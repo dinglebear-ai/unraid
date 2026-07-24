@@ -4,9 +4,9 @@
   "title": "Unraid RMCP",
   "description": "Rust MCP server and CLI for Unraid GraphQL, NAS, Docker, VM, and storage workflows.",
   "version": "0.2.3",
-  "websiteUrl": "https://github.com/jmagar/runraid",
+  "websiteUrl": "https://github.com/dinglebear-ai/unraid-mcp",
   "repository": {
-    "url": "https://github.com/jmagar/runraid",
+    "url": "https://github.com/dinglebear-ai/unraid-mcp",
     "source": "github",
     "id": "1238227303"
   },
@@ -68,8 +68,8 @@
           "format": "string",
           "isRequired": false,
           "isSecret": false,
-          "default": "jmagar/runraid",
-          "placeholder": "jmagar/runraid"
+          "default": "dinglebear-ai/unraid-mcp",
+          "placeholder": "dinglebear-ai/unraid-mcp"
         },
         {
           "name": "UNRAID_RMCP_RELEASE_BASE_URL",
@@ -98,12 +98,11 @@
       "namespace": "ai.dinglebear",
       "dnsDomain": "dinglebear.ai",
       "distribution": {
-        "npm": "unraid-rmcp@0.2.3",
         "nodePackage": "unraid-rmcp"
       },
       "buildInfo": {
         "version": "0.2.3",
-        "repository": "https://github.com/jmagar/runraid"
+        "repository": "https://github.com/dinglebear-ai/unraid-mcp"
       }
     }
   }

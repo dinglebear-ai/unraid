@@ -85,7 +85,7 @@ existing deployment config.
 | Path | Command | Best for | Notes |
 |---|---|---|---|
 | npm / npx | `npx -y unraid-rmcp --help` | Local MCP clients and quick trials. | Downloads the matching `runraid` binary from GitHub Releases. |
-| Release installer | `curl -fsSL https://raw.githubusercontent.com/jmagar/runraid/main/scripts/install.sh \| bash` | Host installs without Node. | Installs `runraid` for linux/amd64. |
+| Release installer | `curl -fsSL https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/unraid-rs/scripts/install.sh \| bash` | Host installs without Node. | Installs `runraid` for linux/amd64. |
 | Docker / Compose | `docker compose up -d` | Shared HTTP MCP deployments. | Reads `.env` and exposes container port `40010`. |
 | Build from source | `cargo build --release` | Development and audits. | Produces `target/release/runraid`. |
 | Plugin | `claude plugin install agents/unraid-rs` | Claude Code local plugin setup from this checkout. | Uses the packaged setup hook, skill, and local runtime metadata. |
@@ -113,8 +113,8 @@ behavior only when testing packaging:
 ### Build From Source
 
 ```bash
-git clone https://github.com/jmagar/runraid
-cd unraid-rmcp
+git clone https://github.com/dinglebear-ai/unraid-mcp
+cd unraid-mcp/unraid-rs
 cargo build --release
 ./target/release/runraid --help
 ```
@@ -402,7 +402,7 @@ CLI shim      (src/cli.rs)       argv -> service -> stdout
   launcher.
 - The npm package name is `unraid-rmcp`; binary aliases are `unraid-rmcp` and
   `runraid`.
-- Docker/OCI metadata uses `ghcr.io/jmagar/runraid:<version>`.
+- Docker/OCI metadata uses `ghcr.io/dinglebear-ai/runraid:<version>`.
 - `agents/unraid-rs/.mcp.json` must launch `npx -y unraid-rmcp mcp` so stdio
   clients start the MCP transport rather than the HTTP server.
 - The root README is curated. `docs/INVENTORY.md` is the curated inventory for

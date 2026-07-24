@@ -75,9 +75,10 @@ fn setup_repair_creates_env_file_without_upstream_contact() {
 /// hook outright.
 #[test]
 fn claude_hooks_call_setup_script() {
-    let hooks: Value =
-        serde_json::from_str(&std::fs::read_to_string("../agents/unraid-rs/hooks/hooks.json").unwrap())
-            .unwrap();
+    let hooks: Value = serde_json::from_str(
+        &std::fs::read_to_string("../agents/unraid-rs/hooks/hooks.json").unwrap(),
+    )
+    .unwrap();
     for hook_name in ["SessionStart", "ConfigChange"] {
         let command = hooks["hooks"][hook_name][0]["hooks"][0]["command"]
             .as_str()
