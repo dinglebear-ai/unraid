@@ -1,4 +1,18 @@
-plugins/incus/**/*.sh eol=lf
-plugins/incus/**/*.plg eol=lf
-plugins/incus/**/*.cfg eol=lf
-plugins/*/packages/*.txz binary
+# Unraid runs Slackware. Every shell script, .plg manifest, event hook and .cfg
+# shipped to a box MUST have LF endings — a CRLF shebang is not executable there.
+# This has to cover ALL THREE plugins (incus, mcp, codex), not just incus: a
+# contributor on Windows with core.autocrlf=true would otherwise commit CRLF into
+# the two uncovered ones. `text` is required alongside `eol=lf` so git normalises
+# on checkin rather than only on checkout.
+plugins/**/*.sh text eol=lf
+plugins/**/*.plg text eol=lf
+plugins/**/*.cfg text eol=lf
+plugins/**/*.tmpl text eol=lf
+
+# Unraid plugin event hooks and rc scripts are extensionless shell scripts.
+plugins/**/event/* text eol=lf
+plugins/**/scripts/rc.* text eol=lf
+
+# Plugin payloads are release assets and must never be diffed or EOL-mangled if
+# one is ever staged locally. Covers packages/ (incus, mcp) and dist/ (codex).
+plugins/**/*.txz binary
