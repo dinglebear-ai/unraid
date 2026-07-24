@@ -45,9 +45,17 @@ jobs:
           [ -n "$build" ] || { echo "::error::could not parse build number from incus.plg &txz; entity"; exit 1; }
           echo "BUILD=${build}" >> "$GITHUB_ENV"
           mkdir -p prev
-          prev_tag="$(gh release list --repo "$GITHUB_REPOSITORY" --json tagName \
-            --jq '[.[].tagName | select(startswith("incus-v"))] | .[1] // empty' 2>/dev/null || true)"
+          # --limit is REQUIRED: `gh release list` defaults to 30, and in this
+          # monorepo unraid-py/unraid-rs/codex releases interleave with incus ones.
+          # Without it, once 30 newer releases exist the incus predecessor falls off
+          # the page and this reports "no previous release" — sending whoever debugs
+          # it toward seeding a first release that already exists.
+          incus_tags="$(gh release list --repo "$GITHUB_REPOSITORY" --limit 300 --json tagName \
+            --jq '[.[].tagName | select(startswith("incus-v"))]' 2>/dev/null || echo '[]')"
+          incus_count="$(printf '%s' "$incus_tags" | jq 'length')"
+          prev_tag="$(printf '%s' "$incus_tags" | jq -r '.[1] // empty')"
           echo "PREV_TAG=${prev_tag}" >> "$GITHUB_ENV"
+          echo "INCUS_RELEASE_COUNT=${incus_count}" >> "$GITHUB_ENV"
           if [ -n "$prev_tag" ]; then
             gh release download "$prev_tag" --repo "$GITHUB_REPOSITORY" -p '*.txz' -D prev \
               || { echo "::error::failed to download the previous payload from $prev_tag (transient? asset renamed?) — re-run this job"; exit 1; }
@@ -60,8 +68,14 @@ jobs:
           if [ -z "$prevtxz" ]; then
             if [ -n "${PREV_TAG:-}" ]; then
               echo "::error::previous release ${PREV_TAG} exists but shipped no .txz asset — investigate before re-running"
+            elif [ "${INCUS_RELEASE_COUNT:-0}" -le 1 ]; then
+              # Genuinely the first incus release out of the monorepo. The .plg's
+              # &txzURL; points at this release's own tag, so publishing without a
+              # payload ships a plugin whose download 404s.
+              echo "::error::this is the first incus-v release ($INCUS_RELEASE_COUNT found) and there is no predecessor to carry the payload forward from."
+              echo "::error::Seed it once, then re-run: create release incus-v<version> and upload the legacy incus-unraid-7.0.0-55-x86_64-1.txz asset to it."
             else
-              echo "::error::no previous incus-v release; seed the first one from the legacy incus-unraid build-55 asset"
+              echo "::error::found $INCUS_RELEASE_COUNT incus-v releases but could not resolve a predecessor payload — check the release listing window and asset names"
             fi
             exit 1
           fi

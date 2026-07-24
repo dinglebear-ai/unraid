@@ -28,11 +28,25 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Fetch upstream SDL
+      # Resolve `main` to an immutable commit first, matching schema-drift.yml.
+      # Fetching the mutable ref directly makes this job's result depend on when
+      # it ran rather than on repo state — two runs of the same commit could
+      # disagree, and a reported diff could not be reproduced.
+      - name: Resolve and fetch immutable upstream SDL
+        id: upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          upstream_commit="$(gh api repos/unraid/api/commits/main --jq .sha)"
+          if ! [[ "$upstream_commit" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Invalid upstream commit: $upstream_commit"
+            exit 1
+          fi
           curl -fsSL \
-            https://raw.githubusercontent.com/unraid/api/main/api/generated-schema.graphql \
+            "https://raw.githubusercontent.com/unraid/api/${upstream_commit}/api/generated-schema.graphql" \
             -o upstream-schema.graphql
+          echo "commit=${upstream_commit}" >> "$GITHUB_OUTPUT"
+          echo "Resolved unraid/api@main to immutable commit ${upstream_commit}."
 
       - name: Strip vendored provenance header
         run: |
@@ -91,5 +105,29 @@ jobs:
               await github.rest.issues.create({
                 owner: context.repo.owner, repo: context.repo.repo,
                 title, body, labels: ['schema-drift-rust'],
+              });
+            }
+
+      # Parity with schema-drift.yml's "Close resolved drift issue" step. Without
+      # this, a drift issue opened here stayed open forever — even after the SDL
+      # was re-vendored — leaving a permanently red signal nobody trusts.
+      - name: Close resolved drift issue
+        if: steps.diff.outputs.drift == 'false'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'schema-drift-rust',
+            });
+            for (const issue of existing.data) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number,
+                body: 'The vendored `unraid-rs/schema/unraid-schema.graphql` now matches `unraid/api@main`; closing this drift report.',
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number, state: 'closed',
               });
             }

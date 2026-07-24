@@ -23,6 +23,16 @@ PYTHON_VERSION="3.12.13"
 PBS_RELEASE="20260718"
 PBS_TARBALL="cpython-${PYTHON_VERSION}+${PBS_RELEASE}-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
 PBS_URL="https://github.com/astral-sh/python-build-standalone/releases/download/${PBS_RELEASE}/${PBS_TARBALL}"
+# Pinned sha256 of PBS_TARBALL, taken from that release's SHA256SUMS manifest.
+# This interpreter is embedded in the .txz shipped to every install, so it is
+# verified UNCONDITIONALLY and the build fails closed if it does not match.
+# Update whenever PYTHON_VERSION or PBS_RELEASE changes:
+#   curl -fsSL ".../${PBS_RELEASE}/SHA256SUMS" | grep "${PBS_TARBALL}"
+# NOTE: python-build-standalone publishes ONE SHA256SUMS manifest per release —
+# it does NOT publish per-file "<tarball>.sha256" sidecars. An earlier version of
+# this script fetched that nonexistent sidecar inside an `if`, so the 404 made the
+# check silently no-op and the interpreter installed unverified on every build.
+PBS_SHA256="5854aa6ec71cad00334d5065633c210b2e7feb40956767a59a91791cadcf0b79"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STAGE="$(mktemp -d)"
@@ -40,14 +50,28 @@ echo "==> [2/4] vendoring python ${PYTHON_VERSION} (${PBS_RELEASE})"
 if [ ! -f "${CACHE}/${PBS_TARBALL}" ]; then
     tmp="$(mktemp)"
     curl -fsSL -o "${tmp}" "${PBS_URL}"
-    # Verify against python-build-standalone's sha256 sidecar (best-effort) before
-    # trusting the interpreter, then move into the cache atomically so an aborted
-    # download can't poison the next run.
-    if sum="$(curl -fsSL "${PBS_URL}.sha256" 2>/dev/null)" && [ -n "$sum" ]; then
-        printf '%s  %s\n' "${sum%% *}" "${tmp}" | sha256sum -c - >/dev/null \
-          || { echo "ERROR: sha256 mismatch for ${PBS_TARBALL}" >&2; rm -f "${tmp}"; exit 1; }
+    # Verify against the PINNED hash before trusting the interpreter. Mandatory,
+    # not best-effort: no conditional, no fallback, no silent skip.
+    echo "    verifying ${PBS_TARBALL} against pinned sha256"
+    if ! printf '%s  %s\n' "${PBS_SHA256}" "${tmp}" | sha256sum -c - >/dev/null 2>&1; then
+        actual="$(sha256sum "${tmp}" | cut -d' ' -f1)"
+        echo "ERROR: sha256 mismatch for ${PBS_TARBALL}" >&2
+        echo "       expected ${PBS_SHA256}" >&2
+        echo "       actual   ${actual}" >&2
+        echo "       If PYTHON_VERSION/PBS_RELEASE changed, update PBS_SHA256 from that release's SHA256SUMS." >&2
+        rm -f "${tmp}"
+        exit 1
     fi
+    # Move into the cache atomically so an aborted download can't poison the next run.
     mv -f "${tmp}" "${CACHE}/${PBS_TARBALL}"
+else
+    # A cached tarball is re-verified too — the cache may outlive a PBS_SHA256 bump
+    # or have been written by an older build of this script.
+    if ! printf '%s  %s\n' "${PBS_SHA256}" "${CACHE}/${PBS_TARBALL}" | sha256sum -c - >/dev/null 2>&1; then
+        echo "ERROR: cached ${PBS_TARBALL} does not match pinned sha256; removing it — re-run to re-download" >&2
+        rm -f "${CACHE}/${PBS_TARBALL}"
+        exit 1
+    fi
 fi
 mkdir -p "${STAGE}/usr/local/unraid-mcp/python"
 tar -xzf "${CACHE}/${PBS_TARBALL}" --strip-components=1 \

@@ -25,15 +25,27 @@ if [ -f "pyproject.toml" ]; then
   [ -n "$v" ] && versions+=("pyproject.toml=$v") && files_checked+=("pyproject.toml")
 fi
 
-if [ -f ".claude-plugin/plugin.json" ]; then
-  v=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json')).get('version',''))" 2>/dev/null)
-  [ -n "$v" ] && versions+=(".claude-plugin/plugin.json=$v") && files_checked+=(".claude-plugin/plugin.json")
-fi
-
-if [ -f ".codex-plugin/plugin.json" ]; then
-  v=$(python3 -c "import json; print(json.load(open('.codex-plugin/plugin.json')).get('version',''))" 2>/dev/null)
-  [ -n "$v" ] && versions+=(".codex-plugin/plugin.json=$v") && files_checked+=(".codex-plugin/plugin.json")
-fi
+# The agent-plugin manifests moved OUT of this crate to agents/unraid-rs/ during
+# the monorepo consolidation. These are REQUIRED, not optional — a soft `[ -f ]`
+# skip is what let this script silently narrow to Cargo.toml + server.json and
+# miss the drift it exists to catch.
+for manifest in \
+  "../agents/unraid-rs/.claude-plugin/plugin.json" \
+  "../agents/unraid-rs/.codex-plugin/plugin.json"
+do
+  if [ ! -f "$manifest" ]; then
+    echo "[version-sync] FAIL — expected manifest is missing: $manifest" >&2
+    echo "  If it moved again, update this script rather than letting the check skip." >&2
+    exit 1
+  fi
+  v=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('version',''))" "$manifest" 2>/dev/null)
+  if [ -z "$v" ]; then
+    echo "[version-sync] FAIL — $manifest has no version field" >&2
+    exit 1
+  fi
+  versions+=("$manifest=$v")
+  files_checked+=("$manifest")
+done
 
 if [ -f "gemini-extension.json" ]; then
   v=$(python3 -c "import json; print(json.load(open('gemini-extension.json')).get('version',''))" 2>/dev/null)

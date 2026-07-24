@@ -26,7 +26,18 @@
       "package-name": "unraid-rmcp",
       "component": "unraid-rs",
       "changelog-path": "CHANGELOG.md",
-      "extra-files": ["packages/unraid-rmcp/package.json"]
+      "extra-files": [
+        { "type": "json", "path": "packages/unraid-rmcp/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "server.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "server.json", "jsonpath": "$.packages[0].version" },
+        {
+          "type": "json",
+          "path": "server.json",
+          "jsonpath": "$._meta['io.modelcontextprotocol.registry/publisher-provided'].buildInfo.version"
+        },
+        { "type": "json", "path": "/agents/unraid-rs/.claude-plugin/plugin.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "/agents/unraid-rs/.codex-plugin/plugin.json", "jsonpath": "$.version" }
+      ]
     },
     "plugins/incus": {
       "release-type": "simple",

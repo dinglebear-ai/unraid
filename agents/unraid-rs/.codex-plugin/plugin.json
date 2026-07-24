@@ -1,5 +1,6 @@
 {
   "name": "runraid",
+  "version": "0.2.3",
   "description": "Read-only MCP server for Unraid homelab servers \u2014 query array health, Docker containers, VMs, metrics, and more.",
   "homepage": "https://github.com/dinglebear-ai/unraid-mcp",
   "repository": "https://github.com/dinglebear-ai/unraid-mcp",

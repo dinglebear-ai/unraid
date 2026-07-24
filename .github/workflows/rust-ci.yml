@@ -27,7 +27,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, unraid]
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       # Pinned to the project MSRV (Cargo.toml rust-version) so CI enforces it.
       - uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39  # 1.90
@@ -50,7 +50,7 @@ jobs:
       # A partially-pruned checkout there can make Clippy fail before compiling.
       CARGO_HOME: ${{ github.workspace }}/.cargo-home-clippy
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       # Pinned to the project MSRV (Cargo.toml rust-version) so CI enforces it.
       - uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39  # 1.90
@@ -75,7 +75,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, unraid]
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       # Pinned to the project MSRV (Cargo.toml rust-version) so CI enforces it.
       - uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39  # 1.90
@@ -107,7 +107,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, unraid]
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Install taplo
         uses: taiki-e/install-action@7572810d7dd469b651bb7793945692cf78da5dd7  # v2
@@ -125,8 +125,8 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, unraid]
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
       - name: Test npm launcher
@@ -135,3 +135,10 @@ jobs:
         run: npm run check --prefix packages/unraid-rmcp
       - name: Dry-run npm package
         run: npm pack --dry-run --json ./packages/unraid-rmcp
+      # Covers every unraid-rs version carrier, including the agents/unraid-rs/
+      # plugin manifests that live outside this crate. Nothing invoked this script
+      # after the consolidation, which is how server.json drifted out of
+      # release-please's reach unnoticed.
+      - name: Version sync across all unraid-rs version carriers
+        working-directory: ${{ github.workspace }}
+        run: bash unraid-rs/scripts/check-version-sync.sh unraid-rs

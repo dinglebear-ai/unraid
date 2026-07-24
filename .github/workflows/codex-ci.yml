@@ -29,3 +29,24 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils shellcheck file
       - name: Run codex plugin contract tests
         run: ./tests/contract.sh
+
+      # The built web bundle is COMMITTED and shipped verbatim by
+      # scripts/build-package.sh (it copies source/ and never runs a build). Nothing
+      # verified the bundle still corresponded to web-src/ — contract.sh only greps
+      # the SOURCE for strings and asserts the bundle file exists, so editing a .tsx
+      # without rebuilding shipped a stale 500 KB bundle with CI green.
+      # vite writes straight into source/.../web/, and the build is deterministic,
+      # so a rebuild-and-diff is an exact check.
+      - name: Typecheck web sources
+        run: npm ci --no-audit --no-fund --prefix web-src && npm run typecheck --prefix web-src
+      - name: Committed web bundle must match a fresh build of web-src
+        run: |
+          set -euo pipefail
+          npm run build --prefix web-src
+          if ! git diff --quiet -- source/usr/local/emhttp/plugins/unraid-codex/web/; then
+            echo "::error::The committed web bundle is stale — rebuild it and commit the result:"
+            echo "::error::  cd plugins/codex/web-src && npm ci && npm run build"
+            git --no-pager diff --stat -- source/usr/local/emhttp/plugins/unraid-codex/web/
+            exit 1
+          fi
+          echo "committed bundle matches a fresh build of web-src"
