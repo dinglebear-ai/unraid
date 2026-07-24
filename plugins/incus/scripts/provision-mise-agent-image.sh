@@ -62,6 +62,18 @@ apt-get install -y --no-install-recommends \
   zstd
 rm -rf /var/lib/apt/lists/*
 
+# ACCEPTED RISK (reviewed, unpinned vendor installers):
+# The three `curl … | sh` installers in this script (tailscale below, mise and
+# codex further down) execute whatever their vendor serves at build time, as root.
+# They are deliberately NOT pinned, unlike the nvm/rustup installers used by the
+# jail profile, because these vendors do not publish stable per-version install
+# scripts with checksums, and pinning to a release artifact would have to be
+# re-derived per architecture on every bump.
+# Blast radius is bounded: this builds the *jailed agent container image*, not the
+# Unraid host, and the resulting image is not published. A compromised vendor
+# script would run in the image build, not on the NAS.
+# If you tighten one of these, tighten all three, and validate by rebuilding the
+# image end-to-end — a wrong pin silently breaks image provisioning.
 if ! command -v tailscale >/dev/null 2>&1; then
   curl -fsSL https://tailscale.com/install.sh | sh
 fi

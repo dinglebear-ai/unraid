@@ -44,14 +44,14 @@
       "package-name": "incus",
       "component": "incus",
       "changelog-path": "CHANGELOG.md",
-      "extra-files": [{ "type": "generic", "path": "incus.plg" }]
+      "extra-files": ["incus.plg"]
     },
     "plugins/codex": {
       "release-type": "simple",
       "package-name": "codex",
       "component": "codex",
       "changelog-path": "CHANGELOG.md",
-      "extra-files": [{ "type": "generic", "path": "unraid-codex.plg" }]
+      "extra-files": ["unraid-codex.plg"]
     }
   }
 }

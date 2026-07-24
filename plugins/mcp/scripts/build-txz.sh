@@ -107,7 +107,13 @@ chmod +x "${STAGE}/usr/local/emhttp/plugins/unraid-mcp/scripts/"* \
          "${STAGE}/usr/local/emhttp/plugins/unraid-mcp/event/"* \
          "${STAGE}/usr/local/unraid-mcp/python/bin/"*
 
+# Deterministic archive: stable entry order and a fixed mtime, so rebuilding the
+# same sources yields the same sha256. Without --sort/--mtime this was the only
+# one of the three plugin build scripts producing a non-reproducible package,
+# which makes the .plg checksum unverifiable by a third party.
+SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -C "${ROOT}" log -1 --format=%ct 2>/dev/null || echo 0)}"
 tar -C "${STAGE}" --owner=0 --group=0 --numeric-owner \
+    --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
     --transform='s|^\./||' -cJf "${OUT_DIR}/${PKG_NAME}" .
 
 MD5="$(md5sum "${OUT_DIR}/${PKG_NAME}" | awk '{print $1}')"
