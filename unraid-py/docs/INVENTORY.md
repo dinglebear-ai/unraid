@@ -68,8 +68,8 @@ Complete listing of all plugin components.
 
 | File | Client | Transport |
 | --- | --- | --- |
-| `.claude-plugin/plugin.json` | Claude Code | stdio (via `uv run`) |
-| `.codex-plugin/plugin.json` | Codex CLI | stdio (via `.mcp.json`) |
+| `agents/unraid-py/.claude-plugin/plugin.json` | Claude Code | stdio (via `uv run`) |
+| `agents/unraid-py/.codex-plugin/plugin.json` | Codex CLI | stdio (via `.mcp.json`) |
 | `gemini-extension.json` | Gemini CLI | stdio (via `uv run`) |
 | `server.json` | MCP Registry (tv.tootie/unraid-mcp) | stdio (PyPI package) |
 
@@ -77,7 +77,7 @@ Complete listing of all plugin components.
 
 | Path | Name | Description |
 | --- | --- | --- |
-| `skills/unraid/SKILL.md` | unraid | Client-facing skill with all domains, subactions, and workflows |
+| `agents/unraid-py/skills/unraid/SKILL.md` | unraid | Client-facing skill with all domains, subactions, and workflows |
 
 ## scripts/
 

@@ -19,13 +19,17 @@ OS plugins, plus the Claude/Codex agent integrations that surface them.
 | [`agents/unraid-py/`](agents/unraid-py/) | Claude Code / Codex plugin (`name: unraid-mcp`) for the Python server. | — | — |
 | [`agents/unraid-rs/`](agents/unraid-rs/) | Claude Code / Codex plugin (`name: runraid`) for the Rust server. | — | — |
 
-## Install the agent plugins (one marketplace)
+## Install the agent plugins (one marketplace command, two manifests)
 
 ```text
 /plugin marketplace add dinglebear-ai/unraid-mcp
 /plugin install unraid-mcp@unraid-mcp   # Python server
 /plugin install runraid@unraid-mcp      # Rust server
 ```
+
+Both plugins are published from a single repo. Claude reads
+`.claude-plugin/marketplace.json`; Codex reads `.agents/plugins/marketplace.json`.
+`meta-ci.yml` asserts the two list the same plugin set, so they cannot drift.
 
 `marketplace add` accepts the `owner/repo` shorthand (or a full git URL / local
 path). After install, Claude Code prompts for the connection settings (the

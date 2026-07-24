@@ -268,7 +268,7 @@ unraid(
 
 All destructive subactions require `confirm=True`. Without it, the action is
 blocked before any GraphQL request is sent. For the complete current destructive
-action list, call `unraid(action="help")` or see `docs/mcp/TOOLS.md`.
+action list, call `unraid(action="help")` or see `unraid-py/docs/mcp/TOOLS.md`.
 
 ---
 

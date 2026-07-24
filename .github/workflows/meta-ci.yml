@@ -106,25 +106,11 @@ jobs:
           PY
 
       # The SHA is the real pin, but the trailing comment is what humans read when
-      # auditing or bumping. Conflicting annotations of the same SHA
-      # (build-unraid-plugin.yml said v5.0.0 where every other workflow said
-      # v7.0.0) invite a silent downgrade.
+      # auditing or bumping. Extracted to a script because the policy test in
+      # unraid-py/tests/ scans workflow YAML line-by-line for action references,
+      # and an inline regex describing that syntax trips it as a false positive.
       - name: Pinned action SHAs must carry a consistent version comment
-        run: |
-          python3 - <<'PY'
-          import glob, re, collections
-          pat = re.compile(r"uses:\s*([^@\s]+)@([0-9a-f]{40})\s*#\s*(\S+)")
-          seen = collections.defaultdict(set)
-          for f in glob.glob(".github/workflows/*.yml"):
-              for action, sha, ver in pat.findall(open(f).read()):
-                  seen[(action, sha)].add(ver)
-          bad = {f"{a}@{s[:12]}": sorted(v) for (a, s), v in seen.items() if len(v) > 1}
-          assert not bad, f"same action+SHA annotated with conflicting versions: {bad}"
-          unannotated = [f for f in glob.glob(".github/workflows/*.yml")
-                         for l in open(f) if re.search(r"uses:.*@[0-9a-f]{40}\s*$", l)]
-          assert not unannotated, f"pinned action without a version comment in: {sorted(set(unannotated))}"
-          print(f"{len(seen)} pinned action/SHA pairs have consistent version comments")
-          PY
+        run: python3 ./.github/scripts/check-action-pin-comments.py
 
       # .github/actionlint.yaml already existed but nothing ran it. Installed as a
       # checksum-verified release download rather than a third-party action,
