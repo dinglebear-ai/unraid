@@ -31,7 +31,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/ws": "^8.18.1",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "ws": "^8.21.1"
   },
   "overrides": {
