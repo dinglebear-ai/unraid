@@ -112,6 +112,14 @@ jobs:
       - name: Pinned action SHAs must carry a consistent version comment
         run: python3 ./.github/scripts/check-action-pin-comments.py
 
+      # This repo uses `allowed_actions: selected`. A non-allowlisted action is
+      # rejected at COMPILE time — no jobs, no logs, and NO check-run, so it shows
+      # as an absent check that branch protection cannot see. rust-ci was broken
+      # and invisible that way from 2026-07-24. Checks against the checked-in
+      # mirror, because GITHUB_TOKEN cannot read the live setting.
+      - name: Every action must be on the repo allowlist
+        run: python3 ./.github/scripts/check-actions-allowlist.py
+
       # .github/actionlint.yaml already existed but nothing ran it. Installed as a
       # checksum-verified release download rather than a third-party action,
       # matching the gitleaks pattern in secret-scan.yml.

@@ -46,6 +46,20 @@ The Python server's detailed dev guide is `unraid-py/CLAUDE.md`.
   *before* `2026.9.0`, and every installed plugin would silently stop updating.
   `.github/scripts/check-plg-version-ordering.sh` (run by `meta-ci.yml` and the
   pre-commit hook) fails the build on such a regression.
+- **This repo restricts which Actions may run** (`allowed_actions: selected`).
+  A non-allowlisted action is rejected by GitHub at *compile* time: the run ends
+  as `startup_failure` with no jobs, no logs and **no check-run**, so it appears
+  as a *missing* check that branch protection cannot see — not a red one. Adding a
+  new third-party action therefore takes **two** steps: list it in
+  `.github/allowed-actions.txt` *and* apply the same change to the repo setting
+  (`gh api -X PUT repos/<owner>/<repo>/actions/permissions/selected-actions`).
+  `meta-ci.yml` fails the PR if a workflow uses something the mirror doesn't list.
+  `actions/*` and `github/*` are always permitted and need no entry.
+  This is not hypothetical: `rust-ci` was silently dead from 2026-07-24 to
+  2026-07-25 because the consolidation imported Rust CI from a repo with
+  `allowed_actions: all` and never allowlisted `dtolnay/rust-toolchain`,
+  `Swatinem/rust-cache` or `taiki-e/install-action`.
+
 - **`secret-scan.yml` is genuinely unfiltered** (no `paths:` at all) so a
   path-scoped workflow can never gate it off. **`meta-ci.yml` is broadly scoped**
   to the shared root files — its filter must stay exhaustive, since a root file
