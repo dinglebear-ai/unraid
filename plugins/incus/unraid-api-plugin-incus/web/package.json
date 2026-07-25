@@ -16,7 +16,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "ghostty-web": "^0.4.0",
-    "graphql-ws": "^5.16.0",
+    "graphql-ws": "^6.2.0",
     "reka-ui": "^2.5.0",
     "smol-toml": "^1.7.0",
     "tailwind-merge": "^2.6.0",
