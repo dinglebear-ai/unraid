@@ -5,7 +5,16 @@
 set -euo pipefail
 
 PLUGIN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$PLUGIN_ROOT/../.." && pwd)"
+# PROJECT_ROOT must reach the PYTHON PACKAGE, which is what `uv sync` needs.
+# This resolved to agents/unraid-py/ (no pyproject.toml there), so `uv sync` below
+# could never succeed. From agents/unraid-py/skills/unraid/ the package is four
+# levels up then into unraid-py/. Pre-dates the consolidation — it was equally
+# broken when this lived at plugins/unraid/.
+PROJECT_ROOT="$(cd "$PLUGIN_ROOT/../../../../unraid-py" && pwd)"
+if [[ ! -f "$PROJECT_ROOT/pyproject.toml" ]]; then
+  echo "error: expected the Python package at $PROJECT_ROOT but found no pyproject.toml" >&2
+  exit 1
+fi
 
 echo "=== Unraid MCP Plugin Setup ==="
 echo ""

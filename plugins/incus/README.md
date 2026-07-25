@@ -258,6 +258,6 @@ incus-unraid/
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+MIT — see [LICENSE](../../LICENSE).
 
 Not affiliated with the LinuxContainers/Incus project or Unraid.

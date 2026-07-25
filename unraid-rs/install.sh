@@ -2,7 +2,7 @@
 # install.sh — One-line installer for unraid-rmcp
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/jmagar/runraid/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/unraid-rs/install.sh | bash
 #
 # What it does:
 #   1. Runs pre-flight checks (OS/arch, tools, disk space, PATH, port)
@@ -15,8 +15,13 @@
 
 set -euo pipefail
 
-REPO="jmagar/runraid"
+REPO="dinglebear-ai/unraid-mcp"
 BIN_NAME="runraid"
+# The Rust server is one component of the unraid-mcp monorepo. Its releases are
+# tagged `unraid-rs-v<semver>` and its crate lives in the `unraid-rs/` subtree —
+# bare `v<semver>` tags and the repo root belong to the Python server.
+TAG_PREFIX="unraid-rs-v"
+CRATE_SUBDIR="unraid-rs"
 SERVICE="unraid-rmcp"
 INSTALL_DIR="${HOME}/.local/bin"
 DATA_DIR="${HOME}/.unraid"
@@ -148,14 +153,20 @@ detect_platform() {
 }
 
 # ── Get latest release tag ────────────────────────────────────────────────────
+# `/releases/latest` is repo-wide and would return the Python server's `v*` tag,
+# so list releases and pick the newest `unraid-rs-v*` one instead.
 latest_release_tag() {
+  local releases=''
   if command -v curl &>/dev/null; then
-    curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | \
-      grep '"tag_name"' | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/'
+    releases="$(curl -fsSL "https://api.github.com/repos/${REPO}/releases?per_page=100" 2>/dev/null || true)"
   elif command -v wget &>/dev/null; then
-    wget -qO- "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | \
-      grep '"tag_name"' | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/'
+    releases="$(wget -qO- "https://api.github.com/repos/${REPO}/releases?per_page=100" 2>/dev/null || true)"
   fi
+  [[ -z "${releases}" ]] && return 0
+  printf '%s' "${releases}" \
+    | grep -o "\"tag_name\": *\"${TAG_PREFIX}[^\"]*\"" \
+    | head -n1 \
+    | sed -E 's/.*"([^"]+)"$/\1/'
 }
 
 # ── Download binary ───────────────────────────────────────────────────────────
@@ -164,10 +175,13 @@ download_binary() {
   local tmp_dir; tmp_dir="$(mktemp -d)"
   trap 'rm -rf -- "${tmp_dir}"' RETURN
 
-  local asset="${BIN_NAME}-${tag}-${ARCH}-unknown-${OS}-musl"
-  if [[ "${OS}" == "macos" ]]; then
-    asset="${BIN_NAME}-${tag}-${ARCH}-apple-darwin"
+  # rust-release.yml publishes exactly one pre-built target: linux/x86_64, as the
+  # raw binary `runraid-linux-x86_64`. Anything else must build from source.
+  if [[ "${OS}" != "linux" || "${ARCH}" != "x86_64" ]]; then
+    info "No pre-built asset for ${OS}/${ARCH} — will build from source"
+    return 1
   fi
+  local asset="${BIN_NAME}-linux-x86_64"
   local url="https://github.com/${REPO}/releases/download/${tag}/${asset}"
 
   info "Downloading ${url} ..."
@@ -219,9 +233,15 @@ build_from_source() {
 
   if command -v git &>/dev/null; then
     git clone --depth=1 "https://github.com/${REPO}.git" "${tmp_src}" 2>/dev/null || return 1
-    (cd "${tmp_src}" && cargo build --release --quiet)
+    # The crate is a subtree of the monorepo, not its root.
+    local crate_dir="${tmp_src}/${CRATE_SUBDIR}"
+    if [[ ! -f "${crate_dir}/Cargo.toml" ]]; then
+      warn "Expected crate at ${CRATE_SUBDIR}/ in ${REPO} but found none"
+      return 1
+    fi
+    (cd "${crate_dir}" && cargo build --release --quiet)
     mkdir -p "${INSTALL_DIR}"
-    cp "${tmp_src}/target/release/${BIN_NAME}" "${INSTALL_DIR}/${BIN_NAME}"
+    cp "${crate_dir}/target/release/${BIN_NAME}" "${INSTALL_DIR}/${BIN_NAME}"
     ok "Built and installed from GitHub source"
     return 0
   fi

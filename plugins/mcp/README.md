@@ -51,7 +51,7 @@ managed by the form are preserved on save and listed read-only.
 
 ```bash
 ./scripts/build-txz.sh 2.5.0            # pulls unraid-mcp==2.5.0 from PyPI
-./scripts/build-txz.sh 2.5.0 dist/unraid_mcp-2.5.0-py3-none-any.whl
+./scripts/build-txz.sh 2.5.0 ../../unraid-py/dist/unraid_mcp-2.5.0-py3-none-any.whl
 ```
 
 Install on a test box: copy `packages/unraid-mcp.plg` URL (or file) into

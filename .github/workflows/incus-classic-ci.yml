@@ -12,12 +12,20 @@ on:
       - "!plugins/incus/unraid-api-plugin-incus/**"
       - "!plugins/incus/docs/**"
       - ".github/workflows/incus-classic-ci.yml"
+      # classic-contract.sh asserts incus-api-ci.yml still carries its
+      # packages/** and incus.plg path filters. Without this entry the guard
+      # could not run on the very edit it guards against.
+      - ".github/workflows/incus-api-ci.yml"
   pull_request:
     paths:
       - "plugins/incus/**"
       - "!plugins/incus/unraid-api-plugin-incus/**"
       - "!plugins/incus/docs/**"
       - ".github/workflows/incus-classic-ci.yml"
+      # classic-contract.sh asserts incus-api-ci.yml still carries its
+      # packages/** and incus.plg path filters. Without this entry the guard
+      # could not run on the very edit it guards against.
+      - ".github/workflows/incus-api-ci.yml"
   workflow_dispatch:
 
 permissions:
@@ -31,9 +39,38 @@ jobs:
         working-directory: plugins/incus
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # The bundle-staleness step below diffs against the PR base SHA, which
+          # is absent from the default shallow clone (`base...HEAD` then fails with
+          # "Invalid symmetric difference expression"). Same reason no-large-blobs.yml
+          # sets this.
+          fetch-depth: 0
       - name: Install static validators
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils shellcheck
       - name: Validate classic sources and release artifact
         run: ./scripts/verify-classic-package.sh
+      # The built Vue bundle in source/.../web/ is a COPY of dist-web/ (see
+      # plugins/incus/CLAUDE.md) that ships inside the classic .txz. Nothing
+      # verified it still corresponds to the Vue sources, so editing the frontend
+      # without re-copying ships a stale bundle with CI green.
+      # A byte-diff gate is not usable here: vite emits content-hashed filenames,
+      # so a rebuild legitimately changes names. This staleness check needs no
+      # determinism — it only asserts the two moved together.
+      - name: Web sources and the shipped bundle must change together
+        if: github.event_name == 'pull_request'
+        working-directory: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          base="${{ github.event.pull_request.base.sha }}"
+          changed="$(git diff --name-only "$base"...HEAD)"
+          src_changed="$(printf '%s\n' "$changed" | grep -c '^plugins/incus/unraid-api-plugin-incus/web/src/' || true)"
+          bundle_changed="$(printf '%s\n' "$changed" | grep -c '^plugins/incus/source/usr/local/emhttp/plugins/incus/web/' || true)"
+          echo "web/src files changed: $src_changed; shipped bundle files changed: $bundle_changed"
+          if [ "$src_changed" -gt 0 ] && [ "$bundle_changed" -eq 0 ]; then
+            echo "::error::Vue sources under unraid-api-plugin-incus/web/src/ changed but the shipped bundle in source/usr/local/emhttp/plugins/incus/web/ did not."
+            echo "::error::Rebuild and re-copy it, or state explicitly why the bundle is unaffected."
+            exit 1
+          fi
+
       - name: Run classic contract tests
         run: ./tests/classic-contract.sh

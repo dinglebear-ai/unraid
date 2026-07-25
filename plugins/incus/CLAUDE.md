@@ -28,7 +28,7 @@ npx tsc --noEmit   # typecheck
 npm test           # backend unit tests
 npx tsc            # build → dist/
 ```
-`node_modules` here is mostly symlinks into a sibling clone of the real `unraid-api` monorepo's pnpm store (`../upstream/unraid-api/node_modules/.pnpm/...`), which is how this package gets real `@nestjs/*`, `@unraid/shared`, `class-validator`, etc. to typecheck against without vendoring them. If a typecheck fails with a missing module, the fix is usually symlinking the missing package from that pnpm store, not `npm install`. If that sibling clone isn't available (e.g. CI, or a fresh machine), `npm install --no-save` the real published `@nestjs/common`/`@nestjs/config`/`@nestjs/graphql`/`class-transformer`/`class-validator` packages plus the local `@unraid/shared@file:.ci-stubs/unraid-shared` stub instead — see `.github/workflows/api-plugin-ci.yml`, which does exactly this. It's a best-effort proxy for whatever version the real host actually runs, not a guarantee of an identical typecheck.
+`node_modules` here is mostly symlinks into a sibling clone of the real `unraid-api` monorepo's pnpm store (`../upstream/unraid-api/node_modules/.pnpm/...`), which is how this package gets real `@nestjs/*`, `@unraid/shared`, `class-validator`, etc. to typecheck against without vendoring them. If a typecheck fails with a missing module, the fix is usually symlinking the missing package from that pnpm store, not `npm install`. If that sibling clone isn't available (e.g. CI, or a fresh machine), `npm install --no-save` the real published `@nestjs/common`/`@nestjs/config`/`@nestjs/graphql`/`class-transformer`/`class-validator` packages plus the local `@unraid/shared@file:.ci-stubs/unraid-shared` stub instead — see `.github/workflows/incus-api-ci.yml`, which does exactly this. It's a best-effort proxy for whatever version the real host actually runs, not a guarantee of an identical typecheck.
 
 **Frontend** (`unraid-api-plugin-incus/web/`):
 ```bash
@@ -47,9 +47,9 @@ than shipping its own palette; don't introduce a separate color system.
 
 ## CI
 
-`.github/workflows/api-plugin-ci.yml` tests/typechecks/builds the backend and
+`.github/workflows/incus-api-ci.yml` tests/typechecks/builds the backend and
 typechecks/builds both frontend bundles. Host-provided dependency proxies and
-GitHub Actions are pinned. `.github/workflows/classic-plugin-ci.yml` validates
+GitHub Actions are pinned. `.github/workflows/incus-classic-ci.yml` validates
 the plugin XML, shell sources, checksums, required archive inventory, source vs
 archive drift, shrinkage, and embedded manifest. The opt-in privileged live
 boundary suite remains a disposable-Unraid release gate rather than hosted CI.

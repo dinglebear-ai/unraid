@@ -1,6 +1,8 @@
 [workspace]
-members = [".", "xtask"]
-default-members = ["."]
+# A root [package] is implicitly a workspace member; listing "." makes
+# release-please resolve "unraid-rs/./Cargo.toml" and log a spurious
+# "member . declared but did not find Cargo.toml" warning every run.
+members = ["xtask"]
 resolver = "2"
 
 [package]
@@ -10,8 +12,8 @@ edition = "2021"
 rust-version = "1.90"
 categories = ["command-line-utilities", "development-tools"]
 keywords = ["mcp", "unraid", "graphql", "nas", "rmcp"]
-repository = "https://github.com/jmagar/runraid"
-homepage = "https://github.com/jmagar/runraid#readme"
+repository = "https://github.com/dinglebear-ai/unraid-mcp"
+homepage = "https://github.com/dinglebear-ai/unraid-mcp#readme"
 description = "Rust MCP server and CLI for Unraid GraphQL operations across NAS, Docker, VM, and storage workflows."
 autobins = false
 

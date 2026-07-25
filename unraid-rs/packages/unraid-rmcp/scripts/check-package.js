@@ -9,6 +9,8 @@ const { spawnSync } = require("node:child_process");
 
 const packageRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(packageRoot, "..", "..");
+// Canonical home of this package after the monorepo consolidation.
+const CANONICAL_REPO = "dinglebear-ai/unraid-mcp";
 const packageJsonPath = path.join(packageRoot, "package.json");
 const packageJson = readJson(packageJsonPath);
 const releaseMode = process.argv.includes("--release");
@@ -125,6 +127,15 @@ function checkMetadata() {
   assert(packageJson.mcpName === serverJson.name, "package.json mcpName must match server.json name");
   assert(repoUrl === serverRepoUrl, `package repository ${repoUrl} must match server.json repository ${serverRepoUrl}`);
   assert(homepage === serverWebsite, `package homepage ${homepage} must match server.json websiteUrl ${serverWebsite}`);
+  // Anchor the URLs to the canonical monorepo. Asserting only that package.json
+  // and server.json agree with EACH OTHER let both drift to the pre-consolidation
+  // repo (jmagar/runraid) while CI stayed green.
+  for (const [label, value] of [["package repository", repoUrl], ["server.json repository", serverRepoUrl], ["package homepage", homepage], ["server.json websiteUrl", serverWebsite]]) {
+    assert(
+      typeof value === "string" && value.includes(`/${CANONICAL_REPO}`),
+      `${label} must point at ${CANONICAL_REPO} (got ${value})`,
+    );
+  }
   assert(serverJson.version === packageJson.version, `package version ${packageJson.version} must match server.json version ${serverJson.version}`);
 
   if (npmPackage) {

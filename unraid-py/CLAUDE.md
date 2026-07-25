@@ -315,7 +315,7 @@ Conventional Commit messages:
 On every push to `main`, release-please maintains a "release PR" that bumps the version
 in `pyproject.toml` + the three plugin manifests
 (`agents/unraid-py/.claude-plugin/plugin.json`, `agents/unraid-py/.codex-plugin/plugin.json`,
-`agents/unraid-py/gemini-extension.json`) and prepends a CHANGELOG entry.
+`unraid-py/gemini-extension.json`) and prepends a CHANGELOG entry.
 Merging that PR tags `vX.Y.Z` and triggers `publish-pypi.yml` + `docker-publish.yml`.
 
 Config: `release-please-config.json` (which files get bumped) and

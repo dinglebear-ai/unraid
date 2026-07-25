@@ -1,3 +1,10 @@
+# Custom self-hosted runner labels used by this repo's workflows.
+# actionlint rejects any label it doesn't know, so every self-hosted label must be
+# declared here. Both runners live on the homelab:
+#   tailscale — tailnet-connected runner used by ci.yml's live Unraid smoke test
+#   unraid    — the Unraid box itself, used by rust-ci.yml and rust-release.yml
+# This file existed before but was run by nothing; meta-ci.yml now runs actionlint.
 self-hosted-runner:
   labels:
     - tailscale
+    - unraid

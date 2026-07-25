@@ -1,5 +1,10 @@
 # Claude Code Marketplace Setup
 
+> **Scope note (monorepo):** paths shown as repo-root siblings of `agents/unraid-py/`
+> (`src/unraid_mcp/`, `scripts/`, …) actually live under `unraid-py/` in the
+> monorepo. Only `agents/`, `plugins/`, and the orchestration files sit at the root.
+
+
 This document explains the Claude Code marketplace and plugin structure for the Unraid MCP project.
 
 ## What Was Created
