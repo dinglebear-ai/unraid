@@ -1,18 +1,77 @@
+# Root lefthook config for the unraid-mcp monorepo.
+#
+# WHY THIS EXISTS: git hooks are installed once per REPOSITORY, not per directory.
+# After the consolidation there was no root config — only unraid-py/lefthook.yml
+# and unraid-rs/lefthook.yml — and both used repo-root-relative commands
+# (`just lint`, `bash scripts/block-env-commits.sh`) that do not resolve from the
+# root. The result: no hook ran at all, and the .env-commit guard was inert.
+#
+# `root:` scopes a command to a subdirectory: lefthook cd's there and passes only
+# that subtree's staged files. Per-component commands only fire when that
+# component's files are staged, via `glob:`.
+#
+# Install with: lefthook install
+
 pre-commit:
   parallel: true
   commands:
+    # ── Repo-wide ────────────────────────────────────────────────────────────
     diff_check:
-      run: git diff --check --cached
-    yaml:
-      glob: "*.{yml,yaml}"
-      run: uv run python -c 'import sys, yaml; [yaml.safe_load(open(path, "r", encoding="utf-8")) for path in sys.argv[1:]]' {staged_files}
-    lint:
-      run: just lint
-    format:
-      run: just fmt
-    typecheck:
-      run: just typecheck
-    skills:
-      run: just validate-skills
+      run: git --no-pager diff --check --cached
+
+    # Blocks committing any .env file from anywhere in the monorepo. This is the
+    # guard that was silently doing nothing; it is deliberately repo-wide rather
+    # than duplicated per component.
     env_guard:
-      run: bash scripts/block-env-commits.sh
+      run: bash unraid-py/scripts/block-env-commits.sh
+
+    # Unraid ships these to a Slackware box — a CRLF shebang will not execute.
+    # .gitattributes normalises on checkin; this catches anything staged with
+    # --no-normalize or added before the attribute existed.
+    plugin_crlf_guard:
+      glob: "plugins/**/*.{sh,plg,cfg}"
+      run: |
+        status=0
+        for f in {staged_files}; do
+          if grep -qU $'\r' "$f"; then echo "CRLF line endings not allowed in $f"; status=1; fi
+        done
+        exit $status
+
+    # ── unraid-py ────────────────────────────────────────────────────────────
+    py_lint:
+      root: "unraid-py/"
+      glob: "unraid-py/**/*.py"
+      run: just lint
+    py_format:
+      root: "unraid-py/"
+      glob: "unraid-py/**/*.py"
+      run: just fmt
+    py_typecheck:
+      root: "unraid-py/"
+      glob: "unraid-py/**/*.py"
+      run: just typecheck
+    py_yaml:
+      root: "unraid-py/"
+      glob: "unraid-py/**/*.{yml,yaml}"
+      run: uv run python -c 'import sys, yaml; [yaml.safe_load(open(path, "r", encoding="utf-8")) for path in sys.argv[1:]]' {staged_files}
+    py_skills:
+      root: "unraid-py/"
+      glob: "agents/unraid-py/**"
+      run: just validate-skills
+
+    # ── unraid-rs ────────────────────────────────────────────────────────────
+    rs_fmt:
+      root: "unraid-rs/"
+      glob: "unraid-rs/**/*.rs"
+      run: cargo fmt --check
+    rs_toml:
+      root: "unraid-rs/"
+      glob: "unraid-rs/**/*.toml"
+      run: taplo check {staged_files}
+
+    # ── Shared root ──────────────────────────────────────────────────────────
+    # A .plg version that regresses under Unraid's string comparison silently
+    # stops every installed plugin from updating.
+    plg_version_ordering:
+      glob: "plugins/{incus,codex}/*.plg"
+      run: ./.github/scripts/check-plg-version-ordering.sh

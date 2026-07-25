@@ -1,0 +1,69 @@
+/* Vendored from @unraid/ui monorepo: @tailwind-shared/theme-variants.css — Unraid's real design tokens/theme system. Do not hand-edit; re-sync from upstream if it drifts. */
+/**
+ * Tailwind v4 Theme Variants
+ * Defines theme-specific CSS variables that can be switched via classes
+ * These are applied dynamically based on the theme selected in GraphQL
+ */
+
+/* Default/White Theme */
+.Theme--white {
+  --color-border: #383735;
+  --color-alpha: #ff8c2f;
+  --color-beta: #1c1b1b;
+  --color-gamma: #ffffff;
+  --color-gamma-opaque: rgba(255, 255, 255, 0.3);
+  --color-header-gradient-start: color-mix(in srgb, var(--header-background-color) 0%, transparent);
+  --color-header-gradient-end: color-mix(in srgb, var(--header-background-color) 100%, transparent);
+  --shadow-beta: 0 25px 50px -12px color-mix(in srgb, var(--color-beta) 15%, transparent);
+  --ring-offset-shadow: 0 0 var(--color-beta);
+  --ring-shadow: 0 0 var(--color-beta);
+}
+
+/* Black Theme */
+.Theme--black,
+.Theme--black.dark {
+  --color-border: #e0e0e0;
+  --color-alpha: #ff8c2f;
+  --color-beta: #f2f2f2;
+  --color-gamma: #1c1b1b;
+  --color-gamma-opaque: rgba(28, 27, 27, 0.3);
+  --color-header-gradient-start: color-mix(in srgb, var(--header-background-color) 0%, transparent);
+  --color-header-gradient-end: color-mix(in srgb, var(--header-background-color) 100%, transparent);
+  --shadow-beta: 0 25px 50px -12px color-mix(in srgb, var(--color-beta) 15%, transparent);
+  --ring-offset-shadow: 0 0 var(--color-beta);
+  --ring-shadow: 0 0 var(--color-beta);
+}
+
+/* Gray Theme */
+.Theme--gray,
+.Theme--gray.dark {
+  --color-border: #383735;
+  --color-alpha: #ff8c2f;
+  --color-beta: #383735;
+  --color-gamma: #ffffff;
+  --color-gamma-opaque: rgba(255, 255, 255, 0.3);
+  --color-header-gradient-start: color-mix(in srgb, var(--header-background-color) 0%, transparent);
+  --color-header-gradient-end: color-mix(in srgb, var(--header-background-color) 100%, transparent);
+  --shadow-beta: 0 25px 50px -12px color-mix(in srgb, var(--color-beta) 15%, transparent);
+  --ring-offset-shadow: 0 0 var(--color-beta);
+  --ring-shadow: 0 0 var(--color-beta);
+}
+
+/* Azure Theme */
+.Theme--azure {
+  --color-border: #5a8bb8;
+  --color-alpha: #ff8c2f;
+  --color-beta: #e7f2f8;
+  --color-gamma: #336699;
+  --color-gamma-opaque: rgba(51, 102, 153, 0.3);
+  --color-header-gradient-start: color-mix(in srgb, var(--header-background-color) 0%, transparent);
+  --color-header-gradient-end: color-mix(in srgb, var(--header-background-color) 100%, transparent);
+  --shadow-beta: 0 25px 50px -12px color-mix(in srgb, var(--color-beta) 15%, transparent);
+  --ring-offset-shadow: 0 0 var(--color-beta);
+  --ring-shadow: 0 0 var(--color-beta);
+}
+
+/* Dark Mode Overrides */
+.dark {
+  --color-border: #383735;
+}

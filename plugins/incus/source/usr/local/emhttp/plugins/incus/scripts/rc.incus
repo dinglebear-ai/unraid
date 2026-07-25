@@ -1,0 +1,162 @@
+#!/bin/bash
+# /etc/rc.d/rc.incus — Unraid-style service control for incusd.
+# Backgrounds the daemon with scoped libs, persistent state on the array,
+# and a lxcfs mount for container /proc virtualization.
+
+PREFIX="/usr/local/incus"
+EMHTTP="/usr/local/emhttp/plugins/incus"
+. "${EMHTTP}/scripts/incus-env.sh"
+# Source user config to pick up custom INCUS_DIR and SERVICE setting
+[ -f "/boot/config/plugins/incus/incus.cfg" ] && . "/boot/config/plugins/incus/incus.cfg"
+
+PIDFILE="/var/run/incusd.pid"
+LXCFS_PID="/var/run/incus-lxcfs.pid"
+LOG="/var/log/incusd.log"
+WATCHDOG_PID="/var/run/incus-watchdog.pid"
+HEALTH_FILE="${INCUS_DIR}/plugin-health"
+BUILD_ID_FILE="${EMHTTP}/build-id"
+PLUGIN_BUILD="$(head -n 1 "$BUILD_ID_FILE" 2>/dev/null || printf 'unknown')"
+
+log() { logger -t incus "$*"; printf '%s incus: %s\n' "$(date -Is)" "$*" >>"$LOG"; }
+health() {
+  mkdir -p "$INCUS_DIR" 2>/dev/null || true
+  printf 'status=%s\ntime=%s\nbuild=%s\nmessage=%s\n' "$1" "$(date -Is)" "$PLUGIN_BUILD" "${2:-}" >"${HEALTH_FILE}.tmp" 2>/dev/null &&
+    mv -f "${HEALTH_FILE}.tmp" "$HEALTH_FILE" 2>/dev/null || true
+}
+rotate_log() {
+  [ -f "$LOG" ] || return 0
+  [ "$(stat -c %s "$LOG" 2>/dev/null || echo 0)" -lt 5242880 ] && return 0
+  rm -f "${LOG}.3"
+  [ ! -f "${LOG}.2" ] || mv -f "${LOG}.2" "${LOG}.3"
+  [ ! -f "${LOG}.1" ] || mv -f "${LOG}.1" "${LOG}.2"
+  mv -f "$LOG" "${LOG}.1"
+}
+pid_is_live() {
+  local pid
+  [ -f "$1" ] || return 1
+  pid="$(cat "$1" 2>/dev/null)"
+  [[ "$pid" =~ ^[0-9]+$ ]] && kill -0 "$pid" 2>/dev/null
+}
+pid_matches() {
+  local pid
+  pid_is_live "$1" || return 1
+  pid="$(cat "$1")"
+  tr '\0' ' ' <"/proc/${pid}/cmdline" 2>/dev/null | grep -Fq -- "$2"
+}
+terminate_tracked() {
+  local pidfile="$1" expected="$2" pid attempt
+  [ -f "$pidfile" ] || return 0
+  if ! pid_matches "$pidfile" "$expected"; then
+    log "refusing to kill stale PID from ${pidfile}: process identity does not match ${expected}"
+    rm -f "$pidfile"
+    return 1
+  fi
+  pid="$(cat "$pidfile")"
+  kill "$pid" 2>/dev/null || true
+  for attempt in $(seq 1 20); do
+    kill -0 "$pid" 2>/dev/null || break
+    sleep 0.25
+  done
+  if kill -0 "$pid" 2>/dev/null; then
+    log "process ${pid} (${expected}) ignored TERM; sending KILL"
+    kill -KILL "$pid" 2>/dev/null || true
+  fi
+  rm -f "$pidfile"
+}
+ensure_watchdog() {
+  if [ "${INCUS_WATCHDOG:-0}" != "1" ] && ! pid_matches "$WATCHDOG_PID" "incus-watchdog.sh"; then
+    setsid "${EMHTTP}/scripts/incus-watchdog.sh" >>"$LOG" 2>&1 &
+    echo $! >"$WATCHDOG_PID"
+  fi
+}
+cleanup_failed_start() {
+  log "startup failed; rolling back partial daemon/lxcfs resources"
+  terminate_tracked "$PIDFILE" "incusd" || true
+  terminate_tracked "$LXCFS_PID" "lxcfs" || true
+  fusermount3 -u "${INCUS_DIR}/lxcfs" 2>/dev/null || true
+  rm -f "$PIDFILE" "$LXCFS_PID"
+  health failed "daemon readiness timeout; partial startup rolled back"
+}
+
+start() {
+  rotate_log
+  if ! "${EMHTTP}/scripts/incus-preflight.sh" >>"$LOG" 2>&1; then
+    health failed "preflight failed; see $LOG"
+    echo "incus: preflight FAILED — see $LOG"; return 1
+  fi
+  mkdir -p "$INCUS_DIR"
+
+  # lxcfs first (optional but recommended: containers see their own limits).
+  if [ -x "${PREFIX}/bin/lxcfs" ] && ! mountpoint -q "${INCUS_DIR}/lxcfs" 2>/dev/null; then
+    mkdir -p "${INCUS_DIR}/lxcfs"
+    setsid "${PREFIX}/bin/lxcfs" "${INCUS_DIR}/lxcfs" >>"$LOG" 2>&1 &
+    echo $! > "$LXCFS_PID"
+  fi
+
+  if [ -S "${INCUS_DIR}/unix.socket" ] && "${PREFIX}/bin/incus" info </dev/null >/dev/null 2>&1; then
+    health ready "daemon already running"
+    ensure_watchdog
+    echo "incus: already running"; return 0
+  fi
+
+  echo "incus: starting incusd (state: ${INCUS_DIR})"
+  setsid "${PREFIX}/libexec/incus/incusd" --group incus-admin >>"$LOG" 2>&1 &
+  echo $! > "$PIDFILE"
+
+  # Wait for the API socket (up to ~15s).
+  for _ in $(seq 1 30); do
+    if "${PREFIX}/bin/incus" info </dev/null >/dev/null 2>&1; then
+      health ready "daemon socket healthy"
+      ensure_watchdog
+      echo "incus: ready"; return 0
+    fi
+    sleep 0.5
+  done
+  echo "incus: socket did not come up — check $LOG"
+  cleanup_failed_start
+  return 1
+}
+
+stop() {
+  echo "incus: stopping"
+  if [ "${INCUS_WATCHDOG:-0}" != "1" ] && pid_matches "$WATCHDOG_PID" "incus-watchdog.sh"; then
+    terminate_tracked "$WATCHDOG_PID" "incus-watchdog.sh" || true
+  fi
+  # Graceful daemon shutdown (stops instances per their config first).
+  if ! "${PREFIX}/bin/incus" admin shutdown </dev/null >/dev/null 2>&1; then
+    # Graceful path needs INCUS_DIR to point at the socket the running
+    # daemon actually bound (e.g. right after an INCUS_DIR change it won't),
+    # so fall back to a raw kill by pidfile. That doesn't cascade to
+    # incusd's own spawned children (e.g. dnsmasq for a managed bridge),
+    # so reap those explicitly by their distinctive incus-only invocation.
+    terminate_tracked "$PIDFILE" "incusd" || true
+    pkill -f 'dnsmasq.*-s incus ' 2>/dev/null
+  fi
+  terminate_tracked "$LXCFS_PID" "lxcfs" || true
+  fusermount3 -u "${INCUS_DIR}/lxcfs" 2>/dev/null
+  rm -f "$PIDFILE" "$LXCFS_PID"
+  if "${PREFIX}/bin/incus" info </dev/null >/dev/null 2>&1; then
+    health failed "daemon still responds after stop"
+    return 1
+  fi
+  health stopped "daemon and lxcfs stopped"
+}
+
+status() {
+  if "${PREFIX}/bin/incus" info </dev/null >/dev/null 2>&1; then
+    health ready "status check passed"
+    echo "incus: RUNNING"; "${PREFIX}/bin/incus" list </dev/null 2>/dev/null
+  else
+    health stopped "status check found no daemon"
+    echo "incus: STOPPED"
+  fi
+}
+
+case "$1" in
+  start)   start ;;
+  stop)    stop ;;
+  restart) stop && sleep 1 && start ;;
+  status)  status ;;
+  preflight) "${EMHTTP}/scripts/incus-preflight.sh" ;;
+  *) echo "usage: $0 {start|stop|restart|status|preflight}"; exit 1 ;;
+esac

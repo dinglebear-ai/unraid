@@ -23,9 +23,14 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Detect stale release automation
+        # SCOPE: monitors only the primary Python component (unraid-py -> v*).
+        # rust/incus/codex releases are NOT liveness-checked here — plan Task 13c
+        # sanctioned scoping to the primary and documenting it. If a component
+        # release stalls, no alert fires; generalize this over all manifest keys
+        # if that coverage becomes necessary.
         run: |
           set -euo pipefail
-          released_version="$(jq -r '.["."]' .release-please-manifest.json)"
+          released_version="$(jq -r '.["unraid-py"]' .release-please-manifest.json)"
           released_tag="v${released_version}"
           git rev-parse "$released_tag" >/dev/null
           releasable_commits="$(git log --format=%s "${released_tag}..origin/main" | grep -Ec '^(feat|fix|perf|revert)(\([^)]*\))?!?: ' || true)"
@@ -54,7 +59,7 @@ jobs:
             exit 0
           fi
 
-          body="release-please has ${releasable_commits} releasable commit(s) after ${released_tag}, but no release PR has updated within 48 hours. Check the release-please workflow and rotate RELEASE_PLEASE_TOKEN or replace it with a GitHub App credential. See docs/mcp/PUBLISH.md#release-automation-liveness."
+          body="release-please has ${releasable_commits} releasable commit(s) after ${released_tag}, but no release PR has updated within 48 hours. Check the release-please workflow and rotate RELEASE_PLEASE_TOKEN or replace it with a GitHub App credential. See unraid-py/docs/mcp/PUBLISH.md#release-automation-liveness."
           if [[ -n "$issue_number" ]]; then
             gh issue comment "$issue_number" --body "$body"
           else

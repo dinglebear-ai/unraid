@@ -1,0 +1,14 @@
+# Force LF line endings for shell scripts (they run on Linux/Unraid)
+*.sh text eol=lf
+*.plg text eol=lf
+*.cfg text eol=lf
+*.tmpl text eol=lf
+source/usr/local/emhttp/plugins/incus/event/* text eol=lf
+
+# Binary package — don't diff, don't mess with line endings
+*.txz binary
+*.tar.gz binary
+
+# TypeScript — LF preferred
+*.ts text eol=lf
+*.json text eol=lf

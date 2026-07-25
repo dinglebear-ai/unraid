@@ -1,0 +1,133 @@
+{
+  "_note": "Overlay on healthy.json. A correcting parity check is in progress. Overrides array (parityCheckStatus running) and notifications (info that a check started).",
+  "array": {
+    "array": {
+      "state": "STARTED",
+      "capacity": {
+        "kilobytes": {
+          "free": "5860000000",
+          "used": "9540000000",
+          "total": "15400000000"
+        },
+        "disks": {
+          "free": "1",
+          "used": "3",
+          "total": "4"
+        }
+      },
+      "parityCheckStatus": {
+        "status": "RUNNING",
+        "running": true,
+        "progress": 37,
+        "speed": "152 MB/s",
+        "errors": 0,
+        "correcting": true,
+        "paused": false
+      },
+      "parities": [
+        {
+          "id": "parity-1",
+          "name": "parity",
+          "device": "sdb",
+          "size": 7810000000,
+          "status": "DISK_OK",
+          "temp": 39,
+          "numErrors": 0,
+          "type": "PARITY",
+          "isSpinning": true,
+          "rotational": true
+        }
+      ],
+      "disks": [
+        {
+          "id": "disk-1",
+          "name": "disk1",
+          "device": "sdc",
+          "size": 7810000000,
+          "status": "DISK_OK",
+          "temp": 40,
+          "numErrors": 0,
+          "numReads": 1420330,
+          "numWrites": 88210,
+          "fsSize": 7810000000,
+          "fsFree": 2100000000,
+          "fsUsed": 5710000000,
+          "type": "DATA",
+          "color": "GREEN_ON",
+          "isSpinning": true,
+          "rotational": true,
+          "fsType": "xfs",
+          "comment": "media"
+        },
+        {
+          "id": "disk-2",
+          "name": "disk2",
+          "device": "sdd",
+          "size": 7810000000,
+          "status": "DISK_OK",
+          "temp": 39,
+          "numErrors": 0,
+          "numReads": 982210,
+          "numWrites": 41002,
+          "fsSize": 7810000000,
+          "fsFree": 3760000000,
+          "fsUsed": 4050000000,
+          "type": "DATA",
+          "color": "GREEN_ON",
+          "isSpinning": true,
+          "rotational": true,
+          "fsType": "xfs",
+          "comment": "appdata"
+        }
+      ],
+      "caches": [
+        {
+          "id": "cache-1",
+          "name": "cache",
+          "device": "nvme0n1",
+          "size": 1000000000,
+          "status": "DISK_OK",
+          "temp": 41,
+          "numErrors": 0,
+          "fsSize": 1000000000,
+          "fsFree": 640000000,
+          "fsUsed": 360000000,
+          "type": "CACHE",
+          "color": "GREEN_ON",
+          "isSpinning": true,
+          "rotational": false,
+          "fsType": "btrfs"
+        }
+      ]
+    }
+  },
+  "notifications": {
+    "notifications": {
+      "overview": {
+        "unread": {
+          "warning": 0,
+          "alert": 0,
+          "info": 1,
+          "total": 1
+        },
+        "archive": {
+          "warning": 2,
+          "alert": 0,
+          "info": 14,
+          "total": 16
+        }
+      },
+      "warningsAndAlerts": [
+        {
+          "id": "ntf-parity-start",
+          "title": "Parity check started",
+          "subject": "Scheduled correcting parity check",
+          "description": "A correcting parity check has started and is currently at 37%.",
+          "importance": "INFO",
+          "type": "UNREAD",
+          "timestamp": "2026-06-15T16:00:00.000Z"
+        }
+      ]
+    }
+  }
+}

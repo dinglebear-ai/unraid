@@ -1,0 +1,95 @@
+[workspace]
+# A root [package] is implicitly a workspace member; listing "." makes
+# release-please resolve "unraid-rs/./Cargo.toml" and log a spurious
+# "member . declared but did not find Cargo.toml" warning every run.
+members = ["xtask"]
+resolver = "2"
+
+[package]
+name = "unraid-rmcp"
+version = "0.2.3"
+edition = "2021"
+rust-version = "1.90"
+categories = ["command-line-utilities", "development-tools"]
+keywords = ["mcp", "unraid", "graphql", "nas", "rmcp"]
+repository = "https://github.com/dinglebear-ai/unraid-mcp"
+homepage = "https://github.com/dinglebear-ai/unraid-mcp#readme"
+description = "Rust MCP server and CLI for Unraid GraphQL operations across NAS, Docker, VM, and storage workflows."
+autobins = false
+
+[[bin]]
+name = "runraid"
+path = "src/main.rs"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal"] }
+
+# HTTP / MCP transport
+axum = "0.8"
+rmcp = { version = "1.6.0", default-features = false, features = [
+  "server",
+  "macros",
+  "transport-streamable-http-server",
+  "transport-io",
+] }
+tower-http = { version = "0.6", features = ["cors", "limit", "trace"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Config
+toml = "0.8"
+
+# OAuth + JWT
+lab-auth = { git = "https://github.com/jmagar/lab.git", rev = "87cec3241f9baef22335de9cc8629ebbcd8ba047", package = "lab-auth" }
+url = "2"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
+
+# GraphQL HTTP client
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# Typed GraphQL client (codegen from the vendored Unraid SDL). SPIKE: currently
+# powers a couple of actions; being evaluated as the path to compile-time query +
+# mutation/input type-checking across the whole API surface. We deliberately do
+# NOT enable `http-reqwest` — that pulls reqwest 0.13 (we're on 0.12). cynic is
+# used only to build typed operations + deserialize responses; transport stays on
+# our existing reqwest client.
+cynic = { version = "3" }
+
+# Errors
+anyhow = "1"
+thiserror = "2"
+dotenvy = "0.15.7"
+
+# GraphQL query AST parsing — used only by the offline mock's query router
+# (src/mock.rs) to classify a query by its real root field. Optional: pulled in
+# only with the `test-support` feature, never in a release build.
+graphql-parser = { version = "0.4", optional = true }
+
+[build-dependencies]
+# Registers the vendored Unraid SDL so cynic can type-check queries at compile time.
+cynic-codegen = "3"
+
+[features]
+test-support = ["dep:graphql-parser"]
+
+[dev-dependencies]
+unraid-rmcp = { path = ".", features = ["test-support"] }
+tempfile = "3"
+tower = { version = "0.5", features = ["util"] }
+rmcp = { version = "1.6.0", default-features = false, features = [
+  "client",
+  "transport-child-process",
+] }
+wiremock = "0.6"
+# Schema-as-contract test (tests/schema_contract.rs): validates queries +
+# fixtures against the vendored Unraid SDL.
+apollo-compiler = "1"

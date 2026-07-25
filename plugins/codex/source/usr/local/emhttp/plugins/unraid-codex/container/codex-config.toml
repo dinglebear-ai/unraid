@@ -1,0 +1,3 @@
+[mcp_servers.unraid]
+url = "https://unraid.dinglebear.ai/mcp"
+bearer_token_env_var = "UNRAID_MCP_TOKEN"

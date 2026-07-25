@@ -1,0 +1,36 @@
+name: no-large-blobs
+
+# Structural guard against re-introducing the ~746 MB of committed .txz binaries
+# that the incus history was scrubbed of during consolidation. Blocks any PR that
+# adds a *.txz or any tracked blob > 5 MB. Plugin payloads ship as release assets.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  block-large:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Fail if the PR adds any tracked blob > 5 MB or any *.txz
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          bad=$(git diff --name-only "$base"...HEAD | while read -r f; do
+            [ -f "$f" ] || continue
+            case "$f" in *.txz) echo "$f (.txz must be a release asset)"; continue;; esac
+            # The incus classic plugin vendors its Incus runtime binaries under
+            # source/usr/local/incus/ (incusd, distrobuilder, mksquashfs, ...).
+            # These are intentionally tracked and vetted by incus-classic-ci, so
+            # they are exempt from the generic large-blob size cap.
+            case "$f" in plugins/incus/source/*) continue;; esac
+            sz=$(git cat-file -s ":$f" 2>/dev/null || echo 0)
+            # NOTE: must be an `if`, not `[ ] && echo` — GitHub runs this as
+            # `bash -e`, and a false `[ ]` as the loop's last command returns
+            # non-zero, tripping errexit on every <=5MB file (a false failure).
+            if [ "$sz" -gt 5242880 ]; then echo "$f ($((sz/1048576)) MB)"; fi
+          done)
+          if [ -n "$bad" ]; then echo "Blocked large/binary additions:"; echo "$bad"; exit 1; fi

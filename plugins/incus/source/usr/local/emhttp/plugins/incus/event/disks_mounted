@@ -1,0 +1,24 @@
+#!/bin/bash
+# Fires when the array comes up. Start incusd (state lives on the array, so we
+# must wait until now) then apply the jail environment from incus.cfg.
+CFG="/boot/config/plugins/incus/incus.cfg"
+[ -f "$CFG" ] || exit 0
+. "$CFG"
+[ "${SERVICE:-disabled}" = "enabled" ] || exit 0
+
+logger -t incus "array up: starting incusd"
+attempt=1
+while ! /etc/rc.d/rc.incus start; do
+  logger -t incus "incusd failed to start (attempt ${attempt}/3)"
+  [ "$attempt" -ge 3 ] && exit 1
+  attempt=$((attempt + 1))
+  sleep 2
+done
+
+# Apply storage/ACL/bridge/profile idempotently.
+if ! /usr/local/emhttp/plugins/incus/scripts/incus-init.sh; then
+  logger -t incus "daemon started but environment reconciliation failed"
+  /etc/rc.d/rc.incus stop || true
+  exit 1
+fi
+logger -t incus "array up: daemon and containment environment ready"

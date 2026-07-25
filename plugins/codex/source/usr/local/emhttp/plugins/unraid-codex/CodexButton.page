@@ -1,0 +1,20 @@
+Menu="Buttons:5"
+Title="Codex"
+Icon="icon-u-chat"
+Tag="icon-u-chat"
+Code="e93e"
+---
+<?PHP
+/* Persistent Codex chathead for the stock Unraid webGUI. The page fragment is
+ * loaded by Unraid on every authenticated webGUI page; the actual UI lives in
+ * an isolated shadow root so neither side can leak styles into the other.
+ */
+?>
+<script src="/plugins/unraid-codex/web/unraid-codex.js?v=14"></script>
+<script>
+function CodexButton() {
+  if (window.UnraidCodex) window.UnraidCodex.toggle();
+}
+
+if (window.UnraidCodex) window.UnraidCodex.mount();
+</script>

@@ -1,5 +1,13 @@
 [tools]
-# Exact Python minor follows pyproject.toml's >=3.12 runtime floor and the
-# test/type-check configuration for this service.
+# The monorepo is polyglot: python (unraid-py), rust (unraid-rs), node
+# (incus NestJS backend + codex web + npm launchers), plus uv for the Python
+# package. Exact Python minor follows unraid-py/pyproject.toml's >=3.12 floor.
 python = "3.12"
 uv = "latest"
+# Pinned to unraid-rs's MSRV so `cargo clippy -- -D warnings` reproduces CI.
+# rust-ci.yml pins dtolnay/rust-toolchain to 1.90 and Cargo.toml declares
+# rust-version = "1.90"; tracking `latest` here meant local clippy ran on a newer
+# stable with lints CI does not have. unraid-rs/rust-toolchain.toml carries the
+# same pin for contributors who use rustup instead of mise — keep all four in sync.
+rust = "1.90"
+node = "22"

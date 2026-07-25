@@ -1,0 +1,4 @@
+web-src/node_modules/
+tests/webwright-chathead/explore/
+tests/webwright-chathead/final_runs/
+dist/*.txz

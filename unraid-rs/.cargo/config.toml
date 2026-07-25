@@ -1,0 +1,17 @@
+# =============================================================================
+# .cargo/config.toml — Cargo workspace configuration for unrust
+#
+# Most build settings (linker, profile tuning, jobs) live in the developer's
+# ~/.cargo/config.toml. This file only adds workspace-local settings that the
+# global config cannot provide.
+#
+# See docs/RUST.md for expected global config and system tool requirements.
+# See https://github.com/jmagar/rmcp-template/blob/main/docs/RUST.md for the
+# canonical family reference.
+# =============================================================================
+
+[alias]
+# The `cargo xtask` convention: `cargo xtask <cmd>` delegates to the xtask crate.
+# See: https://github.com/matklad/cargo-xtask
+xtask = "run --package xtask --"
+

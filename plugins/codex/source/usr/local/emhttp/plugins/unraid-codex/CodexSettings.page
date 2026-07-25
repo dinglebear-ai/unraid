@@ -1,0 +1,18 @@
+Menu="Utilities"
+Title="Codex"
+Icon="codex.png"
+Tag="codex.png"
+---
+<?PHP
+/* Native Unraid Settings entry for the persistent Codex chathead. The
+ * chathead owns the settings UI; this page opens its Session Inspector while
+ * preserving the stock Settings route and navigation chrome.
+ */
+?>
+<h2>Codex</h2>
+<p>Codex settings are available in the Session Inspector panel.</p>
+<input type="button" value="Open Codex Settings" onclick="window.UnraidCodex?.openSettings()">
+
+<script>
+window.UnraidCodex?.openSettings();
+</script>

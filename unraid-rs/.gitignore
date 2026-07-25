@@ -1,0 +1,166 @@
+# =============================================================================
+# .gitignore
+# Standard ignore rules for the rmcp server family (Rust + optional Node/Python).
+# =============================================================================
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+# ONLY .env.example is ever committed. Every other .env variant is blocked.
+.env
+.env.*
+*.env
+!.env.example
+
+# ── Local config (runtime settings — never commit) ───────────────────────────
+# Use /config.toml (root-anchored) so .cargo/config.toml is NOT excluded.
+/config.toml
+config.local.toml
+config/docker-hosts.toml
+
+# ── Rust ──────────────────────────────────────────────────────────────────────
+/target/
+**/*.rs.bk
+*.profraw
+*.profdata
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+*.egg
+.eggs/
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.pdm-build/
+.uv/
+pip-wheel-metadata/
+
+# ── Node / JavaScript ─────────────────────────────────────────────────────────
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.next/
+.nuxt/
+.output/
+.vercel/
+.turbo/
+*.tsbuildinfo
+
+# ── Build artifacts ───────────────────────────────────────────────────────────
+dist/
+build/
+out/
+
+# ── Generated docs ────────────────────────────────────────────────────────────
+# Do not commit build output from doc generators.
+.docs/
+book/
+site/
+_site/
+
+# ── Test / coverage artifacts ─────────────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+
+# ── Benchmarks / profiling ────────────────────────────────────────────────────
+.benchmarks/
+criterion/
+flamegraph.svg
+perf.data
+perf.data.old
+
+# ── Runtime state ─────────────────────────────────────────────────────────────
+*.db
+*.db-shm
+*.db-wal
+*.key
+*.pem
+*.cert
+*.log
+*.pid
+*.bak
+*.bak-*
+storage/
+data/
+logs/
+backups/
+
+# ── Claude Code / AI tooling ──────────────────────────────────────────────────
+.claude/settings.local.json
+.claude/worktrees/
+.omc/
+.lavra/
+.beads/
+.beads-credential-key
+.beagle/
+.dolt/
+.serena/
+.worktrees/
+.worktree/
+.worktrees
+.full-review/
+.full-review-archive-*
+.bivvy
+.superpowers/
+
+# ── IDE / editor ──────────────────────────────────────────────────────────────
+.vscode/
+.cursor/
+.windsurf/
+.1code/
+.idea/
+.zed/
+*.iml
+*.swp
+*.swo
+*~
+.emdash.json
+
+# ── Version managers / env tools ──────────────────────────────────────────────
+.direnv/
+.mise/
+.rtx/
+.trunk/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── Caches ────────────────────────────────────────────────────────────────────
+.cache/
+
+# ── Auto-generated ────────────────────────────────────────────────────────────
+# Reference docs produced by scripts/refresh-docs.sh — large, never commit.
+docs/references/
+
+# ── Personal ──────────────────────────────────────────────────────────────────
+CLAUDE.md.local
+
+# Local binary artifacts
+/bin/

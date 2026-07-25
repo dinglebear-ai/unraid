@@ -1,0 +1,51 @@
+name: codex-release
+
+# Triggered when release-please publishes a codex-v<version> release. Builds the
+# codex plugin .txz from tracked source and attaches it + the .plg to the release.
+# The .txz name tracks &version; (unraid-codex-<version>-x86_64-<build>.txz).
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codex-release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: startsWith(github.event.release.tag_name, 'codex-v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: plugins/codex
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install packaging tooling
+        run: sudo apt-get update && sudo apt-get install -y xz-utils
+
+      - name: Build codex plugin package
+        run: |
+          set -euo pipefail
+          version="${TAG#codex-v}"
+          build="$(sed -n 's/.*<!ENTITY txz[[:space:]]*"unraid-codex-[^"]*-x86_64-\([0-9]*\)\.txz".*/\1/p' unraid-codex.plg)"
+          [ -n "$build" ] || { echo "::error::could not parse build number from unraid-codex.plg &txz; entity"; exit 1; }
+          echo "VERSION=${version}" >> "$GITHUB_ENV"
+          echo "BUILD=${build}" >> "$GITHUB_ENV"
+          ./scripts/build-package.sh "$version" "$build"
+
+      - name: Run codex contract on the tree
+        run: ./tests/contract.sh
+
+      - name: Attach package + manifest to the release
+        run: |
+          gh release upload "$TAG" \
+            "dist/unraid-codex-${VERSION}-x86_64-${BUILD}.txz" \
+            unraid-codex.plg --clobber

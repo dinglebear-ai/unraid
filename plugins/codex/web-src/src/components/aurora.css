@@ -1,0 +1,630 @@
+:root,
+.dark {
+  /* Surfaces — navy lift tiers */
+  --aurora-page-bg:       #07131c;
+  --aurora-bg:            var(--aurora-page-bg);
+  --aurora-nav-bg:        #07111a;
+  --aurora-panel-medium:  #102330;
+  --aurora-panel-medium-top: rgba(20, 44, 60, 0.18);
+  --aurora-panel-strong:  #13293a;
+  --aurora-panel-strong-top: #173245;
+  --aurora-control-surface: #0c1a24;
+  --aurora-hover-bg:      #17364b;
+  --aurora-surface-raised: linear-gradient(180deg, rgba(18, 40, 56, 0.96), rgba(12, 27, 38, 0.98));
+
+  /* Borders */
+  --aurora-border-default: #1d3d4e;
+  --aurora-border-strong:  #24536c;
+
+  /* Text */
+  --aurora-text-primary: #e6f4fb;
+  --aurora-text-muted:   #a7bcc9;
+
+  /* Primary accent — Aurora cyan */
+  --aurora-accent-primary: #29b6f6;
+  --aurora-accent-strong:  #67cbfa;
+  --aurora-accent-deep:    #1c7fac;
+  --aurora-accent-lift:    #4dc8fa;
+  --aurora-accent-button:  #1da8e6;
+  --aurora-accent-foreground: #051520;
+  --aurora-accent-gradient: linear-gradient(180deg, var(--aurora-accent-lift) 0%, var(--aurora-accent-button) 100%);
+
+  /* Secondary accent — Aurora rose */
+  --aurora-accent-pink:        #f9a8c4;
+  --aurora-accent-pink-strong: #fbc4d6;
+  --aurora-accent-pink-deep:   #c46b88;
+  --aurora-accent-pink-button: #e879a0;
+  --aurora-accent-pink-foreground: #fdeaf1;
+  --aurora-rose-gradient: linear-gradient(180deg, var(--aurora-accent-pink) 0%, var(--aurora-accent-pink-button) 100%);
+
+  /* Violet removed — AI/automation identity uses --axon-orange. */
+
+  /* Expressive surface tokens — rose (extends existing rose family) */
+  --aurora-accent-pink-surface: color-mix(in srgb, var(--aurora-accent-pink) 12%, var(--aurora-panel-medium));
+  --aurora-accent-pink-border:  color-mix(in srgb, var(--aurora-accent-pink) 32%, transparent);
+
+  /* Expressive surface tokens — cyan (primary). Mirror the rose family so the
+     cyan tone tracks the theme instead of hand-mixing colors in the component. */
+  --aurora-accent-primary-surface:    color-mix(in srgb, var(--aurora-accent-primary) 12%, var(--aurora-panel-medium));
+  --aurora-accent-primary-border:     color-mix(in srgb, var(--aurora-accent-primary) 34%, transparent);
+  --aurora-accent-primary-foreground: color-mix(in srgb, var(--aurora-accent-primary) 88%, white);
+
+  /* Status — muted, never neon */
+  --aurora-success: #7dd3c7;
+  --aurora-warn:    #c6a36b;
+  --aurora-error:   #c78490;
+  --aurora-error-lift: #d9909a;
+  --aurora-error-gradient: linear-gradient(180deg, var(--aurora-error-lift) 0%, var(--aurora-error) 100%);
+  /* Semantic state families — surface / border / foreground per state */
+  --aurora-info:            #72c8f5;
+  --aurora-info-surface:    color-mix(in srgb, var(--aurora-info) 12%, var(--aurora-panel-medium));
+  --aurora-info-border:     color-mix(in srgb, var(--aurora-info) 34%, transparent);
+  --aurora-info-foreground: #dff5ff;
+
+  --aurora-success-surface:    color-mix(in srgb, var(--aurora-success) 12%, var(--aurora-panel-medium));
+  --aurora-success-border:     color-mix(in srgb, var(--aurora-success) 34%, transparent);
+  --aurora-success-foreground: #dcfbf6;
+
+  --aurora-warn-surface:    color-mix(in srgb, var(--aurora-warn) 12%, var(--aurora-panel-medium));
+  --aurora-warn-border:     color-mix(in srgb, var(--aurora-warn) 34%, transparent);
+  --aurora-warn-foreground: #f8ead0;
+
+  --aurora-error-surface:    color-mix(in srgb, var(--aurora-error) 12%, var(--aurora-panel-medium));
+  --aurora-error-border:     color-mix(in srgb, var(--aurora-error) 34%, transparent);
+  --aurora-error-foreground: #fde6eb;
+
+  --aurora-neutral:            #91a8b6;
+  --aurora-neutral-surface:    color-mix(in srgb, var(--aurora-neutral) 10%, var(--aurora-panel-medium));
+  --aurora-neutral-border:     color-mix(in srgb, var(--aurora-neutral) 28%, transparent);
+  --aurora-neutral-foreground: #d7e3ea;
+
+  /* Interaction + system */
+  --aurora-overlay:           rgba(4, 10, 14, 0.72);
+  --aurora-disabled-text:     color-mix(in srgb, var(--aurora-text-muted) 72%, var(--aurora-border-strong));
+  --aurora-disabled-surface:  color-mix(in srgb, var(--aurora-control-surface) 88%, var(--aurora-border-default));
+  --aurora-subtle-bg:         color-mix(in srgb, var(--aurora-hover-bg) 52%, transparent);
+  --aurora-selected-bg:       color-mix(in srgb, var(--aurora-accent-primary) 14%, transparent);
+  --aurora-pressed-bg:        color-mix(in srgb, var(--aurora-accent-primary) 20%, transparent);
+  --aurora-focus-ring-strong: color-mix(in srgb, var(--aurora-accent-primary) 52%, transparent);
+
+  /* --aurora-status-offline is deprecated; alias to --aurora-neutral. Remove after all consumers migrate. */
+  --aurora-status-offline: var(--aurora-neutral);
+
+  /* Code accents */
+  --aurora-code-type: #b8d9f5;
+  --aurora-code-function: var(--aurora-accent-strong);
+
+  /* Control internals */
+  --aurora-switch-thumb-gradient: linear-gradient(180deg, #ffffff 0%, #daedf7 100%);
+
+  /* Shadows & glows */
+  --aurora-shadow-medium: 0 12px 24px rgba(0, 0, 0, 0.18);
+  --aurora-shadow-strong: 0 20px 38px rgba(0, 0, 0, 0.26);
+  --aurora-highlight-medium: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  --aurora-highlight-strong: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  --aurora-active-glow: 0 0 0 1px color-mix(in srgb, #29b6f6 28%, transparent),
+                        0 2px 8px color-mix(in srgb, #29b6f6 18%, transparent);
+  --aurora-focus-ring: color-mix(in srgb, #29b6f6 30%, transparent);
+
+  /* Radii */
+  --aurora-radius-1: 14px;
+  --aurora-radius-2: 18px;
+  --aurora-radius-3: 22px;
+
+  /* Motion — Aurora easing (matches Claude Design source) */
+  --motion-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-duration-instant: 100ms;
+  --motion-duration-fast:    160ms;
+  --motion-duration-medium:  240ms;
+  --motion-duration-slow:    360ms;
+
+  /* AI / automation accent — Axon orange. Replaces violet. */
+  --axon-orange:        #ff9645;
+  --axon-orange-strong: #ffb474;
+  --axon-orange-deep:   #c96a1c;
+  --axon-orange-button: #f5801f;
+  --axon-orange-surface: color-mix(in srgb, var(--axon-orange) 14%, var(--aurora-control-surface));
+  --axon-orange-border:  color-mix(in srgb, var(--axon-orange) 36%, transparent);
+
+  /* Raised control-surface top stop (Claude Design parity) */
+  --aurora-control-surface-top: rgba(18, 40, 56, 0.96);
+
+  /* Tints — named alpha scale */
+  --aurora-tint-subtle: 12%;
+  --aurora-tint-soft:   18%;
+  --aurora-tint-medium: 30%;
+  --aurora-tint-strong: 40%;
+
+  /* Spacing scale */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3: 10px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 20px;
+  --space-7: 24px;
+
+  /* Z-index layers */
+  --z-sidebar: 30;
+  --z-popover: 40;
+  --z-modal:   50;
+  --z-toast:   60;
+
+  /* Line heights (Claude Design token names) */
+  --lh-display-tight: 1.04;
+  --lh-display:       1.16;
+  --lh-body:          1.55;
+  --lh-dense:         1.40;
+
+  /* Unprefixed radius aliases — Claude Design components reference these */
+  --radius-1: var(--aurora-radius-1);
+  --radius-2: var(--aurora-radius-2);
+  --radius-3: var(--aurora-radius-3);
+  --radius-pill: 999px;
+
+  /* Unprefixed font aliases — Claude Design components reference these.
+     --font-mono intentionally resolves to the repo's JetBrains Mono stack. */
+  --font-display: var(--aurora-font-display);
+  --font-sans:    var(--aurora-font-sans);
+  --font-mono:    var(--aurora-font-mono);
+
+  /* Live-preview palette — restricted scope (exposure-policy editor) */
+  --aurora-preview-allowed:   #00e676;
+  --aurora-preview-unmatched: #ff9100;
+  --aurora-preview-highlight: #ffea00;
+
+  /* Typography */
+  --aurora-font-display: 'Manrope', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --aurora-font-sans:    'Inter', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --aurora-font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --aurora-type-body: 14px;
+  --aurora-type-body-sm: 13px;
+  --aurora-type-control: 13px;
+  --aurora-type-table: 13px;
+  --aurora-type-label: 12px;
+  --aurora-type-caption: 11px;
+  --aurora-type-micro: 10.5px;
+  --aurora-line-body: 1.58;
+  --aurora-line-ui: 1.35;
+  --aurora-line-dense: 1.28;
+  --aurora-letter-ui: 0.005em;
+  --aurora-letter-label: 0.012em;
+  --aurora-letter-meta: 0.018em;
+  --aurora-letter-eyebrow: 0.095em;
+  --aurora-weight-body: 480;
+  --aurora-weight-ui: 560;
+  --aurora-weight-label: 650;
+  --aurora-weight-heading: 760;
+
+  /* Page shell — the two-radial aurora wash */
+  --aurora-shell-bg: radial-gradient(circle at 12% 0%, rgba(41, 182, 246, 0.09), transparent 28%),
+                     radial-gradient(circle at 88% 0%, rgba(28, 127, 172, 0.10), transparent 24%),
+                     var(--aurora-page-bg);
+
+  /* shadcn token bridge — dark */
+  --background:           var(--aurora-page-bg);
+  --foreground:           var(--aurora-text-primary);
+  --card:                 var(--aurora-panel-medium);
+  --card-foreground:      var(--aurora-text-primary);
+  --popover:              var(--aurora-panel-strong);
+  --popover-foreground:   var(--aurora-text-primary);
+  --primary:              var(--aurora-accent-primary);
+  --primary-foreground:   var(--aurora-accent-foreground);
+  --secondary:            var(--aurora-panel-medium);
+  --secondary-foreground: var(--aurora-text-primary);
+  --muted:                var(--aurora-control-surface);
+  --muted-foreground:     var(--aurora-text-muted);
+  --accent:               var(--aurora-hover-bg);
+  --accent-foreground:    var(--aurora-text-primary);
+  --destructive:          var(--aurora-error);
+  --destructive-foreground: var(--aurora-text-primary);
+  --border:               var(--aurora-border-default);
+  --input:                var(--aurora-control-surface);
+  --ring:                 var(--aurora-focus-ring);
+  --radius:               14px;
+  --sidebar:              var(--aurora-nav-bg);
+  --sidebar-foreground:   var(--aurora-text-primary);
+  --sidebar-primary:      var(--aurora-accent-primary);
+  --sidebar-primary-foreground: var(--aurora-accent-foreground);
+  --sidebar-accent:       var(--aurora-hover-bg);
+  --sidebar-accent-foreground: var(--aurora-text-primary);
+  --sidebar-border:       var(--aurora-border-default);
+  --sidebar-ring:         var(--aurora-focus-ring);
+}
+
+/* ─── Light ─────────────────────────────────────────────────────────────── */
+.light {
+  --aurora-page-bg:        #f0f6f8;
+  --aurora-bg:             var(--aurora-page-bg);
+  --aurora-nav-bg:         #e4f0f5;
+  --aurora-panel-medium:   #ffffff;
+  --aurora-panel-medium-top: rgba(255, 255, 255, 0.5);
+  --aurora-panel-strong:   #f8fbfc;
+  --aurora-panel-strong-top: #ffffff;
+  --aurora-control-surface: #edf5f8;
+  --aurora-control-surface-top: rgba(215, 232, 239, 0.96);
+  --axon-orange:        #e0731a;
+  --axon-orange-strong: #c25f10;
+  --axon-orange-deep:   #a8540e;
+  --axon-orange-button: #cc640f;
+  --axon-orange-surface: color-mix(in srgb, var(--axon-orange) 10%, var(--aurora-panel-medium));
+  --axon-orange-border:  color-mix(in srgb, var(--axon-orange) 28%, transparent);
+  --aurora-hover-bg:       #dceef4;
+  --aurora-surface-raised: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(237, 245, 248, 0.98));
+  --aurora-border-default: #b8d0da;
+  --aurora-border-strong:  #8fb4c4;
+  --aurora-text-primary:   #07131c;
+  --aurora-text-muted:     #3d6070;
+  --aurora-accent-primary: #0288d1;
+  --aurora-accent-strong:  #0277bd;
+  --aurora-accent-deep:    #01579b;
+  --aurora-accent-lift:    #1aa6e8;
+  --aurora-accent-button:  #0277bd;
+  --aurora-accent-foreground: #ffffff;
+  --aurora-accent-pink:        #d63a6f;
+  --aurora-accent-pink-strong: #e0527f;
+  --aurora-accent-pink-deep:   #a0284f;
+  --aurora-accent-pink-button: #b82f60;
+  --aurora-accent-pink-foreground: #6f1636;
+
+  /* Violet removed — AI/automation identity uses --axon-orange. */
+
+  /* Rose surfaces (light) */
+  --aurora-accent-pink-surface: color-mix(in srgb, var(--aurora-accent-pink) 10%, var(--aurora-panel-medium));
+  --aurora-accent-pink-border:  color-mix(in srgb, var(--aurora-accent-pink) 26%, transparent);
+
+  /* Cyan (primary) surfaces (light) — foreground darkens for contrast on the
+     light tinted surface (the dark-theme 88%-white mix would be illegible here). */
+  --aurora-accent-primary-surface:    color-mix(in srgb, var(--aurora-accent-primary) 10%, var(--aurora-panel-medium));
+  --aurora-accent-primary-border:     color-mix(in srgb, var(--aurora-accent-primary) 30%, transparent);
+  --aurora-accent-primary-foreground: color-mix(in srgb, var(--aurora-accent-primary) 45%, #07131c);
+
+  --aurora-success: #2d7d6e;
+  --aurora-warn:    #8a6914;
+  --aurora-error:   #9c3545;
+  --aurora-error-lift: #b84a5b;
+
+  /* Semantic families (light) */
+  --aurora-info:            #0f7db8;
+  --aurora-info-surface:    color-mix(in srgb, var(--aurora-info) 10%, var(--aurora-panel-medium));
+  --aurora-info-border:     color-mix(in srgb, var(--aurora-info) 26%, transparent);
+  --aurora-info-foreground: #0a4f74;
+
+  --aurora-success-surface:    color-mix(in srgb, var(--aurora-success) 12%, var(--aurora-panel-medium));
+  --aurora-success-border:     color-mix(in srgb, var(--aurora-success) 24%, transparent);
+  --aurora-success-foreground: #184b43;
+
+  --aurora-warn-surface:    color-mix(in srgb, var(--aurora-warn) 12%, var(--aurora-panel-medium));
+  --aurora-warn-border:     color-mix(in srgb, var(--aurora-warn) 24%, transparent);
+  --aurora-warn-foreground: #5c450c;
+
+  --aurora-error-surface:    color-mix(in srgb, var(--aurora-error) 10%, var(--aurora-panel-medium));
+  --aurora-error-border:     color-mix(in srgb, var(--aurora-error) 24%, transparent);
+  --aurora-error-foreground: #6f2330;
+
+  --aurora-neutral:            #6f8793;
+  --aurora-neutral-surface:    color-mix(in srgb, var(--aurora-neutral) 12%, var(--aurora-panel-medium));
+  --aurora-neutral-border:     color-mix(in srgb, var(--aurora-neutral) 24%, transparent);
+  --aurora-neutral-foreground: #334e5d;
+
+  /* Interaction (light) */
+  --aurora-overlay:           rgba(7, 19, 28, 0.18);
+  --aurora-disabled-text:     color-mix(in srgb, var(--aurora-text-muted) 66%, var(--aurora-border-strong));
+  --aurora-disabled-surface:  color-mix(in srgb, var(--aurora-control-surface) 78%, var(--aurora-panel-medium));
+  --aurora-subtle-bg:         color-mix(in srgb, var(--aurora-hover-bg) 66%, transparent);
+  --aurora-selected-bg:       color-mix(in srgb, var(--aurora-accent-primary) 10%, var(--aurora-panel-medium));
+  --aurora-pressed-bg:        color-mix(in srgb, var(--aurora-accent-primary) 16%, var(--aurora-panel-medium));
+  --aurora-focus-ring-strong: color-mix(in srgb, var(--aurora-accent-primary) 40%, transparent);
+
+  /* --aurora-status-offline is deprecated; alias to --aurora-neutral. Remove after all consumers migrate. */
+  --aurora-status-offline: var(--aurora-neutral);
+  --aurora-code-type: #24536c;
+  --aurora-code-function: #01579b;
+  --aurora-switch-thumb-gradient: linear-gradient(180deg, #ffffff 0%, #d8edf6 100%);
+  --aurora-shadow-medium: 0 4px 12px rgba(7, 19, 28, 0.08);
+  --aurora-shadow-strong: 0 8px 24px rgba(7, 19, 28, 0.12);
+  --aurora-shell-bg: radial-gradient(circle at 12% 0%, rgba(2, 136, 209, 0.06), transparent 28%),
+                     radial-gradient(circle at 88% 0%, rgba(1, 87, 155, 0.05), transparent 24%),
+                     var(--aurora-page-bg);
+
+  --background:           var(--aurora-page-bg);
+  --foreground:           var(--aurora-text-primary);
+  --card:                 var(--aurora-panel-medium);
+  --card-foreground:      var(--aurora-text-primary);
+  --popover:              var(--aurora-panel-strong);
+  --popover-foreground:   var(--aurora-text-primary);
+  --primary:              var(--aurora-accent-primary);
+  --primary-foreground:   var(--aurora-accent-foreground);
+  --secondary:            var(--aurora-control-surface);
+  --secondary-foreground: var(--aurora-text-primary);
+  --muted:                var(--aurora-control-surface);
+  --muted-foreground:     var(--aurora-text-muted);
+  --accent:               var(--aurora-hover-bg);
+  --accent-foreground:    var(--aurora-text-primary);
+  --destructive:          var(--aurora-error);
+  --border:               var(--aurora-border-default);
+  --input:                var(--aurora-control-surface);
+  --ring:                 var(--aurora-focus-ring);
+  --sidebar:              var(--aurora-nav-bg);
+  --sidebar-border:       var(--aurora-border-default);
+}
+
+/* ─── Page shell utility ─────────────────────────────────────────────────── */
+.aurora-page-shell {
+  min-height: 100vh;
+  background: var(--aurora-shell-bg);
+  color: var(--aurora-text-primary);
+  font-family: var(--aurora-font-sans);
+  font-feature-settings: "kern" 1, "liga" 1, "cv05" 1, "cv10" 1, "tnum" 0;
+  font-size: var(--aurora-type-body);
+  font-synthesis-weight: none;
+  letter-spacing: 0;
+  line-height: var(--aurora-line-body);
+  text-rendering: geometricPrecision;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+}
+
+.aurora-nav-shell {
+  background: var(--aurora-nav-bg);
+  border-right: 1px solid var(--aurora-border-default);
+}
+
+.aurora-text-body {
+  color: var(--aurora-text-primary);
+  font-family: var(--aurora-font-sans);
+  font-size: var(--aurora-type-body);
+  font-weight: var(--aurora-weight-body);
+  letter-spacing: 0;
+  line-height: var(--aurora-line-body);
+}
+
+.aurora-text-body-sm {
+  color: var(--aurora-text-primary);
+  font-family: var(--aurora-font-sans);
+  font-size: var(--aurora-type-body-sm);
+  font-weight: var(--aurora-weight-body);
+  letter-spacing: var(--aurora-letter-ui);
+  line-height: 1.5;
+}
+
+.aurora-text-ui {
+  font-family: var(--aurora-font-sans);
+  font-size: var(--aurora-type-body-sm);
+  font-weight: var(--aurora-weight-ui);
+  letter-spacing: var(--aurora-letter-ui);
+  line-height: var(--aurora-line-ui);
+}
+
+.aurora-text-caption {
+  font-family: var(--aurora-font-sans);
+  font-size: var(--aurora-type-caption);
+  font-weight: var(--aurora-weight-ui);
+  letter-spacing: var(--aurora-letter-label);
+  line-height: 1.35;
+}
+
+.aurora-text-eyebrow {
+  font-family: var(--aurora-font-sans);
+  font-size: var(--aurora-type-caption);
+  font-weight: var(--aurora-weight-label);
+  letter-spacing: var(--aurora-letter-eyebrow);
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.aurora-text-label {
+  color: var(--aurora-text-primary);
+  font-family: var(--aurora-font-sans);
+  font-size: var(--aurora-type-label);
+  font-weight: var(--aurora-weight-label);
+  letter-spacing: var(--aurora-letter-label);
+  line-height: var(--aurora-line-ui);
+}
+
+.aurora-text-control {
+  font-family: var(--aurora-font-sans);
+  font-size: var(--aurora-type-control);
+  font-weight: var(--aurora-weight-ui);
+  letter-spacing: var(--aurora-letter-ui);
+  line-height: var(--aurora-line-dense);
+}
+
+.aurora-text-table {
+  font-family: var(--aurora-font-sans);
+  font-size: var(--aurora-type-table);
+  font-weight: var(--aurora-weight-body);
+  letter-spacing: var(--aurora-letter-ui);
+  line-height: 1.42;
+}
+
+.aurora-text-meta {
+  color: var(--aurora-text-muted);
+  font-family: var(--aurora-font-sans);
+  font-size: var(--aurora-type-caption);
+  font-weight: var(--aurora-weight-ui);
+  letter-spacing: var(--aurora-letter-meta);
+  line-height: 1.35;
+}
+
+.aurora-text-code {
+  font-family: var(--aurora-font-mono);
+  font-size: 0.93em;
+  font-weight: 520;
+  letter-spacing: 0;
+}
+
+.aurora-text-section {
+  color: var(--aurora-text-primary);
+  font-family: var(--aurora-font-display);
+  font-size: 18px;
+  font-weight: var(--aurora-weight-heading);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.aurora-text-display-1 {
+  color: var(--aurora-text-primary);
+  font-family: var(--aurora-font-display);
+  font-size: clamp(24px, 5vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.aurora-text-display-2 {
+  color: var(--aurora-text-primary);
+  font-family: var(--aurora-font-display);
+  font-size: clamp(17px, 3vw, 19px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+/* Marketing scale — site landing/section heroes only. A scaled display-1:
+   same Manrope face, same -0.045em tracking, larger optical size. Not for
+   in-app/operator surfaces (use display-1/-2 there). */
+.aurora-text-display-hero {
+  color: var(--aurora-text-primary);
+  font-family: var(--aurora-font-display);
+  font-size: clamp(40px, 7vw, 76px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+
+.aurora-text-lead {
+  color: var(--aurora-text-muted);
+  font-family: var(--aurora-font-sans);
+  font-size: clamp(15px, 2.2vw, 18px);
+  font-weight: var(--aurora-weight-body);
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+.aurora-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      90deg,
+      var(--aurora-accent-primary) 0%,
+      var(--aurora-accent-primary) var(--aurora-slider-value, 0%),
+      var(--aurora-control-surface) var(--aurora-slider-value, 0%),
+      var(--aurora-control-surface) 100%
+    );
+  border: 1px solid var(--aurora-border-strong);
+}
+
+.aurora-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 999px;
+  background: var(--aurora-accent-primary);
+  border: 2px solid var(--aurora-panel-strong);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--aurora-accent-primary) 45%, transparent),
+    0 0 12px color-mix(in srgb, var(--aurora-accent-primary) 35%, transparent);
+}
+
+.aurora-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--aurora-control-surface);
+  border: 1px solid var(--aurora-border-strong);
+}
+
+.aurora-slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--aurora-accent-primary);
+}
+
+.aurora-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--aurora-accent-primary);
+  border: 2px solid var(--aurora-panel-strong);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--aurora-accent-primary) 45%, transparent),
+    0 0 12px color-mix(in srgb, var(--aurora-accent-primary) 35%, transparent);
+}
+
+/* ─── Scrollbars ───────────────────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--aurora-border-strong) 82%, var(--aurora-accent-primary))
+    color-mix(in srgb, var(--aurora-control-surface) 72%, transparent);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--aurora-control-surface) 72%, transparent);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--aurora-border-strong) 82%, var(--aurora-accent-primary)) 0%,
+    color-mix(in srgb, var(--aurora-border-strong) 70%, var(--aurora-accent-deep)) 100%
+  );
+  border: 2px solid color-mix(in srgb, var(--aurora-control-surface) 80%, transparent);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    var(--aurora-accent-strong) 0%,
+    var(--aurora-accent-primary) 100%
+  );
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.aurora-page-shell, [class^="aurora-"], [class*=" aurora-"]) *,
+  :where(.aurora-page-shell, [class^="aurora-"], [class*=" aurora-"]) {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* Badge live-dot pulse. Lives here (not injected at runtime by the component)
+   so it is SSR-safe, CSP-safe, and present on first paint. The dot sets
+   --badge-dot-color inline; this one keyframe works across every tone. */
+@keyframes aurora-badge-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--badge-dot-color) 40%, transparent),
+      0 0 4px var(--badge-dot-color);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px transparent,
+      0 0 6px var(--badge-dot-color);
+  }
+}
+
+.aurora-badge-dot--pulse {
+  animation: aurora-badge-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-badge-dot--pulse {
+    animation: none;
+  }
+}

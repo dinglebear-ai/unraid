@@ -1,0 +1,144 @@
+name: rust-ci
+
+on:
+  push:
+    paths: ["unraid-rs/**", ".github/workflows/rust-ci.yml"]
+  pull_request:
+    paths: ["unraid-rs/**", ".github/workflows/rust-ci.yml"]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+# All run: steps execute inside the crate at unraid-rs/. Secret scanning is
+# handled repo-wide by secret-scan.yml; a tracked-.env guard is centralised too.
+defaults:
+  run:
+    working-directory: unraid-rs
+
+jobs:
+  fmt:
+    name: Formatting
+    # SECURITY: self-hosted runs on the Unraid box. Never execute untrusted
+    # fork-PR code here (build.rs/proc-macros/npm run arbitrary code). Runs on
+    # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, unraid]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      # Pinned to the project MSRV (Cargo.toml rust-version) so CI enforces it.
+      - uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39  # 1.90
+        with:
+          toolchain: "1.90"
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+  clippy:
+    name: Clippy
+    # SECURITY: self-hosted runs on the Unraid box. Never execute untrusted
+    # fork-PR code here (build.rs/proc-macros/npm run arbitrary code). Runs on
+    # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, unraid]
+    env:
+      # Keep git dependencies out of the runner's shared Cargo checkout cache.
+      # A partially-pruned checkout there can make Clippy fail before compiling.
+      CARGO_HOME: ${{ github.workspace }}/.cargo-home-clippy
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      # Pinned to the project MSRV (Cargo.toml rust-version) so CI enforces it.
+      - uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39  # 1.90
+        with:
+          toolchain: "1.90"
+          components: clippy
+
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
+        with:
+          workspaces: unraid-rs
+
+      - name: Clippy
+        # --all-targets + test-support so the offline mock, example, and test
+        # code (gated behind the feature) are linted too, not just the lib/bin.
+        run: cargo clippy --all-targets --features test-support -- -D warnings
+
+  test:
+    name: Tests
+    # SECURITY: self-hosted runs on the Unraid box. Never execute untrusted
+    # fork-PR code here (build.rs/proc-macros/npm run arbitrary code). Runs on
+    # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, unraid]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      # Pinned to the project MSRV (Cargo.toml rust-version) so CI enforces it.
+      - uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39  # 1.90
+        with:
+          toolchain: "1.90"
+
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
+        with:
+          workspaces: unraid-rs
+
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@7572810d7dd469b651bb7793945692cf78da5dd7  # v2
+        with:
+          tool: nextest
+
+      - name: Run tests
+        run: cargo nextest run --profile ci
+
+      # nextest doesn't build examples; build the standalone mock so its
+      # breakage is caught in CI too.
+      - name: Build example (mock server)
+        run: cargo build --example mock_unraid --features test-support
+
+  check-toml:
+    name: TOML Format
+    # SECURITY: self-hosted runs on the Unraid box. Never execute untrusted
+    # fork-PR code here (build.rs/proc-macros/npm run arbitrary code). Runs on
+    # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, unraid]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install taplo
+        uses: taiki-e/install-action@7572810d7dd469b651bb7793945692cf78da5dd7  # v2
+        with:
+          tool: taplo-cli
+
+      - name: Check TOML formatting
+        run: taplo check
+
+  npm:
+    name: npm launcher
+    # SECURITY: self-hosted runs on the Unraid box. Never execute untrusted
+    # fork-PR code here (build.rs/proc-macros/npm run arbitrary code). Runs on
+    # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, unraid]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - name: Test npm launcher
+        run: npm test --prefix packages/unraid-rmcp
+      - name: Check npm launcher syntax
+        run: npm run check --prefix packages/unraid-rmcp
+      - name: Dry-run npm package
+        run: npm pack --dry-run --json ./packages/unraid-rmcp
+      # Covers every unraid-rs version carrier, including the agents/unraid-rs/
+      # plugin manifests that live outside this crate. Nothing invoked this script
+      # after the consolidation, which is how server.json drifted out of
+      # release-please's reach unnoticed.
+      - name: Version sync across all unraid-rs version carriers
+        working-directory: ${{ github.workspace }}
+        run: bash unraid-rs/scripts/check-version-sync.sh unraid-rs

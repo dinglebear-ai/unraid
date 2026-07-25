@@ -1,0 +1,37 @@
+{
+  "name": "incus-settings-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build && vite build -c vite.dashboard.config.ts",
+    "build:settings": "vite build",
+    "build:dashboard": "vite build -c vite.dashboard.config.ts",
+    "dev": "vite",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@vueuse/core": "^13.8.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "ghostty-web": "^0.4.0",
+    "graphql-ws": "^5.16.0",
+    "reka-ui": "^2.5.0",
+    "smol-toml": "^1.7.0",
+    "tailwind-merge": "^2.6.0",
+    "vue": "^3.5.20"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.12",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitest/coverage-v8": "^4.1.10",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^20.8.3",
+    "tailwindcss": "^4.1.12",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.10",
+    "vue-tsc": "^2.2.0"
+  }
+}

@@ -8,7 +8,19 @@
       "name": "unraid-mcp",
       "source": {
         "source": "local",
-        "path": "./plugins/unraid"
+        "path": "./agents/unraid-py"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Infrastructure"
+    },
+    {
+      "name": "runraid",
+      "source": {
+        "source": "local",
+        "path": "./agents/unraid-rs"
       },
       "policy": {
         "installation": "AVAILABLE",

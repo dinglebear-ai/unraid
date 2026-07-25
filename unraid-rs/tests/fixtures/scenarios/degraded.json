@@ -1,0 +1,236 @@
+{
+  "_note": "Overlay on healthy.json. Array still started but a data disk is disabled, UPS is on battery, and there are unread warnings. Only the keys present here override the baseline.",
+  "array": {
+    "array": {
+      "state": "STARTED",
+      "capacity": {
+        "kilobytes": {
+          "free": "5860000000",
+          "used": "9540000000",
+          "total": "15400000000"
+        },
+        "disks": {
+          "free": "1",
+          "used": "3",
+          "total": "4"
+        }
+      },
+      "parityCheckStatus": {
+        "status": "COMPLETED",
+        "running": false,
+        "progress": 0,
+        "speed": null,
+        "errors": 0,
+        "correcting": false,
+        "paused": false
+      },
+      "parities": [
+        {
+          "id": "parity-1",
+          "name": "parity",
+          "device": "sdb",
+          "size": 7810000000,
+          "status": "DISK_OK",
+          "temp": 41,
+          "numErrors": 0,
+          "type": "PARITY",
+          "isSpinning": true,
+          "rotational": true
+        }
+      ],
+      "disks": [
+        {
+          "id": "disk-1",
+          "name": "disk1",
+          "device": "sdc",
+          "size": 7810000000,
+          "status": "DISK_DSBL",
+          "temp": 49,
+          "numErrors": 1843,
+          "numReads": 142033,
+          "numWrites": 88210,
+          "fsSize": 7810000000,
+          "fsFree": 2100000000,
+          "fsUsed": 5710000000,
+          "type": "DATA",
+          "color": "RED_ON",
+          "isSpinning": true,
+          "rotational": true,
+          "fsType": "xfs",
+          "comment": "media"
+        },
+        {
+          "id": "disk-2",
+          "name": "disk2",
+          "device": "sdd",
+          "size": 7810000000,
+          "status": "DISK_OK",
+          "temp": 36,
+          "numErrors": 0,
+          "numReads": 98221,
+          "numWrites": 41002,
+          "fsSize": 7810000000,
+          "fsFree": 3760000000,
+          "fsUsed": 4050000000,
+          "type": "DATA",
+          "color": "GREEN_ON",
+          "isSpinning": true,
+          "rotational": true,
+          "fsType": "xfs",
+          "comment": "appdata"
+        }
+      ],
+      "caches": [
+        {
+          "id": "cache-1",
+          "name": "cache",
+          "device": "nvme0n1",
+          "size": 1000000000,
+          "status": "DISK_OK",
+          "temp": 44,
+          "numErrors": 0,
+          "fsSize": 1000000000,
+          "fsFree": 120000000,
+          "fsUsed": 880000000,
+          "type": "CACHE",
+          "color": "YELLOW_ON",
+          "isSpinning": true,
+          "rotational": false,
+          "fsType": "btrfs"
+        }
+      ]
+    }
+  },
+  "notifications": {
+    "notifications": {
+      "overview": {
+        "unread": {
+          "warning": 2,
+          "alert": 1,
+          "info": 0,
+          "total": 3
+        },
+        "archive": {
+          "warning": 5,
+          "alert": 1,
+          "info": 14,
+          "total": 20
+        }
+      },
+      "warningsAndAlerts": [
+        {
+          "id": "ntf-disk1-dsbl",
+          "title": "Disk 1 in error state",
+          "subject": "Disk disabled (disk1)",
+          "description": "Device sdc has been disabled after 1843 write errors. Contents are emulated from parity.",
+          "importance": "ALERT",
+          "type": "UNREAD",
+          "timestamp": "2026-06-15T17:40:00.000Z"
+        },
+        {
+          "id": "ntf-cache-space",
+          "title": "Cache pool low on space",
+          "subject": "Cache 88% full",
+          "description": "The cache pool is running low on free space; run the mover.",
+          "importance": "WARNING",
+          "type": "UNREAD",
+          "timestamp": "2026-06-15T17:10:00.000Z"
+        },
+        {
+          "id": "ntf-cpu-temp",
+          "title": "High disk temperature",
+          "subject": "disk1 at 49C",
+          "description": "Disk temperature exceeded the warning threshold.",
+          "importance": "WARNING",
+          "type": "UNREAD",
+          "timestamp": "2026-06-15T16:55:00.000Z"
+        }
+      ]
+    }
+  },
+  "ups": {
+    "upsDevices": [
+      {
+        "id": "ups-1",
+        "name": "APC Back-UPS",
+        "model": "Back-UPS ES 700G",
+        "status": "On Battery",
+        "battery": {
+          "chargeLevel": 72,
+          "estimatedRuntime": 960,
+          "health": "Good"
+        },
+        "power": {
+          "inputVoltage": 0.0,
+          "outputVoltage": 120.0,
+          "loadPercentage": 41
+        }
+      }
+    ]
+  },
+  "metrics": {
+    "metrics": {
+      "cpu": {
+        "percentTotal": 78.9,
+        "cpus": [
+          {
+            "percentTotal": 82.0,
+            "percentUser": 70.0,
+            "percentSystem": 12.0,
+            "percentIdle": 18.0
+          },
+          {
+            "percentTotal": 75.8,
+            "percentUser": 60.0,
+            "percentSystem": 15.8,
+            "percentIdle": 24.2
+          }
+        ]
+      },
+      "memory": {
+        "total": 34359738368,
+        "used": 30923764531,
+        "free": 3435973837,
+        "available": 3435973837,
+        "percentTotal": 90.0,
+        "swapTotal": 4294967296,
+        "swapUsed": 1073741824,
+        "swapFree": 3221225472,
+        "percentSwapTotal": 25.0
+      },
+      "temperature": {
+        "sensors": [
+          {
+            "id": "cpu-pkg",
+            "name": "Tctl",
+            "type": "CPU_PACKAGE",
+            "location": "k10temp",
+            "current": {
+              "value": 84.0,
+              "unit": "CELSIUS"
+            },
+            "warning": 80.0,
+            "critical": 95.0
+          },
+          {
+            "id": "mb",
+            "name": "MB Temp",
+            "type": "MOTHERBOARD",
+            "location": "nct6798",
+            "current": {
+              "value": 52.0,
+              "unit": "CELSIUS"
+            },
+            "warning": 60.0,
+            "critical": 70.0
+          }
+        ],
+        "summary": {
+          "average": 68.0,
+          "warningCount": 1,
+          "criticalCount": 0
+        }
+      }
+    }
+  }
+}

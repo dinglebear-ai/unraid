@@ -1,0 +1,63 @@
+{
+  "name": "unraid-rmcp",
+  "version": "0.2.3",
+  "description": "Node launcher for the Unraid Rust MCP server and runraid CLI for NAS, Docker, VM, and storage workflows.",
+  "license": "MIT",
+  "homepage": "https://github.com/dinglebear-ai/unraid-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dinglebear-ai/unraid-mcp.git",
+    "directory": "packages/unraid-rmcp"
+  },
+  "bugs": {
+    "url": "https://github.com/dinglebear-ai/unraid-mcp/issues"
+  },
+  "bin": {
+    "unraid-rmcp": "bin/runraid.js",
+    "runraid": "bin/runraid.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "scripts/",
+    "README.md",
+    "LICENSE*",
+    "package.json"
+  ],
+  "scripts": {
+    "prepack": "node scripts/sync-readme.js",
+    "postinstall": "node scripts/install.js",
+    "test": "node --test",
+    "check": "node --check bin/runraid.js && node --check scripts/install.js && node --check lib/platform.js && node --check scripts/sync-readme.js && node --check scripts/check-package.js && node scripts/check-package.js",
+    "prepublishOnly": "node scripts/check-package.js --release"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "rmcp",
+    "rust",
+    "unraid",
+    "nas",
+    "graphql",
+    "storage",
+    "docker",
+    "virtualization",
+    "homelab",
+    "cli",
+    "claude-code",
+    "codex",
+    "gemini",
+    "automation",
+    "oauth"
+  ],
+  "mcpName": "ai.dinglebear/unraid-rmcp",
+  "binaryVersion": "0.2.2",
+  "author": {
+    "name": "dinglebear.ai",
+    "url": "https://dinglebear.ai"
+  }
+}

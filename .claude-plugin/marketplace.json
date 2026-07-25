@@ -10,15 +10,15 @@
   "plugins": [
     {
       "name": "unraid-mcp",
-      "source": "./plugins/unraid",
-      "description": "Query, monitor, and manage Unraid servers via GraphQL API through MCP tools. Supports system info, Docker, VMs, array/parity, notifications, plugins, rclone, and live telemetry.",
+      "source": "./agents/unraid-py",
+      "description": "Query, monitor, and manage Unraid servers via the Python MCP server (GraphQL). System info, Docker, VMs, array/parity, notifications, plugins, rclone, live telemetry.",
       "author": {
         "name": "Jacob Magar",
         "email": "jmagar@users.noreply.github.com",
         "url": "https://github.com/jmagar"
       },
-      "homepage": "https://github.com/jmagar/unraid-mcp",
-      "repository": "https://github.com/jmagar/unraid-mcp",
+      "homepage": "https://github.com/dinglebear-ai/unraid-mcp",
+      "repository": "https://github.com/dinglebear-ai/unraid-mcp",
       "license": "MIT",
       "category": "infrastructure",
       "keywords": [
@@ -27,6 +27,29 @@
         "mcp",
         "graphql",
         "docker",
+        "nas",
+        "monitoring"
+      ]
+    },
+    {
+      "name": "runraid",
+      "source": "./agents/unraid-rs",
+      "description": "Unraid monitoring via the Rust MCP server + CLI (single static binary). Bearer/OAuth auth, systemd or Docker deployment.",
+      "author": {
+        "name": "Jacob Magar",
+        "email": "jmagar@users.noreply.github.com",
+        "url": "https://github.com/jmagar"
+      },
+      "homepage": "https://github.com/dinglebear-ai/unraid-mcp",
+      "repository": "https://github.com/dinglebear-ai/unraid-mcp",
+      "license": "MIT",
+      "category": "infrastructure",
+      "keywords": [
+        "unraid",
+        "homelab",
+        "mcp",
+        "rust",
+        "cli",
         "nas",
         "monitoring"
       ]

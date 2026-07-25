@@ -1,0 +1,517 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE PLUGIN [
+  <!ENTITY name      "incus">
+  <!ENTITY author    "jmagar">
+  <!ENTITY version   "2026.7.24"> <!-- x-release-please-version -->
+  <!ENTITY launch    "Settings/IncusSettings">
+  <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/plugins/incus">
+  <!ENTITY pluginURL "&gitURL;/&name;.plg">
+  <!ENTITY txz       "&name;-unraid-7.0.0-55-x86_64-1.txz">
+  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid-mcp/releases/download/incus-v&version;/&txz;">
+  <!ENTITY md5       "fe0ac455ac84bc928f9bdadf57c518b7">
+  <!ENTITY sha256    "ae3615b26aa980f2331812fa7f8e881d16ed70f03bb0370a21ccb4de6307f157">
+  <!ENTITY plugin    "/boot/config/plugins/&name;">
+  <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
+]>
+
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;">
+
+<CHANGES>
+###2026.07.23a
+- Prepare root's subordinate UID/GID ranges during daemon preflight so Incus
+  starts with a functional idmap on fresh Unraid boots and can launch
+  unprivileged containers without a manual daemon restart.
+
+###2026.07.23
+- Restore executable permissions on every private runtime helper and verify
+  their real invocation and shared-library resolution before publication.
+- Make carry-forward package builds byte-for-byte deterministic by normalizing
+  archive ordering and mtimes.
+- Prevent package installation from making Unraid system directories
+  world-writable: omit the archive root entry, normalize all shipped
+  directories to mode 0755, and reject unsafe directory metadata in release
+  verification.
+
+###2026.07.22
+- Fix API activation on current Unraid API releases by registering the staged
+  backend in both the persistent plugin enable-list and the runtime package
+  manifest while the API is stopped, avoiding its config-watcher overwrite.
+- Make registration idempotent and transactional: failed activation restores
+  the previous backend and both loader files; uninstall removes only Incus.
+- Fix fresh-install rollback to remove the actual versioned Slackware package.
+
+###2026.07.18
+- Comprehensive security and reliability hardening: every GraphQL resolver is
+  permission-gated, reusable Tailscale credentials are write-only and stored
+  mode 0600, workspace mounts resolve symlinks safely, and config validation
+  fails closed.
+- Default network containment now blocks Tailscale CGNAT and rejects IPv6
+  until equivalent IPv6 policy exists. Configured bind mounts are reconciled
+  into the container profile with validation and read-only support.
+- Added bounded build/exec/session/cache resources, atomic serialized JSON
+  registries, a shared bounded Incus socket client, transactional config apply,
+  startup rollback, watchdog health, log rotation, and aggregated shutdown.
+- Reconciled the GraphQL SDL with resolver contracts; added backend, frontend,
+  schema, socket, persistence, config, classic-package, and isolation tests.
+- Split heavy frontend concerns into lazy chunks and composables, made query
+  polling non-overlapping, removed mutation replay, and completed label/theme
+  accessibility fixes.
+- Added coordinated API install/uninstall, strong package verification and
+  provenance metadata, reproducible carry-forward packaging, pinned CI actions,
+  classic-package gates, and corrected operational documentation.
+
+###2026.07.08a
+- Fix: the packaged OS .txz never actually shipped incus-dashboard.js — every
+  build since the Main/Dashboard widget feature was added was silently
+  missing it from the installed plugin, even though the settings page and
+  repo both had it. Now included (verified: build 44's package was missing
+  it, build 45 has it, confirmed via tar listing diff).
+- Fix: the unraid-api-plugin-incus backend deployed on the box was stale —
+  several git-pulled commits (dashboard widget, config-sync locking, CI)
+  were never redeployed to /usr/local/unraid-api/node_modules/, so the live
+  GraphQL schema lacked the new dashboardWidgetEnable field entirely. Every
+  page load's very first query (Config tab's incusConfig fetch) failed with
+  a GraphQL validation error surfaced as a raw "HTTP 400", leaving the
+  Network &amp; ACL / Container Defaults cards blank until a manual mid-session
+  fix. Redeployed dist/ and restarted unraid-api; verified clean across
+  repeated fresh page loads.
+- Hardening: the frontend GraphQL client waits for window.csrf_token to be set
+  and retries safe queries once; mutations are never automatically replayed.
+- UI/UX pass across all three tabs:
+  - Config tab: merged 6 cards down to 3 (Runtime / Network &amp; Access /
+    Container Defaults), each carrying subsections instead of duplicating
+    the same group eyebrow label across separate cards (previously read
+    like a rendering bug, not intentional grouping).
+  - Every raw browser-default &lt;select&gt; (Distro, Release, Launch image,
+    Storage driver, Default egress/ingress action) replaced with a
+    restyled dropdown matching Input/Button's border, focus ring, and
+    chevron — no more browser-chrome dropdowns next to custom-styled
+    fields.
+  - Extended the existing monospace-for-data convention (already used for
+    IPs/CIDRs/container names) to every remaining technical field: paths,
+    bridge/subnet/ACL names, CPU/memory limits, container profile/image,
+    UID/GID, bind-mount triples, Tailscale key, container name input.
+  - Builder tab's "No builds started yet" and Containers tab's "No
+    containers found" empty states rewritten with actual next-step
+    guidance instead of a bare status line; Builder's empty state reuses
+    the existing terminal log styling (dark background, blinking cursor)
+    instead of introducing a new visual language.
+  - Launch Container's sudo checkbox replaced with the same Switch
+    component used everywhere else (was a bare unstyled HTML checkbox).
+
+###2026.07.07u
+- Fix: EVERY debootstrap-based image build (all curated Debian/Ubuntu
+  releases, not just the reported "Resolute (26.04 LTS)" one) was silently
+  broken since the image-builder feature was added — root cause was a
+  missing `zstd`/`zstdcat`/`unzstd` in the bundled toolchain. debootstrap
+  falls back to the *system* zstdcat when ours is absent, and that system
+  binary — dynamically linked against the *system* libzstd — gets forced to
+  load our bundled (older) libzstd.so.1 via LD_LIBRARY_PATH, which is
+  missing a symbol (`POOL_create`) the system binary expects, crashing mid-
+  extraction with "symbol lookup error" on the very first .deb. Fixed by
+  bundling a `zstd` binary (with `zstdcat`/`unzstd` symlinks, matching
+  Debian trixie's zstd package — the same source the rest of the bundled
+  toolchain came from) so debootstrap always resolves our matched build
+  first. Verified live: full builds of ubuntu/jammy, ubuntu/noble,
+  ubuntu/resolute, debian/bookworm, and debian/trixie all now complete.
+- Fix: "Resolute (26.04 LTS)" specifically was ALSO missing its own
+  debootstrap release script in the bundled snapshot (curated in the
+  frontend before the release existed in the bundled snapshot). Added it as
+  a symlink to "gutsy", the same base script every other modern Ubuntu
+  release script (jammy, noble, plucky, questing) already points to.
+
+###2026.07.07t
+- Added a Main/Dashboard jail-status box (running/stopped/other counts),
+  toggleable via a new DASHBOARD_WIDGET_ENABLE key in incus.cfg.
+- Fix: updateShellConfig only replaced existing incus.cfg keys, silently
+  dropping an update for any key an install's file predates (the 07.07p
+  TS_AUTHKEY key had this same gap, worked around then by telling existing
+  installs to add it by hand — no longer necessary). Missing keys are now
+  appended, so e.g. toggling the new Dashboard widget off on an old install
+  actually takes effect instead of the UI showing "off" while the widget
+  stays visible because the key was never written.
+- Whitelist-validated (regex @Matches) the free-text updateIncusConfig
+  input fields (jailBridge/jailSubnet/aclBlock/aclAllow/aclDefaultEgress/
+  aclDefaultIngress/jailProfile/jailImage/jailCpu/jailMemory/
+  jailWorkspaceRoot/jailAgentUid/jailAgentGid/jailBindMounts/tsAuthKey).
+  Not a shell-injection fix — updateShellConfig already single-quotes every
+  value before writing it to incus.cfg, which is inert to bash expansion
+  regardless of content — this just rejects obviously-malformed input at
+  the mutation boundary with a clear message instead of letting it reach
+  incus-init.sh and fail there with an opaque Incus-side error.
+- Added locking (a sentinel-lockfile mutex) and atomic writes (temp file +
+  rename) around IncusConfigSyncService's incus.cfg/incus.json read-modify-
+  write, guarding against a hand-edit-over-SSH racing a settings-form save
+  and against a reader (incus-init.sh sourcing incus.cfg) ever seeing a
+  torn file mid-write.
+- CI: added .github/workflows/api-plugin-ci.yml, typechecking and building
+  the backend and both frontend bundles on every push/PR.
+
+###2026.07.07s
+- Fix: a build that failed instantly would show "queued" / "Waiting for
+  log output…" forever, never updating — even though the backend already
+  had the real "failed" status and error the whole time. Root cause: the
+  build-status poller was mutating the raw object captured at build-start
+  time instead of the reactive array element Vue actually tracks, so the
+  fetched status update never triggered a re-render (verified live by
+  instrumenting the page's network calls: the poll fired, got the correct
+  answer, and correctly stopped — the UI just never found out). Also
+  surfaced a real curation gap while chasing this: "Resolute (26.04 LTS)"
+  is listed as a buildable Ubuntu release, but the bundled debootstrap
+  doesn't have a release script for it yet, so any build targeting it
+  fails immediately with a clear "No such script" error — not fixed here,
+  but now at least visible instead of silently hanging.
+
+###2026.07.07r
+- Launch Container: "Allow sudo (NOPASSWD) for the agent user" — opt-in,
+  off by default. Grants immediately after boot; verified live
+  (`sudo -n whoami` → root).
+- Container manage panel: sudo status (live-checked) with a retroactive
+  "Grant sudo" for already-running containers, and a new "Run a privileged
+  command" box that execs as root mediated by the operator — never exposed
+  to the container's own agent user, so it stays safe even with sudo left
+  off. Verified live: apt-installed htop into a running container with
+  neither sudo nor a rebuild.
+- Fixed a real bug caught in that same testing: the sudo-grant script had
+  a `|| &amp;&amp;` adjacency from a bad array-join, which is invalid POSIX shell
+  and made every grant attempt fail outright on Debian's default /bin/sh.
+- Containers tab: replaced the dense table + expandable-row layout with a
+  responsive card grid — each container's stats, quick actions, and full
+  manage panel (limits, workspace, sudo, Homebrew, privileged commands) now
+  live directly in its own card instead of a cramped colspan table row.
+
+###2026.07.07q
+- Container Details panel: "Install a package (Homebrew)" now actually works
+  against a running container — best-effort, bootstraps Homebrew itself
+  (into ~/.linuxbrew, not the shared system path, since the official
+  installer needs sudo and the non-root "agent" user deliberately has none)
+  then installs the formula. Runs as a background job polled from the UI
+  rather than a blocking call — verified live that even a trivial formula
+  install could outlast the browser/reverse-proxy's request timeout while
+  still completing successfully server-side regardless.
+- Container Details panel: a container still sharing the profile's default
+  /workspace (rather than its own isolated one) now shows a warning with a
+  one-click "Isolate this container's workspace" fix.
+- CPU/memory limit fields (both the per-container override panel and
+  Config's global defaults) now validate before saving instead of silently
+  failing against the Incus API on bad input.
+- Container name field validates against real Incus/LXC naming rules before
+  Launch is enabled, instead of only finding out after the API call fails.
+- Containers tab: "Delete N stopped" bulk-removes every stopped container
+  (never touches running ones). Builder tab: "Prune stale records" checks
+  every saved image still exists in Incus and untracks any that don't
+  (e.g. deleted directly via the incus CLI) — both verified live.
+- README.md/MANIFEST.md rewritten to match the plugin's actual current
+  state (were still describing an early, much smaller version).
+- Added a first automated test suite (vitest) for the backend's trickiest
+  pure logic: package-search ranking/merging and incus.cfg/incus.json
+  round-trip parsing — 30 tests, previously zero test coverage existed.
+
+###2026.07.07p
+- Config tab: replaced the rigid "one big card + one small card" 2-column
+  pairing (which left large blank gaps under short cards like Tailscale and
+  Bind Mounts) with a real CSS masonry flow — all six cards balance across
+  both columns by actual content height, regardless of which logical group
+  they belong to. Each card keeps a small group eyebrow (Runtime, Network &amp;
+  Access, Container Defaults) so the grouping context isn't lost.
+
+###2026.07.07o
+- Containers now have a "Details" panel (Actions column) showing the
+  resolved config Incus actually merges from profile + instance overrides:
+  image, profiles, storage pool, bridge, effective CPU/memory limits, and
+  the /workspace host path — with an "override" badge distinguishing an
+  instance-level override from the profile's own inherited value. CPU
+  limit, memory limit, and workspace path can each be overridden
+  independently ("Apply") or reset back to the profile's value ("Use
+  profile default"), without touching the profile or any other container.
+  Verified live: clearing a memory-limit override doesn't shrink an
+  already-larger live cgroup limit until the container is restarted — noted
+  in the panel's own help text rather than silently claiming it's instant.
+- Fix: applying a CPU-limit override used to also silently stamp the
+  unrelated Memory value as an instance-level override (both fields were
+  always sent together) — each field now applies independently.
+
+###2026.07.07n
+- Launch Container now has an Image dropdown listing every tracked built
+  image (plus "Default"), so you can launch straight from a specific image
+  instead of only the configured default.
+- Fix: every container launched via the agent-jail profile previously
+  bind-mounted the SAME shared host directory at /workspace
+  (`${JAIL_WORKSPACE_ROOT}/default-workspace`) — two containers running
+  concurrently, even from different images, saw each other's file writes in
+  real time. launchJail now gives every container its own subdirectory of
+  the workspace root by default (auto-created), overriding the profile's
+  shared device just for that instance — matches the VM-style "same image,
+  independent storage" expectation. The root filesystem itself was already
+  correctly isolated per instance (inherent to how Incus provisions storage
+  against a pool); this only affected the /workspace bind mount.
+- Fix: setJailWorkspace's path-containment check read the wrong config key
+  (`incus.workspaceRoot` instead of `incus.jailWorkspaceRoot`), so it always
+  validated against the hardcoded default root regardless of what was
+  actually configured — silently wrong on any install that changed
+  Workspace root from its default.
+
+###2026.07.07m
+- Blocked CIDRs and Allow-holes are no longer a raw comma-separated text
+  field the user has to hand-edit without spaces. Both are now chip-based
+  editors: existing ranges show as removable tags, and adding a new one is
+  type-a-CIDR-and-press-Add (or Enter) — validated against a CIDR-shaped
+  pattern before it's accepted, with duplicates rejected too.
+
+###2026.07.07l
+- Layout polish: the label/control rows across Config and Builder used to
+  stretch the control to the far right edge of the (now much wider) card,
+  leaving a large dead gap between a label and its input. Capped those rows
+  to a comfortable reading width so labels and controls sit close together
+  regardless of how wide the card is. Moved the two long-value ACL fields
+  (Blocked CIDRs, Allow-holes) out of that compact row layout into their own
+  full-width label-above-input blocks — previously "Allow-holes (punched
+  before block rules)" wrapped awkwardly and Blocked CIDRs' value was
+  clipped mid-range at the old fixed input width.
+
+###2026.07.07k
+- Layout: the settings page was capped at a fixed ~900px column regardless of
+  screen size, leaving most of the window blank on anything wider than a
+  laptop. Widened the page responsively (up to ~2200px on ultra-wide/4K) and
+  paired related cards into a 2-column grid at 1280px+ (Config's Runtime /
+  Network &amp; Access / Container Defaults groups, Builder's Starting
+  points/Build, Containers' Network &amp; ACL/Launch) so wide screens show more
+  at once instead of one narrow stacked column. Mobile is unaffected — every
+  new rule is gated behind a min-width breakpoint, nothing at the base/mobile
+  layer changed.
+- Fix: discovered along the way — Unraid's own global stylesheet
+  (dynamix.my.servers' standalone-apps bundle, loaded on every page) defines
+  `.unapi &lt;utility-class&gt;` rules that share our "unapi" convention class and
+  silently out-specificity our own compiled Tailwind utilities for any
+  colliding class name, including basic ones. This was already capable of
+  silently breaking any of our styling, not just the new grid work. Fixed by
+  compiling our CSS with `!important` on all generated utilities so this
+  page's own styling always wins inside its own widget, regardless of what
+  else Unraid's chrome loads globally.
+
+###2026.07.07j
+- Wired Unraid's native "?" Help toolbar toggle (the `.inline_help` blockquote
+  convention already used across Unraid's own settings pages) into every
+  field across all three tabs — Config, Dev containers, and Builder — not
+  just Builder. Clicking the toolbar Help button now reveals a short
+  explanation under each field site-wide, hidden by default so the page
+  stays uncluttered for anyone who doesn't need it.
+
+###2026.07.07i
+- Builder tab UX pass: collapsed 4 stacked "starting points" cards (presets,
+  devcontainer.json, mise.toml/.tool-versions/dotfiles, saved images) into
+  one card, with config-file imports tucked behind a collapsed "Import from
+  a config file" disclosure so the default view is just presets + saved
+  images + the build form — same capability, much less to look at up front.
+  Trimmed explanatory copy throughout to one line where a full paragraph
+  wasn't earning its space.
+
+###2026.07.07h
+- Package search: real debounce fix (a distro switch used to bypass it and
+  fire an immediate search) plus server-side in-flight request dedup, so
+  concurrent searches for the same cold-cache key share one fetch instead of
+  each starting their own multi-MB download.
+- Builder: import mise.toml / .tool-versions (pins exact tool versions —
+  bakes in mise itself via its official installer as a post-install step,
+  wired system-wide via /etc/profile.d so the runtime agent user can use it,
+  not just root at build time) and dotfiles-repo bootstrap via `mise
+  bootstrap` (experimental, best-effort — only does something if the cloned
+  repo's own mise config declares it). `mise oci build` was evaluated and
+  isn't usable here — it produces OCI/Docker images, a different format
+  from the LXC images distrobuilder produces for Incus.
+
+###2026.07.07g
+- Fix: launchJail always resolved images via a public simplestreams remote — a
+  locally-built image (e.g. anything from the image builder) could never
+  actually be launched from, silently defeating the whole point of building
+  custom images. Local aliases (no "remote:" prefix) now resolve against the
+  daemon's own image store, verified against the real Incus REST API.
+- Golden master: "master" is now exclusive (one at a time, enforced
+  server-side) and actually sets the default image new containers launch
+  from, not just a label. Removed the static "Common packages" checkboxes
+  now that package search covers the same ground. Added devcontainer.json
+  import (best-effort: maps base image + recognized features to
+  distro/release/packages, surfaces lifecycle commands as editable/removable
+  entries, and explicitly reports what it couldn't map rather than
+  dropping it silently).
+
+###2026.07.07f
+- Package search: unified into one box that searches apt+npm+PyPI+Homebrew
+  concurrently and merges results into a single relevance-ranked list (npm's
+  own score normalized against local match-quality scoring for the other
+  three, instead of naive first-N-in-index-order). Hardened: every external
+  fetch has a timeout, failed sources degrade gracefully (partial results +
+  a visible note, not a blanket error), and repeated failures back off for a
+  minute instead of retrying on every keystroke.
+
+###2026.07.07e
+- Builder tab: live package search (apt/npm/PyPI/Homebrew) replacing the fixed
+  checkbox list — real catalogs, click to add. apt results join the OS package
+  list; npm/PyPI results become post-install commands (auto-checking the
+  Node.js/Python prereq group). Homebrew search works but isn't wired to
+  build-time install (unsupported inside a chroot). Also added delete for
+  tracked images (previously impossible once built).
+
+###2026.07.07d
+- Rename "agent jails" to "dev containers" throughout user-facing UI/copy
+  (masthead, tab label, section headers, buttons, table text, README).
+  Internal GraphQL schema and incus.cfg variable names are unchanged.
+
+###2026.07.07c
+- Deploy the actual settings-UI frontend (live Jails dashboard, curated
+  Builder distro/release/package dropdowns) — an earlier build only shipped
+  the distrobuilder binary fix without the matching web bundle.
+
+###2026.07.07b
+- Fix: distrobuilder wasn't actually installed anywhere — the image-builder
+  feature always failed. Bundled distrobuilder + debootstrap + ar + mksquashfs
+  (plus their missing shared libs) under the same private prefix as
+  incusd/lxcfs. Fixed three real invocation bugs found only by running a live
+  build: (1) `packages.manager` was hardcoded to apt for every distro, (2)
+  `--import-into-incus`'s value IS the resulting image alias, not a boolean
+  flag paired with a separate `-o image.name=`, (3) missing `image.architecture`
+  meant debootstrap fell back to a raw `uname -m` string ("x86_64") instead of
+  Debian's "amd64" alias, and inversely Alpine/RPM-family downloaders need the
+  native "x86_64" string, not "amd64". Verified end-to-end with real builds:
+  Debian trixie and Alpine 3.21 imported into Incus successfully.
+
+###2026.07.07
+- Settings UI: tabbed Builder/Jails/Config layout, resource usage columns,
+  Tailscale auto-join on jail launch (TS_AUTHKEY), saveable builder presets,
+  and an image registry with master/variant tracking. See incus.cfg for the
+  new TS_AUTHKEY key (existing installs: add it manually or the field won't
+  persist via Apply — updateShellConfig only replaces existing keys).
+
+###2026.07.06
+- Fix: the packaged txz was stale — it shipped incusd/lxcfs binaries under the
+  pre-refactor layout (bare /usr/local/incus/*.sh, a real /etc/rc.d/rc.incus)
+  and never included /usr/local/emhttp/plugins/incus/ at all (no incus.cfg,
+  no incus-init.sh, no templates/, no event/ hooks). Repackaged so the txz now
+  carries the full emhttp tree at the paths rc.incus/incus-init.sh actually
+  expect; /etc/rc.d/rc.incus is created as a symlink by the install script,
+  not shipped as a file.
+
+###2026.07.01
+- Initial release: Incus 7.0 LTS (repackaged from Debian trixie), LAN-banned
+  agent-jail environment, config-driven idempotent init on array start.
+</CHANGES>
+
+<!-- the repackaged Incus runtime (private-prefixed, no system-lib pollution) -->
+<FILE Name="&plugin;/&txz;">
+<URL>&txzURL;</URL>
+<MD5>&md5;</MD5>
+</FILE>
+
+<!-- Strong verification before privileged install. MD5 remains only because
+     the Unraid plugin loader requires that legacy field for downloads. -->
+<FILE Run="/bin/bash">
+<INLINE>
+echo "&sha256;  &plugin;/&txz;" | sha256sum -c - || exit 1
+previous=""
+for candidate in $(ls -1t &plugin;/&name;-unraid-*.txz 2>/dev/null); do
+  [ "$candidate" = "&plugin;/&txz;" ] &amp;&amp; continue
+  previous="$candidate"
+  break
+done
+upgradepkg --install-new &plugin;/&txz; || exit 1
+
+# A fresh install has no persistent config yet. Bootstrap it before restarting
+# unraid-api so IncusConfigSyncService selects the real /boot path in its
+# constructor rather than permanently binding this process to its development
+# cwd fallback. The later setup block remains responsible for migrations and
+# the known-good copy after coordinated API activation succeeds.
+if [ ! -f "&plugin;/incus.cfg" ]; then
+  cp "&emhttp;/incus.cfg" "&plugin;/incus.cfg" || exit 1
+fi
+chmod 600 "&plugin;/incus.cfg" || exit 1
+
+# The API payload lives inside the classic archive. Activate and verify it
+# before declaring the coordinated release successful. install-api-plugin.sh
+# restores the previous backend itself; if it fails, restore the previous
+# classic archive too so the shipped frontend/runtime cannot remain skewed
+# against the old API schema.
+if ! &emhttp;/scripts/install-api-plugin.sh; then
+  if [ -n "$previous" ] &amp;&amp; [ -f "$previous" ]; then
+    logger -t incus "API activation failed; rolling classic package back to $previous"
+    upgradepkg --install-new "$previous" || logger -t incus "ERROR: automatic classic rollback failed"
+  else
+    logger -t incus "API activation failed on a fresh install; removing the unpaired classic package"
+    removepkg &txz; 2>/dev/null || logger -t incus "ERROR: automatic fresh-install cleanup failed"
+  fi
+  exit 1
+fi
+
+# Retain the newest previous payload as a known-good rollback candidate.
+kept=0
+for old in $(ls -1t &plugin;/&name;-unraid-*.txz 2>/dev/null); do
+  [ "$old" = "&plugin;/&txz;" ] &amp;&amp; continue
+  kept=$((kept + 1))
+  [ "$kept" -le 1 ] || rm -f "$old"
+done
+</INLINE>
+</FILE>
+
+<!-- default config, only if not present (never clobber user edits) -->
+<FILE Run="/bin/bash">
+<INLINE>
+if [ ! -f "&plugin;/incus.cfg" ]; then
+  cp "&emhttp;/incus.cfg" "&plugin;/incus.cfg"
+fi
+chmod 600 "&plugin;/incus.cfg"
+[ -f "&plugin;/incus.cfg.known-good" ] || cp -p "&plugin;/incus.cfg" "&plugin;/incus.cfg.known-good"
+chmod 600 "&plugin;/incus.cfg.known-good"
+&emhttp;/scripts/migrate-config.sh || exit 1
+# make scripts executable
+chmod +x &emhttp;/scripts/*.sh &emhttp;/event/* 2>/dev/null
+# symlink rc script into /etc/rc.d so it's callable as a service
+ln -sf "&emhttp;/scripts/rc.incus" /etc/rc.d/rc.incus
+chmod +x /etc/rc.d/rc.incus
+# create incus-admin group if it doesn't exist (incusd --group references it)
+getent group incus-admin >/dev/null 2>&amp;1 || groupadd -r incus-admin
+</INLINE>
+</FILE>
+
+<FILE Name="&emhttp;/README.md">
+<INLINE>
+**Incus for Unraid — LAN-banned isolated dev containers**
+
+Runs the Incus system-container manager on Unraid for coding-agent and
+stdio-MCP workspaces. The default IPv4 ACL blocks RFC1918, link-local, and
+Tailscale CGNAT ranges while allowing public Internet; IPv6 is disabled until
+equivalent policy exists. This is deny-list containment, so verify your actual
+NAS/router/service addresses and review every allow-hole. All network/storage
+policy is configured in `/boot/config/plugins/incus/incus.cfg`.
+
+Not affiliated with the LinuxContainers project.
+</INLINE>
+</FILE>
+
+<!-- start now if array is already up and service enabled -->
+<FILE Run="/bin/bash">
+<INLINE>
+. "&plugin;/incus.cfg" 2>/dev/null
+if [ "${SERVICE:-disabled}" = "enabled" ] &amp;&amp; mountpoint -q /mnt/user 2>/dev/null; then
+  /etc/rc.d/rc.incus start &amp;&amp; &emhttp;/scripts/incus-init.sh
+fi
+echo ""
+echo "----------------------------------------------------"
+echo " Incus for Unraid &version; installed."
+echo " Configure: /boot/config/plugins/incus/incus.cfg"
+echo " Enable SERVICE=enabled, then start the array (or run"
+echo " /etc/rc.d/rc.incus start &amp;&amp; the init script)."
+echo "----------------------------------------------------"
+</INLINE>
+</FILE>
+
+<!-- uninstall -->
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+/etc/rc.d/rc.incus stop 2>/dev/null
+&emhttp;/scripts/uninstall-api-plugin.sh 2>/dev/null || true
+removepkg &name; 2>/dev/null
+rm -rf &emhttp;
+echo "Incus plugin removed. State in INCUS_DIR and /boot/config/plugins/incus was left intact."
+</INLINE>
+</FILE>
+
+</PLUGIN>

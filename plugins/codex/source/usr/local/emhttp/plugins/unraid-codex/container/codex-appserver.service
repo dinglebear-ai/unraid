@@ -1,0 +1,20 @@
+[Unit]
+Description=Codex app-server for the Unraid chathead
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=agent
+Group=agent
+WorkingDirectory=/workspace
+Environment=HOME=/home/agent
+Environment=PATH=/home/agent/.local/bin:/home/agent/.local/share/mise/shims:/home/agent/.cargo/bin:/home/agent/.soldr/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EnvironmentFile=-/home/agent/.config/unraid-codex/env
+ExecStartPre=/usr/bin/rm -f /run/unraid-codex/appserver.sock
+ExecStart=/home/agent/.local/bin/codex app-server --listen unix:///run/unraid-codex/appserver.sock --strict-config
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

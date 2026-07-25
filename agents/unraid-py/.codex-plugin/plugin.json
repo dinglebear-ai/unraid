@@ -1,0 +1,57 @@
+{
+  "name": "unraid-mcp",
+  "version": "2.7.0",
+  "description": "Unraid server management via MCP.",
+  "homepage": "https://github.com/dinglebear-ai/unraid-mcp",
+  "repository": "https://github.com/dinglebear-ai/unraid-mcp",
+  "license": "MIT",
+  "keywords": [
+    "unraid",
+    "homelab",
+    "graphql",
+    "docker",
+    "nas",
+    "monitoring"
+  ],
+  "skills": "./skills/",
+  "mcpServers": {
+    "unraid-mcp": {
+      "command": "uvx",
+      "args": [
+        "unraid-mcp"
+      ],
+      "env": {
+        "UNRAID_MCP_TRANSPORT": "stdio"
+      },
+      "env_vars": [
+        "UNRAID_API_URL",
+        "UNRAID_API_KEY",
+        "UNRAID_VERIFY_SSL",
+        "UNRAID_ALLOW_INSECURE_TLS"
+      ]
+    }
+  },
+  "interface": {
+    "displayName": "Unraid MCP",
+    "shortDescription": "Monitor and manage Unraid servers",
+    "longDescription": "Monitor array health, Docker containers, VMs, notifications, and system metrics on Unraid through MCP tools and bundled skills.",
+    "developerName": "Jacob Magar",
+    "category": "Infrastructure",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/dinglebear-ai/unraid-mcp",
+    "defaultPrompt": [
+      "Check my Unraid array status.",
+      "List Docker containers on Unraid.",
+      "Inspect Unraid notifications and system health."
+    ],
+    "brandColor": "#F59E0B"
+  },
+  "author": {
+    "name": "Jacob Magar",
+    "email": "jmagar@users.noreply.github.com",
+    "url": "https://github.com/jmagar"
+  }
+}

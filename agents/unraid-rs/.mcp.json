@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "unraid": {
+      "command": "npx",
+      "args": ["-y", "unraid-rmcp", "mcp"]
+    }
+  }
+}

@@ -1,0 +1,126 @@
+name: incus-release
+
+# Triggered when release-please publishes an incus-v<version> release. Rebuilds
+# the classic .txz (carrying forward the previous release's binary payload, since
+# .txz are no longer tracked in git) and attaches it + the .plg to the release.
+#
+# NOTE (verified post-merge): build-classic-package.sh REQUIRES a previous .txz to
+# carry the binary payload forward. The FIRST incus-v release has no predecessor —
+# seed it once from the legacy incus-unraid release asset (build 55), then this
+# workflow is self-sustaining.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: incus-release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: startsWith(github.event.release.tag_name, 'incus-v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: plugins/incus
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install build + validation tooling
+        run: sudo apt-get update && sudo apt-get install -y jq xz-utils libxml2-utils shellcheck
+
+      # SEED / IDEMPOTENCY GATE.
+      # This job rebuilds the .txz by carrying the payload forward from the
+      # PREVIOUS incus release. The very first release out of the monorepo has no
+      # predecessor, so it must be seeded by hand with the legacy build-55 asset
+      # (see the error text below). Once that asset is attached to this release,
+      # there is nothing left to build — and re-running the job must not clobber a
+      # correct payload. So: if this release already carries a .txz, verify it
+      # against the .plg checksum and stop successfully.
+      - name: Skip if this release already carries its payload
+        id: seeded
+        run: |
+          set -euo pipefail
+          expected_txz="$(sed -n 's/.*<!ENTITY txz[[:space:]]*"\([^"]*\)".*/\1/p' incus.plg)"
+          expected_txz="${expected_txz//&name;/incus}"
+          expected_sha="$(sed -n 's/.*<!ENTITY[[:space:]]*sha256[[:space:]]*"\([^"]*\)".*/\1/p' incus.plg)"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+               --jq '.assets[].name' 2>/dev/null | grep -qxF "$expected_txz"; then
+            echo "release $TAG already has $expected_txz attached — verifying it"
+            tmp="$(mktemp -d)"
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" -p "$expected_txz" -D "$tmp"
+            actual_sha="$(sha256sum "$tmp/$expected_txz" | cut -d' ' -f1)"
+            if [ "$actual_sha" != "$expected_sha" ]; then
+              echo "::error::attached $expected_txz sha256 $actual_sha does not match incus.plg &sha256; $expected_sha"
+              exit 1
+            fi
+            echo "payload verified against incus.plg — nothing to rebuild"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Derive build number and fetch previous payload
+        if: steps.seeded.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          txz="$(sed -n 's/.*<!ENTITY txz[[:space:]]*"\([^"]*\)".*/\1/p' incus.plg)"
+          txz="${txz//&name;/incus}"
+          build="$(printf '%s\n' "$txz" | sed -n 's/incus-unraid-7\.0\.0-\([0-9]*\)-x86_64-1\.txz/\1/p')"
+          [ -n "$build" ] || { echo "::error::could not parse build number from incus.plg &txz; entity"; exit 1; }
+          echo "BUILD=${build}" >> "$GITHUB_ENV"
+          mkdir -p prev
+          # --limit is REQUIRED: `gh release list` defaults to 30, and in this
+          # monorepo unraid-py/unraid-rs/codex releases interleave with incus ones.
+          # Without it, once 30 newer releases exist the incus predecessor falls off
+          # the page and this reports "no previous release" — sending whoever debugs
+          # it toward seeding a first release that already exists.
+          incus_tags="$(gh release list --repo "$GITHUB_REPOSITORY" --limit 300 --json tagName \
+            --jq '[.[].tagName | select(startswith("incus-v"))]' 2>/dev/null || echo '[]')"
+          incus_count="$(printf '%s' "$incus_tags" | jq 'length')"
+          prev_tag="$(printf '%s' "$incus_tags" | jq -r '.[1] // empty')"
+          echo "PREV_TAG=${prev_tag}" >> "$GITHUB_ENV"
+          echo "INCUS_RELEASE_COUNT=${incus_count}" >> "$GITHUB_ENV"
+          if [ -n "$prev_tag" ]; then
+            gh release download "$prev_tag" --repo "$GITHUB_REPOSITORY" -p '*.txz' -D prev \
+              || { echo "::error::failed to download the previous payload from $prev_tag (transient? asset renamed?) — re-run this job"; exit 1; }
+          fi
+
+      - name: Build classic package
+        if: steps.seeded.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          prevtxz="$(find prev -maxdepth 1 -name '*.txz' -type f | sort | head -1)"
+          if [ -z "$prevtxz" ]; then
+            if [ -n "${PREV_TAG:-}" ]; then
+              echo "::error::previous release ${PREV_TAG} exists but shipped no .txz asset — investigate before re-running"
+            elif [ "${INCUS_RELEASE_COUNT:-0}" -le 1 ]; then
+              # Genuinely the first incus release out of the monorepo. The .plg's
+              # &txzURL; points at this release's own tag, so publishing without a
+              # payload ships a plugin whose download 404s.
+              echo "::error::this is the first incus-v release ($INCUS_RELEASE_COUNT found) and there is no predecessor to carry the payload forward from."
+              echo "::error::Seed it once, then re-run: create release incus-v<version> and upload the legacy incus-unraid-7.0.0-55-x86_64-1.txz asset to it."
+            else
+              echo "::error::found $INCUS_RELEASE_COUNT incus-v releases but could not resolve a predecessor payload — check the release listing window and asset names"
+            fi
+            exit 1
+          fi
+          ./scripts/build-classic-package.sh "$BUILD" "$prevtxz"
+
+      - name: Verify the rebuilt package
+        if: steps.seeded.outputs.skip != 'true'
+        run: ./scripts/verify-classic-package.sh
+
+      - name: Attach package + manifest to the release
+        if: steps.seeded.outputs.skip != 'true'
+        run: |
+          gh release upload "$TAG" \
+            "packages/incus-unraid-7.0.0-${BUILD}-x86_64-1.txz" \
+            incus.plg --clobber

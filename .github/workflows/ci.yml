@@ -1,10 +1,29 @@
 name: CI
 
+# PATH-FILTER CONTRACT — do not narrow without reading this.
+# unraid-py/tests/ owns REPO-WIDE policy suites, not just Python tests:
+#   * test_supply_chain_policy.py globs ALL .github/workflows/*.yml and enforces
+#     SHA-pinned actions, the openwiki job/permission split, and release pinning.
+#   * test_schema_drift_workflow.py asserts on the drift workflows.
+#   * the version-sync job reads agents/unraid-py/{.claude,.codex}-plugin/plugin.json.
+# Those gates only run when this workflow runs, so `.github/workflows/**` and
+# `agents/unraid-py/**` MUST stay in the filter — otherwise a floating `@v4` added
+# to another component's workflow, or a plugin-manifest version desync, merges
+# green with no error surface. (This regressed once: the consolidation added a
+# paths: filter here where previously there was none.)
 on:
   push:
     branches: ["main", "feat/**", "fix/**"]
+    paths:
+      - "unraid-py/**"
+      - "agents/unraid-py/**"
+      - ".github/workflows/**"
   pull_request:
     branches: ["main"]
+    paths:
+      - "unraid-py/**"
+      - "agents/unraid-py/**"
+      - ".github/workflows/**"
   schedule:
     # Weekly blocking live smoke on a tailnet-connected self-hosted runner.
     - cron: "23 7 * * 1"
@@ -19,18 +38,25 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# The Python package now lives in unraid-py/; every run: step executes there.
+# Secret scanning was extracted to secret-scan.yml (unfiltered) so this
+# workflow's unraid-py/** path filter cannot gate it off.
+defaults:
+  run:
+    working-directory: unraid-py
+
 jobs:
   lint:
     name: Lint & Format
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: "unraid-py/uv.lock"
       - name: Install dependencies
         run: uv sync --locked --group dev
       - name: Ruff check
@@ -43,12 +69,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: "unraid-py/uv.lock"
       - name: Install dependencies
         run: uv sync --locked --group dev
       - name: ty check
@@ -63,13 +89,13 @@ jobs:
       matrix:
         python-version: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
           python-version: ${{ matrix.python-version }}
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: "unraid-py/uv.lock"
       - name: Install dependencies
         run: uv sync --locked --group dev
       - name: Run tests with coverage (excluding integration/slow)
@@ -82,15 +108,15 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "20"
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: "unraid-py/uv.lock"
       - name: Install mock server dependencies
         run: npm --prefix tests/mock ci
       - name: Install Python dependencies
@@ -103,7 +129,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Check all version files are in sync
         run: bash scripts/check-version-sync.sh
 
@@ -113,8 +139,9 @@ jobs:
     timeout-minutes: 15
     # Live smoke test against the REAL Unraid box (via repo secrets). The homelab
     # Unraid API lives on a private/Tailscale network that GitHub's cloud runners
-    # cannot reach, so this can never pass on a hosted runner — it is therefore a
-    # Runs weekly and on demand on the tailnet-connected runner. This gate is
+    # cannot reach, so this can never pass on a hosted runner — it is therefore
+    # restricted to the tailnet-connected self-hosted runner and never runs on
+    # push/PR. Runs weekly and on demand. This gate is
     # deliberately blocking: protocol, discovery, representative non-destructive
     # reads, subscriptions, Docker, and stdio must all work against the real API.
     needs: [lint, typecheck, test]
@@ -123,12 +150,12 @@ jobs:
       UNRAID_API_URL: ${{ secrets.UNRAID_API_URL }}
       UNRAID_API_KEY: ${{ secrets.UNRAID_API_KEY }}
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: "unraid-py/uv.lock"
       - name: Require live non-destructive credentials
         run: |
           test -n "$UNRAID_API_URL"
@@ -141,12 +168,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: "unraid-py/uv.lock"
       - name: Export locked application runtime graph
         run: |
           uv export --frozen --no-dev --no-emit-project \
@@ -165,14 +192,14 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
+          cache-dependency-glob: "unraid-py/uv.lock"
       - name: Build clean source artifacts
         run: uv build --no-sources
       - name: Validate package metadata and contents
@@ -188,22 +215,3 @@ jobs:
           .artifact-venv/bin/python -c 'import importlib.metadata; assert importlib.metadata.version("unraid-mcp")'
       - name: Smoke installed wheel over stdio
         run: bash scripts/smoke-stdio.sh .artifact-venv/bin/unraid-mcp-server
-
-  gitleaks:
-    name: Secret Scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-        with:
-          fetch-depth: 0
-      - name: Run gitleaks CLI
-        env:
-          GITLEAKS_VERSION: 8.30.1
-          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
-        run: |
-          curl -sSfL -o gitleaks.tar.gz \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum --check --quiet
-          tar -xzf gitleaks.tar.gz gitleaks
-          ./gitleaks git . --redact --verbose

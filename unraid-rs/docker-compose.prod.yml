@@ -1,0 +1,49 @@
+name: unrust
+
+x-common-service: &common-service
+  networks:
+    - unrust
+  restart: unless-stopped
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  ulimits:
+    nofile:
+      soft: 65535
+      hard: 65535
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+      compress: "true"
+
+services:
+  unraid-rmcp:
+    <<: *common-service
+    # Default pins to a known, immutable version for safe rollback.
+    # Override with VERSION to deploy/roll back, e.g.: VERSION=0.2.2 docker compose up -d
+    image: ghcr.io/dinglebear-ai/runraid:latest
+    container_name: runraid
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "${UNRAID_RMCP_HOST_PORT:-40010}:40010/tcp"
+    volumes:
+      - ${UNRAID_RMCP_DATA_VOLUME:-${HOME}/.unraid}:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:40010/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '0.5'
+
+networks:
+  unrust:
+    name: ${DOCKER_NETWORK:-unrust}
+    external: true

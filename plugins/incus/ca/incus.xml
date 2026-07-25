@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Plugin>
+  <Name>Incus Dev Containers</Name>
+  <PluginURL>https://raw.githubusercontent.com/jmagar/incus-unraid/main/incus.plg</PluginURL>
+  <Support>https://github.com/dinglebear-ai/incus-unraid/issues</Support>
+  <Project>https://github.com/dinglebear-ai/incus-unraid</Project>
+  <Overview>Install and manage Incus system containers for coding agents and stdio MCP workspaces on Unraid. Containers use a dedicated IPv4 NAT bridge that blocks common LAN, link-local, and Tailscale ranges while preserving public Internet access. This is deny-list containment, not a complete security boundary: review allow-holes and bind mounts, test your actual networks, and add stronger controls before running hostile workloads.</Overview>
+  <Category>Tools:System</Category>
+  <Icon>https://raw.githubusercontent.com/dinglebear-ai/incus-unraid/main/icon.svg</Icon>
+  <ReadMe>https://raw.githubusercontent.com/dinglebear-ai/incus-unraid/main/README.md</ReadMe>
+</Plugin>

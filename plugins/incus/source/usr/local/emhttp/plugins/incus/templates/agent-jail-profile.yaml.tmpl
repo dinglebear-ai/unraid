@@ -1,0 +1,82 @@
+name: @PROFILE@
+description: "LAN-banned coding-agent jail (workspace mount + uv/node/rust toolchains, non-root agent)"
+
+config:
+  boot.autostart: "false"
+  security.privileged: "false"
+  security.nesting: "@NESTING@"
+  security.idmap.isolated: "true"
+  limits.cpu: "@CPU@"
+  limits.memory: "@MEMORY@"
+
+  cloud-init.user-data: |
+    #cloud-config
+    output: { all: "| tee -a /var/log/cloud-init-output.log" }
+    package_update: true
+    apt:
+      conf: |
+        APT::Install-Recommends "0";
+        APT::Install-Suggests "0";
+
+    users:
+      - name: agent
+        gecos: "Coding Agent"
+        shell: /bin/bash
+        lock_passwd: true
+        uid: @UID@
+        groups: [users]
+    ssh_pwauth: false
+    disable_root: true
+
+    packages:
+      - ca-certificates
+      - curl
+      - git
+      - jq
+      - build-essential
+      - pkg-config
+      - libssl-dev
+      - python3
+      - python3-venv
+      - ripgrep
+      - netcat-openbsd
+      - iproute2
+      - iputils-ping
+      - bash-completion
+
+    write_files:
+      - path: /usr/local/bin/agent-env
+        owner: root:root
+        permissions: "0755"
+        content: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          export HOME=/home/agent USER=agent LOGNAME=agent
+          export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          cd /workspace 2>/dev/null || cd "$HOME"
+          exec "$@"
+
+    runcmd:
+      - [ usermod, -p, '*', agent ]
+      # uv / uvx + managed python (for uvx-based stdio MCPs)
+      # Versioned installer endpoint; upgrades are explicit source changes.
+      - [ su, -l, agent, -c, "env UV_NO_MODIFY_PATH=1 curl -LsSf https://astral.sh/uv/0.8.3/install.sh | sh" ]
+      - [ su, -l, agent, -c, "/usr/local/bin/agent-env uv python install 3.12 --default" ]
+      # node + npx (for npx-based stdio MCPs and coding agents)
+      - [ su, -l, agent, -c, "curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/62387b8f92aa012d48202747fd75c40850e5e261/install.sh | bash" ]
+      - [ su, -l, agent, -c, "bash -lc 'source \"$HOME/.nvm/nvm.sh\" && nvm install --lts && nvm alias default \"lts/*\"'" ]
+      # rust (jmagar works in rust heavily)
+      - [ su, -l, agent, -c, "curl -fsSL https://raw.githubusercontent.com/rust-lang/rustup/e4f3ad6f893e56ca10f0a329c401a5eafab69607/rustup-init.sh | sh -s -- -y --no-modify-path --profile minimal" ]
+
+devices:
+  eth0:
+    type: nic
+    name: eth0
+    network: "@BRIDGE@"
+  workspace:
+    type: disk
+    source: "@WSROOT@/default-workspace"
+    path: /workspace
+    shift: "true"

@@ -1,0 +1,32 @@
+# unraid-rmcp configuration
+# Secrets and URLs belong in .env — not here.
+# All non-secret settings live here. Env vars override values below.
+
+[unraid]
+# TLS verification for the Unraid GraphQL endpoint.
+# Override with UNRAID_API_SKIP_TLS_VERIFY=true in .env if the server
+# uses a self-signed certificate.
+skip_tls_verify = false
+
+[mcp]
+host = "0.0.0.0"
+port = 40010
+server_name = "unraid-rmcp"
+# no_auth = false  # set true only when fronted by a gateway that enforces auth
+# allowed_hosts = ["unraid.example.com"]
+# allowed_origins = ["https://unraid.example.com"]
+
+[mcp.auth]
+mode = "bearer"
+# public_url = "https://unraid.example.com"  # required when mode = "oauth"
+admin_email = ""
+allowed_emails = []
+sqlite_path = "/data/auth.db"
+key_path = "/data/auth-jwt.pem"
+access_token_ttl_secs = 3600
+refresh_token_ttl_secs = 2592000
+auth_code_ttl_secs = 300
+register_rpm = 10
+authorize_rpm = 60
+disable_static_token_with_oauth = true
+allowed_client_redirect_uris = []

@@ -1,0 +1,23 @@
+Menu="Utilities"
+Title="Incus"
+Icon="incus.png"
+Tag="server"
+---
+<?PHP
+/* Settings UI for the Incus-for-Unraid plugin. All config read/write and jail
+ * management happens client-side through the local GraphQL API (see
+ * unraid-api-plugin-incus's incus.resolver.ts) — this page is just a thin
+ * shell that loads the compiled Vue component and mounts it. Auth for those
+ * GraphQL calls rides on the webGUI's own session cookie + the ambient
+ * `window.csrf_token` DefaultPageLayout.php already puts on every page.
+ */
+?>
+<link rel="stylesheet" href="/plugins/incus/web/incus-settings.css">
+
+<noscript>
+  <p>This settings page requires JavaScript.</p>
+</noscript>
+
+<incus-settings-app></incus-settings-app>
+
+<script type="module" src="/plugins/incus/web/incus-settings.js"></script>

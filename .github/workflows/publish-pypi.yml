@@ -25,12 +25,22 @@ env:
 jobs:
   build:
     name: Build & Attest Release Artifact
+    # Only the primary (Python) release tag `v*`. Component tags start with
+    # incus-/codex-/unraid-rs-, so startsWith(tag,'v') already excludes them.
+    # Gating build cascades to pypi/github-release/mcp-registry/reconcile via needs.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.event.release.tag_name, 'v')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
       id-token: write
       attestations: write
+    # Python package sources live in unraid-py/; build run: steps execute there.
+    defaults:
+      run:
+        working-directory: unraid-py
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -61,16 +71,16 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: dist/
+          path: unraid-py/dist/
           if-no-files-found: error
           retention-days: 30
       - name: Attest exact wheel and source distribution
         uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4
         with:
           subject-path: |
-            dist/*.whl
-            dist/*.tar.gz
-            dist/SHA256SUMS
+            unraid-py/dist/*.whl
+            unraid-py/dist/*.tar.gz
+            unraid-py/dist/SHA256SUMS
 
   pypi:
     name: Publish PyPI Channel
@@ -147,6 +157,11 @@ jobs:
     environment: release
     permissions:
       contents: read
+    # server.json (the MCP registry manifest) lives in unraid-py/; the publisher
+    # binary is downloaded into and run from there too.
+    defaults:
+      run:
+        working-directory: unraid-py
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:

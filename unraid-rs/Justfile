@@ -1,0 +1,215 @@
+dev:
+    cargo run -- serve mcp
+
+# Run the standalone mock Unraid GraphQL server (no real Unraid box needed).
+# Point UNRAID_API_URL at http://127.0.0.1:8999/graphql to drive the real binary.
+# Scenarios: healthy (default) | degraded | parity-running | disk-failing
+mock scenario="healthy" port="8999":
+    cargo run --example mock_unraid -- --scenario {{scenario}} --port {{port}}
+
+build:
+    cargo build
+
+release:
+    cargo build --release
+
+# Run pre-flight environment check
+doctor:
+    ./target/release/runraid doctor
+
+check:
+    cargo check --workspace
+
+# xtask commands
+dist:
+    cargo xtask dist
+
+ci:
+    cargo xtask ci
+
+symlink-docs:
+    cargo xtask symlink-docs
+
+check-env:
+    cargo xtask check-env
+
+lint:
+    cargo clippy -- -D warnings
+
+fmt:
+    cargo fmt
+
+fmt-toml:
+    taplo fmt
+
+check-toml:
+    taplo check
+
+test:
+    cargo nextest run
+
+test-ci:
+    cargo nextest run --profile ci
+
+# Capture a normalized structural schema snapshot from a live Unraid API.
+# Requires UNRAID_API_URL and UNRAID_API_KEY; honors UNRAID_API_SKIP_TLS_VERIFY.
+schema-live-capture output="schema/live-introspection.json":
+    python3 scripts/live-schema-contract.py --source-label production-unraid --output {{output}}
+
+# Fail with a focused unified diff when live introspection has structurally drifted.
+schema-live-diff snapshot="schema/live-introspection.json":
+    python3 scripts/live-schema-contract.py --source-label production-unraid --check {{snapshot}}
+
+# Install binary to ~/.local/bin via install.sh
+install:
+    bash install.sh
+
+# Docker Compose helpers
+docker-up:
+    docker compose up -d
+
+docker-down:
+    docker compose down
+
+# Legacy aliases
+up: docker-up
+down: docker-down
+
+restart:
+    docker compose restart
+
+logs:
+    docker compose logs -f
+
+health:
+    curl -sf http://localhost:40010/health | jq .
+
+setup:
+    cp -n .env.example .env || true
+
+gen-token:
+    openssl rand -hex 32
+
+# Stop service, rebuild release binary, restart (supports both systemd and docker)
+repair:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> Stopping unraid-rmcp..."
+    if systemctl --user is-active --quiet unraid-rmcp.service 2>/dev/null; then
+      systemctl --user stop unraid-rmcp.service
+      echo "    stopped systemd unit"
+    elif docker ps --filter 'name=^/unraid-rmcp$' --quiet 2>/dev/null | grep -q .; then
+      docker stop unraid-rmcp 2>/dev/null || true
+      echo "    stopped docker container"
+    else
+      echo "    no running instance found"
+    fi
+    echo "==> Rebuilding..."
+    cargo build --release
+    echo "==> Restarting..."
+    if systemctl --user list-unit-files unraid-rmcp.service 2>/dev/null | grep -q unraid-rmcp; then
+      install -m 755 target/release/runraid "${HOME}/.local/bin/runraid"
+      systemctl --user start unraid-rmcp.service
+      echo "    started systemd unit"
+    elif [ -f docker-compose.yml ]; then
+      docker compose build
+      docker compose up -d --force-recreate
+      echo "    started docker container"
+    else
+      echo "    No service manager detected; binary at target/release/runraid"
+    fi
+    echo "==> Done"
+
+# Run mcporter integration tests against the live server
+test-mcporter:
+    bash tests/mcporter/test-tools.sh
+
+
+validate-skills:
+    bash scripts/validate-plugin-layout.sh
+
+validate-plugin: validate-skills
+
+runtime-current:
+    bash scripts/check-runtime-current.sh --unit unraid-rmcp.service --service unraid-rmcp --expected-binary target/release/runraid
+
+# Generate a standalone CLI for this server (requires running server; HTTP-only transport)
+generate-cli:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "⚠  Server must be running on port 40010 (run 'just dev' first)"
+    echo "⚠  Generated CLI embeds your token — do not commit or share"
+    mkdir -p dist dist/.cache
+    current_hash=$(timeout 10 curl -sf \
+      -H "Authorization: Bearer ${UNRAID_RMCP_TOKEN:-}" \
+      -H "Accept: application/json, text/event-stream" \
+      http://localhost:40010/mcp/tools/list 2>/dev/null | sha256sum | cut -d' ' -f1 || echo "nohash")
+    cache_file="dist/.cache/unraid-cli.schema_hash"
+    if [[ -f "$cache_file" ]] && [[ "$(cat "$cache_file")" == "$current_hash" ]] && [[ -f "dist/unraid-cli" ]]; then
+      echo "SKIP: unraid tool schema unchanged — use existing dist/unraid-cli"
+      exit 0
+    fi
+    timeout 30 mcporter generate-cli \
+      --command http://localhost:40010/mcp \
+      --header "Authorization: Bearer ${UNRAID_RMCP_TOKEN:-}" \
+      --name unraid-cli \
+      --output dist/unraid-cli
+    printf '%s' "$current_hash" > "$cache_file"
+    echo "✓ Generated dist/unraid-cli (requires bun at runtime)"
+
+clean:
+    cargo clean
+    rm -rf .cache/
+
+# Linux only — Windows would need .exe binaries; requires git lfs install
+build-plugin: release
+    #!/bin/sh
+    set -eu
+    target_dir="${CARGO_TARGET_DIR:-target}"
+    if [ ! -x "$target_dir/release/runraid" ] && [ -x ".cache/cargo/release/runraid" ]; then
+      target_dir=".cache/cargo"
+    fi
+    mkdir -p bin ../agents/unraid-rs/bin
+    install -m 755 "$target_dir/release/runraid" bin/runraid
+    install -m 755 "$target_dir/release/runraid" ../agents/unraid-rs/bin/runraid
+
+# Explicit binary artifact sync. This replaces hidden Cargo rustc-wrapper side effects.
+sync-bin: build-plugin
+
+# Publish: bump version, tag, push (triggers crates.io + Docker publish)
+publish bump="patch":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    [ "$(git branch --show-current)" = "main" ] || { echo "Switch to main first"; exit 1; }
+    [ -z "$(git status --porcelain)" ] || { echo "Commit or stash changes first"; exit 1; }
+    git pull origin main
+    CURRENT=$(grep -m1 "^version" Cargo.toml | sed "s/.*\"\(.*\)\".*/\1/")
+    IFS="." read -r major minor patch <<< "$CURRENT"
+    case "{{bump}}" in
+      major) major=$((major+1)); minor=0; patch=0 ;;
+      minor) minor=$((minor+1)); patch=0 ;;
+      patch) patch=$((patch+1)) ;;
+      *) echo "Usage: just publish [major|minor|patch]"; exit 1 ;;
+    esac
+    NEW="${major}.${minor}.${patch}"
+    echo "Version: ${CURRENT} → ${NEW}"
+    sed -i "s/^version = \"${CURRENT}\"/version = \"${NEW}\"/" Cargo.toml
+    cargo check 2>/dev/null || true
+    git add -A && git commit -m "release: v${NEW}" && git tag "v${NEW}" && git push origin main --tags
+    echo "Tagged v${NEW} — publish workflow will run automatically"
+
+# Refresh local reference documentation (crawls + repomix)
+refresh-docs:
+    bash scripts/refresh-docs.sh
+
+# Refresh docs — repomix packs only (no crawl)
+refresh-docs-repomix:
+    bash scripts/refresh-docs.sh --skip-crawl
+
+# Refresh docs — crawl only (no repomix)
+refresh-docs-crawl:
+    bash scripts/refresh-docs.sh --skip-repomix
+
+# Dry-run: print what would be refreshed
+refresh-docs-dry:
+    bash scripts/refresh-docs.sh --dry-run

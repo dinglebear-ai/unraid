@@ -46,13 +46,17 @@ Thumbs.db
 # ── Caches (ALL tool caches go here) ─────────────────────────────────────────
 .cache/
 
-# ── Documentation artifacts (session/plan docs, not reference) ───────────────
+# ── Documentation artifacts (plan docs, not reference) ───────────────────────
+# A pattern containing a mid-string "/" is anchored to THIS file's directory, so
+# the bare `docs/...` forms stopped matching when components moved into subtrees.
+# Use `**/` so they apply to every component's docs/ directory.
+# NOTE: `docs/sessions/` is deliberately NOT listed — dated session logs are
+# tracked on purpose in unraid-py/, unraid-rs/, and plugins/incus/.
 .docs/
-docs/plans/
-docs/sessions/
-docs/reports/
-docs/research/
-docs/superpowers/
+**/docs/plans/
+**/docs/reports/
+**/docs/research/
+**/docs/superpowers/
 specs/
 
 # ── Python ───────────────────────────────────────────────────────────────────
@@ -84,7 +88,6 @@ coverage.xml
 pip-log.txt
 
 # ── Repo-specific ────────────────────────────────────────────────────────────
-/DESTRUCTIVE_ACTIONS.md
 client_secret_*.apps.googleusercontent.com.json
 
 .worktrees
@@ -95,8 +98,14 @@ logs/
 backups/
 data/
 
-# mcporter local test server definitions (may contain personal endpoints/tokens)
-/config/mcporter.json
+# mcporter LOCAL test server definitions (may contain personal endpoints/tokens).
+# The checked-in `unraid-rs/config/mcporter.json` is intentional and localhost-only;
+# personal overrides belong in a *.local.json sibling, which is what this ignores.
+**/mcporter.local.json
 
-# Mock GraphQL server (tests/mock) — JS deps installed locally
-tests/mock/node_modules/
+# Node deps — every component that installs them. `node_modules/` with no leading
+# slash matches at any depth, unlike the old root-anchored `tests/mock/node_modules/`.
+node_modules/
+
+# runraid binary staged into the agent plugin by the Justfile install target
+agents/unraid-rs/bin/

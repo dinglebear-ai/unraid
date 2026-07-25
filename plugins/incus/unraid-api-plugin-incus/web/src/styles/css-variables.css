@@ -1,0 +1,145 @@
+/* Vendored from @unraid/ui monorepo: @tailwind-shared/css-variables.css — Unraid's real design tokens/theme system. Do not hand-edit; re-sync from upstream if it drifts. */
+/* Hybrid theme system: Native CSS + Theme Store fallback */
+
+/* Light mode defaults */
+:root {
+    /* Nuxt UI Color System - Primary (Orange for Unraid) */
+    --ui-color-primary-50: #fff7ed;
+    --ui-color-primary-100: #ffedd5;
+    --ui-color-primary-200: #fed7aa;
+    --ui-color-primary-300: #fdba74;
+    --ui-color-primary-400: #fb923c;
+    --ui-color-primary-500: #ff8c2f;
+    --ui-color-primary-600: #ea580c;
+    --ui-color-primary-700: #c2410c;
+    --ui-color-primary-800: #9a3412;
+    --ui-color-primary-900: #7c2d12;
+    --ui-color-primary-950: #431407;
+
+    /* Nuxt UI Color System - Neutral (True Gray) */
+    --ui-color-neutral-50: #fafafa;
+    --ui-color-neutral-100: #f5f5f5;
+    --ui-color-neutral-200: #e5e5e5;
+    --ui-color-neutral-300: #d4d4d4;
+    --ui-color-neutral-400: #a3a3a3;
+    --ui-color-neutral-500: #737373;
+    --ui-color-neutral-600: #525252;
+    --ui-color-neutral-700: #404040;
+    --ui-color-neutral-800: #262626;
+    --ui-color-neutral-900: #171717;
+    --ui-color-neutral-950: #0a0a0a;
+
+    /* Nuxt UI Default color shades */
+    --ui-primary: var(--ui-color-primary-500);
+    --ui-secondary: var(--ui-color-neutral-500);
+    
+    /* Nuxt UI Design Tokens - Text */
+    --ui-text-dimmed: var(--ui-color-neutral-400);
+    --ui-text-muted: var(--ui-color-neutral-500);
+    --ui-text-toned: var(--ui-color-neutral-600);
+    --ui-text: var(--ui-color-neutral-700);
+    --ui-text-highlighted: var(--ui-color-neutral-900);
+    --ui-text-inverted: white;
+
+    /* Nuxt UI Design Tokens - Background */
+    --ui-bg: white;
+    --ui-bg-muted: var(--ui-color-neutral-50);
+    --ui-bg-elevated: var(--ui-color-neutral-100);
+    --ui-bg-accented: var(--ui-color-neutral-200);
+    --ui-bg-inverted: var(--ui-color-neutral-900);
+
+    /* Nuxt UI Design Tokens - Border */
+    --ui-border: var(--ui-color-neutral-200);
+    --ui-border-muted: var(--ui-color-neutral-200);
+    --ui-border-accented: var(--ui-color-neutral-300);
+    --ui-border-inverted: var(--ui-color-neutral-900);
+
+    /* Nuxt UI Radius */
+    --ui-radius: 0.5rem;
+    
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --primary: 24 100% 50%; /* Orange #ff8c2f in HSL */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --ring: 24 100% 50%; /* Orange ring to match primary */
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  /* Dark mode */
+  .dark {
+    /* Nuxt UI Default color shades - Dark mode */
+    --ui-primary: var(--ui-color-primary-400);
+    --ui-secondary: var(--ui-color-neutral-400);
+    
+    /* Nuxt UI Design Tokens - Text (Dark) */
+    --ui-text-dimmed: var(--ui-color-neutral-500);
+    --ui-text-muted: var(--ui-color-neutral-400);
+    --ui-text-toned: var(--ui-color-neutral-300);
+    --ui-text: var(--ui-color-neutral-200);
+    --ui-text-highlighted: white;
+    --ui-text-inverted: var(--ui-color-neutral-900);
+
+    /* Nuxt UI Design Tokens - Background (Dark) */
+    --ui-bg: var(--ui-color-neutral-900);
+    --ui-bg-muted: var(--ui-color-neutral-800);
+    --ui-bg-elevated: var(--ui-color-neutral-800);
+    --ui-bg-accented: var(--ui-color-neutral-700);
+    --ui-bg-inverted: white;
+
+    /* Nuxt UI Design Tokens - Border (Dark) */
+    --ui-border: var(--ui-color-neutral-800);
+    --ui-border-muted: var(--ui-color-neutral-700);
+    --ui-border-accented: var(--ui-color-neutral-700);
+    --ui-border-inverted: white;
+    
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --primary: 24 100% 50%; /* Orange #ff8c2f in HSL */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --ring: 24 100% 50%; /* Orange ring to match primary */
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+
+  /* Alternative class-based dark mode support for specific Unraid themes */
+  .dark[data-theme='black'],
+  .dark[data-theme='gray'] {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+  }

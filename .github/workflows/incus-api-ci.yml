@@ -1,0 +1,152 @@
+name: incus-api-ci
+
+on:
+  push:
+    paths:
+      - "plugins/incus/unraid-api-plugin-incus/**"
+      - "plugins/incus/packages/**"
+      - "plugins/incus/incus.plg"
+      - "plugins/incus/MANIFEST.md"
+      - "plugins/incus/release-manifest.json"
+      - ".github/workflows/incus-api-ci.yml"
+  pull_request:
+    paths:
+      - "plugins/incus/unraid-api-plugin-incus/**"
+      - "plugins/incus/packages/**"
+      - "plugins/incus/incus.plg"
+      - "plugins/incus/MANIFEST.md"
+      - "plugins/incus/release-manifest.json"
+      - ".github/workflows/incus-api-ci.yml"
+  workflow_dispatch:
+
+# This covers the NestJS/GraphQL backend and Vue frontend. Classic package
+# verification is handled by incus-classic-ci.yml.
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (unraid-api-plugin-incus) — typecheck + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/incus/unraid-api-plugin-incus
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      # peerDependencies (@nestjs/*, class-validator, class-transformer) are
+      # normally provided by the real unraid-api host at deploy time — this
+      # repo never vendors them. For CI we install the real published NestJS
+      # packages (best-effort proxy for whatever version the actual host
+      # runs; re-pin here if that's ever confirmed) so the typecheck exercises
+      # real APIs, plus a local stub for @unraid/shared, the one peer with no
+      # public npm package (it's Unraid's internal, private monorepo).
+      # --no-save: peerDependencies stay peer — CI installing them shouldn't
+      # change what this package declares it needs from its host.
+      - name: Install peer dependencies for typecheck (host-provided at real deploy time)
+        run: |
+          npm install --no-save --no-package-lock \
+            @nestjs/common@11.1.28 @nestjs/config@4.0.4 @nestjs/graphql@13.4.2 \
+            class-transformer@0.5.1 class-validator@0.15.1 \
+            @unraid/shared@file:.ci-stubs/unraid-shared
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Enforce coverage floor
+        run: npm run test:coverage
+
+      - name: Build
+        run: npx tsc
+
+      - name: Verify coordinated classic payload matches this backend build
+        run: |
+          plugin_name="$(sed -n 's/.*<!ENTITY name[[:space:]]*"\([^"]*\)".*/\1/p' ../incus.plg)"
+          txz="$(sed -n 's/.*<!ENTITY txz[[:space:]]*"\([^"]*\)".*/\1/p' ../incus.plg)"
+          txz="${txz//&name;/$plugin_name}"
+          archive="../packages/$txz"
+          # The .txz plugin payload is a GitHub release asset (not tracked in git
+          # after the monorepo consolidation). When it isn't present in-tree, skip
+          # the payload diff; incus-release.yml fetches the prior asset and runs
+          # the full determinism check at release time.
+          if [ ! -f "$archive" ]; then
+            echo "release asset $txz not present in-tree; skipping payload diff"
+            exit 0
+          fi
+          stage="$(mktemp -d)"
+          trap 'rm -rf "$stage"' EXIT
+          tar -xJf "$archive" -C "$stage" \
+            usr/local/emhttp/plugins/incus/api-plugin
+          payload="$stage/usr/local/emhttp/plugins/incus/api-plugin"
+          diff -qr dist "$payload/dist"
+          cmp package.json "$payload/package.json"
+          cmp package-lock.json "$payload/package-lock.json"
+          for dependency in ws graphql-subscriptions; do
+            test -f "$payload/node_modules/$dependency/package.json"
+          done
+
+      - name: Upload dist/
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
+        with:
+          name: unraid-api-plugin-incus-dist
+          path: plugins/incus/unraid-api-plugin-incus/dist/
+          retention-days: 14
+
+  frontend:
+    name: Frontend (web/) — typecheck + build (settings + dashboard bundles)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/incus/unraid-api-plugin-incus/web
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: plugins/incus/unraid-api-plugin-incus/web/package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx vue-tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Enforce coverage floor
+        run: npm run test:coverage
+
+      - name: Build (both bundles — npm run build chains build:settings + build:dashboard)
+        run: npm run build
+
+      - name: Verify deployed bundles match frontend source build
+        run: |
+          for asset in ../../unraid-api-plugin-incus/dist-web/*; do
+            cmp "$asset" "../../source/usr/local/emhttp/plugins/incus/web/$(basename "$asset")"
+          done
+          cmp ../../unraid-api-plugin-incus/dist-web-dashboard/incus-dashboard.js \
+            ../../source/usr/local/emhttp/plugins/incus/web/incus-dashboard.js
+
+      - name: Upload incus-settings bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
+        with:
+          name: incus-settings-bundle
+          path: plugins/incus/unraid-api-plugin-incus/dist-web/
+          retention-days: 14
+
+      - name: Upload incus-dashboard bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
+        with:
+          name: incus-dashboard-bundle
+          path: plugins/incus/unraid-api-plugin-incus/dist-web-dashboard/
+          retention-days: 14

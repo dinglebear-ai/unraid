@@ -1,0 +1,75 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE PLUGIN [
+  <!ENTITY name      "unraid-codex">
+  <!ENTITY author    "jmagar">
+  <!ENTITY version   "2026.7.24"> <!-- x-release-please-version -->
+  <!ENTITY launch    "">
+  <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/plugins/codex">
+  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid-mcp/releases/download/codex-v&version;/&txz;">
+  <!ENTITY pluginURL "&gitURL;/unraid-codex.plg">
+  <!ENTITY txz       "unraid-codex-&version;-x86_64-15.txz">
+  <!ENTITY md5       "69784069fb5e4d285eaaf62d389a904d">
+  <!ENTITY sha256    "f8eebc8e00fd88c9d867ee6b4bb42d93dbb38e624cfd4c302731dcc2c3e620c2">
+  <!ENTITY plugin    "/boot/config/plugins/&name;">
+  <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
+]>
+
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;">
+
+<CHANGES>
+###2026.07.23
+- Build 15 replaces Unraid's fallback puzzle piece with a packaged,
+  high-contrast Codex/OpenAI mark sized for the Settings tile.
+- Build 14 adds a native Codex tile and icon to Unraid Settings. Opening the
+  tile launches the chathead directly into its real Session Inspector.
+- Build 13 streamlines the header and composer, fixes latest-turn context
+  accounting, adds quick reasoning and permission controls, turns MCP servers
+  into an editable configuration surface, replaces the plugin wall with a
+  searchable catalog, and groups tool, skill, and diagnostic activity.
+- Build 12 adds phone/tablet full-screen behavior, safe-area and touch-target
+  polish, non-shrinking scrollable transcript rows, live model/reasoning/
+  permission/personality controls, MCP OAuth and resource inventory, installed
+  apps/plugins, and a bounded app-server protocol activity inspector.
+- Build 11 adds a persisted Aurora/Unraid theme setting. The Unraid mode uses
+  live webGUI tokens, compact dark terminals, simple Thinking disclosures,
+  and session-aware approval cards with resolved states.
+- Build 10 makes the transcript itself an Aurora Conversation with Aurora
+  message actions, moves runtime inventory into the Session Inspector, and
+  adds a persisted resizable dock that reflows the stock Unraid page.
+- Build 6 replaces the prototype renderer with vendored Aurora registry
+  components for messages, reasoning, plans, terminal output, tool calls,
+  patches, approvals, elicitation, questions, context usage, and warnings.
+- Initial prototype: persistent Aurora Light chathead, Codex app-server
+  connection over an authenticated same-origin Unix-socket proxy, ChatGPT
+  device login, streamed responses, thread resume, and one-shot approvals.
+</CHANGES>
+
+<FILE Name="&plugin;/&txz;">
+<URL>&txzURL;</URL>
+<MD5>&md5;</MD5>
+</FILE>
+
+<FILE Run="/bin/bash">
+<INLINE>
+echo "&sha256;  &plugin;/&txz;" | sha256sum -c - || exit 1
+upgradepkg --install-new &plugin;/&txz; || exit 1
+chmod +x &emhttp;/scripts/*.sh &emhttp;/event/* 2>/dev/null
+mkdir -p &plugin;
+chmod 0700 &plugin;
+if mountpoint -q /mnt/user 2>/dev/null; then
+  &emhttp;/scripts/start-appserver.sh || logger -t unraid-codex "App-server is not ready yet"
+fi
+</INLINE>
+</FILE>
+
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+&emhttp;/scripts/stop-appserver.sh 2>/dev/null || true
+&emhttp;/scripts/configure-nginx.sh --remove 2>/dev/null || true
+removepkg &name; 2>/dev/null
+rm -rf &emhttp;
+echo "Unraid Codex removed. The Incus container and Codex data were left intact."
+</INLINE>
+</FILE>
+
+</PLUGIN>

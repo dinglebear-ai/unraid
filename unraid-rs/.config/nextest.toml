@@ -1,0 +1,14 @@
+[profile.default]
+failure-output = "immediate"
+success-output = "never"
+status-level = "pass"
+final-status-level = "fail"
+test-threads = "num-cpus"
+
+[profile.ci]
+failure-output = "immediate"
+success-output = "never"
+status-level = "pass"
+final-status-level = "fail"
+test-threads = 4
+retries = 1

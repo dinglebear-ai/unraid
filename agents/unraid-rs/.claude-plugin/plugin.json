@@ -1,0 +1,107 @@
+{
+  "name": "runraid",
+  "version": "0.2.3",
+  "description": "Unraid NAS/homelab monitoring via MCP",
+  "author": {
+    "name": "jmagar"
+  },
+  "repository": "https://github.com/dinglebear-ai/unraid-mcp",
+  "license": "MIT",
+  "keywords": [
+    "unraid",
+    "nas",
+    "homelab",
+    "mcp"
+  ],
+  "skills": "./skills",
+  "userConfig": {
+    "server_url": {
+      "type": "string",
+      "title": "Server URL",
+      "description": "Base URL the MCP client connects to. Keep the default http://localhost:40010 when Claude Code runs on the same machine as the unraid-rmcp server. Change to e.g. http://nas:40010 or https://unraid.example.com when connecting to a remote instance. Do NOT append /mcp \u2014 the plugin adds it.",
+      "required": true,
+      "default": "http://localhost:40010"
+    },
+    "api_token": {
+      "type": "string",
+      "title": "API token",
+      "description": "Bearer token for MCP HTTP authentication (Authorization: Bearer <token>). Must match UNRAID_RMCP_TOKEN on the server. Generate one with: openssl rand -hex 32",
+      "sensitive": true,
+      "required": false
+    },
+    "no_auth": {
+      "type": "boolean",
+      "title": "Disable service auth",
+      "description": "Run unraid-rmcp without MCP auth. Use only when an upstream gateway enforces auth before traffic reaches this service.",
+      "required": true,
+      "default": false
+    },
+    "auth_mode": {
+      "type": "string",
+      "title": "Auth mode",
+      "description": "Server auth mode. bearer: static API token only. oauth: Google OAuth/JWT for clients like Codex while the API token remains accepted for this plugin connection. OAuth requires public_url, google_client_id, google_client_secret, and auth_admin_email.",
+      "required": true,
+      "default": "bearer"
+    },
+    "public_url": {
+      "type": "string",
+      "title": "Public URL",
+      "description": "Public base URL for OAuth issuer metadata, e.g. https://unraid.example.com. Required when auth_mode=oauth.",
+      "default": ""
+    },
+    "google_client_id": {
+      "type": "string",
+      "title": "Google OAuth client ID",
+      "description": "Google OAuth client ID for auth_mode=oauth. Create a Web application client at https://console.cloud.google.com.",
+      "sensitive": true,
+      "default": ""
+    },
+    "google_client_secret": {
+      "type": "string",
+      "title": "Google OAuth client secret",
+      "description": "Google OAuth client secret for auth_mode=oauth.",
+      "sensitive": true,
+      "default": ""
+    },
+    "auth_admin_email": {
+      "type": "string",
+      "title": "OAuth admin email",
+      "description": "Bootstrap allowed Google account for OAuth mode. The server refuses to start OAuth without an allowlisted account.",
+      "default": ""
+    },
+    "use_docker": {
+      "type": "boolean",
+      "title": "Deploy with Docker",
+      "description": "Deployment method. true: run via the bundled docker compose stack (ports 40010, mounts data_dir). false: run as a systemd user service (lighter weight, logs to journald).",
+      "required": true,
+      "default": false
+    },
+    "data_dir": {
+      "type": "directory",
+      "title": "Data directory",
+      "description": "Directory for runtime state (OAuth DB, JWT key). Defaults to the plugin persistent data directory.",
+      "default": "${CLAUDE_PLUGIN_DATA}"
+    },
+    "unraid_api_url": {
+      "type": "string",
+      "title": "Unraid API URL",
+      "description": "Full Unraid GraphQL endpoint URL. Example: https://10-1-0-2.<hash>.myunraid.net:31337/graphql",
+      "sensitive": true,
+      "required": false
+    },
+    "unraid_api_key": {
+      "type": "string",
+      "title": "Unraid API key",
+      "description": "API key for the Unraid GraphQL endpoint (x-api-key header). Generate in Unraid UI: Settings \u2192 Management Access \u2192 API Keys.",
+      "sensitive": true,
+      "required": false
+    },
+    "unraid_skip_tls": {
+      "type": "boolean",
+      "title": "Skip TLS verification",
+      "description": "Accept self-signed TLS certificates from the Unraid GraphQL endpoint. Set true when the server uses a self-signed certificate.",
+      "required": true,
+      "default": false
+    }
+  }
+}

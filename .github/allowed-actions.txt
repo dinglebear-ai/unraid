@@ -1,0 +1,47 @@
+# Mirror of this repository's GitHub Actions allowlist.
+#
+# WHY THIS FILE EXISTS
+# The repo is configured with `allowed_actions: selected`. GitHub rejects a
+# non-allowlisted action at COMPILE time — before any job is scheduled — and
+# reports a `startup_failure` with NO check-run, NO jobs and NO logs. It therefore
+# shows up as an ABSENT check rather than a red one, which branch protection
+# cannot see. That is exactly how rust-ci sat broken and invisible from
+# 2026-07-24: the consolidation moved Rust CI in from a repo with
+# `allowed_actions: all`, and dtolnay/rust-toolchain, Swatinem/rust-cache and
+# taiki-e/install-action were never added here.
+#
+# A workflow's GITHUB_TOKEN cannot read the live setting (that needs the
+# `administration` permission, which is not available to workflows), so this file
+# is a checked-in mirror and `.github/scripts/check-actions-allowlist.py` asserts
+# every `uses:` in every workflow matches it. The failure then arrives as a normal,
+# readable PR failure instead of a silent missing check.
+#
+# KEEPING IT IN SYNC — this file does NOT change the setting. When adding an action:
+#   1. add its pattern below
+#   2. apply the same change to the repo setting:
+#        gh api repos/dinglebear-ai/unraid-mcp/actions/permissions/selected-actions
+#        gh api -X PUT repos/dinglebear-ai/unraid-mcp/actions/permissions/selected-actions --input <json>
+# Regenerate this list from the live setting with:
+#   gh api repos/dinglebear-ai/unraid-mcp/actions/permissions/selected-actions -q '.patterns_allowed[]'
+#
+# GitHub-owned actions (actions/*, github/*) are permitted by
+# `github_owned_allowed: true` and need no entry here.
+#
+# NOTE: `verified_allowed: true` means GitHub would also permit any
+# verified-creator action not listed here. List such actions anyway — the check is
+# deliberately stricter than the setting so it stays deterministic and offline.
+#
+# Blank lines and #-comments are ignored.
+
+anthropics/claude-code-action@*
+aquasecurity/trivy-action@*
+astral-sh/setup-uv@*
+docker/*@*
+dtolnay/rust-toolchain@*
+gitleaks/gitleaks-action@*
+googleapis/release-please-action@*
+peter-evans/create-pull-request@*
+pypa/gh-action-pypi-publish@*
+Swatinem/rust-cache@*
+taiki-e/install-action@*
+tailscale/github-action@*

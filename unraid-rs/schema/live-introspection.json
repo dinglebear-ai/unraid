@@ -1,0 +1,7173 @@
+{
+  "captured_at": "2026-07-23T20:14:58+00:00",
+  "format": 1,
+  "roots": {
+    "mutationType": "Mutation",
+    "queryType": "Query",
+    "subscriptionType": "Subscription"
+  },
+  "source": "production-unraid",
+  "types": {
+    "AccessUrl": {
+      "fields": {
+        "ipv4": {
+          "args": {},
+          "type": "URL"
+        },
+        "ipv6": {
+          "args": {},
+          "type": "URL"
+        },
+        "name": {
+          "args": {},
+          "type": "String"
+        },
+        "type": {
+          "args": {},
+          "type": "URL_TYPE!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "AccessUrlInput": {
+      "input_fields": {
+        "ipv4": "URL",
+        "ipv6": "URL",
+        "name": "String",
+        "type": "URL_TYPE!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "AccessUrlObject": {
+      "fields": {
+        "ipv4": {
+          "args": {},
+          "type": "String"
+        },
+        "ipv6": {
+          "args": {},
+          "type": "String"
+        },
+        "name": {
+          "args": {},
+          "type": "String"
+        },
+        "type": {
+          "args": {},
+          "type": "URL_TYPE!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "AccessUrlObjectInput": {
+      "input_fields": {
+        "ipv4": "String",
+        "ipv6": "String",
+        "name": "String",
+        "type": "URL_TYPE!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "ActivationCode": {
+      "fields": {
+        "branding": {
+          "args": {},
+          "type": "BrandingConfig"
+        },
+        "code": {
+          "args": {},
+          "type": "String"
+        },
+        "partner": {
+          "args": {},
+          "type": "PartnerConfig"
+        },
+        "system": {
+          "args": {},
+          "type": "SystemConfig"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ActivationCodeOverrideInput": {
+      "input_fields": {
+        "branding": "BrandingConfigInput",
+        "code": "String",
+        "partner": "PartnerConfigInput",
+        "system": "SystemConfigInput"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "AddPermissionInput": {
+      "input_fields": {
+        "actions": "[AuthAction!]!",
+        "resource": "Resource!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "AddRoleForApiKeyInput": {
+      "input_fields": {
+        "apiKeyId": "PrefixedID!",
+        "role": "Role!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "ApiConfig": {
+      "fields": {
+        "extraOrigins": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "plugins": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "sandbox": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "ssoSubIds": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "version": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ApiKey": {
+      "fields": {
+        "createdAt": {
+          "args": {},
+          "type": "String!"
+        },
+        "description": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "key": {
+          "args": {},
+          "type": "String!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "permissions": {
+          "args": {},
+          "type": "[Permission!]!"
+        },
+        "roles": {
+          "args": {},
+          "type": "[Role!]!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "ApiKeyFormSettings": {
+      "fields": {
+        "dataSchema": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "uiSchema": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "values": {
+          "args": {},
+          "type": "JSON!"
+        }
+      },
+      "interfaces": [
+        "FormSchema",
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "ApiKeyMutations": {
+      "fields": {
+        "addRole": {
+          "args": {
+            "input": "AddRoleForApiKeyInput!"
+          },
+          "type": "Boolean!"
+        },
+        "create": {
+          "args": {
+            "input": "CreateApiKeyInput!"
+          },
+          "type": "ApiKey!"
+        },
+        "delete": {
+          "args": {
+            "input": "DeleteApiKeyInput!"
+          },
+          "type": "Boolean!"
+        },
+        "removeRole": {
+          "args": {
+            "input": "RemoveRoleFromApiKeyInput!"
+          },
+          "type": "Boolean!"
+        },
+        "update": {
+          "args": {
+            "input": "UpdateApiKeyInput!"
+          },
+          "type": "ApiKey!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ApiKeyResponse": {
+      "fields": {
+        "error": {
+          "args": {},
+          "type": "String"
+        },
+        "valid": {
+          "args": {},
+          "type": "Boolean!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ArrayCapacity": {
+      "fields": {
+        "disks": {
+          "args": {},
+          "type": "Capacity!"
+        },
+        "kilobytes": {
+          "args": {},
+          "type": "Capacity!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ArrayDisk": {
+      "fields": {
+        "color": {
+          "args": {},
+          "type": "ArrayDiskFsColor"
+        },
+        "comment": {
+          "args": {},
+          "type": "String"
+        },
+        "critical": {
+          "args": {},
+          "type": "Int"
+        },
+        "device": {
+          "args": {},
+          "type": "String"
+        },
+        "exportable": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "format": {
+          "args": {},
+          "type": "String"
+        },
+        "fsFree": {
+          "args": {},
+          "type": "BigInt"
+        },
+        "fsSize": {
+          "args": {},
+          "type": "BigInt"
+        },
+        "fsType": {
+          "args": {},
+          "type": "String"
+        },
+        "fsUsed": {
+          "args": {},
+          "type": "BigInt"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "idx": {
+          "args": {},
+          "type": "Int!"
+        },
+        "isSpinning": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "name": {
+          "args": {},
+          "type": "String"
+        },
+        "numErrors": {
+          "args": {},
+          "type": "BigInt"
+        },
+        "numReads": {
+          "args": {},
+          "type": "BigInt"
+        },
+        "numWrites": {
+          "args": {},
+          "type": "BigInt"
+        },
+        "rotational": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "size": {
+          "args": {},
+          "type": "BigInt"
+        },
+        "status": {
+          "args": {},
+          "type": "ArrayDiskStatus"
+        },
+        "temp": {
+          "args": {},
+          "type": "Int"
+        },
+        "transport": {
+          "args": {},
+          "type": "String"
+        },
+        "type": {
+          "args": {},
+          "type": "ArrayDiskType!"
+        },
+        "warning": {
+          "args": {},
+          "type": "Int"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "ArrayDiskFsColor": {
+      "enum_values": [
+        "BLUE_BLINK",
+        "BLUE_ON",
+        "GREEN_BLINK",
+        "GREEN_ON",
+        "GREY_OFF",
+        "RED_OFF",
+        "RED_ON",
+        "YELLOW_BLINK",
+        "YELLOW_ON"
+      ],
+      "kind": "ENUM"
+    },
+    "ArrayDiskInput": {
+      "input_fields": {
+        "id": "PrefixedID!",
+        "slot": "Int"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "ArrayDiskStatus": {
+      "enum_values": [
+        "DISK_DSBL",
+        "DISK_DSBL_NEW",
+        "DISK_INVALID",
+        "DISK_NEW",
+        "DISK_NP",
+        "DISK_NP_DSBL",
+        "DISK_NP_MISSING",
+        "DISK_OK",
+        "DISK_WRONG"
+      ],
+      "kind": "ENUM"
+    },
+    "ArrayDiskType": {
+      "enum_values": [
+        "BOOT",
+        "CACHE",
+        "DATA",
+        "FLASH",
+        "PARITY"
+      ],
+      "kind": "ENUM"
+    },
+    "ArrayMutations": {
+      "fields": {
+        "addDiskToArray": {
+          "args": {
+            "input": "ArrayDiskInput!"
+          },
+          "type": "UnraidArray!"
+        },
+        "clearArrayDiskStatistics": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "Boolean!"
+        },
+        "mountArrayDisk": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "ArrayDisk!"
+        },
+        "removeDiskFromArray": {
+          "args": {
+            "input": "ArrayDiskInput!"
+          },
+          "type": "UnraidArray!"
+        },
+        "setState": {
+          "args": {
+            "input": "ArrayStateInput!"
+          },
+          "type": "UnraidArray!"
+        },
+        "unmountArrayDisk": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "ArrayDisk!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ArrayState": {
+      "enum_values": [
+        "DISABLE_DISK",
+        "INVALID_EXPANSION",
+        "NEW_ARRAY",
+        "NEW_DISK_TOO_SMALL",
+        "NO_DATA_DISKS",
+        "PARITY_NOT_BIGGEST",
+        "RECON_DISK",
+        "STARTED",
+        "STOPPED",
+        "SWAP_DSBL",
+        "TOO_MANY_MISSING_DISKS"
+      ],
+      "kind": "ENUM"
+    },
+    "ArrayStateInput": {
+      "input_fields": {
+        "decryptionKeyfile": "String",
+        "decryptionPassword": "String",
+        "desiredState": "ArrayStateInputState!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "ArrayStateInputState": {
+      "enum_values": [
+        "START",
+        "STOP"
+      ],
+      "kind": "ENUM"
+    },
+    "AuthAction": {
+      "enum_values": [
+        "CREATE_ANY",
+        "CREATE_OWN",
+        "DELETE_ANY",
+        "DELETE_OWN",
+        "READ_ANY",
+        "READ_OWN",
+        "UPDATE_ANY",
+        "UPDATE_OWN"
+      ],
+      "kind": "ENUM"
+    },
+    "AuthorizationOperator": {
+      "enum_values": [
+        "CONTAINS",
+        "ENDS_WITH",
+        "EQUALS",
+        "STARTS_WITH"
+      ],
+      "kind": "ENUM"
+    },
+    "AuthorizationRuleMode": {
+      "enum_values": [
+        "AND",
+        "OR"
+      ],
+      "kind": "ENUM"
+    },
+    "BigInt": {
+      "kind": "SCALAR"
+    },
+    "Boolean": {
+      "kind": "SCALAR"
+    },
+    "BrandingConfig": {
+      "fields": {
+        "background": {
+          "args": {},
+          "type": "String"
+        },
+        "bannerImage": {
+          "args": {},
+          "type": "String"
+        },
+        "caseModel": {
+          "args": {},
+          "type": "String"
+        },
+        "caseModelImage": {
+          "args": {},
+          "type": "String"
+        },
+        "hasPartnerLogo": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "header": {
+          "args": {},
+          "type": "String"
+        },
+        "headermetacolor": {
+          "args": {},
+          "type": "String"
+        },
+        "onboardingSubtitle": {
+          "args": {},
+          "type": "String"
+        },
+        "onboardingSubtitleDowngrade": {
+          "args": {},
+          "type": "String"
+        },
+        "onboardingSubtitleFreshInstall": {
+          "args": {},
+          "type": "String"
+        },
+        "onboardingSubtitleIncomplete": {
+          "args": {},
+          "type": "String"
+        },
+        "onboardingSubtitleUpgrade": {
+          "args": {},
+          "type": "String"
+        },
+        "onboardingTitle": {
+          "args": {},
+          "type": "String"
+        },
+        "onboardingTitleDowngrade": {
+          "args": {},
+          "type": "String"
+        },
+        "onboardingTitleFreshInstall": {
+          "args": {},
+          "type": "String"
+        },
+        "onboardingTitleIncomplete": {
+          "args": {},
+          "type": "String"
+        },
+        "onboardingTitleUpgrade": {
+          "args": {},
+          "type": "String"
+        },
+        "partnerLogoDarkUrl": {
+          "args": {},
+          "type": "String"
+        },
+        "partnerLogoLightUrl": {
+          "args": {},
+          "type": "String"
+        },
+        "showBannerGradient": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "theme": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "BrandingConfigInput": {
+      "input_fields": {
+        "background": "String",
+        "bannerImage": "String",
+        "caseModel": "String",
+        "caseModelImage": "String",
+        "hasPartnerLogo": "Boolean",
+        "header": "String",
+        "headermetacolor": "String",
+        "onboardingSubtitle": "String",
+        "onboardingSubtitleDowngrade": "String",
+        "onboardingSubtitleFreshInstall": "String",
+        "onboardingSubtitleIncomplete": "String",
+        "onboardingSubtitleUpgrade": "String",
+        "onboardingTitle": "String",
+        "onboardingTitleDowngrade": "String",
+        "onboardingTitleFreshInstall": "String",
+        "onboardingTitleIncomplete": "String",
+        "onboardingTitleUpgrade": "String",
+        "partnerLogoDarkUrl": "String",
+        "partnerLogoLightUrl": "String",
+        "showBannerGradient": "Boolean",
+        "theme": "String"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "BuilderPreset": {
+      "fields": {
+        "distro": {
+          "args": {},
+          "type": "String!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "packages": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "release": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "BuilderPresetInput": {
+      "input_fields": {
+        "distro": "String!",
+        "name": "String!",
+        "packages": "[String!]!",
+        "release": "String!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "Capacity": {
+      "fields": {
+        "free": {
+          "args": {},
+          "type": "String!"
+        },
+        "total": {
+          "args": {},
+          "type": "String!"
+        },
+        "used": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Cloud": {
+      "fields": {
+        "allowedOrigins": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "apiKey": {
+          "args": {},
+          "type": "ApiKeyResponse!"
+        },
+        "cloud": {
+          "args": {},
+          "type": "CloudResponse!"
+        },
+        "error": {
+          "args": {},
+          "type": "String"
+        },
+        "minigraphql": {
+          "args": {},
+          "type": "MinigraphqlResponse!"
+        },
+        "relay": {
+          "args": {},
+          "type": "RelayResponse"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "CloudResponse": {
+      "fields": {
+        "error": {
+          "args": {},
+          "type": "String"
+        },
+        "ip": {
+          "args": {},
+          "type": "String"
+        },
+        "status": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Config": {
+      "fields": {
+        "error": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "valid": {
+          "args": {},
+          "type": "Boolean"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "ConfigErrorState": {
+      "enum_values": [
+        "INELIGIBLE",
+        "INVALID",
+        "NO_KEY_SERVER",
+        "UNKNOWN_ERROR",
+        "WITHDRAWN"
+      ],
+      "kind": "ENUM"
+    },
+    "Connect": {
+      "fields": {
+        "dynamicRemoteAccess": {
+          "args": {},
+          "type": "DynamicRemoteAccessStatus!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "settings": {
+          "args": {},
+          "type": "ConnectSettings!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "ConnectSettings": {
+      "fields": {
+        "dataSchema": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "uiSchema": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "values": {
+          "args": {},
+          "type": "ConnectSettingsValues!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "ConnectSettingsInput": {
+      "input_fields": {
+        "accessType": "WAN_ACCESS_TYPE",
+        "forwardType": "WAN_FORWARD_TYPE",
+        "port": "Int"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "ConnectSettingsValues": {
+      "fields": {
+        "accessType": {
+          "args": {},
+          "type": "WAN_ACCESS_TYPE!"
+        },
+        "forwardType": {
+          "args": {},
+          "type": "WAN_FORWARD_TYPE"
+        },
+        "port": {
+          "args": {},
+          "type": "Int"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ConnectSignInInput": {
+      "input_fields": {
+        "apiKey": "String!",
+        "userInfo": "ConnectUserInfoInput"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "ConnectUserInfoInput": {
+      "input_fields": {
+        "avatar": "String",
+        "email": "String!",
+        "preferred_username": "String!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "ContainerHostConfig": {
+      "fields": {
+        "networkMode": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ContainerPort": {
+      "fields": {
+        "ip": {
+          "args": {},
+          "type": "String"
+        },
+        "privatePort": {
+          "args": {},
+          "type": "Port"
+        },
+        "publicPort": {
+          "args": {},
+          "type": "Port"
+        },
+        "type": {
+          "args": {},
+          "type": "ContainerPortType!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ContainerPortType": {
+      "enum_values": [
+        "TCP",
+        "UDP"
+      ],
+      "kind": "ENUM"
+    },
+    "ContainerState": {
+      "enum_values": [
+        "EXITED",
+        "PAUSED",
+        "RUNNING"
+      ],
+      "kind": "ENUM"
+    },
+    "CoreVersions": {
+      "fields": {
+        "api": {
+          "args": {},
+          "type": "String"
+        },
+        "kernel": {
+          "args": {},
+          "type": "String"
+        },
+        "unraid": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "CpuLoad": {
+      "fields": {
+        "percentGuest": {
+          "args": {},
+          "type": "Float!"
+        },
+        "percentIdle": {
+          "args": {},
+          "type": "Float!"
+        },
+        "percentIrq": {
+          "args": {},
+          "type": "Float!"
+        },
+        "percentNice": {
+          "args": {},
+          "type": "Float!"
+        },
+        "percentSteal": {
+          "args": {},
+          "type": "Float!"
+        },
+        "percentSystem": {
+          "args": {},
+          "type": "Float!"
+        },
+        "percentTotal": {
+          "args": {},
+          "type": "Float!"
+        },
+        "percentUser": {
+          "args": {},
+          "type": "Float!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "CpuPackages": {
+      "fields": {
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "power": {
+          "args": {},
+          "type": "[Float!]!"
+        },
+        "temp": {
+          "args": {},
+          "type": "[Float!]!"
+        },
+        "totalPower": {
+          "args": {},
+          "type": "Float!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "CpuUtilization": {
+      "fields": {
+        "cpus": {
+          "args": {},
+          "type": "[CpuLoad!]!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "percentTotal": {
+          "args": {},
+          "type": "Float!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "CreateApiKeyInput": {
+      "input_fields": {
+        "description": "String",
+        "name": "String!",
+        "overwrite": "Boolean",
+        "permissions": "[AddPermissionInput!]",
+        "roles": "[Role!]"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "CreateInternalBootPoolInput": {
+      "input_fields": {
+        "bootSizeMiB": "Int!",
+        "devices": "[String!]!",
+        "poolName": "String!",
+        "reboot": "Boolean",
+        "updateBios": "Boolean!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "CreateRCloneRemoteInput": {
+      "input_fields": {
+        "name": "String!",
+        "parameters": "JSON!",
+        "type": "String!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "Customization": {
+      "fields": {
+        "activationCode": {
+          "args": {},
+          "type": "ActivationCode"
+        },
+        "availableLanguages": {
+          "args": {},
+          "type": "[Language!]"
+        },
+        "onboarding": {
+          "args": {},
+          "type": "Onboarding!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "CustomizationMutations": {
+      "fields": {
+        "setLocale": {
+          "args": {
+            "locale": "String!"
+          },
+          "type": "String!"
+        },
+        "setTheme": {
+          "args": {
+            "theme": "ThemeName!"
+          },
+          "type": "Theme!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "DateTime": {
+      "kind": "SCALAR"
+    },
+    "DeleteApiKeyInput": {
+      "input_fields": {
+        "ids": "[PrefixedID!]!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "DeleteRCloneRemoteInput": {
+      "input_fields": {
+        "name": "String!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "Disk": {
+      "fields": {
+        "bytesPerSector": {
+          "args": {},
+          "type": "Float!"
+        },
+        "device": {
+          "args": {},
+          "type": "String!"
+        },
+        "firmwareRevision": {
+          "args": {},
+          "type": "String!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "interfaceType": {
+          "args": {},
+          "type": "DiskInterfaceType!"
+        },
+        "isSpinning": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "partitions": {
+          "args": {},
+          "type": "[DiskPartition!]!"
+        },
+        "sectorsPerTrack": {
+          "args": {},
+          "type": "Float!"
+        },
+        "serialNum": {
+          "args": {},
+          "type": "String!"
+        },
+        "size": {
+          "args": {},
+          "type": "Float!"
+        },
+        "smartStatus": {
+          "args": {},
+          "type": "DiskSmartStatus!"
+        },
+        "temperature": {
+          "args": {},
+          "type": "Float"
+        },
+        "totalCylinders": {
+          "args": {},
+          "type": "Float!"
+        },
+        "totalHeads": {
+          "args": {},
+          "type": "Float!"
+        },
+        "totalSectors": {
+          "args": {},
+          "type": "Float!"
+        },
+        "totalTracks": {
+          "args": {},
+          "type": "Float!"
+        },
+        "tracksPerCylinder": {
+          "args": {},
+          "type": "Float!"
+        },
+        "type": {
+          "args": {},
+          "type": "String!"
+        },
+        "vendor": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "DiskFsType": {
+      "enum_values": [
+        "BTRFS",
+        "EXT4",
+        "NTFS",
+        "VFAT",
+        "XFS",
+        "ZFS"
+      ],
+      "kind": "ENUM"
+    },
+    "DiskInterfaceType": {
+      "enum_values": [
+        "PCIE",
+        "SAS",
+        "SATA",
+        "UNKNOWN",
+        "USB"
+      ],
+      "kind": "ENUM"
+    },
+    "DiskPartition": {
+      "fields": {
+        "fsType": {
+          "args": {},
+          "type": "DiskFsType!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "size": {
+          "args": {},
+          "type": "Float!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "DiskSmartStatus": {
+      "enum_values": [
+        "OK",
+        "UNKNOWN"
+      ],
+      "kind": "ENUM"
+    },
+    "Docker": {
+      "fields": {
+        "container": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "DockerContainer"
+        },
+        "containerUpdateStatuses": {
+          "args": {},
+          "type": "[ExplicitStatusItem!]!"
+        },
+        "containers": {
+          "args": {
+            "skipCache": "Boolean!"
+          },
+          "type": "[DockerContainer!]!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "logs": {
+          "args": {
+            "id": "PrefixedID!",
+            "since": "DateTime",
+            "tail": "Int"
+          },
+          "type": "DockerContainerLogs!"
+        },
+        "networks": {
+          "args": {
+            "skipCache": "Boolean!"
+          },
+          "type": "[DockerNetwork!]!"
+        },
+        "organizer": {
+          "args": {
+            "skipCache": "Boolean!"
+          },
+          "type": "ResolvedOrganizerV1!"
+        },
+        "portConflicts": {
+          "args": {
+            "skipCache": "Boolean!"
+          },
+          "type": "DockerPortConflicts!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "DockerAutostartEntryInput": {
+      "input_fields": {
+        "autoStart": "Boolean!",
+        "id": "PrefixedID!",
+        "wait": "Int"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "DockerContainer": {
+      "fields": {
+        "autoStart": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "autoStartOrder": {
+          "args": {},
+          "type": "Int"
+        },
+        "autoStartWait": {
+          "args": {},
+          "type": "Int"
+        },
+        "command": {
+          "args": {},
+          "type": "String!"
+        },
+        "created": {
+          "args": {},
+          "type": "Int!"
+        },
+        "hostConfig": {
+          "args": {},
+          "type": "ContainerHostConfig"
+        },
+        "iconUrl": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "image": {
+          "args": {},
+          "type": "String!"
+        },
+        "imageId": {
+          "args": {},
+          "type": "String!"
+        },
+        "isOrphaned": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "isRebuildReady": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "isUpdateAvailable": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "labels": {
+          "args": {},
+          "type": "JSON"
+        },
+        "lanIpPorts": {
+          "args": {},
+          "type": "[String!]"
+        },
+        "mounts": {
+          "args": {},
+          "type": "[JSON!]"
+        },
+        "names": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "networkSettings": {
+          "args": {},
+          "type": "JSON"
+        },
+        "ports": {
+          "args": {},
+          "type": "[ContainerPort!]!"
+        },
+        "projectUrl": {
+          "args": {},
+          "type": "String"
+        },
+        "registryUrl": {
+          "args": {},
+          "type": "String"
+        },
+        "shell": {
+          "args": {},
+          "type": "String"
+        },
+        "sizeLog": {
+          "args": {},
+          "type": "BigInt"
+        },
+        "sizeRootFs": {
+          "args": {},
+          "type": "BigInt"
+        },
+        "sizeRw": {
+          "args": {},
+          "type": "BigInt"
+        },
+        "state": {
+          "args": {},
+          "type": "ContainerState!"
+        },
+        "status": {
+          "args": {},
+          "type": "String!"
+        },
+        "supportUrl": {
+          "args": {},
+          "type": "String"
+        },
+        "tailscaleEnabled": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "tailscaleStatus": {
+          "args": {
+            "forceRefresh": "Boolean"
+          },
+          "type": "TailscaleStatus"
+        },
+        "templatePath": {
+          "args": {},
+          "type": "String"
+        },
+        "templatePorts": {
+          "args": {},
+          "type": "[ContainerPort!]"
+        },
+        "webUiUrl": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "DockerContainerLogLine": {
+      "fields": {
+        "message": {
+          "args": {},
+          "type": "String!"
+        },
+        "timestamp": {
+          "args": {},
+          "type": "DateTime!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "DockerContainerLogs": {
+      "fields": {
+        "containerId": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "cursor": {
+          "args": {},
+          "type": "DateTime"
+        },
+        "lines": {
+          "args": {},
+          "type": "[DockerContainerLogLine!]!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "DockerContainerPortConflict": {
+      "fields": {
+        "containers": {
+          "args": {},
+          "type": "[DockerPortConflictContainer!]!"
+        },
+        "privatePort": {
+          "args": {},
+          "type": "Port!"
+        },
+        "type": {
+          "args": {},
+          "type": "ContainerPortType!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "DockerContainerStats": {
+      "fields": {
+        "blockIO": {
+          "args": {},
+          "type": "String!"
+        },
+        "cpuPercent": {
+          "args": {},
+          "type": "Float!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "memPercent": {
+          "args": {},
+          "type": "Float!"
+        },
+        "memUsage": {
+          "args": {},
+          "type": "String!"
+        },
+        "netIO": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "DockerLanPortConflict": {
+      "fields": {
+        "containers": {
+          "args": {},
+          "type": "[DockerPortConflictContainer!]!"
+        },
+        "lanIpPort": {
+          "args": {},
+          "type": "String!"
+        },
+        "publicPort": {
+          "args": {},
+          "type": "Port"
+        },
+        "type": {
+          "args": {},
+          "type": "ContainerPortType!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "DockerMutations": {
+      "fields": {
+        "pause": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "DockerContainer!"
+        },
+        "removeContainer": {
+          "args": {
+            "id": "PrefixedID!",
+            "withImage": "Boolean"
+          },
+          "type": "Boolean!"
+        },
+        "restart": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "DockerContainer!"
+        },
+        "start": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "DockerContainer!"
+        },
+        "stop": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "DockerContainer!"
+        },
+        "unpause": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "DockerContainer!"
+        },
+        "updateAllContainers": {
+          "args": {},
+          "type": "[DockerContainer!]!"
+        },
+        "updateAutostartConfiguration": {
+          "args": {
+            "entries": "[DockerAutostartEntryInput!]!",
+            "persistUserPreferences": "Boolean"
+          },
+          "type": "Boolean!"
+        },
+        "updateContainer": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "DockerContainer!"
+        },
+        "updateContainers": {
+          "args": {
+            "ids": "[PrefixedID!]!"
+          },
+          "type": "[DockerContainer!]!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "DockerNetwork": {
+      "fields": {
+        "attachable": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "configFrom": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "configOnly": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "containers": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "created": {
+          "args": {},
+          "type": "String!"
+        },
+        "driver": {
+          "args": {},
+          "type": "String!"
+        },
+        "enableIPv6": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "ingress": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "internal": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "ipam": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "labels": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "options": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "scope": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "DockerPortConflictContainer": {
+      "fields": {
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "DockerPortConflicts": {
+      "fields": {
+        "containerPorts": {
+          "args": {},
+          "type": "[DockerContainerPortConflict!]!"
+        },
+        "lanPorts": {
+          "args": {},
+          "type": "[DockerLanPortConflict!]!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "DockerTemplateSyncResult": {
+      "fields": {
+        "errors": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "matched": {
+          "args": {},
+          "type": "Int!"
+        },
+        "scanned": {
+          "args": {},
+          "type": "Int!"
+        },
+        "skipped": {
+          "args": {},
+          "type": "Int!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "DynamicRemoteAccessStatus": {
+      "fields": {
+        "enabledType": {
+          "args": {},
+          "type": "DynamicRemoteAccessType!"
+        },
+        "error": {
+          "args": {},
+          "type": "String"
+        },
+        "runningType": {
+          "args": {},
+          "type": "DynamicRemoteAccessType!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "DynamicRemoteAccessType": {
+      "enum_values": [
+        "DISABLED",
+        "STATIC",
+        "UPNP"
+      ],
+      "kind": "ENUM"
+    },
+    "EnableDynamicRemoteAccessInput": {
+      "input_fields": {
+        "enabled": "Boolean!",
+        "url": "AccessUrlInput!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "ExplicitStatusItem": {
+      "fields": {
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "updateStatus": {
+          "args": {},
+          "type": "UpdateStatus!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Flash": {
+      "fields": {
+        "guid": {
+          "args": {},
+          "type": "String!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "product": {
+          "args": {},
+          "type": "String!"
+        },
+        "vendor": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "FlashBackupStatus": {
+      "fields": {
+        "jobId": {
+          "args": {},
+          "type": "String"
+        },
+        "status": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "FlatOrganizerEntry": {
+      "fields": {
+        "childrenIds": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "depth": {
+          "args": {},
+          "type": "Float!"
+        },
+        "hasChildren": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "id": {
+          "args": {},
+          "type": "String!"
+        },
+        "meta": {
+          "args": {},
+          "type": "DockerContainer"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "parentId": {
+          "args": {},
+          "type": "String"
+        },
+        "path": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "position": {
+          "args": {},
+          "type": "Float!"
+        },
+        "type": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Float": {
+      "kind": "SCALAR"
+    },
+    "FormSchema": {
+      "fields": {
+        "dataSchema": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "uiSchema": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "values": {
+          "args": {},
+          "type": "JSON!"
+        }
+      },
+      "interfaces": [],
+      "kind": "INTERFACE"
+    },
+    "HomebrewInstallStatus": {
+      "fields": {
+        "formula": {
+          "args": {},
+          "type": "String!"
+        },
+        "id": {
+          "args": {},
+          "type": "String!"
+        },
+        "message": {
+          "args": {},
+          "type": "String!"
+        },
+        "status": {
+          "args": {},
+          "type": "JobStatus!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ID": {
+      "kind": "SCALAR"
+    },
+    "ImageBuildState": {
+      "enum_values": [
+        "failed",
+        "queued",
+        "running",
+        "success"
+      ],
+      "kind": "ENUM"
+    },
+    "ImageBuildStatus": {
+      "fields": {
+        "alias": {
+          "args": {},
+          "type": "String!"
+        },
+        "distro": {
+          "args": {},
+          "type": "String!"
+        },
+        "error": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "String!"
+        },
+        "logTail": {
+          "args": {},
+          "type": "String!"
+        },
+        "packages": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "release": {
+          "args": {},
+          "type": "String!"
+        },
+        "status": {
+          "args": {},
+          "type": "ImageBuildState!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ImageRecord": {
+      "fields": {
+        "alias": {
+          "args": {},
+          "type": "String!"
+        },
+        "basedOn": {
+          "args": {},
+          "type": "String"
+        },
+        "createdAt": {
+          "args": {},
+          "type": "String!"
+        },
+        "distro": {
+          "args": {},
+          "type": "String!"
+        },
+        "isMaster": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "packages": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "release": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "IncusConfig": {
+      "fields": {
+        "aclAllow": {
+          "args": {},
+          "type": "String!"
+        },
+        "aclBlock": {
+          "args": {},
+          "type": "String!"
+        },
+        "aclDefaultEgress": {
+          "args": {},
+          "type": "String!"
+        },
+        "aclDefaultIngress": {
+          "args": {},
+          "type": "String!"
+        },
+        "aclName": {
+          "args": {},
+          "type": "String!"
+        },
+        "dashboardWidgetEnable": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "enabled": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "jailAgentGid": {
+          "args": {},
+          "type": "String!"
+        },
+        "jailAgentUid": {
+          "args": {},
+          "type": "String!"
+        },
+        "jailBindMounts": {
+          "args": {},
+          "type": "String!"
+        },
+        "jailBridge": {
+          "args": {},
+          "type": "String!"
+        },
+        "jailCpu": {
+          "args": {},
+          "type": "String!"
+        },
+        "jailImage": {
+          "args": {},
+          "type": "String!"
+        },
+        "jailIpv6": {
+          "args": {},
+          "type": "String!"
+        },
+        "jailMemory": {
+          "args": {},
+          "type": "String!"
+        },
+        "jailNat": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "jailNesting": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "jailProfile": {
+          "args": {},
+          "type": "String!"
+        },
+        "jailSubnet": {
+          "args": {},
+          "type": "String!"
+        },
+        "jailWorkspaceRoot": {
+          "args": {},
+          "type": "String!"
+        },
+        "stateDir": {
+          "args": {},
+          "type": "String!"
+        },
+        "storageDriver": {
+          "args": {},
+          "type": "String!"
+        },
+        "storagePoolName": {
+          "args": {},
+          "type": "String!"
+        },
+        "storageSource": {
+          "args": {},
+          "type": "String!"
+        },
+        "tsAuthKeyConfigured": {
+          "args": {},
+          "type": "Boolean!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "IncusConfigInput": {
+      "input_fields": {
+        "aclAllow": "String",
+        "aclBlock": "String",
+        "aclDefaultEgress": "String",
+        "aclDefaultIngress": "String",
+        "aclName": "String",
+        "dashboardWidgetEnable": "Boolean",
+        "enabled": "Boolean",
+        "jailAgentGid": "String",
+        "jailAgentUid": "String",
+        "jailBindMounts": "String",
+        "jailBridge": "String",
+        "jailCpu": "String",
+        "jailImage": "String",
+        "jailIpv6": "String",
+        "jailMemory": "String",
+        "jailNat": "Boolean",
+        "jailNesting": "Boolean",
+        "jailProfile": "String",
+        "jailSubnet": "String",
+        "jailWorkspaceRoot": "String",
+        "stateDir": "String",
+        "storageDriver": "String",
+        "storagePoolName": "String",
+        "storageSource": "String",
+        "tsAuthKey": "String"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "Info": {
+      "fields": {
+        "baseboard": {
+          "args": {},
+          "type": "InfoBaseboard!"
+        },
+        "cpu": {
+          "args": {},
+          "type": "InfoCpu!"
+        },
+        "devices": {
+          "args": {},
+          "type": "InfoDevices!"
+        },
+        "display": {
+          "args": {},
+          "type": "InfoDisplay!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "machineId": {
+          "args": {},
+          "type": "ID"
+        },
+        "memory": {
+          "args": {},
+          "type": "InfoMemory!"
+        },
+        "networkInterfaces": {
+          "args": {},
+          "type": "[InfoNetworkInterface!]!"
+        },
+        "os": {
+          "args": {},
+          "type": "InfoOs!"
+        },
+        "primaryNetwork": {
+          "args": {},
+          "type": "InfoNetworkInterface"
+        },
+        "system": {
+          "args": {},
+          "type": "InfoSystem!"
+        },
+        "time": {
+          "args": {},
+          "type": "DateTime!"
+        },
+        "versions": {
+          "args": {},
+          "type": "InfoVersions!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoBaseboard": {
+      "fields": {
+        "assetTag": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "manufacturer": {
+          "args": {},
+          "type": "String"
+        },
+        "memMax": {
+          "args": {},
+          "type": "Float"
+        },
+        "memSlots": {
+          "args": {},
+          "type": "Float"
+        },
+        "model": {
+          "args": {},
+          "type": "String"
+        },
+        "serial": {
+          "args": {},
+          "type": "String"
+        },
+        "version": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoCpu": {
+      "fields": {
+        "brand": {
+          "args": {},
+          "type": "String"
+        },
+        "cache": {
+          "args": {},
+          "type": "JSON"
+        },
+        "cores": {
+          "args": {},
+          "type": "Int"
+        },
+        "family": {
+          "args": {},
+          "type": "String"
+        },
+        "flags": {
+          "args": {},
+          "type": "[String!]"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "manufacturer": {
+          "args": {},
+          "type": "String"
+        },
+        "model": {
+          "args": {},
+          "type": "String"
+        },
+        "packages": {
+          "args": {},
+          "type": "CpuPackages!"
+        },
+        "processors": {
+          "args": {},
+          "type": "Int"
+        },
+        "revision": {
+          "args": {},
+          "type": "String"
+        },
+        "socket": {
+          "args": {},
+          "type": "String"
+        },
+        "speed": {
+          "args": {},
+          "type": "Float"
+        },
+        "speedmax": {
+          "args": {},
+          "type": "Float"
+        },
+        "speedmin": {
+          "args": {},
+          "type": "Float"
+        },
+        "stepping": {
+          "args": {},
+          "type": "Int"
+        },
+        "threads": {
+          "args": {},
+          "type": "Int"
+        },
+        "topology": {
+          "args": {},
+          "type": "[[[Int!]!]!]!"
+        },
+        "vendor": {
+          "args": {},
+          "type": "String"
+        },
+        "voltage": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoDevices": {
+      "fields": {
+        "gpu": {
+          "args": {},
+          "type": "[InfoGpu!]"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "network": {
+          "args": {},
+          "type": "[InfoNetwork!]"
+        },
+        "pci": {
+          "args": {},
+          "type": "[InfoPci!]"
+        },
+        "usb": {
+          "args": {},
+          "type": "[InfoUsb!]"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoDisplay": {
+      "fields": {
+        "case": {
+          "args": {},
+          "type": "InfoDisplayCase!"
+        },
+        "critical": {
+          "args": {},
+          "type": "Int!"
+        },
+        "hot": {
+          "args": {},
+          "type": "Int!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "locale": {
+          "args": {},
+          "type": "String"
+        },
+        "max": {
+          "args": {},
+          "type": "Int"
+        },
+        "resize": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "scale": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "tabs": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "text": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "theme": {
+          "args": {},
+          "type": "ThemeName!"
+        },
+        "total": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "unit": {
+          "args": {},
+          "type": "Temperature!"
+        },
+        "usage": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "warning": {
+          "args": {},
+          "type": "Int!"
+        },
+        "wwn": {
+          "args": {},
+          "type": "Boolean!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoDisplayCase": {
+      "fields": {
+        "base64": {
+          "args": {},
+          "type": "String!"
+        },
+        "error": {
+          "args": {},
+          "type": "String!"
+        },
+        "icon": {
+          "args": {},
+          "type": "String!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "url": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoGpu": {
+      "fields": {
+        "blacklisted": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "class": {
+          "args": {},
+          "type": "String!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "productid": {
+          "args": {},
+          "type": "String!"
+        },
+        "type": {
+          "args": {},
+          "type": "String!"
+        },
+        "typeid": {
+          "args": {},
+          "type": "String!"
+        },
+        "vendorname": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoMemory": {
+      "fields": {
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "layout": {
+          "args": {},
+          "type": "[MemoryLayout!]!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoNetwork": {
+      "fields": {
+        "dhcp": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "iface": {
+          "args": {},
+          "type": "String!"
+        },
+        "mac": {
+          "args": {},
+          "type": "String"
+        },
+        "model": {
+          "args": {},
+          "type": "String"
+        },
+        "speed": {
+          "args": {},
+          "type": "String"
+        },
+        "vendor": {
+          "args": {},
+          "type": "String"
+        },
+        "virtual": {
+          "args": {},
+          "type": "Boolean"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoNetworkInterface": {
+      "fields": {
+        "description": {
+          "args": {},
+          "type": "String"
+        },
+        "duplex": {
+          "args": {},
+          "type": "String"
+        },
+        "gateway": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "internal": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "ipAddress": {
+          "args": {},
+          "type": "String"
+        },
+        "ipv4Addresses": {
+          "args": {},
+          "type": "[InfoNetworkIpv4Address!]!"
+        },
+        "ipv6Address": {
+          "args": {},
+          "type": "String"
+        },
+        "ipv6Addresses": {
+          "args": {},
+          "type": "[InfoNetworkIpv6Address!]!"
+        },
+        "ipv6Gateway": {
+          "args": {},
+          "type": "String"
+        },
+        "ipv6Netmask": {
+          "args": {},
+          "type": "String"
+        },
+        "macAddress": {
+          "args": {},
+          "type": "String"
+        },
+        "mtu": {
+          "args": {},
+          "type": "Int"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "netmask": {
+          "args": {},
+          "type": "String"
+        },
+        "operstate": {
+          "args": {},
+          "type": "String"
+        },
+        "protocol": {
+          "args": {},
+          "type": "String"
+        },
+        "speed": {
+          "args": {},
+          "type": "Int"
+        },
+        "status": {
+          "args": {},
+          "type": "String"
+        },
+        "type": {
+          "args": {},
+          "type": "String"
+        },
+        "useDhcp": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "useDhcp6": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "virtual": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "vlanId": {
+          "args": {},
+          "type": "Int"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoNetworkIpv4Address": {
+      "fields": {
+        "address": {
+          "args": {},
+          "type": "String!"
+        },
+        "netmask": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "InfoNetworkIpv6Address": {
+      "fields": {
+        "address": {
+          "args": {},
+          "type": "String!"
+        },
+        "prefixLength": {
+          "args": {},
+          "type": "Int"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "InfoOs": {
+      "fields": {
+        "arch": {
+          "args": {},
+          "type": "String"
+        },
+        "build": {
+          "args": {},
+          "type": "String"
+        },
+        "codename": {
+          "args": {},
+          "type": "String"
+        },
+        "distro": {
+          "args": {},
+          "type": "String"
+        },
+        "fqdn": {
+          "args": {},
+          "type": "String"
+        },
+        "hostname": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "kernel": {
+          "args": {},
+          "type": "String"
+        },
+        "logofile": {
+          "args": {},
+          "type": "String"
+        },
+        "platform": {
+          "args": {},
+          "type": "String"
+        },
+        "release": {
+          "args": {},
+          "type": "String"
+        },
+        "serial": {
+          "args": {},
+          "type": "String"
+        },
+        "servicepack": {
+          "args": {},
+          "type": "String"
+        },
+        "uefi": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "uptime": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoPci": {
+      "fields": {
+        "blacklisted": {
+          "args": {},
+          "type": "String!"
+        },
+        "class": {
+          "args": {},
+          "type": "String!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "productid": {
+          "args": {},
+          "type": "String!"
+        },
+        "productname": {
+          "args": {},
+          "type": "String"
+        },
+        "type": {
+          "args": {},
+          "type": "String!"
+        },
+        "typeid": {
+          "args": {},
+          "type": "String!"
+        },
+        "vendorid": {
+          "args": {},
+          "type": "String!"
+        },
+        "vendorname": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoSystem": {
+      "fields": {
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "manufacturer": {
+          "args": {},
+          "type": "String"
+        },
+        "model": {
+          "args": {},
+          "type": "String"
+        },
+        "serial": {
+          "args": {},
+          "type": "String"
+        },
+        "sku": {
+          "args": {},
+          "type": "String"
+        },
+        "uuid": {
+          "args": {},
+          "type": "String"
+        },
+        "version": {
+          "args": {},
+          "type": "String"
+        },
+        "virtual": {
+          "args": {},
+          "type": "Boolean"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoUsb": {
+      "fields": {
+        "bus": {
+          "args": {},
+          "type": "String"
+        },
+        "device": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InfoVersions": {
+      "fields": {
+        "core": {
+          "args": {},
+          "type": "CoreVersions!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "packages": {
+          "args": {},
+          "type": "PackageVersions"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "InitiateFlashBackupInput": {
+      "input_fields": {
+        "destinationPath": "String!",
+        "options": "JSON",
+        "remoteName": "String!",
+        "sourcePath": "String!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "InstallPluginInput": {
+      "input_fields": {
+        "forced": "Boolean",
+        "name": "String",
+        "url": "String!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "Int": {
+      "kind": "SCALAR"
+    },
+    "IpmiConfig": {
+      "fields": {
+        "args": {
+          "args": {},
+          "type": "[String!]"
+        },
+        "enabled": {
+          "args": {},
+          "type": "Boolean"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "IpmiConfigInput": {
+      "input_fields": {
+        "args": "[String!]",
+        "enabled": "Boolean"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "JSON": {
+      "kind": "SCALAR"
+    },
+    "Jail": {
+      "fields": {
+        "cpuUsageNs": {
+          "args": {},
+          "type": "String"
+        },
+        "ipv4": {
+          "args": {},
+          "type": "String"
+        },
+        "memoryTotalBytes": {
+          "args": {},
+          "type": "String"
+        },
+        "memoryUsageBytes": {
+          "args": {},
+          "type": "String"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "status": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "JailAction": {
+      "enum_values": [
+        "freeze",
+        "restart",
+        "start",
+        "stop",
+        "unfreeze"
+      ],
+      "kind": "ENUM"
+    },
+    "JailDetail": {
+      "fields": {
+        "cpuLimit": {
+          "args": {},
+          "type": "String"
+        },
+        "cpuLimitIsOverride": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "imageDescription": {
+          "args": {},
+          "type": "String"
+        },
+        "imageOs": {
+          "args": {},
+          "type": "String"
+        },
+        "imageRelease": {
+          "args": {},
+          "type": "String"
+        },
+        "memoryLimit": {
+          "args": {},
+          "type": "String"
+        },
+        "memoryLimitIsOverride": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "networkBridge": {
+          "args": {},
+          "type": "String"
+        },
+        "profiles": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "storagePool": {
+          "args": {},
+          "type": "String"
+        },
+        "sudoEnabled": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "workspaceHostPath": {
+          "args": {},
+          "type": "String"
+        },
+        "workspaceIsOverride": {
+          "args": {},
+          "type": "Boolean!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "JobStatus": {
+      "enum_values": [
+        "failed",
+        "running",
+        "success"
+      ],
+      "kind": "ENUM"
+    },
+    "KeyFile": {
+      "fields": {
+        "contents": {
+          "args": {},
+          "type": "String"
+        },
+        "location": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Language": {
+      "fields": {
+        "code": {
+          "args": {},
+          "type": "String!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "url": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "LmSensorsConfig": {
+      "fields": {
+        "config_path": {
+          "args": {},
+          "type": "String"
+        },
+        "enabled": {
+          "args": {},
+          "type": "Boolean"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "LmSensorsConfigInput": {
+      "input_fields": {
+        "config_path": "String",
+        "enabled": "Boolean"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "LogFile": {
+      "fields": {
+        "modifiedAt": {
+          "args": {},
+          "type": "DateTime!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "path": {
+          "args": {},
+          "type": "String!"
+        },
+        "size": {
+          "args": {},
+          "type": "Int!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "LogFileContent": {
+      "fields": {
+        "content": {
+          "args": {},
+          "type": "String!"
+        },
+        "path": {
+          "args": {},
+          "type": "String!"
+        },
+        "startLine": {
+          "args": {},
+          "type": "Int"
+        },
+        "totalLines": {
+          "args": {},
+          "type": "Int!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "MemoryLayout": {
+      "fields": {
+        "bank": {
+          "args": {},
+          "type": "String"
+        },
+        "clockSpeed": {
+          "args": {},
+          "type": "Int"
+        },
+        "formFactor": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "manufacturer": {
+          "args": {},
+          "type": "String"
+        },
+        "partNum": {
+          "args": {},
+          "type": "String"
+        },
+        "serialNum": {
+          "args": {},
+          "type": "String"
+        },
+        "size": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "type": {
+          "args": {},
+          "type": "String"
+        },
+        "voltageConfigured": {
+          "args": {},
+          "type": "Int"
+        },
+        "voltageMax": {
+          "args": {},
+          "type": "Int"
+        },
+        "voltageMin": {
+          "args": {},
+          "type": "Int"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "MemoryUtilization": {
+      "fields": {
+        "active": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "available": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "buffcache": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "free": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "percentSwapTotal": {
+          "args": {},
+          "type": "Float!"
+        },
+        "percentTotal": {
+          "args": {},
+          "type": "Float!"
+        },
+        "swapFree": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "swapTotal": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "swapUsed": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "total": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "used": {
+          "args": {},
+          "type": "BigInt!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "Metrics": {
+      "fields": {
+        "cpu": {
+          "args": {},
+          "type": "CpuUtilization"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "memory": {
+          "args": {},
+          "type": "MemoryUtilization"
+        },
+        "network": {
+          "args": {},
+          "type": "[NetworkMetrics!]!"
+        },
+        "temperature": {
+          "args": {},
+          "type": "TemperatureMetrics"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "MinigraphStatus": {
+      "enum_values": [
+        "CONNECTED",
+        "CONNECTING",
+        "ERROR_RETRYING",
+        "PING_FAILURE",
+        "PRE_INIT"
+      ],
+      "kind": "ENUM"
+    },
+    "MinigraphqlResponse": {
+      "fields": {
+        "error": {
+          "args": {},
+          "type": "String"
+        },
+        "status": {
+          "args": {},
+          "type": "MinigraphStatus!"
+        },
+        "timeout": {
+          "args": {},
+          "type": "Int"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Mutation": {
+      "fields": {
+        "addPlugin": {
+          "args": {
+            "input": "PluginManagementInput!"
+          },
+          "type": "Boolean!"
+        },
+        "apiKey": {
+          "args": {},
+          "type": "ApiKeyMutations!"
+        },
+        "archiveAll": {
+          "args": {
+            "importance": "NotificationImportance"
+          },
+          "type": "NotificationOverview!"
+        },
+        "archiveNotification": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "Notification!"
+        },
+        "archiveNotifications": {
+          "args": {
+            "ids": "[PrefixedID!]!"
+          },
+          "type": "NotificationOverview!"
+        },
+        "array": {
+          "args": {},
+          "type": "ArrayMutations!"
+        },
+        "buildJailImage": {
+          "args": {
+            "alias": "String!",
+            "basedOn": "String",
+            "distro": "String!",
+            "packages": "[String!]!",
+            "postInstallCommands": "[String!]",
+            "release": "String!"
+          },
+          "type": "String!"
+        },
+        "clearJailWorkspace": {
+          "args": {
+            "name": "String!"
+          },
+          "type": "Boolean!"
+        },
+        "configureUps": {
+          "args": {
+            "config": "UPSConfigInput!"
+          },
+          "type": "Boolean!"
+        },
+        "connectSignIn": {
+          "args": {
+            "input": "ConnectSignInInput!"
+          },
+          "type": "Boolean!"
+        },
+        "connectSignOut": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "createDockerFolder": {
+          "args": {
+            "childrenIds": "[String!]",
+            "name": "String!",
+            "parentId": "String"
+          },
+          "type": "ResolvedOrganizerV1!"
+        },
+        "createDockerFolderWithItems": {
+          "args": {
+            "name": "String!",
+            "parentId": "String",
+            "position": "Float",
+            "sourceEntryIds": "[String!]"
+          },
+          "type": "ResolvedOrganizerV1!"
+        },
+        "createNotification": {
+          "args": {
+            "input": "NotificationData!"
+          },
+          "type": "Notification!"
+        },
+        "customization": {
+          "args": {},
+          "type": "CustomizationMutations!"
+        },
+        "deleteArchivedNotifications": {
+          "args": {},
+          "type": "NotificationOverview!"
+        },
+        "deleteBuilderPreset": {
+          "args": {
+            "name": "String!"
+          },
+          "type": "Boolean!"
+        },
+        "deleteDockerEntries": {
+          "args": {
+            "entryIds": "[String!]!"
+          },
+          "type": "ResolvedOrganizerV1!"
+        },
+        "deleteJail": {
+          "args": {
+            "name": "String!"
+          },
+          "type": "Boolean!"
+        },
+        "deleteJailImage": {
+          "args": {
+            "alias": "String!"
+          },
+          "type": "Boolean!"
+        },
+        "deleteNotification": {
+          "args": {
+            "id": "PrefixedID!",
+            "type": "NotificationType!"
+          },
+          "type": "NotificationOverview!"
+        },
+        "deleteStoppedJails": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "docker": {
+          "args": {},
+          "type": "DockerMutations!"
+        },
+        "enableDynamicRemoteAccess": {
+          "args": {
+            "input": "EnableDynamicRemoteAccessInput!"
+          },
+          "type": "Boolean!"
+        },
+        "grantJailSudo": {
+          "args": {
+            "name": "String!"
+          },
+          "type": "Boolean!"
+        },
+        "initiateFlashBackup": {
+          "args": {
+            "input": "InitiateFlashBackupInput!"
+          },
+          "type": "FlashBackupStatus!"
+        },
+        "installHomebrewFormula": {
+          "args": {
+            "formula": "String!",
+            "name": "String!"
+          },
+          "type": "String!"
+        },
+        "launchJail": {
+          "args": {
+            "allowSudo": "Boolean",
+            "image": "String",
+            "name": "String!"
+          },
+          "type": "Boolean!"
+        },
+        "migrateJailWorkspace": {
+          "args": {
+            "name": "String!"
+          },
+          "type": "String!"
+        },
+        "moveDockerEntriesToFolder": {
+          "args": {
+            "destinationFolderId": "String!",
+            "sourceEntryIds": "[String!]!"
+          },
+          "type": "ResolvedOrganizerV1!"
+        },
+        "moveDockerItemsToPosition": {
+          "args": {
+            "destinationFolderId": "String!",
+            "position": "Float!",
+            "sourceEntryIds": "[String!]!"
+          },
+          "type": "ResolvedOrganizerV1!"
+        },
+        "notifyIfUnique": {
+          "args": {
+            "input": "NotificationData!"
+          },
+          "type": "Notification"
+        },
+        "onboarding": {
+          "args": {},
+          "type": "OnboardingMutations!"
+        },
+        "parityCheck": {
+          "args": {},
+          "type": "ParityCheckMutations!"
+        },
+        "pruneStaleImageRecords": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "rclone": {
+          "args": {},
+          "type": "RCloneMutations!"
+        },
+        "recalculateOverview": {
+          "args": {},
+          "type": "NotificationOverview!"
+        },
+        "refreshDockerDigests": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "removePlugin": {
+          "args": {
+            "input": "PluginManagementInput!"
+          },
+          "type": "Boolean!"
+        },
+        "renameDockerFolder": {
+          "args": {
+            "folderId": "String!",
+            "newName": "String!"
+          },
+          "type": "ResolvedOrganizerV1!"
+        },
+        "resetDockerTemplateMappings": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "resizeJailExec": {
+          "args": {
+            "cols": "Int!",
+            "rows": "Int!",
+            "sessionId": "String!"
+          },
+          "type": "Boolean!"
+        },
+        "saveBuilderPreset": {
+          "args": {
+            "input": "BuilderPresetInput!"
+          },
+          "type": "BuilderPreset!"
+        },
+        "sendJailExecInput": {
+          "args": {
+            "data": "String!",
+            "sessionId": "String!"
+          },
+          "type": "Boolean!"
+        },
+        "setDockerFolderChildren": {
+          "args": {
+            "childrenIds": "[String!]!",
+            "folderId": "String"
+          },
+          "type": "ResolvedOrganizerV1!"
+        },
+        "setJailLimits": {
+          "args": {
+            "cpu": "String",
+            "memory": "String",
+            "name": "String!"
+          },
+          "type": "Boolean!"
+        },
+        "setJailState": {
+          "args": {
+            "action": "JailAction!",
+            "name": "String!"
+          },
+          "type": "Boolean!"
+        },
+        "setJailWorkspace": {
+          "args": {
+            "hostPath": "String!",
+            "name": "String!"
+          },
+          "type": "Boolean!"
+        },
+        "setMasterImage": {
+          "args": {
+            "alias": "String!",
+            "isMaster": "Boolean!"
+          },
+          "type": "ImageRecord!"
+        },
+        "setupRemoteAccess": {
+          "args": {
+            "input": "SetupRemoteAccessInput!"
+          },
+          "type": "Boolean!"
+        },
+        "startJailExec": {
+          "args": {
+            "cols": "Int",
+            "name": "String!",
+            "rows": "Int"
+          },
+          "type": "String!"
+        },
+        "startPrivilegedCommand": {
+          "args": {
+            "command": "String!",
+            "name": "String!"
+          },
+          "type": "String!"
+        },
+        "stopJailExec": {
+          "args": {
+            "sessionId": "String!"
+          },
+          "type": "Boolean!"
+        },
+        "syncDockerTemplatePaths": {
+          "args": {},
+          "type": "DockerTemplateSyncResult!"
+        },
+        "unarchiveAll": {
+          "args": {
+            "importance": "NotificationImportance"
+          },
+          "type": "NotificationOverview!"
+        },
+        "unarchiveNotifications": {
+          "args": {
+            "ids": "[PrefixedID!]!"
+          },
+          "type": "NotificationOverview!"
+        },
+        "unraidPlugins": {
+          "args": {},
+          "type": "UnraidPluginsMutations!"
+        },
+        "unreadNotification": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "Notification!"
+        },
+        "updateApiSettings": {
+          "args": {
+            "input": "ConnectSettingsInput!"
+          },
+          "type": "ConnectSettingsValues!"
+        },
+        "updateDockerViewPreferences": {
+          "args": {
+            "prefs": "JSON!",
+            "viewId": "String"
+          },
+          "type": "ResolvedOrganizerV1!"
+        },
+        "updateIncusConfig": {
+          "args": {
+            "input": "IncusConfigInput!"
+          },
+          "type": "IncusConfig!"
+        },
+        "updateServerIdentity": {
+          "args": {
+            "comment": "String",
+            "name": "String!",
+            "sysModel": "String"
+          },
+          "type": "Server!"
+        },
+        "updateSettings": {
+          "args": {
+            "input": "JSON!"
+          },
+          "type": "UpdateSettingsResponse!"
+        },
+        "updateSshSettings": {
+          "args": {
+            "input": "UpdateSshInput!"
+          },
+          "type": "Vars!"
+        },
+        "updateSystemTime": {
+          "args": {
+            "input": "UpdateSystemTimeInput!"
+          },
+          "type": "SystemTime!"
+        },
+        "updateTemperatureConfig": {
+          "args": {
+            "input": "TemperatureConfigInput!"
+          },
+          "type": "Boolean!"
+        },
+        "vm": {
+          "args": {},
+          "type": "VmMutations!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Network": {
+      "fields": {
+        "accessUrls": {
+          "args": {},
+          "type": "[AccessUrl!]"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "NetworkMetrics": {
+      "fields": {
+        "bytesReceived": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "bytesSent": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "lastUpdated": {
+          "args": {},
+          "type": "DateTime!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "operstate": {
+          "args": {},
+          "type": "String"
+        },
+        "packetsReceived": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "packetsSent": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "receiveDropped": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "receiveErrors": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "rxSec": {
+          "args": {},
+          "type": "Float!"
+        },
+        "transmitDropped": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "transmitErrors": {
+          "args": {},
+          "type": "BigInt!"
+        },
+        "txSec": {
+          "args": {},
+          "type": "Float!"
+        },
+        "utilizationPercent": {
+          "args": {},
+          "type": "Float"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "Node": {
+      "fields": {
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        }
+      },
+      "interfaces": [],
+      "kind": "INTERFACE"
+    },
+    "Notification": {
+      "fields": {
+        "description": {
+          "args": {},
+          "type": "String!"
+        },
+        "formattedTimestamp": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "importance": {
+          "args": {},
+          "type": "NotificationImportance!"
+        },
+        "link": {
+          "args": {},
+          "type": "String"
+        },
+        "subject": {
+          "args": {},
+          "type": "String!"
+        },
+        "timestamp": {
+          "args": {},
+          "type": "String"
+        },
+        "title": {
+          "args": {},
+          "type": "String!"
+        },
+        "type": {
+          "args": {},
+          "type": "NotificationType!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "NotificationCounts": {
+      "fields": {
+        "alert": {
+          "args": {},
+          "type": "Int!"
+        },
+        "info": {
+          "args": {},
+          "type": "Int!"
+        },
+        "total": {
+          "args": {},
+          "type": "Int!"
+        },
+        "warning": {
+          "args": {},
+          "type": "Int!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "NotificationData": {
+      "input_fields": {
+        "description": "String!",
+        "importance": "NotificationImportance!",
+        "link": "String",
+        "subject": "String!",
+        "title": "String!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "NotificationFilter": {
+      "input_fields": {
+        "importance": "NotificationImportance",
+        "limit": "Int!",
+        "offset": "Int!",
+        "type": "NotificationType!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "NotificationImportance": {
+      "enum_values": [
+        "ALERT",
+        "INFO",
+        "WARNING"
+      ],
+      "kind": "ENUM"
+    },
+    "NotificationOverview": {
+      "fields": {
+        "archive": {
+          "args": {},
+          "type": "NotificationCounts!"
+        },
+        "unread": {
+          "args": {},
+          "type": "NotificationCounts!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "NotificationType": {
+      "enum_values": [
+        "ARCHIVE",
+        "UNREAD"
+      ],
+      "kind": "ENUM"
+    },
+    "Notifications": {
+      "fields": {
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "list": {
+          "args": {
+            "filter": "NotificationFilter!"
+          },
+          "type": "[Notification!]!"
+        },
+        "overview": {
+          "args": {},
+          "type": "NotificationOverview!"
+        },
+        "warningsAndAlerts": {
+          "args": {},
+          "type": "[Notification!]!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "OidcAuthorizationRule": {
+      "fields": {
+        "claim": {
+          "args": {},
+          "type": "String!"
+        },
+        "operator": {
+          "args": {},
+          "type": "AuthorizationOperator!"
+        },
+        "value": {
+          "args": {},
+          "type": "[String!]!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "OidcConfiguration": {
+      "fields": {
+        "defaultAllowedOrigins": {
+          "args": {},
+          "type": "[String!]"
+        },
+        "providers": {
+          "args": {},
+          "type": "[OidcProvider!]!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "OidcProvider": {
+      "fields": {
+        "authorizationEndpoint": {
+          "args": {},
+          "type": "String"
+        },
+        "authorizationRuleMode": {
+          "args": {},
+          "type": "AuthorizationRuleMode"
+        },
+        "authorizationRules": {
+          "args": {},
+          "type": "[OidcAuthorizationRule!]"
+        },
+        "buttonIcon": {
+          "args": {},
+          "type": "String"
+        },
+        "buttonStyle": {
+          "args": {},
+          "type": "String"
+        },
+        "buttonText": {
+          "args": {},
+          "type": "String"
+        },
+        "buttonVariant": {
+          "args": {},
+          "type": "String"
+        },
+        "clientId": {
+          "args": {},
+          "type": "String!"
+        },
+        "clientSecret": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "issuer": {
+          "args": {},
+          "type": "String"
+        },
+        "jwksUri": {
+          "args": {},
+          "type": "String"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "scopes": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "tokenEndpoint": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "OidcSessionValidation": {
+      "fields": {
+        "username": {
+          "args": {},
+          "type": "String"
+        },
+        "valid": {
+          "args": {},
+          "type": "Boolean!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Onboarding": {
+      "fields": {
+        "activationCode": {
+          "args": {},
+          "type": "String"
+        },
+        "completed": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "completedAtVersion": {
+          "args": {},
+          "type": "String"
+        },
+        "isPartnerBuild": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "onboardingState": {
+          "args": {},
+          "type": "OnboardingState!"
+        },
+        "shouldOpen": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "status": {
+          "args": {},
+          "type": "OnboardingStatus!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "OnboardingInternalBootContext": {
+      "fields": {
+        "arrayStopped": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "assignableDisks": {
+          "args": {},
+          "type": "[Disk!]!"
+        },
+        "bootEligible": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "bootedFromFlashWithInternalBootSetup": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "driveWarnings": {
+          "args": {},
+          "type": "[OnboardingInternalBootDriveWarning!]!"
+        },
+        "enableBootTransfer": {
+          "args": {},
+          "type": "String"
+        },
+        "poolNames": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "reservedNames": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "shareNames": {
+          "args": {},
+          "type": "[String!]!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "OnboardingInternalBootDriveWarning": {
+      "fields": {
+        "device": {
+          "args": {},
+          "type": "String!"
+        },
+        "diskId": {
+          "args": {},
+          "type": "String!"
+        },
+        "warnings": {
+          "args": {},
+          "type": "[String!]!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "OnboardingInternalBootResult": {
+      "fields": {
+        "code": {
+          "args": {},
+          "type": "Int"
+        },
+        "ok": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "output": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "OnboardingMutations": {
+      "fields": {
+        "bypassOnboarding": {
+          "args": {},
+          "type": "Onboarding!"
+        },
+        "clearOnboardingOverride": {
+          "args": {},
+          "type": "Onboarding!"
+        },
+        "closeOnboarding": {
+          "args": {},
+          "type": "Onboarding!"
+        },
+        "completeOnboarding": {
+          "args": {},
+          "type": "Onboarding!"
+        },
+        "createInternalBootPool": {
+          "args": {
+            "input": "CreateInternalBootPoolInput!"
+          },
+          "type": "OnboardingInternalBootResult!"
+        },
+        "openOnboarding": {
+          "args": {},
+          "type": "Onboarding!"
+        },
+        "refreshInternalBootContext": {
+          "args": {},
+          "type": "OnboardingInternalBootContext!"
+        },
+        "resetOnboarding": {
+          "args": {},
+          "type": "Onboarding!"
+        },
+        "resumeOnboarding": {
+          "args": {},
+          "type": "Onboarding!"
+        },
+        "setOnboardingOverride": {
+          "args": {
+            "input": "OnboardingOverrideInput!"
+          },
+          "type": "Onboarding!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "OnboardingOverrideCompletionInput": {
+      "input_fields": {
+        "completed": "Boolean",
+        "completedAtVersion": "String",
+        "forceOpen": "Boolean"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "OnboardingOverrideInput": {
+      "input_fields": {
+        "activationCode": "ActivationCodeOverrideInput",
+        "onboarding": "OnboardingOverrideCompletionInput",
+        "partnerInfo": "PartnerInfoOverrideInput",
+        "registrationState": "RegistrationState"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "OnboardingState": {
+      "fields": {
+        "activationRequired": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "hasActivationCode": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "isFreshInstall": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "isRegistered": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "registrationState": {
+          "args": {},
+          "type": "RegistrationState"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "OnboardingStatus": {
+      "enum_values": [
+        "COMPLETED",
+        "DOWNGRADE",
+        "INCOMPLETE",
+        "UPGRADE"
+      ],
+      "kind": "ENUM"
+    },
+    "Owner": {
+      "fields": {
+        "avatar": {
+          "args": {},
+          "type": "String!"
+        },
+        "url": {
+          "args": {},
+          "type": "String!"
+        },
+        "username": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "PackageEcosystem": {
+      "enum_values": [
+        "apt",
+        "brew",
+        "npm",
+        "pypi"
+      ],
+      "kind": "ENUM"
+    },
+    "PackageSearchError": {
+      "fields": {
+        "ecosystem": {
+          "args": {},
+          "type": "String!"
+        },
+        "message": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "PackageSearchResponse": {
+      "fields": {
+        "errors": {
+          "args": {},
+          "type": "[PackageSearchError!]!"
+        },
+        "results": {
+          "args": {},
+          "type": "[PackageSearchResult!]!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "PackageSearchResult": {
+      "fields": {
+        "description": {
+          "args": {},
+          "type": "String"
+        },
+        "ecosystem": {
+          "args": {},
+          "type": "String!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "version": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "PackageVersions": {
+      "fields": {
+        "docker": {
+          "args": {},
+          "type": "String"
+        },
+        "git": {
+          "args": {},
+          "type": "String"
+        },
+        "nginx": {
+          "args": {},
+          "type": "String"
+        },
+        "node": {
+          "args": {},
+          "type": "String"
+        },
+        "npm": {
+          "args": {},
+          "type": "String"
+        },
+        "openssl": {
+          "args": {},
+          "type": "String"
+        },
+        "php": {
+          "args": {},
+          "type": "String"
+        },
+        "pm2": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ParityCheck": {
+      "fields": {
+        "correcting": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "date": {
+          "args": {},
+          "type": "DateTime"
+        },
+        "duration": {
+          "args": {},
+          "type": "Int"
+        },
+        "errors": {
+          "args": {},
+          "type": "Int"
+        },
+        "paused": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "progress": {
+          "args": {},
+          "type": "Int"
+        },
+        "running": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "speed": {
+          "args": {},
+          "type": "String"
+        },
+        "status": {
+          "args": {},
+          "type": "ParityCheckStatus!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ParityCheckMutations": {
+      "fields": {
+        "cancel": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "pause": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "resume": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "start": {
+          "args": {
+            "correct": "Boolean!"
+          },
+          "type": "JSON!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ParityCheckStatus": {
+      "enum_values": [
+        "CANCELLED",
+        "COMPLETED",
+        "FAILED",
+        "NEVER_RUN",
+        "PAUSED",
+        "RUNNING"
+      ],
+      "kind": "ENUM"
+    },
+    "PartnerConfig": {
+      "fields": {
+        "extraLinks": {
+          "args": {},
+          "type": "[PartnerLink!]"
+        },
+        "hardwareSpecsUrl": {
+          "args": {},
+          "type": "String"
+        },
+        "manualUrl": {
+          "args": {},
+          "type": "String"
+        },
+        "name": {
+          "args": {},
+          "type": "String"
+        },
+        "supportUrl": {
+          "args": {},
+          "type": "String"
+        },
+        "url": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "PartnerConfigInput": {
+      "input_fields": {
+        "extraLinks": "[PartnerLinkInput!]",
+        "hardwareSpecsUrl": "String",
+        "manualUrl": "String",
+        "name": "String",
+        "supportUrl": "String",
+        "url": "String"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "PartnerInfoOverrideInput": {
+      "input_fields": {
+        "branding": "BrandingConfigInput",
+        "partner": "PartnerConfigInput"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "PartnerLink": {
+      "fields": {
+        "title": {
+          "args": {},
+          "type": "String!"
+        },
+        "url": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "PartnerLinkInput": {
+      "input_fields": {
+        "title": "String!",
+        "url": "String!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "Permission": {
+      "fields": {
+        "actions": {
+          "args": {},
+          "type": "[AuthAction!]!"
+        },
+        "resource": {
+          "args": {},
+          "type": "Resource!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Plugin": {
+      "fields": {
+        "hasApiModule": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "hasCliModule": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "version": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "PluginInstallEvent": {
+      "fields": {
+        "operationId": {
+          "args": {},
+          "type": "ID!"
+        },
+        "output": {
+          "args": {},
+          "type": "[String!]"
+        },
+        "status": {
+          "args": {},
+          "type": "PluginInstallStatus!"
+        },
+        "timestamp": {
+          "args": {},
+          "type": "DateTime!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "PluginInstallOperation": {
+      "fields": {
+        "createdAt": {
+          "args": {},
+          "type": "DateTime!"
+        },
+        "finishedAt": {
+          "args": {},
+          "type": "DateTime"
+        },
+        "id": {
+          "args": {},
+          "type": "ID!"
+        },
+        "name": {
+          "args": {},
+          "type": "String"
+        },
+        "output": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "status": {
+          "args": {},
+          "type": "PluginInstallStatus!"
+        },
+        "updatedAt": {
+          "args": {},
+          "type": "DateTime"
+        },
+        "url": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "PluginInstallStatus": {
+      "enum_values": [
+        "FAILED",
+        "QUEUED",
+        "RUNNING",
+        "SUCCEEDED"
+      ],
+      "kind": "ENUM"
+    },
+    "PluginManagementInput": {
+      "input_fields": {
+        "bundled": "Boolean!",
+        "names": "[String!]!",
+        "restart": "Boolean!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "Port": {
+      "kind": "SCALAR"
+    },
+    "PrefixedID": {
+      "kind": "SCALAR"
+    },
+    "PrivilegedCommandStatus": {
+      "fields": {
+        "command": {
+          "args": {},
+          "type": "String!"
+        },
+        "exitCode": {
+          "args": {},
+          "type": "Int"
+        },
+        "id": {
+          "args": {},
+          "type": "String!"
+        },
+        "message": {
+          "args": {},
+          "type": "String!"
+        },
+        "status": {
+          "args": {},
+          "type": "JobStatus!"
+        },
+        "stderr": {
+          "args": {},
+          "type": "String"
+        },
+        "stdout": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ProfileModel": {
+      "fields": {
+        "avatar": {
+          "args": {},
+          "type": "String!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "url": {
+          "args": {},
+          "type": "String!"
+        },
+        "username": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "PublicOidcProvider": {
+      "fields": {
+        "buttonIcon": {
+          "args": {},
+          "type": "String"
+        },
+        "buttonStyle": {
+          "args": {},
+          "type": "String"
+        },
+        "buttonText": {
+          "args": {},
+          "type": "String"
+        },
+        "buttonVariant": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "ID!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Query": {
+      "fields": {
+        "apiKey": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "ApiKey"
+        },
+        "apiKeyPossiblePermissions": {
+          "args": {},
+          "type": "[Permission!]!"
+        },
+        "apiKeyPossibleRoles": {
+          "args": {},
+          "type": "[Role!]!"
+        },
+        "apiKeys": {
+          "args": {},
+          "type": "[ApiKey!]!"
+        },
+        "array": {
+          "args": {},
+          "type": "UnraidArray!"
+        },
+        "assignableDisks": {
+          "args": {},
+          "type": "[Disk!]!"
+        },
+        "builderPresets": {
+          "args": {},
+          "type": "[BuilderPreset!]!"
+        },
+        "cloud": {
+          "args": {},
+          "type": "Cloud!"
+        },
+        "config": {
+          "args": {},
+          "type": "Config!"
+        },
+        "connect": {
+          "args": {},
+          "type": "Connect!"
+        },
+        "customization": {
+          "args": {},
+          "type": "Customization"
+        },
+        "disk": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "Disk!"
+        },
+        "disks": {
+          "args": {},
+          "type": "[Disk!]!"
+        },
+        "display": {
+          "args": {},
+          "type": "InfoDisplay!"
+        },
+        "docker": {
+          "args": {},
+          "type": "Docker!"
+        },
+        "flash": {
+          "args": {},
+          "type": "Flash!"
+        },
+        "getApiKeyCreationFormSchema": {
+          "args": {},
+          "type": "ApiKeyFormSettings!"
+        },
+        "getAvailableAuthActions": {
+          "args": {},
+          "type": "[AuthAction!]!"
+        },
+        "getPermissionsForRoles": {
+          "args": {
+            "roles": "[Role!]!"
+          },
+          "type": "[Permission!]!"
+        },
+        "homebrewInstallStatus": {
+          "args": {
+            "id": "String!"
+          },
+          "type": "HomebrewInstallStatus"
+        },
+        "incusConfig": {
+          "args": {},
+          "type": "IncusConfig!"
+        },
+        "incusHealthy": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "info": {
+          "args": {},
+          "type": "Info!"
+        },
+        "installedUnraidPlugins": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "internalBootContext": {
+          "args": {},
+          "type": "OnboardingInternalBootContext!"
+        },
+        "isFreshInstall": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "isSSOEnabled": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "jailDetail": {
+          "args": {
+            "name": "String!"
+          },
+          "type": "JailDetail!"
+        },
+        "jailImageBuildStatus": {
+          "args": {
+            "buildId": "String!"
+          },
+          "type": "ImageBuildStatus"
+        },
+        "jailImages": {
+          "args": {},
+          "type": "[ImageRecord!]!"
+        },
+        "jails": {
+          "args": {},
+          "type": "[Jail!]!"
+        },
+        "logFile": {
+          "args": {
+            "lines": "Int",
+            "path": "String!",
+            "startLine": "Int"
+          },
+          "type": "LogFileContent!"
+        },
+        "logFiles": {
+          "args": {},
+          "type": "[LogFile!]!"
+        },
+        "me": {
+          "args": {},
+          "type": "UserAccount!"
+        },
+        "metrics": {
+          "args": {},
+          "type": "Metrics!"
+        },
+        "network": {
+          "args": {},
+          "type": "Network!"
+        },
+        "networkInterfaces": {
+          "args": {},
+          "type": "[InfoNetworkInterface!]!"
+        },
+        "notifications": {
+          "args": {},
+          "type": "Notifications!"
+        },
+        "oidcConfiguration": {
+          "args": {},
+          "type": "OidcConfiguration!"
+        },
+        "oidcProvider": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "OidcProvider"
+        },
+        "oidcProviders": {
+          "args": {},
+          "type": "[OidcProvider!]!"
+        },
+        "online": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "owner": {
+          "args": {},
+          "type": "Owner!"
+        },
+        "parityHistory": {
+          "args": {},
+          "type": "[ParityCheck!]!"
+        },
+        "pluginInstallOperation": {
+          "args": {
+            "operationId": "ID!"
+          },
+          "type": "PluginInstallOperation"
+        },
+        "pluginInstallOperations": {
+          "args": {},
+          "type": "[PluginInstallOperation!]!"
+        },
+        "plugins": {
+          "args": {},
+          "type": "[Plugin!]!"
+        },
+        "previewEffectivePermissions": {
+          "args": {
+            "permissions": "[AddPermissionInput!]",
+            "roles": "[Role!]"
+          },
+          "type": "[Permission!]!"
+        },
+        "privilegedCommandStatus": {
+          "args": {
+            "id": "String!"
+          },
+          "type": "PrivilegedCommandStatus"
+        },
+        "publicOidcProviders": {
+          "args": {},
+          "type": "[PublicOidcProvider!]!"
+        },
+        "publicTheme": {
+          "args": {},
+          "type": "Theme!"
+        },
+        "rclone": {
+          "args": {},
+          "type": "RCloneBackupSettings!"
+        },
+        "registration": {
+          "args": {},
+          "type": "Registration"
+        },
+        "remoteAccess": {
+          "args": {},
+          "type": "RemoteAccess!"
+        },
+        "searchAllPackages": {
+          "args": {
+            "distro": "String",
+            "query": "String!",
+            "release": "String"
+          },
+          "type": "PackageSearchResponse!"
+        },
+        "searchPackages": {
+          "args": {
+            "distro": "String",
+            "ecosystem": "PackageEcosystem!",
+            "query": "String!",
+            "release": "String"
+          },
+          "type": "[PackageSearchResult!]!"
+        },
+        "server": {
+          "args": {},
+          "type": "Server"
+        },
+        "servers": {
+          "args": {},
+          "type": "[Server!]!"
+        },
+        "services": {
+          "args": {},
+          "type": "[Service!]!"
+        },
+        "settings": {
+          "args": {},
+          "type": "Settings!"
+        },
+        "shares": {
+          "args": {},
+          "type": "[Share!]!"
+        },
+        "systemTime": {
+          "args": {},
+          "type": "SystemTime!"
+        },
+        "timeZoneOptions": {
+          "args": {},
+          "type": "[TimeZoneOption!]!"
+        },
+        "upsConfiguration": {
+          "args": {},
+          "type": "UPSConfiguration!"
+        },
+        "upsDeviceById": {
+          "args": {
+            "id": "String!"
+          },
+          "type": "UPSDevice"
+        },
+        "upsDevices": {
+          "args": {},
+          "type": "[UPSDevice!]!"
+        },
+        "validateOidcSession": {
+          "args": {
+            "token": "String!"
+          },
+          "type": "OidcSessionValidation!"
+        },
+        "vars": {
+          "args": {},
+          "type": "Vars!"
+        },
+        "vms": {
+          "args": {},
+          "type": "Vms!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "RCloneBackupConfigForm": {
+      "fields": {
+        "dataSchema": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "id": {
+          "args": {},
+          "type": "ID!"
+        },
+        "uiSchema": {
+          "args": {},
+          "type": "JSON!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "RCloneBackupSettings": {
+      "fields": {
+        "configForm": {
+          "args": {
+            "formOptions": "RCloneConfigFormInput"
+          },
+          "type": "RCloneBackupConfigForm!"
+        },
+        "drives": {
+          "args": {},
+          "type": "[RCloneDrive!]!"
+        },
+        "remotes": {
+          "args": {},
+          "type": "[RCloneRemote!]!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "RCloneConfigFormInput": {
+      "input_fields": {
+        "parameters": "JSON",
+        "providerType": "String",
+        "showAdvanced": "Boolean"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "RCloneDrive": {
+      "fields": {
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "options": {
+          "args": {},
+          "type": "JSON!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "RCloneMutations": {
+      "fields": {
+        "createRCloneRemote": {
+          "args": {
+            "input": "CreateRCloneRemoteInput!"
+          },
+          "type": "RCloneRemote!"
+        },
+        "deleteRCloneRemote": {
+          "args": {
+            "input": "DeleteRCloneRemoteInput!"
+          },
+          "type": "Boolean!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "RCloneRemote": {
+      "fields": {
+        "config": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "parameters": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "type": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Registration": {
+      "fields": {
+        "expiration": {
+          "args": {},
+          "type": "String"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "keyFile": {
+          "args": {},
+          "type": "KeyFile"
+        },
+        "state": {
+          "args": {},
+          "type": "RegistrationState"
+        },
+        "type": {
+          "args": {},
+          "type": "registrationType"
+        },
+        "updateExpiration": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "RegistrationState": {
+      "enum_values": [
+        "BASIC",
+        "EBLACKLISTED",
+        "EBLACKLISTED1",
+        "EBLACKLISTED2",
+        "EEXPIRED",
+        "EGUID",
+        "EGUID1",
+        "ENOCONN",
+        "ENOFLASH",
+        "ENOFLASH1",
+        "ENOFLASH2",
+        "ENOFLASH3",
+        "ENOFLASH4",
+        "ENOFLASH5",
+        "ENOFLASH6",
+        "ENOFLASH7",
+        "ENOKEYFILE",
+        "ENOKEYFILE1",
+        "ENOKEYFILE2",
+        "ETRIAL",
+        "LIFETIME",
+        "PLUS",
+        "PRO",
+        "STARTER",
+        "TRIAL",
+        "UNLEASHED"
+      ],
+      "kind": "ENUM"
+    },
+    "RelayResponse": {
+      "fields": {
+        "error": {
+          "args": {},
+          "type": "String"
+        },
+        "status": {
+          "args": {},
+          "type": "String!"
+        },
+        "timeout": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "RemoteAccess": {
+      "fields": {
+        "accessType": {
+          "args": {},
+          "type": "WAN_ACCESS_TYPE!"
+        },
+        "forwardType": {
+          "args": {},
+          "type": "WAN_FORWARD_TYPE"
+        },
+        "port": {
+          "args": {},
+          "type": "Int"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "RemoveRoleFromApiKeyInput": {
+      "input_fields": {
+        "apiKeyId": "PrefixedID!",
+        "role": "Role!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "ResolvedOrganizerV1": {
+      "fields": {
+        "version": {
+          "args": {},
+          "type": "Float!"
+        },
+        "views": {
+          "args": {},
+          "type": "[ResolvedOrganizerView!]!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ResolvedOrganizerView": {
+      "fields": {
+        "flatEntries": {
+          "args": {},
+          "type": "[FlatOrganizerEntry!]!"
+        },
+        "id": {
+          "args": {},
+          "type": "String!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "prefs": {
+          "args": {},
+          "type": "JSON"
+        },
+        "rootId": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Resource": {
+      "enum_values": [
+        "ACTIVATION_CODE",
+        "API_KEY",
+        "ARRAY",
+        "CLOUD",
+        "CONFIG",
+        "CONNECT",
+        "CONNECT__REMOTE_ACCESS",
+        "CUSTOMIZATIONS",
+        "DASHBOARD",
+        "DISK",
+        "DISPLAY",
+        "DOCKER",
+        "FLASH",
+        "INFO",
+        "LOGS",
+        "ME",
+        "NETWORK",
+        "NOTIFICATIONS",
+        "ONLINE",
+        "OS",
+        "OWNER",
+        "PERMISSION",
+        "REGISTRATION",
+        "SERVERS",
+        "SERVICES",
+        "SHARE",
+        "VARS",
+        "VMS",
+        "WELCOME"
+      ],
+      "kind": "ENUM"
+    },
+    "Role": {
+      "enum_values": [
+        "ADMIN",
+        "CONNECT",
+        "GUEST",
+        "VIEWER"
+      ],
+      "kind": "ENUM"
+    },
+    "SensorConfig": {
+      "fields": {
+        "enabled": {
+          "args": {},
+          "type": "Boolean"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "SensorConfigInput": {
+      "input_fields": {
+        "enabled": "Boolean"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "SensorType": {
+      "enum_values": [
+        "AMBIENT",
+        "CHIPSET",
+        "CPU_CORE",
+        "CPU_PACKAGE",
+        "CUSTOM",
+        "DISK",
+        "GPU",
+        "MOTHERBOARD",
+        "NVME",
+        "VRM"
+      ],
+      "kind": "ENUM"
+    },
+    "Server": {
+      "fields": {
+        "apikey": {
+          "args": {},
+          "type": "String!"
+        },
+        "comment": {
+          "args": {},
+          "type": "String"
+        },
+        "guid": {
+          "args": {},
+          "type": "String!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "lanip": {
+          "args": {},
+          "type": "String!"
+        },
+        "localurl": {
+          "args": {},
+          "type": "String!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "owner": {
+          "args": {},
+          "type": "ProfileModel!"
+        },
+        "remoteurl": {
+          "args": {},
+          "type": "String!"
+        },
+        "status": {
+          "args": {},
+          "type": "ServerStatus!"
+        },
+        "wanip": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "ServerStatus": {
+      "enum_values": [
+        "NEVER_CONNECTED",
+        "OFFLINE",
+        "ONLINE"
+      ],
+      "kind": "ENUM"
+    },
+    "Service": {
+      "fields": {
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "name": {
+          "args": {},
+          "type": "String"
+        },
+        "online": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "uptime": {
+          "args": {},
+          "type": "Uptime"
+        },
+        "version": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "Settings": {
+      "fields": {
+        "api": {
+          "args": {},
+          "type": "ApiConfig!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "sso": {
+          "args": {},
+          "type": "SsoSettings!"
+        },
+        "unified": {
+          "args": {},
+          "type": "UnifiedSettings!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "SetupRemoteAccessInput": {
+      "input_fields": {
+        "accessType": "WAN_ACCESS_TYPE!",
+        "forwardType": "WAN_FORWARD_TYPE",
+        "port": "Int"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "Share": {
+      "fields": {
+        "allocator": {
+          "args": {},
+          "type": "String"
+        },
+        "cache": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "color": {
+          "args": {},
+          "type": "String"
+        },
+        "comment": {
+          "args": {},
+          "type": "String"
+        },
+        "cow": {
+          "args": {},
+          "type": "String"
+        },
+        "exclude": {
+          "args": {},
+          "type": "[String!]"
+        },
+        "floor": {
+          "args": {},
+          "type": "String"
+        },
+        "free": {
+          "args": {},
+          "type": "BigInt"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "include": {
+          "args": {},
+          "type": "[String!]"
+        },
+        "luksStatus": {
+          "args": {},
+          "type": "String"
+        },
+        "name": {
+          "args": {},
+          "type": "String"
+        },
+        "nameOrig": {
+          "args": {},
+          "type": "String"
+        },
+        "size": {
+          "args": {},
+          "type": "BigInt"
+        },
+        "splitLevel": {
+          "args": {},
+          "type": "String"
+        },
+        "used": {
+          "args": {},
+          "type": "BigInt"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "SsoSettings": {
+      "fields": {
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "oidcProviders": {
+          "args": {},
+          "type": "[OidcProvider!]!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "String": {
+      "kind": "SCALAR"
+    },
+    "Subscription": {
+      "fields": {
+        "arraySubscription": {
+          "args": {},
+          "type": "UnraidArray!"
+        },
+        "displaySubscription": {
+          "args": {},
+          "type": "InfoDisplay!"
+        },
+        "dockerContainerStats": {
+          "args": {},
+          "type": "DockerContainerStats!"
+        },
+        "jailExecOutput": {
+          "args": {
+            "sessionId": "String!"
+          },
+          "type": "String!"
+        },
+        "logFile": {
+          "args": {
+            "path": "String!"
+          },
+          "type": "LogFileContent!"
+        },
+        "notificationAdded": {
+          "args": {},
+          "type": "Notification!"
+        },
+        "notificationsOverview": {
+          "args": {},
+          "type": "NotificationOverview!"
+        },
+        "notificationsWarningsAndAlerts": {
+          "args": {},
+          "type": "[Notification!]!"
+        },
+        "ownerSubscription": {
+          "args": {},
+          "type": "Owner!"
+        },
+        "parityHistorySubscription": {
+          "args": {},
+          "type": "ParityCheck!"
+        },
+        "pluginInstallUpdates": {
+          "args": {
+            "operationId": "ID!"
+          },
+          "type": "PluginInstallEvent!"
+        },
+        "serversSubscription": {
+          "args": {},
+          "type": "Server!"
+        },
+        "systemMetricsCpu": {
+          "args": {},
+          "type": "CpuUtilization!"
+        },
+        "systemMetricsCpuTelemetry": {
+          "args": {},
+          "type": "CpuPackages!"
+        },
+        "systemMetricsMemory": {
+          "args": {},
+          "type": "MemoryUtilization!"
+        },
+        "systemMetricsNetwork": {
+          "args": {},
+          "type": "[NetworkMetrics!]!"
+        },
+        "systemMetricsTemperature": {
+          "args": {},
+          "type": "TemperatureMetrics"
+        },
+        "upsUpdates": {
+          "args": {},
+          "type": "UPSDevice!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "SystemConfig": {
+      "fields": {
+        "comment": {
+          "args": {},
+          "type": "String"
+        },
+        "model": {
+          "args": {},
+          "type": "String"
+        },
+        "serverName": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "SystemConfigInput": {
+      "input_fields": {
+        "comment": "String",
+        "model": "String",
+        "serverName": "String"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "SystemTime": {
+      "fields": {
+        "currentTime": {
+          "args": {},
+          "type": "String!"
+        },
+        "ntpServers": {
+          "args": {},
+          "type": "[String!]!"
+        },
+        "timeZone": {
+          "args": {},
+          "type": "String!"
+        },
+        "useNtp": {
+          "args": {},
+          "type": "Boolean!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "TailscaleExitNodeStatus": {
+      "fields": {
+        "online": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "tailscaleIps": {
+          "args": {},
+          "type": "[String!]"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "TailscaleStatus": {
+      "fields": {
+        "authUrl": {
+          "args": {},
+          "type": "String"
+        },
+        "backendState": {
+          "args": {},
+          "type": "String"
+        },
+        "dnsName": {
+          "args": {},
+          "type": "String"
+        },
+        "exitNodeStatus": {
+          "args": {},
+          "type": "TailscaleExitNodeStatus"
+        },
+        "hostname": {
+          "args": {},
+          "type": "String"
+        },
+        "isExitNode": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "keyExpired": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "keyExpiry": {
+          "args": {},
+          "type": "DateTime"
+        },
+        "keyExpiryDays": {
+          "args": {},
+          "type": "Int"
+        },
+        "latestVersion": {
+          "args": {},
+          "type": "String"
+        },
+        "online": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "primaryRoutes": {
+          "args": {},
+          "type": "[String!]"
+        },
+        "relay": {
+          "args": {},
+          "type": "String"
+        },
+        "relayName": {
+          "args": {},
+          "type": "String"
+        },
+        "tailscaleIps": {
+          "args": {},
+          "type": "[String!]"
+        },
+        "updateAvailable": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "version": {
+          "args": {},
+          "type": "String"
+        },
+        "webUiUrl": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "Temperature": {
+      "enum_values": [
+        "CELSIUS",
+        "FAHRENHEIT"
+      ],
+      "kind": "ENUM"
+    },
+    "TemperatureConfigInput": {
+      "input_fields": {
+        "default_unit": "TemperatureUnit",
+        "enabled": "Boolean",
+        "history": "TemperatureHistoryConfigInput",
+        "polling_interval": "Int",
+        "sensors": "TemperatureSensorsConfigInput",
+        "thresholds": "TemperatureThresholdsConfigInput"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "TemperatureHistoryConfig": {
+      "fields": {
+        "max_readings": {
+          "args": {},
+          "type": "Int"
+        },
+        "retention_ms": {
+          "args": {},
+          "type": "Int"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "TemperatureHistoryConfigInput": {
+      "input_fields": {
+        "max_readings": "Int",
+        "retention_ms": "Int"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "TemperatureMetrics": {
+      "fields": {
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "sensors": {
+          "args": {},
+          "type": "[TemperatureSensor!]!"
+        },
+        "summary": {
+          "args": {},
+          "type": "TemperatureSummary!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "TemperatureReading": {
+      "fields": {
+        "status": {
+          "args": {},
+          "type": "TemperatureStatus!"
+        },
+        "timestamp": {
+          "args": {},
+          "type": "DateTime!"
+        },
+        "unit": {
+          "args": {},
+          "type": "TemperatureUnit!"
+        },
+        "value": {
+          "args": {},
+          "type": "Float!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "TemperatureSensor": {
+      "fields": {
+        "critical": {
+          "args": {},
+          "type": "Float"
+        },
+        "current": {
+          "args": {},
+          "type": "TemperatureReading!"
+        },
+        "history": {
+          "args": {},
+          "type": "[TemperatureReading!]"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "location": {
+          "args": {},
+          "type": "String"
+        },
+        "max": {
+          "args": {},
+          "type": "TemperatureReading"
+        },
+        "min": {
+          "args": {},
+          "type": "TemperatureReading"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "type": {
+          "args": {},
+          "type": "SensorType!"
+        },
+        "warning": {
+          "args": {},
+          "type": "Float"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "TemperatureSensorsConfig": {
+      "fields": {
+        "ipmi": {
+          "args": {},
+          "type": "IpmiConfig"
+        },
+        "lm_sensors": {
+          "args": {},
+          "type": "LmSensorsConfig"
+        },
+        "smartctl": {
+          "args": {},
+          "type": "SensorConfig"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "TemperatureSensorsConfigInput": {
+      "input_fields": {
+        "ipmi": "IpmiConfigInput",
+        "lm_sensors": "LmSensorsConfigInput",
+        "smartctl": "SensorConfigInput"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "TemperatureStatus": {
+      "enum_values": [
+        "CRITICAL",
+        "NORMAL",
+        "UNKNOWN",
+        "WARNING"
+      ],
+      "kind": "ENUM"
+    },
+    "TemperatureSummary": {
+      "fields": {
+        "average": {
+          "args": {},
+          "type": "Float!"
+        },
+        "coolest": {
+          "args": {},
+          "type": "TemperatureSensor!"
+        },
+        "criticalCount": {
+          "args": {},
+          "type": "Int!"
+        },
+        "hottest": {
+          "args": {},
+          "type": "TemperatureSensor!"
+        },
+        "warningCount": {
+          "args": {},
+          "type": "Int!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "TemperatureThresholdsConfig": {
+      "fields": {
+        "cpu_critical": {
+          "args": {},
+          "type": "Int"
+        },
+        "cpu_warning": {
+          "args": {},
+          "type": "Int"
+        },
+        "critical": {
+          "args": {},
+          "type": "Int"
+        },
+        "disk_critical": {
+          "args": {},
+          "type": "Int"
+        },
+        "disk_warning": {
+          "args": {},
+          "type": "Int"
+        },
+        "warning": {
+          "args": {},
+          "type": "Int"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "TemperatureThresholdsConfigInput": {
+      "input_fields": {
+        "cpu_critical": "Int",
+        "cpu_warning": "Int",
+        "critical": "Int",
+        "disk_critical": "Int",
+        "disk_warning": "Int",
+        "warning": "Int"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "TemperatureUnit": {
+      "enum_values": [
+        "CELSIUS",
+        "FAHRENHEIT",
+        "KELVIN",
+        "RANKINE"
+      ],
+      "kind": "ENUM"
+    },
+    "Theme": {
+      "fields": {
+        "headerBackgroundColor": {
+          "args": {},
+          "type": "String"
+        },
+        "headerPrimaryTextColor": {
+          "args": {},
+          "type": "String"
+        },
+        "headerSecondaryTextColor": {
+          "args": {},
+          "type": "String"
+        },
+        "name": {
+          "args": {},
+          "type": "ThemeName!"
+        },
+        "showBannerGradient": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "showBannerImage": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "showHeaderDescription": {
+          "args": {},
+          "type": "Boolean!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "ThemeName": {
+      "enum_values": [
+        "azure",
+        "black",
+        "gray",
+        "white"
+      ],
+      "kind": "ENUM"
+    },
+    "TimeZoneOption": {
+      "fields": {
+        "label": {
+          "args": {},
+          "type": "String!"
+        },
+        "value": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "UPSBattery": {
+      "fields": {
+        "chargeLevel": {
+          "args": {},
+          "type": "Int!"
+        },
+        "estimatedRuntime": {
+          "args": {},
+          "type": "Int!"
+        },
+        "health": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "UPSCableType": {
+      "enum_values": [
+        "CUSTOM",
+        "ETHER",
+        "SIMPLE",
+        "SMART",
+        "USB"
+      ],
+      "kind": "ENUM"
+    },
+    "UPSConfigInput": {
+      "input_fields": {
+        "batteryLevel": "Int",
+        "customUpsCable": "String",
+        "device": "String",
+        "killUps": "UPSKillPower",
+        "minutes": "Int",
+        "overrideUpsCapacity": "Int",
+        "service": "UPSServiceState",
+        "timeout": "Int",
+        "upsCable": "UPSCableType",
+        "upsType": "UPSType"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "UPSConfiguration": {
+      "fields": {
+        "batteryLevel": {
+          "args": {},
+          "type": "Int"
+        },
+        "customUpsCable": {
+          "args": {},
+          "type": "String"
+        },
+        "device": {
+          "args": {},
+          "type": "String"
+        },
+        "killUps": {
+          "args": {},
+          "type": "String"
+        },
+        "minutes": {
+          "args": {},
+          "type": "Int"
+        },
+        "modelName": {
+          "args": {},
+          "type": "String"
+        },
+        "netServer": {
+          "args": {},
+          "type": "String"
+        },
+        "nisIp": {
+          "args": {},
+          "type": "String"
+        },
+        "overrideUpsCapacity": {
+          "args": {},
+          "type": "Int"
+        },
+        "service": {
+          "args": {},
+          "type": "String"
+        },
+        "timeout": {
+          "args": {},
+          "type": "Int"
+        },
+        "upsCable": {
+          "args": {},
+          "type": "String"
+        },
+        "upsName": {
+          "args": {},
+          "type": "String"
+        },
+        "upsType": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "UPSDevice": {
+      "fields": {
+        "battery": {
+          "args": {},
+          "type": "UPSBattery!"
+        },
+        "id": {
+          "args": {},
+          "type": "ID!"
+        },
+        "model": {
+          "args": {},
+          "type": "String!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "power": {
+          "args": {},
+          "type": "UPSPower!"
+        },
+        "status": {
+          "args": {},
+          "type": "String!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "UPSKillPower": {
+      "enum_values": [
+        "NO",
+        "YES"
+      ],
+      "kind": "ENUM"
+    },
+    "UPSPower": {
+      "fields": {
+        "currentPower": {
+          "args": {},
+          "type": "Float"
+        },
+        "inputVoltage": {
+          "args": {},
+          "type": "Float!"
+        },
+        "loadPercentage": {
+          "args": {},
+          "type": "Int!"
+        },
+        "nominalPower": {
+          "args": {},
+          "type": "Int"
+        },
+        "outputVoltage": {
+          "args": {},
+          "type": "Float!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "UPSServiceState": {
+      "enum_values": [
+        "DISABLE",
+        "ENABLE"
+      ],
+      "kind": "ENUM"
+    },
+    "UPSType": {
+      "enum_values": [
+        "APCSMART",
+        "DUMB",
+        "MODBUS",
+        "NET",
+        "PCNET",
+        "SNMP",
+        "USB"
+      ],
+      "kind": "ENUM"
+    },
+    "URL": {
+      "kind": "SCALAR"
+    },
+    "URL_TYPE": {
+      "enum_values": [
+        "DEFAULT",
+        "LAN",
+        "MDNS",
+        "OTHER",
+        "WAN",
+        "WIREGUARD"
+      ],
+      "kind": "ENUM"
+    },
+    "UnifiedSettings": {
+      "fields": {
+        "dataSchema": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "uiSchema": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "values": {
+          "args": {},
+          "type": "JSON!"
+        }
+      },
+      "interfaces": [
+        "FormSchema",
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "UnraidArray": {
+      "fields": {
+        "boot": {
+          "args": {},
+          "type": "ArrayDisk"
+        },
+        "bootDevices": {
+          "args": {},
+          "type": "[ArrayDisk!]!"
+        },
+        "caches": {
+          "args": {},
+          "type": "[ArrayDisk!]!"
+        },
+        "capacity": {
+          "args": {},
+          "type": "ArrayCapacity!"
+        },
+        "disks": {
+          "args": {},
+          "type": "[ArrayDisk!]!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "parities": {
+          "args": {},
+          "type": "[ArrayDisk!]!"
+        },
+        "parityCheckStatus": {
+          "args": {},
+          "type": "ParityCheck!"
+        },
+        "state": {
+          "args": {},
+          "type": "ArrayState!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "UnraidPluginsMutations": {
+      "fields": {
+        "installLanguage": {
+          "args": {
+            "input": "InstallPluginInput!"
+          },
+          "type": "PluginInstallOperation!"
+        },
+        "installPlugin": {
+          "args": {
+            "input": "InstallPluginInput!"
+          },
+          "type": "PluginInstallOperation!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "UpdateApiKeyInput": {
+      "input_fields": {
+        "description": "String",
+        "id": "PrefixedID!",
+        "name": "String",
+        "permissions": "[AddPermissionInput!]",
+        "roles": "[Role!]"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "UpdateSettingsResponse": {
+      "fields": {
+        "restartRequired": {
+          "args": {},
+          "type": "Boolean!"
+        },
+        "values": {
+          "args": {},
+          "type": "JSON!"
+        },
+        "warnings": {
+          "args": {},
+          "type": "[String!]"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "UpdateSshInput": {
+      "input_fields": {
+        "enabled": "Boolean!",
+        "port": "Int!"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "UpdateStatus": {
+      "enum_values": [
+        "REBUILD_READY",
+        "UNKNOWN",
+        "UPDATE_AVAILABLE",
+        "UP_TO_DATE"
+      ],
+      "kind": "ENUM"
+    },
+    "UpdateSystemTimeInput": {
+      "input_fields": {
+        "manualDateTime": "String",
+        "ntpServers": "[String!]",
+        "timeZone": "String",
+        "useNtp": "Boolean"
+      },
+      "kind": "INPUT_OBJECT"
+    },
+    "Uptime": {
+      "fields": {
+        "timestamp": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "UserAccount": {
+      "fields": {
+        "description": {
+          "args": {},
+          "type": "String!"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "name": {
+          "args": {},
+          "type": "String!"
+        },
+        "permissions": {
+          "args": {},
+          "type": "[Permission!]"
+        },
+        "roles": {
+          "args": {},
+          "type": "[Role!]!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "Vars": {
+      "fields": {
+        "bindMgt": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "bootEligible": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "bootedFromFlashWithInternalBootSetup": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "cacheNumDevices": {
+          "args": {},
+          "type": "Int"
+        },
+        "cacheSbNumDisks": {
+          "args": {},
+          "type": "Int"
+        },
+        "comment": {
+          "args": {},
+          "type": "String"
+        },
+        "configError": {
+          "args": {},
+          "type": "ConfigErrorState"
+        },
+        "configValid": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "csrfToken": {
+          "args": {},
+          "type": "String"
+        },
+        "defaultFormat": {
+          "args": {},
+          "type": "String"
+        },
+        "defaultFsType": {
+          "args": {},
+          "type": "String"
+        },
+        "deviceCount": {
+          "args": {},
+          "type": "Int"
+        },
+        "domain": {
+          "args": {},
+          "type": "String"
+        },
+        "domainLogin": {
+          "args": {},
+          "type": "String"
+        },
+        "domainShort": {
+          "args": {},
+          "type": "String"
+        },
+        "enableBootTransfer": {
+          "args": {},
+          "type": "String"
+        },
+        "enableFruit": {
+          "args": {},
+          "type": "String"
+        },
+        "flashGuid": {
+          "args": {},
+          "type": "String"
+        },
+        "flashProduct": {
+          "args": {},
+          "type": "String"
+        },
+        "flashVendor": {
+          "args": {},
+          "type": "String"
+        },
+        "fsCopyPrcnt": {
+          "args": {},
+          "type": "Int"
+        },
+        "fsNumMounted": {
+          "args": {},
+          "type": "Int"
+        },
+        "fsNumUnmountable": {
+          "args": {},
+          "type": "Int"
+        },
+        "fsProgress": {
+          "args": {},
+          "type": "String"
+        },
+        "fsState": {
+          "args": {},
+          "type": "String"
+        },
+        "fsUnmountableMask": {
+          "args": {},
+          "type": "String"
+        },
+        "fuseDirectio": {
+          "args": {},
+          "type": "String"
+        },
+        "fuseDirectioDefault": {
+          "args": {},
+          "type": "String"
+        },
+        "fuseDirectioStatus": {
+          "args": {},
+          "type": "String"
+        },
+        "fuseRemember": {
+          "args": {},
+          "type": "String"
+        },
+        "fuseRememberDefault": {
+          "args": {},
+          "type": "String"
+        },
+        "fuseRememberStatus": {
+          "args": {},
+          "type": "String"
+        },
+        "hideDotFiles": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "joinStatus": {
+          "args": {},
+          "type": "String"
+        },
+        "localMaster": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "localTld": {
+          "args": {},
+          "type": "String"
+        },
+        "luksKeyfile": {
+          "args": {},
+          "type": "String"
+        },
+        "maxArraysz": {
+          "args": {},
+          "type": "Int"
+        },
+        "maxCachesz": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdColor": {
+          "args": {},
+          "type": "String"
+        },
+        "mdNumDisabled": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdNumDisks": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdNumErased": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdNumInvalid": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdNumMissing": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdNumNew": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdNumStripes": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdNumStripesDefault": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdNumStripesStatus": {
+          "args": {},
+          "type": "String"
+        },
+        "mdResync": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdResyncAction": {
+          "args": {},
+          "type": "String"
+        },
+        "mdResyncCorr": {
+          "args": {},
+          "type": "String"
+        },
+        "mdResyncDb": {
+          "args": {},
+          "type": "String"
+        },
+        "mdResyncDt": {
+          "args": {},
+          "type": "String"
+        },
+        "mdResyncPos": {
+          "args": {},
+          "type": "String"
+        },
+        "mdResyncSize": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdState": {
+          "args": {},
+          "type": "String"
+        },
+        "mdSyncThresh": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdSyncThreshDefault": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdSyncThreshStatus": {
+          "args": {},
+          "type": "String"
+        },
+        "mdSyncWindow": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdSyncWindowDefault": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdSyncWindowStatus": {
+          "args": {},
+          "type": "String"
+        },
+        "mdVersion": {
+          "args": {},
+          "type": "String"
+        },
+        "mdWriteMethod": {
+          "args": {},
+          "type": "Int"
+        },
+        "mdWriteMethodDefault": {
+          "args": {},
+          "type": "String"
+        },
+        "mdWriteMethodStatus": {
+          "args": {},
+          "type": "String"
+        },
+        "name": {
+          "args": {},
+          "type": "String"
+        },
+        "nrRequests": {
+          "args": {},
+          "type": "Int"
+        },
+        "nrRequestsDefault": {
+          "args": {},
+          "type": "Int"
+        },
+        "nrRequestsStatus": {
+          "args": {},
+          "type": "String"
+        },
+        "ntpServer1": {
+          "args": {},
+          "type": "String"
+        },
+        "ntpServer2": {
+          "args": {},
+          "type": "String"
+        },
+        "ntpServer3": {
+          "args": {},
+          "type": "String"
+        },
+        "ntpServer4": {
+          "args": {},
+          "type": "String"
+        },
+        "pollAttributes": {
+          "args": {},
+          "type": "String"
+        },
+        "pollAttributesDefault": {
+          "args": {},
+          "type": "String"
+        },
+        "pollAttributesStatus": {
+          "args": {},
+          "type": "String"
+        },
+        "port": {
+          "args": {},
+          "type": "Int"
+        },
+        "portssh": {
+          "args": {},
+          "type": "Int"
+        },
+        "portssl": {
+          "args": {},
+          "type": "Int"
+        },
+        "porttelnet": {
+          "args": {},
+          "type": "Int"
+        },
+        "queueDepth": {
+          "args": {},
+          "type": "String"
+        },
+        "regCheck": {
+          "args": {},
+          "type": "String"
+        },
+        "regFile": {
+          "args": {},
+          "type": "String"
+        },
+        "regGen": {
+          "args": {},
+          "type": "String"
+        },
+        "regGuid": {
+          "args": {},
+          "type": "String"
+        },
+        "regState": {
+          "args": {},
+          "type": "RegistrationState"
+        },
+        "regTm": {
+          "args": {},
+          "type": "String"
+        },
+        "regTm2": {
+          "args": {},
+          "type": "String"
+        },
+        "regTo": {
+          "args": {},
+          "type": "String"
+        },
+        "regTy": {
+          "args": {},
+          "type": "registrationType"
+        },
+        "reservedNames": {
+          "args": {},
+          "type": "String"
+        },
+        "safeMode": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "sbClean": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "sbEvents": {
+          "args": {},
+          "type": "Int"
+        },
+        "sbName": {
+          "args": {},
+          "type": "String"
+        },
+        "sbNumDisks": {
+          "args": {},
+          "type": "Int"
+        },
+        "sbState": {
+          "args": {},
+          "type": "String"
+        },
+        "sbSyncErrs": {
+          "args": {},
+          "type": "Int"
+        },
+        "sbSyncExit": {
+          "args": {},
+          "type": "String"
+        },
+        "sbSynced": {
+          "args": {},
+          "type": "Int"
+        },
+        "sbSynced2": {
+          "args": {},
+          "type": "Int"
+        },
+        "sbUpdated": {
+          "args": {},
+          "type": "String"
+        },
+        "sbVersion": {
+          "args": {},
+          "type": "String"
+        },
+        "security": {
+          "args": {},
+          "type": "String"
+        },
+        "shareAfpCount": {
+          "args": {},
+          "type": "Int"
+        },
+        "shareAfpEnabled": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "shareAvahiAfpModel": {
+          "args": {},
+          "type": "String"
+        },
+        "shareAvahiAfpName": {
+          "args": {},
+          "type": "String"
+        },
+        "shareAvahiEnabled": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "shareAvahiSmbModel": {
+          "args": {},
+          "type": "String"
+        },
+        "shareAvahiSmbName": {
+          "args": {},
+          "type": "String"
+        },
+        "shareCacheEnabled": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "shareCacheFloor": {
+          "args": {},
+          "type": "String"
+        },
+        "shareCount": {
+          "args": {},
+          "type": "Int"
+        },
+        "shareDisk": {
+          "args": {},
+          "type": "String"
+        },
+        "shareInitialGroup": {
+          "args": {},
+          "type": "String"
+        },
+        "shareInitialOwner": {
+          "args": {},
+          "type": "String"
+        },
+        "shareMoverActive": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "shareMoverLogging": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "shareMoverSchedule": {
+          "args": {},
+          "type": "String"
+        },
+        "shareNfsCount": {
+          "args": {},
+          "type": "Int"
+        },
+        "shareNfsEnabled": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "shareSmbCount": {
+          "args": {},
+          "type": "Int"
+        },
+        "shareSmbEnabled": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "shareUser": {
+          "args": {},
+          "type": "String"
+        },
+        "shareUserExclude": {
+          "args": {},
+          "type": "String"
+        },
+        "shareUserInclude": {
+          "args": {},
+          "type": "String"
+        },
+        "shutdownTimeout": {
+          "args": {},
+          "type": "Int"
+        },
+        "spindownDelay": {
+          "args": {},
+          "type": "String"
+        },
+        "spinupGroups": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "startArray": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "startMode": {
+          "args": {},
+          "type": "String"
+        },
+        "startPage": {
+          "args": {},
+          "type": "String"
+        },
+        "sysArraySlots": {
+          "args": {},
+          "type": "Int"
+        },
+        "sysCacheSlots": {
+          "args": {},
+          "type": "Int"
+        },
+        "sysFlashSlots": {
+          "args": {},
+          "type": "Int"
+        },
+        "sysModel": {
+          "args": {},
+          "type": "String"
+        },
+        "timeZone": {
+          "args": {},
+          "type": "String"
+        },
+        "tpmGuid": {
+          "args": {},
+          "type": "String"
+        },
+        "useNtp": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "useSsh": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "useSsl": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "useTelnet": {
+          "args": {},
+          "type": "Boolean"
+        },
+        "version": {
+          "args": {},
+          "type": "String"
+        },
+        "workgroup": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "VmDomain": {
+      "fields": {
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        },
+        "name": {
+          "args": {},
+          "type": "String"
+        },
+        "state": {
+          "args": {},
+          "type": "VmState!"
+        },
+        "uuid": {
+          "args": {},
+          "type": "String"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "VmMutations": {
+      "fields": {
+        "forceStop": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "Boolean!"
+        },
+        "pause": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "Boolean!"
+        },
+        "reboot": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "Boolean!"
+        },
+        "reset": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "Boolean!"
+        },
+        "resume": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "Boolean!"
+        },
+        "start": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "Boolean!"
+        },
+        "stop": {
+          "args": {
+            "id": "PrefixedID!"
+          },
+          "type": "Boolean!"
+        }
+      },
+      "interfaces": [],
+      "kind": "OBJECT"
+    },
+    "VmState": {
+      "enum_values": [
+        "CRASHED",
+        "IDLE",
+        "NOSTATE",
+        "PAUSED",
+        "PMSUSPENDED",
+        "RUNNING",
+        "SHUTDOWN",
+        "SHUTOFF"
+      ],
+      "kind": "ENUM"
+    },
+    "Vms": {
+      "fields": {
+        "domain": {
+          "args": {},
+          "type": "[VmDomain!]"
+        },
+        "domains": {
+          "args": {},
+          "type": "[VmDomain!]"
+        },
+        "id": {
+          "args": {},
+          "type": "PrefixedID!"
+        }
+      },
+      "interfaces": [
+        "Node"
+      ],
+      "kind": "OBJECT"
+    },
+    "WAN_ACCESS_TYPE": {
+      "enum_values": [
+        "ALWAYS",
+        "DISABLED",
+        "DYNAMIC"
+      ],
+      "kind": "ENUM"
+    },
+    "WAN_FORWARD_TYPE": {
+      "enum_values": [
+        "STATIC",
+        "UPNP"
+      ],
+      "kind": "ENUM"
+    },
+    "registrationType": {
+      "enum_values": [
+        "BASIC",
+        "INVALID",
+        "LIFETIME",
+        "PLUS",
+        "PRO",
+        "STARTER",
+        "TRIAL",
+        "UNLEASHED"
+      ],
+      "kind": "ENUM"
+    }
+  }
+}

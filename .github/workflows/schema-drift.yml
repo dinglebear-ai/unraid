@@ -16,8 +16,13 @@ jobs:
     timeout-minutes: 10
     env:
       GH_TOKEN: ${{ github.token }}
+    # The vendored Python SDL (docs/unraid/UNRAID-SCHEMA.graphql) and the
+    # schema_diff_summary devtool live under unraid-py/; run: steps execute there.
+    defaults:
+      run:
+        working-directory: unraid-py
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
@@ -51,7 +56,7 @@ jobs:
 
       - name: Set up uv
         if: steps.diff.outputs.drift == 'true'
-        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
           enable-cache: false
@@ -66,13 +71,13 @@ jobs:
 
       - name: Upload full schema drift artifacts
         if: steps.diff.outputs.drift == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
         with:
           name: unraid-schema-drift-${{ github.run_id }}
           path: |
-            schema.diff
-            schema-summary.md
-            upstream-schema.graphql
+            unraid-py/schema.diff
+            unraid-py/schema-summary.md
+            unraid-py/upstream-schema.graphql
           retention-days: 14
 
       - name: Open or update drift issue

@@ -1,0 +1,18 @@
+Menu="Dashboard"
+Title="Incus Jails"
+Icon="incus.png"
+Tag="server"
+Cond="(preg_match('/DASHBOARD_WIDGET_ENABLE\s*=\s*[' . chr(34) . chr(39) . ']false[' . chr(34) . chr(39) . ']/', @file_get_contents('/boot/config/plugins/incus/incus.cfg'))!==1)"
+---
+<?PHP
+/* Main/Dashboard status box for the Incus-for-Unraid plugin. Deliberately its
+ * own small Vue bundle (web/incus-dashboard.js), not the full settings-app
+ * bundle (web/incus-settings.js, ~850KB) — this loads on every Main/Dashboard
+ * view for every user, so it stays a separate, minimal build. Same auth model
+ * as IncusSettings.page: GraphQL calls ride the webGUI session cookie +
+ * window.csrf_token.
+ */
+?>
+<incus-dashboard-widget></incus-dashboard-widget>
+
+<script type="module" src="/plugins/incus/web/incus-dashboard.js"></script>

@@ -1,3 +1,6 @@
 {
-  ".": "2.7.0"
+  "unraid-py": "2.7.0",
+  "unraid-rs": "0.2.3",
+  "plugins/incus": "2026.7.24",
+  "plugins/codex": "2026.7.24"
 }

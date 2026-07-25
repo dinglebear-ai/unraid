@@ -1,0 +1,8 @@
+{
+  "name": "@unraid/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "CI-only type/runtime stub for @unraid/shared — the one peerDependency with no public npm package (it's Unraid's internal API monorepo, provided by the real host at deploy time). See ../../CLAUDE.md and .github/workflows/ci.yml.",
+  "main": "index.js",
+  "types": "index.d.ts"
+}

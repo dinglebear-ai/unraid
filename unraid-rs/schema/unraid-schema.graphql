@@ -1,0 +1,3744 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Vendored Unraid GraphQL schema (SDL) — used ONLY by tests/dev tooling.
+#
+# Source : github.com/unraid/api  → api/generated-schema.graphql
+# Commit : 2679fda1 (2026-07-06)
+# Method : copied from a local clone of unraid/api (the repo's own generated SDL;
+#          regenerate upstream with their codegen, do not hand-edit here).
+#
+# Purpose: schema-as-contract test (tests/schema_contract.rs) validates every
+#          query in src/graphql.rs AND every mock fixture against THIS schema,
+#          catching field/enum/type drift mechanically.
+# Refresh: re-copy from a fresh unraid/api clone when Unraid ships an API change;
+#          a non-empty schema diff is the signal to update queries + fixtures.
+# Caveat : this proves query validity + fixture self-consistency, NOT that a real
+#          Unraid server returns data matching the fixtures (only a live test does;
+#          e.g. flash.guid is non-null in SDL yet null at runtime).
+# ─────────────────────────────────────────────────────────────────────────────
+# >>> VENDOR-HEADER-END <<< (schema-drift CI strips everything up to this line)
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+"""Directive to document required permissions for fields"""
+directive @usePermissions(
+  """The action required for access (must be a valid AuthAction enum value)"""
+  action: String
+
+  """The resource required for access (must be a valid Resource enum value)"""
+  resource: String
+) on FIELD_DEFINITION
+
+type ParityCheck {
+  """Date of the parity check"""
+  date: DateTime
+
+  """Duration of the parity check in seconds"""
+  duration: Int
+
+  """Speed of the parity check, in MB/s"""
+  speed: String
+
+  """Status of the parity check"""
+  status: ParityCheckStatus!
+
+  """Number of errors during the parity check"""
+  errors: Int
+
+  """Progress percentage of the parity check"""
+  progress: Int
+
+  """Whether corrections are being written to parity"""
+  correcting: Boolean
+
+  """Whether the parity check is paused"""
+  paused: Boolean
+
+  """Whether the parity check is running"""
+  running: Boolean
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+enum ParityCheckStatus {
+  NEVER_RUN
+  RUNNING
+  PAUSED
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+type Capacity {
+  """Free capacity"""
+  free: String!
+
+  """Used capacity"""
+  used: String!
+
+  """Total capacity"""
+  total: String!
+}
+
+type ArrayCapacity {
+  """Capacity in kilobytes"""
+  kilobytes: Capacity!
+
+  """Capacity in number of disks"""
+  disks: Capacity!
+}
+
+type ArrayDisk implements Node {
+  id: PrefixedID!
+
+  """
+  Array slot number. Parity1 is always 0 and Parity2 is always 29. Array slots will be 1 - 28. Cache slots are 30 - 53. Flash is 54.
+  """
+  idx: Int!
+  name: String
+  device: String
+
+  """(KB) Disk Size total"""
+  size: BigInt
+  status: ArrayDiskStatus
+
+  """Is the disk a HDD or SSD."""
+  rotational: Boolean
+
+  """Disk temp - will be NaN if array is not started or DISK_NP"""
+  temp: Int
+
+  """
+  Count of I/O read requests sent to the device I/O drivers. These statistics may be cleared at any time.
+  """
+  numReads: BigInt
+
+  """
+  Count of I/O writes requests sent to the device I/O drivers. These statistics may be cleared at any time.
+  """
+  numWrites: BigInt
+
+  """
+  Number of unrecoverable errors reported by the device I/O drivers. Missing data due to unrecoverable array read errors is filled in on-the-fly using parity reconstruct (and we attempt to write this data back to the sector(s) which failed). Any unrecoverable write error results in disabling the disk.
+  """
+  numErrors: BigInt
+
+  """(KB) Total Size of the FS (Not present on Parity type drive)"""
+  fsSize: BigInt
+
+  """(KB) Free Size on the FS (Not present on Parity type drive)"""
+  fsFree: BigInt
+
+  """(KB) Used Size on the FS (Not present on Parity type drive)"""
+  fsUsed: BigInt
+  exportable: Boolean
+
+  """
+  Type of Disk - used to differentiate Boot / Cache / Flash / Data (DATA) / Parity
+  """
+  type: ArrayDiskType!
+
+  """(%) Disk space left to warn"""
+  warning: Int
+
+  """(%) Disk space left for critical"""
+  critical: Int
+
+  """File system type for the disk"""
+  fsType: String
+
+  """User comment on disk"""
+  comment: String
+
+  """File format (ex MBR: 4KiB-aligned)"""
+  format: String
+
+  """ata | nvme | usb | (others)"""
+  transport: String
+  color: ArrayDiskFsColor
+
+  """Whether the disk is currently spinning"""
+  isSpinning: Boolean
+}
+
+interface Node {
+  id: PrefixedID!
+}
+
+"""
+The `BigInt` scalar type represents non-fractional signed whole numeric values.
+"""
+scalar BigInt
+
+enum ArrayDiskStatus {
+  DISK_NP
+  DISK_OK
+  DISK_NP_MISSING
+  DISK_INVALID
+  DISK_WRONG
+  DISK_DSBL
+  DISK_NP_DSBL
+  DISK_DSBL_NEW
+  DISK_NEW
+}
+
+enum ArrayDiskType {
+  DATA
+  PARITY
+  BOOT
+  FLASH
+  CACHE
+}
+
+enum ArrayDiskFsColor {
+  GREEN_ON
+  GREEN_BLINK
+  BLUE_ON
+  BLUE_BLINK
+  YELLOW_ON
+  YELLOW_BLINK
+  RED_ON
+  RED_OFF
+  GREY_OFF
+}
+
+type UnraidArray implements Node {
+  id: PrefixedID!
+
+  """Current array state"""
+  state: ArrayState!
+
+  """Current array capacity"""
+  capacity: ArrayCapacity!
+
+  """Returns the active boot disk"""
+  boot: ArrayDisk
+
+  """
+  All detected boot devices: every Boot entry for internal boot, including mirrored members when configured, or the mounted /boot Flash entry for legacy USB boot
+  """
+  bootDevices: [ArrayDisk!]!
+
+  """Parity disks in the current array"""
+  parities: [ArrayDisk!]!
+
+  """Current parity check status"""
+  parityCheckStatus: ParityCheck!
+
+  """Data disks in the current array"""
+  disks: [ArrayDisk!]!
+
+  """Caches in the current array"""
+  caches: [ArrayDisk!]!
+}
+
+enum ArrayState {
+  STARTED
+  STOPPED
+  NEW_ARRAY
+  RECON_DISK
+  DISABLE_DISK
+  SWAP_DSBL
+  INVALID_EXPANSION
+  PARITY_NOT_BIGGEST
+  TOO_MANY_MISSING_DISKS
+  NEW_DISK_TOO_SMALL
+  NO_DATA_DISKS
+}
+
+type Share implements Node {
+  id: PrefixedID!
+
+  """Display name"""
+  name: String
+
+  """(KB) Free space"""
+  free: BigInt
+
+  """(KB) Used Size"""
+  used: BigInt
+
+  """(KB) Total size"""
+  size: BigInt
+
+  """Disks that are included in this share"""
+  include: [String!]
+
+  """Disks that are excluded from this share"""
+  exclude: [String!]
+
+  """Is this share cached"""
+  cache: Boolean
+
+  """Original name"""
+  nameOrig: String
+
+  """User comment"""
+  comment: String
+
+  """Allocator"""
+  allocator: String
+
+  """Split level"""
+  splitLevel: String
+
+  """Floor"""
+  floor: String
+
+  """COW"""
+  cow: String
+
+  """Color"""
+  color: String
+
+  """LUKS status"""
+  luksStatus: String
+}
+
+type DiskPartition {
+  """The name of the partition"""
+  name: String!
+
+  """The filesystem type of the partition"""
+  fsType: DiskFsType!
+
+  """The size of the partition in bytes"""
+  size: Float!
+}
+
+"""The type of filesystem on the disk partition"""
+enum DiskFsType {
+  XFS
+  BTRFS
+  VFAT
+  ZFS
+  EXT4
+  NTFS
+}
+
+type Disk implements Node {
+  id: PrefixedID!
+
+  """The device path of the disk (e.g. /dev/sdb)"""
+  device: String!
+
+  """The type of disk (e.g. SSD, HDD)"""
+  type: String!
+
+  """The model name of the disk"""
+  name: String!
+
+  """The manufacturer of the disk"""
+  vendor: String!
+
+  """The total size of the disk in bytes"""
+  size: Float!
+
+  """The number of bytes per sector"""
+  bytesPerSector: Float!
+
+  """The total number of cylinders on the disk"""
+  totalCylinders: Float!
+
+  """The total number of heads on the disk"""
+  totalHeads: Float!
+
+  """The total number of sectors on the disk"""
+  totalSectors: Float!
+
+  """The total number of tracks on the disk"""
+  totalTracks: Float!
+
+  """The number of tracks per cylinder"""
+  tracksPerCylinder: Float!
+
+  """The number of sectors per track"""
+  sectorsPerTrack: Float!
+
+  """The firmware revision of the disk"""
+  firmwareRevision: String!
+
+  """The serial number of the disk"""
+  serialNum: String!
+
+  """The interface type of the disk"""
+  interfaceType: DiskInterfaceType!
+
+  """The SMART status of the disk"""
+  smartStatus: DiskSmartStatus!
+
+  """The current temperature of the disk in Celsius"""
+  temperature: Float
+
+  """The partitions on the disk"""
+  partitions: [DiskPartition!]!
+
+  """Whether the disk is spinning or not"""
+  isSpinning: Boolean!
+}
+
+"""The type of interface the disk uses to connect to the system"""
+enum DiskInterfaceType {
+  SAS
+  SATA
+  USB
+  PCIE
+  UNKNOWN
+}
+
+"""
+The SMART (Self-Monitoring, Analysis and Reporting Technology) status of the disk
+"""
+enum DiskSmartStatus {
+  OK
+  UNKNOWN
+}
+
+type KeyFile {
+  location: String
+  contents: String
+}
+
+type Registration implements Node {
+  id: PrefixedID!
+  type: registrationType
+  keyFile: KeyFile
+  state: RegistrationState
+  expiration: String
+  updateExpiration: String
+}
+
+enum registrationType {
+  BASIC
+  PLUS
+  PRO
+  STARTER
+  UNLEASHED
+  LIFETIME
+  INVALID
+  TRIAL
+}
+
+enum RegistrationState {
+  TRIAL
+  BASIC
+  PLUS
+  PRO
+  STARTER
+  UNLEASHED
+  LIFETIME
+  EEXPIRED
+  EGUID
+  EGUID1
+  ETRIAL
+  ENOKEYFILE
+  ENOKEYFILE1
+  ENOKEYFILE2
+  ENOFLASH
+  ENOFLASH1
+  ENOFLASH2
+  ENOFLASH3
+  ENOFLASH4
+  ENOFLASH5
+  ENOFLASH6
+  ENOFLASH7
+  EBLACKLISTED
+  EBLACKLISTED1
+  EBLACKLISTED2
+  ENOCONN
+}
+
+type Vars implements Node {
+  id: PrefixedID!
+
+  """Unraid version"""
+  version: String
+  maxArraysz: Int
+  maxCachesz: Int
+
+  """Machine hostname"""
+  name: String
+  timeZone: String
+  comment: String
+  security: String
+  workgroup: String
+  domain: String
+  domainShort: String
+  hideDotFiles: Boolean
+  localMaster: Boolean
+  enableFruit: String
+
+  """Should a NTP server be used for time sync?"""
+  useNtp: Boolean
+
+  """NTP Server 1"""
+  ntpServer1: String
+
+  """NTP Server 2"""
+  ntpServer2: String
+
+  """NTP Server 3"""
+  ntpServer3: String
+
+  """NTP Server 4"""
+  ntpServer4: String
+  domainLogin: String
+  sysModel: String
+  sysArraySlots: Int
+  sysCacheSlots: Int
+  sysFlashSlots: Int
+  useSsl: Boolean
+
+  """Port for the webui via HTTP"""
+  port: Int
+
+  """Port for the webui via HTTPS"""
+  portssl: Int
+  localTld: String
+  bindMgt: Boolean
+
+  """Should telnet be enabled?"""
+  useTelnet: Boolean
+  porttelnet: Int
+  useSsh: Boolean
+  portssh: Int
+  startPage: String
+  startArray: Boolean
+  spindownDelay: String
+  queueDepth: String
+  spinupGroups: Boolean
+  defaultFormat: String
+  defaultFsType: String
+  shutdownTimeout: Int
+  luksKeyfile: String
+  pollAttributes: String
+  pollAttributesDefault: String
+  pollAttributesStatus: String
+  nrRequests: Int
+  nrRequestsDefault: Int
+  nrRequestsStatus: String
+  mdNumStripes: Int
+  mdNumStripesDefault: Int
+  mdNumStripesStatus: String
+  mdSyncWindow: Int
+  mdSyncWindowDefault: Int
+  mdSyncWindowStatus: String
+  mdSyncThresh: Int
+  mdSyncThreshDefault: Int
+  mdSyncThreshStatus: String
+  mdWriteMethod: Int
+  mdWriteMethodDefault: String
+  mdWriteMethodStatus: String
+  shareDisk: String
+  shareUser: String
+  shareUserInclude: String
+  shareUserExclude: String
+  shareSmbEnabled: Boolean
+  shareNfsEnabled: Boolean
+  shareAfpEnabled: Boolean
+  shareInitialOwner: String
+  shareInitialGroup: String
+  shareCacheEnabled: Boolean
+  shareCacheFloor: String
+  shareMoverSchedule: String
+  shareMoverLogging: Boolean
+  fuseRemember: String
+  fuseRememberDefault: String
+  fuseRememberStatus: String
+  fuseDirectio: String
+  fuseDirectioDefault: String
+  fuseDirectioStatus: String
+  shareAvahiEnabled: Boolean
+  shareAvahiSmbName: String
+  shareAvahiSmbModel: String
+  shareAvahiAfpName: String
+  shareAvahiAfpModel: String
+  safeMode: Boolean
+  startMode: String
+  configValid: Boolean
+  configError: ConfigErrorState
+  joinStatus: String
+  deviceCount: Int
+  flashGuid: String
+  flashProduct: String
+  flashVendor: String
+  tpmGuid: String
+  regCheck: String
+  regFile: String
+  regGuid: String
+  regTy: registrationType
+  regState: RegistrationState
+
+  """Registration owner"""
+  regTo: String
+  regTm: String
+  regTm2: String
+  regGen: String
+  sbName: String
+  sbVersion: String
+  sbUpdated: String
+  sbEvents: Int
+  sbState: String
+  sbClean: Boolean
+  sbSynced: Int
+  sbSyncErrs: Int
+  sbSynced2: Int
+  sbSyncExit: String
+  sbNumDisks: Int
+  mdColor: String
+  mdNumDisks: Int
+  mdNumDisabled: Int
+  mdNumInvalid: Int
+  mdNumMissing: Int
+  mdNumNew: Int
+  mdNumErased: Int
+  mdResync: Int
+  mdResyncCorr: String
+  mdResyncPos: String
+  mdResyncDb: String
+  mdResyncDt: String
+  mdResyncAction: String
+  mdResyncSize: Int
+  mdState: String
+  mdVersion: String
+  cacheNumDevices: Int
+  cacheSbNumDisks: Int
+  fsState: String
+  bootEligible: Boolean
+  enableBootTransfer: String
+  bootedFromFlashWithInternalBootSetup: Boolean
+  reservedNames: String
+
+  """Human friendly string of array events happening"""
+  fsProgress: String
+
+  """
+  Percentage from 0 - 100 while upgrading a disk or swapping parity drives
+  """
+  fsCopyPrcnt: Int
+  fsNumMounted: Int
+  fsNumUnmountable: Int
+  fsUnmountableMask: String
+
+  """Total amount of user shares"""
+  shareCount: Int
+
+  """Total amount shares with SMB enabled"""
+  shareSmbCount: Int
+
+  """Total amount shares with NFS enabled"""
+  shareNfsCount: Int
+
+  """Total amount shares with AFP enabled"""
+  shareAfpCount: Int
+  shareMoverActive: Boolean
+  csrfToken: String
+}
+
+"""Possible error states for configuration"""
+enum ConfigErrorState {
+  UNKNOWN_ERROR
+  INELIGIBLE
+  INVALID
+  NO_KEY_SERVER
+  WITHDRAWN
+}
+
+type Permission {
+  resource: Resource!
+
+  """Actions allowed on this resource"""
+  actions: [AuthAction!]!
+}
+
+"""Available resources for permissions"""
+enum Resource {
+  ACTIVATION_CODE
+  API_KEY
+  ARRAY
+  CLOUD
+  CONFIG
+  CONNECT
+  CONNECT__REMOTE_ACCESS
+  CUSTOMIZATIONS
+  DASHBOARD
+  DISK
+  DISPLAY
+  DOCKER
+  FLASH
+  INFO
+  LOGS
+  ME
+  NETWORK
+  NOTIFICATIONS
+  ONLINE
+  OS
+  OWNER
+  PERMISSION
+  REGISTRATION
+  SERVERS
+  SERVICES
+  SHARE
+  VARS
+  VMS
+  WELCOME
+}
+
+"""Authentication actions with possession (e.g., create:any, read:own)"""
+enum AuthAction {
+  """Create any resource"""
+  CREATE_ANY
+
+  """Create own resource"""
+  CREATE_OWN
+
+  """Read any resource"""
+  READ_ANY
+
+  """Read own resource"""
+  READ_OWN
+
+  """Update any resource"""
+  UPDATE_ANY
+
+  """Update own resource"""
+  UPDATE_OWN
+
+  """Delete any resource"""
+  DELETE_ANY
+
+  """Delete own resource"""
+  DELETE_OWN
+}
+
+type ApiKey implements Node {
+  id: PrefixedID!
+  key: String!
+  name: String!
+  description: String
+  roles: [Role!]!
+  createdAt: String!
+  permissions: [Permission!]!
+}
+
+"""Available roles for API keys and users"""
+enum Role {
+  """Full administrative access to all resources"""
+  ADMIN
+
+  """Internal Role for Unraid Connect"""
+  CONNECT
+
+  """Basic read access to user profile only"""
+  GUEST
+
+  """Read-only access to all resources"""
+  VIEWER
+}
+
+type SsoSettings implements Node {
+  id: PrefixedID!
+
+  """List of configured OIDC providers"""
+  oidcProviders: [OidcProvider!]!
+}
+
+type UnifiedSettings implements Node & FormSchema {
+  id: PrefixedID!
+
+  """The data schema for the settings"""
+  dataSchema: JSON!
+
+  """The UI schema for the settings"""
+  uiSchema: JSON!
+
+  """The current values of the settings"""
+  values: JSON!
+}
+
+interface FormSchema {
+  """The data schema for the form"""
+  dataSchema: JSON!
+
+  """The UI schema for the form"""
+  uiSchema: JSON!
+
+  """The current values of the form"""
+  values: JSON!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+type ApiKeyFormSettings implements Node & FormSchema {
+  id: PrefixedID!
+
+  """The data schema for the API key form"""
+  dataSchema: JSON!
+
+  """The UI schema for the API key form"""
+  uiSchema: JSON!
+
+  """The current values of the API key form"""
+  values: JSON!
+}
+
+type UpdateSettingsResponse {
+  """Whether a restart is required for the changes to take effect"""
+  restartRequired: Boolean!
+
+  """The updated settings values"""
+  values: JSON!
+
+  """Warning messages about configuration issues found during validation"""
+  warnings: [String!]
+}
+
+type Settings implements Node {
+  id: PrefixedID!
+
+  """A view of all settings"""
+  unified: UnifiedSettings!
+
+  """SSO settings"""
+  sso: SsoSettings!
+
+  """The API setting values"""
+  api: ApiConfig!
+}
+
+type Theme {
+  """The theme name"""
+  name: ThemeName!
+
+  """Whether to show the header banner image"""
+  showBannerImage: Boolean!
+
+  """Whether to show the banner gradient"""
+  showBannerGradient: Boolean!
+
+  """Whether to show the description in the header"""
+  showHeaderDescription: Boolean!
+
+  """The background color of the header"""
+  headerBackgroundColor: String
+
+  """The text color of the header"""
+  headerPrimaryTextColor: String
+
+  """The secondary text color of the header"""
+  headerSecondaryTextColor: String
+}
+
+"""The theme name"""
+enum ThemeName {
+  azure
+  black
+  gray
+  white
+}
+
+type InfoDisplayCase implements Node {
+  id: PrefixedID!
+
+  """Case image URL"""
+  url: String!
+
+  """Case icon identifier"""
+  icon: String!
+
+  """Error message if any"""
+  error: String!
+
+  """Base64 encoded case image"""
+  base64: String!
+}
+
+type InfoDisplay implements Node {
+  id: PrefixedID!
+
+  """Case display configuration"""
+  case: InfoDisplayCase!
+
+  """UI theme name"""
+  theme: ThemeName!
+
+  """Temperature unit (C or F)"""
+  unit: Temperature!
+
+  """Enable UI scaling"""
+  scale: Boolean!
+
+  """Show tabs in UI"""
+  tabs: Boolean!
+
+  """Enable UI resize"""
+  resize: Boolean!
+
+  """Show WWN identifiers"""
+  wwn: Boolean!
+
+  """Show totals"""
+  total: Boolean!
+
+  """Show usage statistics"""
+  usage: Boolean!
+
+  """Show text labels"""
+  text: Boolean!
+
+  """Warning temperature threshold"""
+  warning: Int!
+
+  """Critical temperature threshold"""
+  critical: Int!
+
+  """Hot temperature threshold"""
+  hot: Int!
+
+  """Maximum temperature threshold"""
+  max: Int
+
+  """Locale setting"""
+  locale: String
+}
+
+"""Temperature unit"""
+enum Temperature {
+  CELSIUS
+  FAHRENHEIT
+}
+
+type Language {
+  """Language code (e.g. en_US)"""
+  code: String!
+
+  """Language description/name"""
+  name: String!
+
+  """URL to the language pack XML"""
+  url: String
+}
+
+type PartnerLink {
+  """Display title for the link"""
+  title: String!
+
+  """The URL"""
+  url: String!
+}
+
+type PartnerConfig {
+  name: String
+  url: String
+
+  """Link to hardware specifications for this system"""
+  hardwareSpecsUrl: String
+
+  """Link to the system manual/documentation"""
+  manualUrl: String
+
+  """Link to manufacturer support page"""
+  supportUrl: String
+
+  """Additional custom links provided by the partner"""
+  extraLinks: [PartnerLink!]
+}
+
+type BrandingConfig {
+  header: String
+  headermetacolor: String
+  background: String
+  showBannerGradient: Boolean
+  theme: String
+
+  """
+  Banner image source. Supports local path, remote URL, or data URI/base64.
+  """
+  bannerImage: String
+
+  """
+  Built-in case model value written to case-model.cfg when no custom override is supplied.
+  """
+  caseModel: String
+
+  """
+  Case model image source. Supports local path, remote URL, or data URI/base64.
+  """
+  caseModelImage: String
+
+  """
+  Partner logo source for light themes (azure/white). Supports local path, remote URL, or data URI/base64.
+  """
+  partnerLogoLightUrl: String
+
+  """
+  Partner logo source for dark themes (black/gray). Supports local path, remote URL, or data URI/base64.
+  """
+  partnerLogoDarkUrl: String
+
+  """Indicates if a partner logo exists"""
+  hasPartnerLogo: Boolean
+
+  """Custom title for onboarding welcome step"""
+  onboardingTitle: String
+
+  """Custom subtitle for onboarding welcome step"""
+  onboardingSubtitle: String
+
+  """Custom title for fresh install onboarding"""
+  onboardingTitleFreshInstall: String
+
+  """Custom subtitle for fresh install onboarding"""
+  onboardingSubtitleFreshInstall: String
+
+  """Custom title for upgrade onboarding"""
+  onboardingTitleUpgrade: String
+
+  """Custom subtitle for upgrade onboarding"""
+  onboardingSubtitleUpgrade: String
+
+  """Custom title for downgrade onboarding"""
+  onboardingTitleDowngrade: String
+
+  """Custom subtitle for downgrade onboarding"""
+  onboardingSubtitleDowngrade: String
+
+  """Custom title for incomplete onboarding"""
+  onboardingTitleIncomplete: String
+
+  """Custom subtitle for incomplete onboarding"""
+  onboardingSubtitleIncomplete: String
+}
+
+type SystemConfig {
+  serverName: String
+  model: String
+  comment: String
+}
+
+type ActivationCode {
+  code: String
+  partner: PartnerConfig
+  branding: BrandingConfig
+  system: SystemConfig
+}
+
+type OnboardingState {
+  registrationState: RegistrationState
+
+  """Indicates whether the system is registered"""
+  isRegistered: Boolean!
+
+  """Indicates whether the system is a fresh install"""
+  isFreshInstall: Boolean!
+
+  """Indicates whether an activation code is present"""
+  hasActivationCode: Boolean!
+
+  """Indicates whether activation is required based on current state"""
+  activationRequired: Boolean!
+}
+
+"""Onboarding completion state and context"""
+type Onboarding {
+  """
+  The current onboarding status (INCOMPLETE, UPGRADE, DOWNGRADE, or COMPLETED)
+  """
+  status: OnboardingStatus!
+
+  """Whether this is a partner/OEM build with activation code"""
+  isPartnerBuild: Boolean!
+
+  """Whether the onboarding flow has been completed"""
+  completed: Boolean!
+
+  """The OS version when onboarding was completed"""
+  completedAtVersion: String
+
+  """The activation code from the .activationcode file, if present"""
+  activationCode: String
+
+  """Whether the onboarding modal should currently be shown"""
+  shouldOpen: Boolean!
+
+  """Runtime onboarding state values used by the onboarding flow"""
+  onboardingState: OnboardingState!
+}
+
+"""
+The current onboarding status based on completion state and version relationship
+"""
+enum OnboardingStatus {
+  INCOMPLETE
+  UPGRADE
+  DOWNGRADE
+  COMPLETED
+}
+
+type Customization {
+  activationCode: ActivationCode
+
+  """Onboarding completion state and context"""
+  onboarding: Onboarding!
+  availableLanguages: [Language!]
+}
+
+"""Result of attempting internal boot pool setup"""
+type OnboardingInternalBootResult {
+  ok: Boolean!
+  code: Int
+  output: String!
+}
+
+"""Warning metadata for an assignable internal boot drive"""
+type OnboardingInternalBootDriveWarning {
+  diskId: String!
+  device: String!
+  warnings: [String!]!
+}
+
+"""Current onboarding context for configuring internal boot"""
+type OnboardingInternalBootContext {
+  arrayStopped: Boolean!
+  bootEligible: Boolean
+  bootedFromFlashWithInternalBootSetup: Boolean!
+  enableBootTransfer: String
+  reservedNames: [String!]!
+  shareNames: [String!]!
+  poolNames: [String!]!
+  assignableDisks: [Disk!]!
+  driveWarnings: [OnboardingInternalBootDriveWarning!]!
+}
+
+type RCloneDrive {
+  """Provider name"""
+  name: String!
+
+  """Provider options and configuration schema"""
+  options: JSON!
+}
+
+type RCloneBackupConfigForm {
+  id: ID!
+  dataSchema: JSON!
+  uiSchema: JSON!
+}
+
+type RCloneBackupSettings {
+  configForm(formOptions: RCloneConfigFormInput): RCloneBackupConfigForm!
+  drives: [RCloneDrive!]!
+  remotes: [RCloneRemote!]!
+}
+
+input RCloneConfigFormInput {
+  providerType: String
+  showAdvanced: Boolean = false
+  parameters: JSON
+}
+
+type RCloneRemote {
+  name: String!
+  type: String!
+  parameters: JSON!
+
+  """Complete remote configuration"""
+  config: JSON!
+}
+
+"""Represents a tracked plugin installation operation"""
+type PluginInstallOperation {
+  """Unique identifier of the operation"""
+  id: ID!
+
+  """Plugin URL passed to the installer"""
+  url: String!
+
+  """Optional plugin name for display purposes"""
+  name: String
+
+  """Current status of the operation"""
+  status: PluginInstallStatus!
+
+  """Timestamp when the operation was created"""
+  createdAt: DateTime!
+
+  """Timestamp for the last update to this operation"""
+  updatedAt: DateTime
+
+  """Timestamp when the operation finished, if applicable"""
+  finishedAt: DateTime
+
+  """
+  Collected output lines generated by the installer (capped at recent lines)
+  """
+  output: [String!]!
+}
+
+"""Status of a plugin installation operation"""
+enum PluginInstallStatus {
+  FAILED
+  QUEUED
+  RUNNING
+  SUCCEEDED
+}
+
+"""Emitted event representing progress for a plugin installation"""
+type PluginInstallEvent {
+  """Identifier of the related plugin installation operation"""
+  operationId: ID!
+
+  """Status reported with this event"""
+  status: PluginInstallStatus!
+
+  """Output lines newly emitted since the previous event"""
+  output: [String!]
+
+  """Timestamp when the event was emitted"""
+  timestamp: DateTime!
+}
+
+type ArrayMutations {
+  """Set array state"""
+  setState(input: ArrayStateInput!): UnraidArray!
+
+  """Add new disk to array"""
+  addDiskToArray(input: ArrayDiskInput!): UnraidArray!
+
+  """
+  Remove existing disk from array. NOTE: The array must be stopped before running this otherwise it'll throw an error.
+  """
+  removeDiskFromArray(input: ArrayDiskInput!): UnraidArray!
+
+  """Mount a disk in the array"""
+  mountArrayDisk(id: PrefixedID!): ArrayDisk!
+
+  """Unmount a disk from the array"""
+  unmountArrayDisk(id: PrefixedID!): ArrayDisk!
+
+  """Clear statistics for a disk in the array"""
+  clearArrayDiskStatistics(id: PrefixedID!): Boolean!
+}
+
+input ArrayStateInput {
+  """Array state"""
+  desiredState: ArrayStateInputState!
+
+  """
+  Optional password used to unlock encrypted array disks when starting the array
+  """
+  decryptionPassword: String
+
+  """
+  Optional keyfile contents used to unlock encrypted array disks when starting the array. Accepts a data URL or raw base64 payload.
+  """
+  decryptionKeyfile: String
+}
+
+enum ArrayStateInputState {
+  START
+  STOP
+}
+
+input ArrayDiskInput {
+  """Disk ID"""
+  id: PrefixedID!
+
+  """The slot for the disk"""
+  slot: Int
+}
+
+type DockerMutations {
+  """Start a container"""
+  start(id: PrefixedID!): DockerContainer!
+
+  """Stop a container"""
+  stop(id: PrefixedID!): DockerContainer!
+
+  """Restart a container"""
+  restart(id: PrefixedID!): DockerContainer!
+
+  """Pause (Suspend) a container"""
+  pause(id: PrefixedID!): DockerContainer!
+
+  """Unpause (Resume) a container"""
+  unpause(id: PrefixedID!): DockerContainer!
+
+  """Remove a container"""
+  removeContainer(id: PrefixedID!, withImage: Boolean): Boolean!
+
+  """Update auto-start configuration for Docker containers"""
+  updateAutostartConfiguration(entries: [DockerAutostartEntryInput!]!, persistUserPreferences: Boolean): Boolean!
+
+  """Update a container to the latest image"""
+  updateContainer(id: PrefixedID!): DockerContainer!
+
+  """Update multiple containers to the latest images"""
+  updateContainers(ids: [PrefixedID!]!): [DockerContainer!]!
+
+  """Update all containers that have available updates"""
+  updateAllContainers: [DockerContainer!]!
+}
+
+input DockerAutostartEntryInput {
+  """Docker container identifier"""
+  id: PrefixedID!
+
+  """Whether the container should auto-start"""
+  autoStart: Boolean!
+
+  """Number of seconds to wait after starting the container"""
+  wait: Int
+}
+
+type VmMutations {
+  """Start a virtual machine"""
+  start(id: PrefixedID!): Boolean!
+
+  """Stop a virtual machine"""
+  stop(id: PrefixedID!): Boolean!
+
+  """Pause a virtual machine"""
+  pause(id: PrefixedID!): Boolean!
+
+  """Resume a virtual machine"""
+  resume(id: PrefixedID!): Boolean!
+
+  """Force stop a virtual machine"""
+  forceStop(id: PrefixedID!): Boolean!
+
+  """Reboot a virtual machine"""
+  reboot(id: PrefixedID!): Boolean!
+
+  """Reset a virtual machine"""
+  reset(id: PrefixedID!): Boolean!
+}
+
+"""API Key related mutations"""
+type ApiKeyMutations {
+  """Create an API key"""
+  create(input: CreateApiKeyInput!): ApiKey!
+
+  """Add a role to an API key"""
+  addRole(input: AddRoleForApiKeyInput!): Boolean!
+
+  """Remove a role from an API key"""
+  removeRole(input: RemoveRoleFromApiKeyInput!): Boolean!
+
+  """Delete one or more API keys"""
+  delete(input: DeleteApiKeyInput!): Boolean!
+
+  """Update an API key"""
+  update(input: UpdateApiKeyInput!): ApiKey!
+}
+
+input CreateApiKeyInput {
+  name: String!
+  description: String
+  roles: [Role!]
+  permissions: [AddPermissionInput!]
+
+  """
+  This will replace the existing key if one already exists with the same name, otherwise returns the existing key
+  """
+  overwrite: Boolean
+}
+
+input AddPermissionInput {
+  resource: Resource!
+  actions: [AuthAction!]!
+}
+
+input AddRoleForApiKeyInput {
+  apiKeyId: PrefixedID!
+  role: Role!
+}
+
+input RemoveRoleFromApiKeyInput {
+  apiKeyId: PrefixedID!
+  role: Role!
+}
+
+input DeleteApiKeyInput {
+  ids: [PrefixedID!]!
+}
+
+input UpdateApiKeyInput {
+  id: PrefixedID!
+  name: String
+  description: String
+  roles: [Role!]
+  permissions: [AddPermissionInput!]
+}
+
+"""Customization related mutations"""
+type CustomizationMutations {
+  """Update the UI theme (writes dynamix.cfg)"""
+  setTheme(
+    """Theme to apply"""
+    theme: ThemeName!
+  ): Theme!
+
+  """Update the display locale (language)"""
+  setLocale(
+    """Locale code to apply (e.g. en_US)"""
+    locale: String!
+  ): String!
+}
+
+"""
+Parity check related mutations, WIP, response types and functionaliy will change
+"""
+type ParityCheckMutations {
+  """Start a parity check"""
+  start(correct: Boolean!): JSON!
+
+  """Pause a parity check"""
+  pause: JSON!
+
+  """Resume a parity check"""
+  resume: JSON!
+
+  """Cancel a parity check"""
+  cancel: JSON!
+}
+
+"""RClone related mutations"""
+type RCloneMutations {
+  """Create a new RClone remote"""
+  createRCloneRemote(input: CreateRCloneRemoteInput!): RCloneRemote!
+
+  """Delete an existing RClone remote"""
+  deleteRCloneRemote(input: DeleteRCloneRemoteInput!): Boolean!
+}
+
+input CreateRCloneRemoteInput {
+  name: String!
+  type: String!
+  parameters: JSON!
+}
+
+input DeleteRCloneRemoteInput {
+  name: String!
+}
+
+"""Onboarding related mutations"""
+type OnboardingMutations {
+  """Mark onboarding as completed"""
+  completeOnboarding: Onboarding!
+
+  """Reset onboarding progress (for testing)"""
+  resetOnboarding: Onboarding!
+
+  """Force the onboarding modal open"""
+  openOnboarding: Onboarding!
+
+  """Close the onboarding modal"""
+  closeOnboarding: Onboarding!
+
+  """Temporarily bypass onboarding in API memory"""
+  bypassOnboarding: Onboarding!
+
+  """Clear the temporary onboarding bypass"""
+  resumeOnboarding: Onboarding!
+
+  """Override onboarding state for testing (in-memory only)"""
+  setOnboardingOverride(input: OnboardingOverrideInput!): Onboarding!
+
+  """Clear onboarding override state and reload from disk"""
+  clearOnboardingOverride: Onboarding!
+
+  """Create and configure internal boot pool via emcmd operations"""
+  createInternalBootPool(input: CreateInternalBootPoolInput!): OnboardingInternalBootResult!
+
+  """
+  Refresh the internal boot onboarding context from the latest emhttp state
+  """
+  refreshInternalBootContext: OnboardingInternalBootContext!
+}
+
+"""Onboarding override input for testing"""
+input OnboardingOverrideInput {
+  onboarding: OnboardingOverrideCompletionInput
+  activationCode: ActivationCodeOverrideInput
+  partnerInfo: PartnerInfoOverrideInput
+  registrationState: RegistrationState
+}
+
+"""Onboarding completion override input"""
+input OnboardingOverrideCompletionInput {
+  completed: Boolean
+  completedAtVersion: String
+  forceOpen: Boolean
+}
+
+"""Activation code override input"""
+input ActivationCodeOverrideInput {
+  code: String
+  partner: PartnerConfigInput
+  branding: BrandingConfigInput
+  system: SystemConfigInput
+}
+
+input PartnerConfigInput {
+  name: String
+  url: String
+  hardwareSpecsUrl: String
+  manualUrl: String
+  supportUrl: String
+  extraLinks: [PartnerLinkInput!]
+}
+
+"""Partner link input for custom links"""
+input PartnerLinkInput {
+  title: String!
+  url: String!
+}
+
+input BrandingConfigInput {
+  header: String
+  headermetacolor: String
+  background: String
+  showBannerGradient: Boolean
+  theme: String
+  bannerImage: String
+  caseModel: String
+  caseModelImage: String
+  partnerLogoLightUrl: String
+  partnerLogoDarkUrl: String
+  hasPartnerLogo: Boolean
+  onboardingTitle: String
+  onboardingSubtitle: String
+  onboardingTitleFreshInstall: String
+  onboardingSubtitleFreshInstall: String
+  onboardingTitleUpgrade: String
+  onboardingSubtitleUpgrade: String
+  onboardingTitleDowngrade: String
+  onboardingSubtitleDowngrade: String
+  onboardingTitleIncomplete: String
+  onboardingSubtitleIncomplete: String
+}
+
+input SystemConfigInput {
+  serverName: String
+  model: String
+  comment: String
+}
+
+"""Partner info override input"""
+input PartnerInfoOverrideInput {
+  partner: PartnerConfigInput
+  branding: BrandingConfigInput
+}
+
+"""Input for creating an internal boot pool during onboarding"""
+input CreateInternalBootPoolInput {
+  poolName: String!
+  devices: [String!]!
+  bootSizeMiB: Int!
+  updateBios: Boolean!
+  reboot: Boolean
+}
+
+"""Unraid plugin management mutations"""
+type UnraidPluginsMutations {
+  """Install an Unraid plugin and track installation progress"""
+  installPlugin(input: InstallPluginInput!): PluginInstallOperation!
+
+  """Install an Unraid language pack and track installation progress"""
+  installLanguage(input: InstallPluginInput!): PluginInstallOperation!
+}
+
+"""Input payload for installing a plugin"""
+input InstallPluginInput {
+  """Plugin installation URL (.plg)"""
+  url: String!
+
+  """Optional human-readable plugin name used for logging"""
+  name: String
+
+  """
+  Force installation even when plugin is already present. Defaults to true to mirror the existing UI behaviour.
+  """
+  forced: Boolean
+}
+
+type Config implements Node {
+  id: PrefixedID!
+  valid: Boolean
+  error: String
+}
+
+type InfoGpu implements Node {
+  id: PrefixedID!
+
+  """GPU type/manufacturer"""
+  type: String!
+
+  """GPU type identifier"""
+  typeid: String!
+
+  """Whether GPU is blacklisted"""
+  blacklisted: Boolean!
+
+  """Device class"""
+  class: String!
+
+  """Product ID"""
+  productid: String!
+
+  """Vendor name"""
+  vendorname: String
+}
+
+type InfoNetwork implements Node {
+  id: PrefixedID!
+
+  """Network interface name"""
+  iface: String!
+
+  """Network interface model"""
+  model: String
+
+  """Network vendor"""
+  vendor: String
+
+  """MAC address"""
+  mac: String
+
+  """Virtual interface flag"""
+  virtual: Boolean
+
+  """Network speed"""
+  speed: String
+
+  """DHCP enabled flag"""
+  dhcp: Boolean
+}
+
+type InfoPci implements Node {
+  id: PrefixedID!
+
+  """Device type/manufacturer"""
+  type: String!
+
+  """Type identifier"""
+  typeid: String!
+
+  """Vendor name"""
+  vendorname: String
+
+  """Vendor ID"""
+  vendorid: String!
+
+  """Product name"""
+  productname: String
+
+  """Product ID"""
+  productid: String!
+
+  """Blacklisted status"""
+  blacklisted: String!
+
+  """Device class"""
+  class: String!
+}
+
+type InfoUsb implements Node {
+  id: PrefixedID!
+
+  """USB device name"""
+  name: String!
+
+  """USB bus number"""
+  bus: String
+
+  """USB device number"""
+  device: String
+}
+
+type InfoDevices implements Node {
+  id: PrefixedID!
+
+  """List of GPU devices"""
+  gpu: [InfoGpu!]
+
+  """List of network interfaces"""
+  network: [InfoNetwork!]
+
+  """List of PCI devices"""
+  pci: [InfoPci!]
+
+  """List of USB devices"""
+  usb: [InfoUsb!]
+}
+
+"""CPU load for a single core"""
+type CpuLoad {
+  """The total CPU load on a single core, in percent."""
+  percentTotal: Float!
+
+  """The percentage of time the CPU spent in user space."""
+  percentUser: Float!
+
+  """The percentage of time the CPU spent in kernel space."""
+  percentSystem: Float!
+
+  """
+  The percentage of time the CPU spent on low-priority (niced) user space processes.
+  """
+  percentNice: Float!
+
+  """The percentage of time the CPU was idle."""
+  percentIdle: Float!
+
+  """The percentage of time the CPU spent servicing hardware interrupts."""
+  percentIrq: Float!
+
+  """The percentage of time the CPU spent running virtual machines (guest)."""
+  percentGuest: Float!
+
+  """The percentage of CPU time stolen by the hypervisor."""
+  percentSteal: Float!
+}
+
+type CpuPackages implements Node {
+  id: PrefixedID!
+
+  """Total CPU package power draw (W)"""
+  totalPower: Float!
+
+  """Power draw per package (W)"""
+  power: [Float!]!
+
+  """Temperature per package (°C)"""
+  temp: [Float!]!
+}
+
+type CpuUtilization implements Node {
+  id: PrefixedID!
+
+  """Total CPU load in percent"""
+  percentTotal: Float!
+
+  """CPU load for each core"""
+  cpus: [CpuLoad!]!
+}
+
+type InfoCpu implements Node {
+  id: PrefixedID!
+
+  """CPU manufacturer"""
+  manufacturer: String
+
+  """CPU brand name"""
+  brand: String
+
+  """CPU vendor"""
+  vendor: String
+
+  """CPU family"""
+  family: String
+
+  """CPU model"""
+  model: String
+
+  """CPU stepping"""
+  stepping: Int
+
+  """CPU revision"""
+  revision: String
+
+  """CPU voltage"""
+  voltage: String
+
+  """Current CPU speed in GHz"""
+  speed: Float
+
+  """Minimum CPU speed in GHz"""
+  speedmin: Float
+
+  """Maximum CPU speed in GHz"""
+  speedmax: Float
+
+  """Number of CPU threads"""
+  threads: Int
+
+  """Number of CPU cores"""
+  cores: Int
+
+  """Number of physical processors"""
+  processors: Int
+
+  """CPU socket type"""
+  socket: String
+
+  """CPU cache information"""
+  cache: JSON
+
+  """CPU feature flags"""
+  flags: [String!]
+
+  """
+  Per-package array of core/thread pairs, e.g. [[[0,1],[2,3]], [[4,5],[6,7]]]
+  """
+  topology: [[[Int!]!]!]!
+  packages: CpuPackages!
+}
+
+type MemoryLayout implements Node {
+  id: PrefixedID!
+
+  """Memory module size in bytes"""
+  size: BigInt!
+
+  """Memory bank location (e.g., BANK 0)"""
+  bank: String
+
+  """Memory type (e.g., DDR4, DDR5)"""
+  type: String
+
+  """Memory clock speed in MHz"""
+  clockSpeed: Int
+
+  """Part number of the memory module"""
+  partNum: String
+
+  """Serial number of the memory module"""
+  serialNum: String
+
+  """Memory manufacturer"""
+  manufacturer: String
+
+  """Form factor (e.g., DIMM, SODIMM)"""
+  formFactor: String
+
+  """Configured voltage in millivolts"""
+  voltageConfigured: Int
+
+  """Minimum voltage in millivolts"""
+  voltageMin: Int
+
+  """Maximum voltage in millivolts"""
+  voltageMax: Int
+}
+
+type MemoryUtilization implements Node {
+  id: PrefixedID!
+
+  """Total system memory in bytes"""
+  total: BigInt!
+
+  """Used memory in bytes"""
+  used: BigInt!
+
+  """Free memory in bytes"""
+  free: BigInt!
+
+  """Available memory in bytes"""
+  available: BigInt!
+
+  """Active memory in bytes"""
+  active: BigInt!
+
+  """Buffer/cache memory in bytes"""
+  buffcache: BigInt!
+
+  """Memory usage percentage"""
+  percentTotal: Float!
+
+  """Total swap memory in bytes"""
+  swapTotal: BigInt!
+
+  """Used swap memory in bytes"""
+  swapUsed: BigInt!
+
+  """Free swap memory in bytes"""
+  swapFree: BigInt!
+
+  """Swap usage percentage"""
+  percentSwapTotal: Float!
+}
+
+type InfoMemory implements Node {
+  id: PrefixedID!
+
+  """Physical memory layout"""
+  layout: [MemoryLayout!]!
+}
+
+"""IPv4 address assigned to a network interface"""
+type InfoNetworkIpv4Address {
+  """IPv4 address"""
+  address: String!
+
+  """IPv4 netmask"""
+  netmask: String!
+}
+
+"""IPv6 address assigned to a network interface"""
+type InfoNetworkIpv6Address {
+  """IPv6 address"""
+  address: String!
+
+  """IPv6 prefix length"""
+  prefixLength: Int
+}
+
+type InfoNetworkInterface implements Node {
+  id: PrefixedID!
+
+  """Interface name (e.g. eth0)"""
+  name: String!
+
+  """Interface description/label"""
+  description: String
+
+  """MAC Address"""
+  macAddress: String
+
+  """Maximum transmission unit"""
+  mtu: Int
+
+  """Link speed in Mbps"""
+  speed: Int
+
+  """Link duplex mode"""
+  duplex: String
+
+  """Whether this is an internal interface"""
+  internal: Boolean
+
+  """Whether this is a virtual interface"""
+  virtual: Boolean
+
+  """Operational state"""
+  operstate: String
+
+  """Interface type"""
+  type: String
+
+  """VLAN identifier parsed from the interface name"""
+  vlanId: Int
+
+  """IPv4 addresses assigned to this interface"""
+  ipv4Addresses: [InfoNetworkIpv4Address!]!
+
+  """IPv6 addresses assigned to this interface"""
+  ipv6Addresses: [InfoNetworkIpv6Address!]!
+
+  """Connection status"""
+  status: String
+
+  """IPv4 Protocol mode"""
+  protocol: String
+
+  """IPv4 Address"""
+  ipAddress: String
+
+  """IPv4 Netmask"""
+  netmask: String
+
+  """IPv4 Gateway"""
+  gateway: String
+
+  """Using DHCP for IPv4"""
+  useDhcp: Boolean
+
+  """IPv6 Address"""
+  ipv6Address: String
+
+  """IPv6 Netmask"""
+  ipv6Netmask: String
+
+  """IPv6 Gateway"""
+  ipv6Gateway: String
+
+  """Using DHCP for IPv6"""
+  useDhcp6: Boolean
+}
+
+type InfoOs implements Node {
+  id: PrefixedID!
+
+  """Operating system platform"""
+  platform: String
+
+  """Linux distribution name"""
+  distro: String
+
+  """OS release version"""
+  release: String
+
+  """OS codename"""
+  codename: String
+
+  """Kernel version"""
+  kernel: String
+
+  """OS architecture"""
+  arch: String
+
+  """Hostname"""
+  hostname: String
+
+  """Fully qualified domain name"""
+  fqdn: String
+
+  """OS build identifier"""
+  build: String
+
+  """Service pack version"""
+  servicepack: String
+
+  """Boot time ISO string"""
+  uptime: String
+
+  """OS logo name"""
+  logofile: String
+
+  """OS serial number"""
+  serial: String
+
+  """OS started via UEFI"""
+  uefi: Boolean
+}
+
+type InfoSystem implements Node {
+  id: PrefixedID!
+
+  """System manufacturer"""
+  manufacturer: String
+
+  """System model"""
+  model: String
+
+  """System version"""
+  version: String
+
+  """System serial number"""
+  serial: String
+
+  """System UUID"""
+  uuid: String
+
+  """System SKU"""
+  sku: String
+
+  """Virtual machine flag"""
+  virtual: Boolean
+}
+
+type InfoBaseboard implements Node {
+  id: PrefixedID!
+
+  """Motherboard manufacturer"""
+  manufacturer: String
+
+  """Motherboard model"""
+  model: String
+
+  """Motherboard version"""
+  version: String
+
+  """Motherboard serial number"""
+  serial: String
+
+  """Motherboard asset tag"""
+  assetTag: String
+
+  """Maximum memory capacity in bytes"""
+  memMax: Float
+
+  """Number of memory slots"""
+  memSlots: Float
+}
+
+type CoreVersions {
+  """Unraid version"""
+  unraid: String
+
+  """Unraid API version"""
+  api: String
+
+  """Kernel version"""
+  kernel: String
+}
+
+type PackageVersions {
+  """OpenSSL version"""
+  openssl: String
+
+  """Node.js version"""
+  node: String
+
+  """npm version"""
+  npm: String
+
+  """pm2 version"""
+  pm2: String
+
+  """Git version"""
+  git: String
+
+  """nginx version"""
+  nginx: String
+
+  """PHP version"""
+  php: String
+
+  """Docker version"""
+  docker: String
+}
+
+type InfoVersions implements Node {
+  id: PrefixedID!
+
+  """Core system versions"""
+  core: CoreVersions!
+
+  """Software package versions"""
+  packages: PackageVersions
+}
+
+type Info implements Node {
+  id: PrefixedID!
+
+  """Current server time"""
+  time: DateTime!
+
+  """Motherboard information"""
+  baseboard: InfoBaseboard!
+
+  """CPU information"""
+  cpu: InfoCpu!
+
+  """Device information"""
+  devices: InfoDevices!
+
+  """Display configuration"""
+  display: InfoDisplay!
+
+  """Machine ID"""
+  machineId: ID
+
+  """Memory information"""
+  memory: InfoMemory!
+
+  """Operating system information"""
+  os: InfoOs!
+
+  """System information"""
+  system: InfoSystem!
+
+  """Software versions"""
+  versions: InfoVersions!
+
+  """Network interfaces"""
+  networkInterfaces: [InfoNetworkInterface!]!
+
+  """Primary management interface"""
+  primaryNetwork: InfoNetworkInterface
+}
+
+type NotificationCounts {
+  info: Int!
+  warning: Int!
+  alert: Int!
+  total: Int!
+}
+
+type NotificationOverview {
+  unread: NotificationCounts!
+  archive: NotificationCounts!
+}
+
+type Notification implements Node {
+  id: PrefixedID!
+
+  """Also known as 'event'"""
+  title: String!
+  subject: String!
+  description: String!
+  importance: NotificationImportance!
+  link: String
+  type: NotificationType!
+
+  """ISO Timestamp for when the notification occurred"""
+  timestamp: String
+  formattedTimestamp: String
+}
+
+enum NotificationImportance {
+  ALERT
+  INFO
+  WARNING
+}
+
+enum NotificationType {
+  UNREAD
+  ARCHIVE
+}
+
+type Notifications implements Node {
+  id: PrefixedID!
+
+  """A cached overview of the notifications in the system & their severity."""
+  overview: NotificationOverview!
+  list(filter: NotificationFilter!): [Notification!]!
+
+  """
+  Deduplicated list of unread warning and alert notifications, sorted latest first.
+  """
+  warningsAndAlerts: [Notification!]!
+}
+
+input NotificationFilter {
+  importance: NotificationImportance
+  type: NotificationType!
+  offset: Int!
+  limit: Int!
+}
+
+type ExplicitStatusItem {
+  name: String!
+  updateStatus: UpdateStatus!
+}
+
+"""Update status of a container."""
+enum UpdateStatus {
+  UP_TO_DATE
+  UPDATE_AVAILABLE
+  REBUILD_READY
+  UNKNOWN
+}
+
+type ContainerPort {
+  ip: String
+  privatePort: Port
+  publicPort: Port
+  type: ContainerPortType!
+}
+
+"""
+A field whose value is a valid TCP port within the range of 0 to 65535: https://en.wikipedia.org/wiki/Transmission_Control_Protocol#TCP_ports
+"""
+scalar Port
+
+enum ContainerPortType {
+  TCP
+  UDP
+}
+
+type DockerPortConflictContainer {
+  id: PrefixedID!
+  name: String!
+}
+
+type DockerContainerPortConflict {
+  privatePort: Port!
+  type: ContainerPortType!
+  containers: [DockerPortConflictContainer!]!
+}
+
+type DockerLanPortConflict {
+  lanIpPort: String!
+  publicPort: Port
+  type: ContainerPortType!
+  containers: [DockerPortConflictContainer!]!
+}
+
+type DockerPortConflicts {
+  containerPorts: [DockerContainerPortConflict!]!
+  lanPorts: [DockerLanPortConflict!]!
+}
+
+type ContainerHostConfig {
+  networkMode: String!
+}
+
+type DockerContainer implements Node {
+  id: PrefixedID!
+  names: [String!]!
+  image: String!
+  imageId: String!
+  command: String!
+  created: Int!
+  ports: [ContainerPort!]!
+
+  """List of LAN-accessible host:port values"""
+  lanIpPorts: [String!]
+
+  """Total size of all files in the container (in bytes)"""
+  sizeRootFs: BigInt
+
+  """Size of writable layer (in bytes)"""
+  sizeRw: BigInt
+
+  """Size of container logs (in bytes)"""
+  sizeLog: BigInt
+  labels: JSON
+  state: ContainerState!
+  status: String!
+  hostConfig: ContainerHostConfig
+  networkSettings: JSON
+  mounts: [JSON!]
+  autoStart: Boolean!
+
+  """Zero-based order in the auto-start list"""
+  autoStartOrder: Int
+
+  """Wait time in seconds applied after start"""
+  autoStartWait: Int
+  templatePath: String
+
+  """Project/Product homepage URL"""
+  projectUrl: String
+
+  """Registry/Docker Hub URL"""
+  registryUrl: String
+
+  """Support page/thread URL"""
+  supportUrl: String
+
+  """Icon URL"""
+  iconUrl: String
+
+  """Resolved WebUI URL from template"""
+  webUiUrl: String
+
+  """Shell to use for console access (from template)"""
+  shell: String
+
+  """Port mappings from template (used when container is not running)"""
+  templatePorts: [ContainerPort!]
+
+  """Whether the container is orphaned (no template found)"""
+  isOrphaned: Boolean!
+  isUpdateAvailable: Boolean
+  isRebuildReady: Boolean
+
+  """Whether Tailscale is enabled for this container"""
+  tailscaleEnabled: Boolean!
+
+  """Tailscale status for this container (fetched via docker exec)"""
+  tailscaleStatus(forceRefresh: Boolean = false): TailscaleStatus
+}
+
+enum ContainerState {
+  RUNNING
+  PAUSED
+  EXITED
+}
+
+type DockerNetwork implements Node {
+  id: PrefixedID!
+  name: String!
+  created: String!
+  scope: String!
+  driver: String!
+  enableIPv6: Boolean!
+  ipam: JSON!
+  internal: Boolean!
+  attachable: Boolean!
+  ingress: Boolean!
+  configFrom: JSON!
+  configOnly: Boolean!
+  containers: JSON!
+  options: JSON!
+  labels: JSON!
+}
+
+type DockerContainerLogLine {
+  timestamp: DateTime!
+  message: String!
+}
+
+type DockerContainerLogs {
+  containerId: PrefixedID!
+  lines: [DockerContainerLogLine!]!
+
+  """
+  Cursor that can be passed back through the since argument to continue streaming logs.
+  """
+  cursor: DateTime
+}
+
+type DockerContainerStats {
+  id: PrefixedID!
+
+  """CPU Usage Percentage"""
+  cpuPercent: Float!
+
+  """Memory Usage String (e.g. 100MB / 1GB)"""
+  memUsage: String!
+
+  """Memory Usage Percentage"""
+  memPercent: Float!
+
+  """Network I/O String (e.g. 100MB / 1GB)"""
+  netIO: String!
+
+  """Block I/O String (e.g. 100MB / 1GB)"""
+  blockIO: String!
+}
+
+"""Tailscale exit node connection status"""
+type TailscaleExitNodeStatus {
+  """Whether the exit node is online"""
+  online: Boolean!
+
+  """Tailscale IPs of the exit node"""
+  tailscaleIps: [String!]
+}
+
+"""Tailscale status for a Docker container"""
+type TailscaleStatus {
+  """Whether Tailscale is online in the container"""
+  online: Boolean!
+
+  """Current Tailscale version"""
+  version: String
+
+  """Latest available Tailscale version"""
+  latestVersion: String
+
+  """Whether a Tailscale update is available"""
+  updateAvailable: Boolean!
+
+  """Configured Tailscale hostname"""
+  hostname: String
+
+  """Actual Tailscale DNS name"""
+  dnsName: String
+
+  """DERP relay code"""
+  relay: String
+
+  """DERP relay region name"""
+  relayName: String
+
+  """Tailscale IPv4 and IPv6 addresses"""
+  tailscaleIps: [String!]
+
+  """Advertised subnet routes"""
+  primaryRoutes: [String!]
+
+  """Whether this container is an exit node"""
+  isExitNode: Boolean!
+
+  """Status of the connected exit node (if using one)"""
+  exitNodeStatus: TailscaleExitNodeStatus
+
+  """Tailscale Serve/Funnel WebUI URL"""
+  webUiUrl: String
+
+  """Tailscale key expiry date"""
+  keyExpiry: DateTime
+
+  """Days until key expires"""
+  keyExpiryDays: Int
+
+  """Whether the Tailscale key has expired"""
+  keyExpired: Boolean!
+
+  """Tailscale backend state (Running, NeedsLogin, Stopped, etc.)"""
+  backendState: String
+
+  """Authentication URL if Tailscale needs login"""
+  authUrl: String
+}
+
+type Docker implements Node {
+  id: PrefixedID!
+  containers(skipCache: Boolean! = false @deprecated(reason: "Caching has been removed; this parameter is now ignored")): [DockerContainer!]!
+  networks(skipCache: Boolean! = false @deprecated(reason: "Caching has been removed; this parameter is now ignored")): [DockerNetwork!]!
+  portConflicts(skipCache: Boolean! = false @deprecated(reason: "Caching has been removed; this parameter is now ignored")): DockerPortConflicts!
+
+  """
+  Access container logs. Requires specifying a target container id through resolver arguments.
+  """
+  logs(id: PrefixedID!, since: DateTime, tail: Int): DockerContainerLogs!
+  container(id: PrefixedID!): DockerContainer
+  organizer(skipCache: Boolean! = false @deprecated(reason: "Caching has been removed; this parameter is now ignored")): ResolvedOrganizerV1!
+  containerUpdateStatuses: [ExplicitStatusItem!]!
+}
+
+type DockerTemplateSyncResult {
+  scanned: Int!
+  matched: Int!
+  skipped: Int!
+  errors: [String!]!
+}
+
+type ResolvedOrganizerView {
+  id: String!
+  name: String!
+  rootId: String!
+  flatEntries: [FlatOrganizerEntry!]!
+  prefs: JSON
+}
+
+type ResolvedOrganizerV1 {
+  version: Float!
+  views: [ResolvedOrganizerView!]!
+}
+
+type FlatOrganizerEntry {
+  id: String!
+  type: String!
+  name: String!
+  parentId: String
+  depth: Float!
+  position: Float!
+  path: [String!]!
+  hasChildren: Boolean!
+  childrenIds: [String!]!
+  meta: DockerContainer
+}
+
+type FlashBackupStatus {
+  """Status message indicating the outcome of the backup initiation."""
+  status: String!
+
+  """Job ID if available, can be used to check job status."""
+  jobId: String
+}
+
+type Flash implements Node {
+  id: PrefixedID!
+  guid: String!
+  vendor: String!
+  product: String!
+}
+
+type LogFile {
+  """Name of the log file"""
+  name: String!
+
+  """Full path to the log file"""
+  path: String!
+
+  """Size of the log file in bytes"""
+  size: Int!
+
+  """Last modified timestamp"""
+  modifiedAt: DateTime!
+}
+
+type LogFileContent {
+  """Path to the log file"""
+  path: String!
+
+  """Content of the log file"""
+  content: String!
+
+  """Total number of lines in the file"""
+  totalLines: Int!
+
+  """Starting line number of the content (1-indexed)"""
+  startLine: Int
+}
+
+type NetworkMetrics implements Node {
+  id: PrefixedID!
+
+  """Interface identifier"""
+  name: String!
+
+  """Operational state"""
+  operstate: String
+
+  """Total received bytes"""
+  bytesReceived: BigInt!
+
+  """Total transmitted bytes"""
+  bytesSent: BigInt!
+
+  """Total received packets"""
+  packetsReceived: BigInt!
+
+  """Total transmitted packets"""
+  packetsSent: BigInt!
+
+  """Receive errors"""
+  receiveErrors: BigInt!
+
+  """Transmit errors"""
+  transmitErrors: BigInt!
+
+  """Dropped receive packets"""
+  receiveDropped: BigInt!
+
+  """Dropped transmit packets"""
+  transmitDropped: BigInt!
+
+  """Receive throughput in bytes per second"""
+  rxSec: Float!
+
+  """Transmit throughput in bytes per second"""
+  txSec: Float!
+
+  """Estimated link utilization percentage"""
+  utilizationPercent: Float
+
+  """Metric collection timestamp"""
+  lastUpdated: DateTime!
+}
+
+type TemperatureReading {
+  """Temperature value"""
+  value: Float!
+
+  """Temperature unit"""
+  unit: TemperatureUnit!
+
+  """Timestamp of reading"""
+  timestamp: DateTime!
+
+  """Temperature status"""
+  status: TemperatureStatus!
+}
+
+enum TemperatureUnit {
+  CELSIUS
+  FAHRENHEIT
+  KELVIN
+  RANKINE
+}
+
+enum TemperatureStatus {
+  NORMAL
+  WARNING
+  CRITICAL
+  UNKNOWN
+}
+
+type TemperatureSensor implements Node {
+  id: PrefixedID!
+
+  """Sensor name"""
+  name: String!
+
+  """Type of sensor"""
+  type: SensorType!
+
+  """Physical location"""
+  location: String
+
+  """Current temperature"""
+  current: TemperatureReading!
+
+  """Minimum recorded"""
+  min: TemperatureReading
+
+  """Maximum recorded"""
+  max: TemperatureReading
+
+  """Warning threshold"""
+  warning: Float
+
+  """Critical threshold"""
+  critical: Float
+
+  """Historical readings for this sensor"""
+  history: [TemperatureReading!]
+}
+
+"""Type of temperature sensor"""
+enum SensorType {
+  CPU_PACKAGE
+  CPU_CORE
+  MOTHERBOARD
+  CHIPSET
+  GPU
+  DISK
+  NVME
+  AMBIENT
+  VRM
+  CUSTOM
+}
+
+type TemperatureSummary {
+  """Average temperature across all sensors"""
+  average: Float!
+
+  """Hottest sensor"""
+  hottest: TemperatureSensor!
+
+  """Coolest sensor"""
+  coolest: TemperatureSensor!
+
+  """Count of sensors at warning level"""
+  warningCount: Int!
+
+  """Count of sensors at critical level"""
+  criticalCount: Int!
+}
+
+type TemperatureMetrics implements Node {
+  id: PrefixedID!
+
+  """All temperature sensors"""
+  sensors: [TemperatureSensor!]!
+
+  """Temperature summary"""
+  summary: TemperatureSummary!
+}
+
+"""System metrics including CPU and memory utilization"""
+type Metrics implements Node {
+  id: PrefixedID!
+
+  """Current CPU utilization metrics"""
+  cpu: CpuUtilization
+
+  """Current memory utilization metrics"""
+  memory: MemoryUtilization
+
+  """Temperature metrics"""
+  temperature: TemperatureMetrics
+
+  """Current network metrics for all interfaces"""
+  network: [NetworkMetrics!]!
+}
+
+type SensorConfig {
+  enabled: Boolean
+}
+
+type LmSensorsConfig {
+  enabled: Boolean
+  config_path: String
+}
+
+type IpmiConfig {
+  enabled: Boolean
+  args: [String!]
+}
+
+type TemperatureSensorsConfig {
+  lm_sensors: LmSensorsConfig
+  smartctl: SensorConfig
+  ipmi: IpmiConfig
+}
+
+type TemperatureThresholdsConfig {
+  cpu_warning: Int
+  cpu_critical: Int
+  disk_warning: Int
+  disk_critical: Int
+  warning: Int
+  critical: Int
+}
+
+type TemperatureHistoryConfig {
+  max_readings: Int
+  retention_ms: Int
+}
+
+type Owner {
+  username: String!
+  url: String!
+  avatar: String!
+}
+
+type ProfileModel implements Node {
+  id: PrefixedID!
+  username: String!
+  url: String!
+  avatar: String!
+}
+
+type Server implements Node {
+  id: PrefixedID!
+  owner: ProfileModel!
+  guid: String!
+  apikey: String!
+  name: String!
+
+  """Server description/comment"""
+  comment: String
+
+  """Whether this server is online or offline"""
+  status: ServerStatus!
+  wanip: String!
+  lanip: String!
+  localurl: String!
+  remoteurl: String!
+}
+
+enum ServerStatus {
+  ONLINE
+  OFFLINE
+  NEVER_CONNECTED
+}
+
+type ApiConfig {
+  version: String!
+  extraOrigins: [String!]!
+  sandbox: Boolean
+  ssoSubIds: [String!]!
+  plugins: [String!]!
+}
+
+type OidcAuthorizationRule {
+  """The claim to check (e.g., email, sub, groups, hd)"""
+  claim: String!
+
+  """The comparison operator"""
+  operator: AuthorizationOperator!
+
+  """The value(s) to match against"""
+  value: [String!]!
+}
+
+"""Operators for authorization rule matching"""
+enum AuthorizationOperator {
+  EQUALS
+  CONTAINS
+  ENDS_WITH
+  STARTS_WITH
+}
+
+type OidcProvider {
+  """The unique identifier for the OIDC provider"""
+  id: PrefixedID!
+
+  """Display name of the OIDC provider"""
+  name: String!
+
+  """OAuth2 client ID registered with the provider"""
+  clientId: String!
+
+  """OAuth2 client secret (if required by provider)"""
+  clientSecret: String
+
+  """
+  OIDC issuer URL (e.g., https://accounts.google.com). Required for auto-discovery via /.well-known/openid-configuration
+  """
+  issuer: String
+
+  """
+  OAuth2 authorization endpoint URL. If omitted, will be auto-discovered from issuer/.well-known/openid-configuration
+  """
+  authorizationEndpoint: String
+
+  """
+  OAuth2 token endpoint URL. If omitted, will be auto-discovered from issuer/.well-known/openid-configuration
+  """
+  tokenEndpoint: String
+
+  """
+  JSON Web Key Set URI for token validation. If omitted, will be auto-discovered from issuer/.well-known/openid-configuration
+  """
+  jwksUri: String
+
+  """OAuth2 scopes to request (e.g., openid, profile, email)"""
+  scopes: [String!]!
+
+  """Flexible authorization rules based on claims"""
+  authorizationRules: [OidcAuthorizationRule!]
+
+  """
+  Mode for evaluating authorization rules - OR (any rule passes) or AND (all rules must pass). Defaults to OR.
+  """
+  authorizationRuleMode: AuthorizationRuleMode
+
+  """Custom text for the login button"""
+  buttonText: String
+
+  """URL or base64 encoded icon for the login button"""
+  buttonIcon: String
+
+  """
+  Button variant style from Reka UI. See https://reka-ui.com/docs/components/button
+  """
+  buttonVariant: String
+
+  """
+  Custom CSS styles for the button (e.g., "background: linear-gradient(to right, #4f46e5, #7c3aed); border-radius: 9999px;")
+  """
+  buttonStyle: String
+}
+
+"""
+Mode for evaluating authorization rules - OR (any rule passes) or AND (all rules must pass)
+"""
+enum AuthorizationRuleMode {
+  OR
+  AND
+}
+
+type OidcConfiguration {
+  """List of configured OIDC providers"""
+  providers: [OidcProvider!]!
+
+  """
+  Default allowed redirect origins that apply to all OIDC providers (e.g., Tailscale domains)
+  """
+  defaultAllowedOrigins: [String!]
+}
+
+type OidcSessionValidation {
+  valid: Boolean!
+  username: String
+}
+
+type PublicOidcProvider {
+  id: ID!
+  name: String!
+  buttonText: String
+  buttonIcon: String
+  buttonVariant: String
+  buttonStyle: String
+}
+
+"""System time configuration and current status"""
+type SystemTime {
+  """Current server time in ISO-8601 format (UTC)"""
+  currentTime: String!
+
+  """IANA timezone identifier currently in use"""
+  timeZone: String!
+
+  """Whether NTP/PTP time synchronization is enabled"""
+  useNtp: Boolean!
+
+  """Configured NTP servers (empty strings indicate unused slots)"""
+  ntpServers: [String!]!
+}
+
+"""Selectable timezone option from the system list"""
+type TimeZoneOption {
+  """IANA timezone identifier"""
+  value: String!
+
+  """Display label for the timezone"""
+  label: String!
+}
+
+type UPSBattery {
+  """
+  Battery charge level as a percentage (0-100). Unit: percent (%). Example: 100 means battery is fully charged
+  """
+  chargeLevel: Int!
+
+  """
+  Estimated runtime remaining on battery power. Unit: seconds. Example: 3600 means 1 hour of runtime remaining
+  """
+  estimatedRuntime: Int!
+
+  """
+  Battery health status. Possible values: 'Good', 'Replace', 'Unknown'. Indicates if the battery needs replacement
+  """
+  health: String!
+}
+
+type UPSPower {
+  """
+  Input voltage from the wall outlet/mains power. Unit: volts (V). Example: 120.5 for typical US household voltage
+  """
+  inputVoltage: Float!
+
+  """
+  Output voltage being delivered to connected devices. Unit: volts (V). Example: 120.5 - should match input voltage when on mains power
+  """
+  outputVoltage: Float!
+
+  """
+  Current load on the UPS as a percentage of its capacity. Unit: percent (%). Example: 25 means UPS is loaded at 25% of its maximum capacity
+  """
+  loadPercentage: Int!
+
+  """
+  Nominal power capacity of the UPS. Unit: watts (W). Example: 1000 means the UPS is rated for 1000 watts. This is the maximum power the UPS can deliver
+  """
+  nominalPower: Int
+
+  """
+  Current power consumption calculated from load percentage and nominal power. Unit: watts (W). Example: 350 means 350 watts currently being used. Calculated as: nominalPower * (loadPercentage / 100)
+  """
+  currentPower: Float
+}
+
+type UPSDevice {
+  """
+  Unique identifier for the UPS device. Usually based on the model name or a generated ID
+  """
+  id: ID!
+
+  """Display name for the UPS device. Can be customized by the user"""
+  name: String!
+
+  """UPS model name/number. Example: 'APC Back-UPS Pro 1500'"""
+  model: String!
+
+  """
+  Current operational status of the UPS. Common values: 'Online', 'On Battery', 'Low Battery', 'Replace Battery', 'Overload', 'Offline'. 'Online' means running on mains power, 'On Battery' means running on battery backup
+  """
+  status: String!
+
+  """Battery-related information"""
+  battery: UPSBattery!
+
+  """Power-related information"""
+  power: UPSPower!
+}
+
+type UPSConfiguration {
+  """
+  UPS service state. Values: 'enable' or 'disable'. Controls whether the UPS monitoring service is running
+  """
+  service: String
+
+  """
+  Type of cable connecting the UPS to the server. Common values: 'usb', 'smart', 'ether', 'custom'. Determines communication protocol
+  """
+  upsCable: String
+
+  """
+  Custom cable configuration string. Only used when upsCable is set to 'custom'. Format depends on specific UPS model
+  """
+  customUpsCable: String
+
+  """
+  UPS communication type. Common values: 'usb', 'net', 'snmp', 'dumb', 'pcnet', 'modbus'. Defines how the server communicates with the UPS
+  """
+  upsType: String
+
+  """
+  Device path or network address for UPS connection. Examples: '/dev/ttyUSB0' for USB, '192.168.1.100:3551' for network. Depends on upsType setting
+  """
+  device: String
+
+  """
+  Override UPS capacity for runtime calculations. Unit: volt-amperes (VA). Example: 1500 for a 1500VA UPS. Leave unset to use UPS-reported capacity
+  """
+  overrideUpsCapacity: Int
+
+  """
+  Battery level threshold for shutdown. Unit: percent (%). Example: 10 means shutdown when battery reaches 10%. System will shutdown when battery drops to this level
+  """
+  batteryLevel: Int
+
+  """
+  Runtime threshold for shutdown. Unit: minutes. Example: 5 means shutdown when 5 minutes runtime remaining. System will shutdown when estimated runtime drops below this
+  """
+  minutes: Int
+
+  """
+  Timeout for UPS communications. Unit: seconds. Example: 0 means no timeout. Time to wait for UPS response before considering it offline
+  """
+  timeout: Int
+
+  """
+  Kill UPS power after shutdown. Values: 'yes' or 'no'. If 'yes', tells UPS to cut power after system shutdown. Useful for ensuring complete power cycle
+  """
+  killUps: String
+
+  """
+  Network Information Server (NIS) IP address. Default: '0.0.0.0' (listen on all interfaces). IP address for apcupsd network information server
+  """
+  nisIp: String
+
+  """
+  Network server mode. Values: 'on' or 'off'. Enable to allow network clients to monitor this UPS
+  """
+  netServer: String
+
+  """
+  UPS name for network monitoring. Used to identify this UPS on the network. Example: 'SERVER_UPS'
+  """
+  upsName: String
+
+  """
+  Override UPS model name. Used for display purposes. Leave unset to use UPS-reported model
+  """
+  modelName: String
+}
+
+type VmDomain implements Node {
+  """The unique identifier for the vm (uuid)"""
+  id: PrefixedID!
+
+  """A friendly name for the vm"""
+  name: String
+
+  """Current domain vm state"""
+  state: VmState!
+
+  """The UUID of the vm"""
+  uuid: String @deprecated(reason: "Use id instead")
+}
+
+"""The state of a virtual machine"""
+enum VmState {
+  NOSTATE
+  RUNNING
+  IDLE
+  PAUSED
+  SHUTDOWN
+  SHUTOFF
+  CRASHED
+  PMSUSPENDED
+}
+
+type Vms implements Node {
+  id: PrefixedID!
+  domains: [VmDomain!]
+  domain: [VmDomain!]
+}
+
+type Uptime {
+  timestamp: String
+}
+
+type Service implements Node {
+  id: PrefixedID!
+  name: String
+  online: Boolean
+  uptime: Uptime
+  version: String
+}
+
+type UserAccount implements Node {
+  id: PrefixedID!
+
+  """The name of the user"""
+  name: String!
+
+  """A description of the user"""
+  description: String!
+
+  """The roles of the user"""
+  roles: [Role!]!
+
+  """The permissions of the user"""
+  permissions: [Permission!]
+}
+
+type Plugin {
+  """The name of the plugin package"""
+  name: String!
+
+  """The version of the plugin package"""
+  version: String!
+
+  """Whether the plugin has an API module"""
+  hasApiModule: Boolean
+
+  """Whether the plugin has a CLI module"""
+  hasCliModule: Boolean
+}
+
+type AccessUrl {
+  type: URL_TYPE!
+  name: String
+  ipv4: URL
+  ipv6: URL
+}
+
+enum URL_TYPE {
+  LAN
+  WIREGUARD
+  WAN
+  MDNS
+  OTHER
+  DEFAULT
+}
+
+"""
+A field whose value conforms to the standard URL format as specified in RFC3986: https://www.ietf.org/rfc/rfc3986.txt.
+"""
+scalar URL
+
+type AccessUrlObject {
+  ipv4: String
+  ipv6: String
+  type: URL_TYPE!
+  name: String
+}
+
+type ApiKeyResponse {
+  valid: Boolean!
+  error: String
+}
+
+type MinigraphqlResponse {
+  status: MinigraphStatus!
+  timeout: Int
+  error: String
+}
+
+"""The status of the minigraph"""
+enum MinigraphStatus {
+  PRE_INIT
+  CONNECTING
+  CONNECTED
+  PING_FAILURE
+  ERROR_RETRYING
+}
+
+type CloudResponse {
+  status: String!
+  ip: String
+  error: String
+}
+
+type RelayResponse {
+  status: String!
+  timeout: String
+  error: String
+}
+
+type Cloud {
+  error: String
+  apiKey: ApiKeyResponse!
+  relay: RelayResponse
+  minigraphql: MinigraphqlResponse!
+  cloud: CloudResponse!
+  allowedOrigins: [String!]!
+}
+
+type RemoteAccess {
+  """The type of WAN access used for Remote Access"""
+  accessType: WAN_ACCESS_TYPE!
+
+  """The type of port forwarding used for Remote Access"""
+  forwardType: WAN_FORWARD_TYPE
+
+  """The port used for Remote Access"""
+  port: Int
+}
+
+enum WAN_ACCESS_TYPE {
+  DYNAMIC
+  ALWAYS
+  DISABLED
+}
+
+enum WAN_FORWARD_TYPE {
+  UPNP
+  STATIC
+}
+
+type DynamicRemoteAccessStatus {
+  """The type of dynamic remote access that is enabled"""
+  enabledType: DynamicRemoteAccessType!
+
+  """The type of dynamic remote access that is currently running"""
+  runningType: DynamicRemoteAccessType!
+
+  """Any error message associated with the dynamic remote access"""
+  error: String
+}
+
+enum DynamicRemoteAccessType {
+  STATIC
+  UPNP
+  DISABLED
+}
+
+type ConnectSettingsValues {
+  """The type of WAN access used for Remote Access"""
+  accessType: WAN_ACCESS_TYPE!
+
+  """The type of port forwarding used for Remote Access"""
+  forwardType: WAN_FORWARD_TYPE
+
+  """The port used for Remote Access"""
+  port: Int
+}
+
+type ConnectSettings implements Node {
+  id: PrefixedID!
+
+  """The data schema for the Connect settings"""
+  dataSchema: JSON!
+
+  """The UI schema for the Connect settings"""
+  uiSchema: JSON!
+
+  """The values for the Connect settings"""
+  values: ConnectSettingsValues!
+}
+
+type Connect implements Node {
+  id: PrefixedID!
+
+  """The status of dynamic remote access"""
+  dynamicRemoteAccess: DynamicRemoteAccessStatus!
+
+  """The settings for the Connect instance"""
+  settings: ConnectSettings!
+}
+
+type Network implements Node {
+  id: PrefixedID!
+  accessUrls: [AccessUrl!]
+}
+
+input AccessUrlObjectInput {
+  ipv4: String
+  ipv6: String
+  type: URL_TYPE!
+  name: String
+}
+
+"\n### Description:\n\nID scalar type that prefixes the underlying ID with the server identifier on output and strips it on input.\n\nWe use this scalar type to ensure that the ID is unique across all servers, allowing the same underlying resource ID to be used across different server instances.\n\n#### Input Behavior:\n\nWhen providing an ID as input (e.g., in arguments or input objects), the server identifier prefix ('<serverId>:') is optional.\n\n- If the prefix is present (e.g., '123:456'), it will be automatically stripped, and only the underlying ID ('456') will be used internally.\n- If the prefix is absent (e.g., '456'), the ID will be used as-is.\n\nThis makes it flexible for clients, as they don't strictly need to know or provide the server ID.\n\n#### Output Behavior:\n\nWhen an ID is returned in the response (output), it will *always* be prefixed with the current server's unique identifier (e.g., '123:456').\n\n#### Example:\n\nNote: The server identifier is '123' in this example.\n\n##### Input (Prefix Optional):\n```graphql\n# Both of these are valid inputs resolving to internal ID '456'\n{\n  someQuery(id: \"123:456\") { ... }\n  anotherQuery(id: \"456\") { ... }\n}\n```\n\n##### Output (Prefix Always Added):\n```graphql\n# Assuming internal ID is '456'\n{\n  \"data\": {\n    \"someResource\": {\n      \"id\": \"123:456\" \n    }\n  }\n}\n```\n        "
+scalar PrefixedID
+
+type Query {
+  apiKeys: [ApiKey!]!
+  apiKey(id: PrefixedID!): ApiKey
+
+  """All possible roles for API keys"""
+  apiKeyPossibleRoles: [Role!]!
+
+  """All possible permissions for API keys"""
+  apiKeyPossiblePermissions: [Permission!]!
+
+  """Get the actual permissions that would be granted by a set of roles"""
+  getPermissionsForRoles(roles: [Role!]!): [Permission!]!
+
+  """
+  Preview the effective permissions for a combination of roles and explicit permissions
+  """
+  previewEffectivePermissions(roles: [Role!], permissions: [AddPermissionInput!]): [Permission!]!
+
+  """Get all available authentication actions with possession"""
+  getAvailableAuthActions: [AuthAction!]!
+
+  """Get JSON Schema for API key creation form"""
+  getApiKeyCreationFormSchema: ApiKeyFormSettings!
+  config: Config!
+  display: InfoDisplay!
+  flash: Flash!
+  me: UserAccount!
+
+  """Get all notifications"""
+  notifications: Notifications!
+  online: Boolean!
+  owner: Owner!
+
+  """Get the latest onboarding context for configuring internal boot"""
+  internalBootContext: OnboardingInternalBootContext!
+  registration: Registration
+  server: Server
+  servers: [Server!]!
+  services: [Service!]!
+  shares: [Share!]!
+  vars: Vars!
+
+  """Get information about all VMs on the system"""
+  vms: Vms!
+  parityHistory: [ParityCheck!]!
+  array: UnraidArray!
+  customization: Customization
+
+  """Whether the system is a fresh install (no license key)"""
+  isFreshInstall: Boolean!
+  publicTheme: Theme!
+  info: Info!
+
+  """Network interfaces"""
+  networkInterfaces: [InfoNetworkInterface!]!
+  docker: Docker!
+  disks: [Disk!]!
+  assignableDisks: [Disk!]!
+  disk(id: PrefixedID!): Disk!
+  rclone: RCloneBackupSettings!
+  logFiles: [LogFile!]!
+  logFile(path: String!, lines: Int, startLine: Int): LogFileContent!
+  settings: Settings!
+  isSSOEnabled: Boolean!
+
+  """Get public OIDC provider information for login buttons"""
+  publicOidcProviders: [PublicOidcProvider!]!
+
+  """Get all configured OIDC providers (admin only)"""
+  oidcProviders: [OidcProvider!]!
+
+  """Get a specific OIDC provider by ID"""
+  oidcProvider(id: PrefixedID!): OidcProvider
+
+  """Get the full OIDC configuration (admin only)"""
+  oidcConfiguration: OidcConfiguration!
+
+  """Validate an OIDC session token (internal use for CLI validation)"""
+  validateOidcSession(token: String!): OidcSessionValidation!
+  metrics: Metrics!
+
+  """Retrieve current system time configuration"""
+  systemTime: SystemTime!
+
+  """Retrieve available time zone options"""
+  timeZoneOptions: [TimeZoneOption!]!
+  upsDevices: [UPSDevice!]!
+  upsDeviceById(id: String!): UPSDevice
+  upsConfiguration: UPSConfiguration!
+
+  """Retrieve a plugin installation operation by identifier"""
+  pluginInstallOperation(operationId: ID!): PluginInstallOperation
+
+  """List all tracked plugin installation operations"""
+  pluginInstallOperations: [PluginInstallOperation!]!
+
+  """List installed Unraid OS plugins by .plg filename"""
+  installedUnraidPlugins: [String!]!
+
+  """List all installed plugins with their metadata"""
+  plugins: [Plugin!]!
+  remoteAccess: RemoteAccess!
+  connect: Connect!
+  network: Network!
+  cloud: Cloud!
+}
+
+type Mutation {
+  """Creates a new notification record"""
+  createNotification(input: NotificationData!): Notification!
+  deleteNotification(id: PrefixedID!, type: NotificationType!): NotificationOverview!
+
+  """Deletes all archived notifications on server."""
+  deleteArchivedNotifications: NotificationOverview!
+
+  """Marks a notification as archived."""
+  archiveNotification(id: PrefixedID!): Notification!
+  archiveNotifications(ids: [PrefixedID!]!): NotificationOverview!
+
+  """
+  Creates a notification if an equivalent unread notification does not already exist.
+  """
+  notifyIfUnique(input: NotificationData!): Notification
+  archiveAll(importance: NotificationImportance): NotificationOverview!
+
+  """Marks a notification as unread."""
+  unreadNotification(id: PrefixedID!): Notification!
+  unarchiveNotifications(ids: [PrefixedID!]!): NotificationOverview!
+  unarchiveAll(importance: NotificationImportance): NotificationOverview!
+
+  """Reads each notification to recompute & update the overview."""
+  recalculateOverview: NotificationOverview!
+  array: ArrayMutations!
+  docker: DockerMutations!
+  vm: VmMutations!
+  parityCheck: ParityCheckMutations!
+  apiKey: ApiKeyMutations!
+  customization: CustomizationMutations!
+  rclone: RCloneMutations!
+  onboarding: OnboardingMutations!
+  unraidPlugins: UnraidPluginsMutations!
+
+  """Update server name, comment, and model"""
+  updateServerIdentity(name: String!, comment: String, sysModel: String): Server!
+  updateSshSettings(input: UpdateSshInput!): Vars!
+  createDockerFolder(name: String!, parentId: String, childrenIds: [String!]): ResolvedOrganizerV1!
+  setDockerFolderChildren(folderId: String, childrenIds: [String!]!): ResolvedOrganizerV1!
+  deleteDockerEntries(entryIds: [String!]!): ResolvedOrganizerV1!
+  moveDockerEntriesToFolder(sourceEntryIds: [String!]!, destinationFolderId: String!): ResolvedOrganizerV1!
+  moveDockerItemsToPosition(sourceEntryIds: [String!]!, destinationFolderId: String!, position: Float!): ResolvedOrganizerV1!
+  renameDockerFolder(folderId: String!, newName: String!): ResolvedOrganizerV1!
+  createDockerFolderWithItems(name: String!, parentId: String, sourceEntryIds: [String!], position: Float): ResolvedOrganizerV1!
+  updateDockerViewPreferences(viewId: String = "default", prefs: JSON!): ResolvedOrganizerV1!
+  syncDockerTemplatePaths: DockerTemplateSyncResult!
+
+  """
+  Reset Docker template mappings to defaults. Use this to recover from corrupted state.
+  """
+  resetDockerTemplateMappings: Boolean!
+  refreshDockerDigests: Boolean!
+
+  """Initiates a flash drive backup using a configured remote."""
+  initiateFlashBackup(input: InitiateFlashBackupInput!): FlashBackupStatus!
+  updateSettings(input: JSON!): UpdateSettingsResponse!
+  updateTemperatureConfig(input: TemperatureConfigInput!): Boolean!
+
+  """Update system time configuration"""
+  updateSystemTime(input: UpdateSystemTimeInput!): SystemTime!
+  configureUps(config: UPSConfigInput!): Boolean!
+
+  """
+  Add one or more plugins to the API. Returns false if restart was triggered automatically, true if manual restart is required.
+  """
+  addPlugin(input: PluginManagementInput!): Boolean!
+
+  """
+  Remove one or more plugins from the API. Returns false if restart was triggered automatically, true if manual restart is required.
+  """
+  removePlugin(input: PluginManagementInput!): Boolean!
+  updateApiSettings(input: ConnectSettingsInput!): ConnectSettingsValues!
+  connectSignIn(input: ConnectSignInInput!): Boolean!
+  connectSignOut: Boolean!
+  setupRemoteAccess(input: SetupRemoteAccessInput!): Boolean!
+  enableDynamicRemoteAccess(input: EnableDynamicRemoteAccessInput!): Boolean!
+}
+
+input NotificationData {
+  title: String!
+  subject: String!
+  description: String!
+  importance: NotificationImportance!
+  link: String
+}
+
+input UpdateSshInput {
+  enabled: Boolean!
+
+  """SSH Port (default 22)"""
+  port: Int!
+}
+
+input InitiateFlashBackupInput {
+  """The name of the remote configuration to use for the backup."""
+  remoteName: String!
+
+  """Source path to backup (typically the flash drive)."""
+  sourcePath: String!
+
+  """Destination path on the remote."""
+  destinationPath: String!
+
+  """
+  Additional options for the backup operation, such as --dry-run or --transfers.
+  """
+  options: JSON
+}
+
+input TemperatureConfigInput {
+  enabled: Boolean
+  polling_interval: Int
+  default_unit: TemperatureUnit
+  sensors: TemperatureSensorsConfigInput
+  thresholds: TemperatureThresholdsConfigInput
+  history: TemperatureHistoryConfigInput
+}
+
+input TemperatureSensorsConfigInput {
+  lm_sensors: LmSensorsConfigInput
+  smartctl: SensorConfigInput
+  ipmi: IpmiConfigInput
+}
+
+input LmSensorsConfigInput {
+  enabled: Boolean
+  config_path: String
+}
+
+input SensorConfigInput {
+  enabled: Boolean
+}
+
+input IpmiConfigInput {
+  enabled: Boolean
+  args: [String!]
+}
+
+input TemperatureThresholdsConfigInput {
+  cpu_warning: Int
+  cpu_critical: Int
+  disk_warning: Int
+  disk_critical: Int
+  warning: Int
+  critical: Int
+}
+
+input TemperatureHistoryConfigInput {
+  max_readings: Int
+  retention_ms: Int
+}
+
+input UpdateSystemTimeInput {
+  """New IANA timezone identifier to apply"""
+  timeZone: String
+
+  """Enable or disable NTP-based synchronization"""
+  useNtp: Boolean
+
+  """
+  Ordered list of up to four NTP servers. Supply empty strings to clear positions.
+  """
+  ntpServers: [String!]
+
+  """
+  Manual date/time to apply when disabling NTP, expected format YYYY-MM-DD HH:mm:ss
+  """
+  manualDateTime: String
+}
+
+input UPSConfigInput {
+  """Enable or disable the UPS monitoring service"""
+  service: UPSServiceState
+
+  """Type of cable connecting the UPS to the server"""
+  upsCable: UPSCableType
+
+  """
+  Custom cable configuration (only used when upsCable is CUSTOM). Format depends on specific UPS model
+  """
+  customUpsCable: String
+
+  """UPS communication protocol"""
+  upsType: UPSType
+
+  """
+  Device path or network address for UPS connection. Examples: '/dev/ttyUSB0' for USB, '192.168.1.100:3551' for network
+  """
+  device: String
+
+  """
+  Override UPS capacity for runtime calculations. Unit: watts (W). Leave unset to use UPS-reported capacity
+  """
+  overrideUpsCapacity: Int
+
+  """
+  Battery level percentage to initiate shutdown. Unit: percent (%) - Valid range: 0-100
+  """
+  batteryLevel: Int
+
+  """Runtime left in minutes to initiate shutdown. Unit: minutes"""
+  minutes: Int
+
+  """
+  Time on battery before shutdown. Unit: seconds. Set to 0 to disable timeout-based shutdown
+  """
+  timeout: Int
+
+  """
+  Turn off UPS power after system shutdown. Useful for ensuring complete power cycle
+  """
+  killUps: UPSKillPower
+}
+
+"""Service state for UPS daemon"""
+enum UPSServiceState {
+  ENABLE
+  DISABLE
+}
+
+"""UPS cable connection types"""
+enum UPSCableType {
+  USB
+  SIMPLE
+  SMART
+  ETHER
+  CUSTOM
+}
+
+"""UPS communication protocols"""
+enum UPSType {
+  USB
+  APCSMART
+  NET
+  SNMP
+  DUMB
+  PCNET
+  MODBUS
+}
+
+"""Kill UPS power after shutdown option"""
+enum UPSKillPower {
+  YES
+  NO
+}
+
+input PluginManagementInput {
+  """Array of plugin package names to add or remove"""
+  names: [String!]!
+
+  """
+  Whether to treat plugins as bundled plugins. Bundled plugins are installed to node_modules at build time and controlled via config only.
+  """
+  bundled: Boolean! = false
+
+  """
+  Whether to restart the API after the operation. When false, a restart has already been queued.
+  """
+  restart: Boolean! = true
+}
+
+input ConnectSettingsInput {
+  """The type of WAN access to use for Remote Access"""
+  accessType: WAN_ACCESS_TYPE
+
+  """The type of port forwarding to use for Remote Access"""
+  forwardType: WAN_FORWARD_TYPE
+
+  """
+  The port to use for Remote Access. Not required for UPNP forwardType. Required for STATIC forwardType. Ignored if accessType is DISABLED or forwardType is UPNP.
+  """
+  port: Int
+}
+
+input ConnectSignInInput {
+  """The API key for authentication"""
+  apiKey: String!
+
+  """User information for the sign-in"""
+  userInfo: ConnectUserInfoInput
+}
+
+input ConnectUserInfoInput {
+  """The preferred username of the user"""
+  preferred_username: String!
+
+  """The email address of the user"""
+  email: String!
+
+  """The avatar URL of the user"""
+  avatar: String
+}
+
+input SetupRemoteAccessInput {
+  """The type of WAN access to use for Remote Access"""
+  accessType: WAN_ACCESS_TYPE!
+
+  """The type of port forwarding to use for Remote Access"""
+  forwardType: WAN_FORWARD_TYPE
+
+  """
+  The port to use for Remote Access. Not required for UPNP forwardType. Required for STATIC forwardType. Ignored if accessType is DISABLED or forwardType is UPNP.
+  """
+  port: Int
+}
+
+input EnableDynamicRemoteAccessInput {
+  """The AccessURL Input for dynamic remote access"""
+  url: AccessUrlInput!
+
+  """Whether to enable or disable dynamic remote access"""
+  enabled: Boolean!
+}
+
+input AccessUrlInput {
+  type: URL_TYPE!
+  name: String
+  ipv4: URL
+  ipv6: URL
+}
+
+type Subscription {
+  displaySubscription: InfoDisplay!
+  notificationAdded: Notification!
+  notificationsOverview: NotificationOverview!
+  notificationsWarningsAndAlerts: [Notification!]!
+  ownerSubscription: Owner!
+  serversSubscription: Server!
+  parityHistorySubscription: ParityCheck!
+  arraySubscription: UnraidArray!
+  dockerContainerStats: DockerContainerStats!
+  logFile(path: String!): LogFileContent!
+  systemMetricsCpu: CpuUtilization!
+  systemMetricsCpuTelemetry: CpuPackages!
+  systemMetricsMemory: MemoryUtilization!
+  systemMetricsNetwork: [NetworkMetrics!]!
+  systemMetricsTemperature: TemperatureMetrics
+  upsUpdates: UPSDevice!
+  pluginInstallUpdates(operationId: ID!): PluginInstallEvent!
+}

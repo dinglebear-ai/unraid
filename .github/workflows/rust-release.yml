@@ -1,0 +1,161 @@
+name: rust-release
+
+# Triggered when release-please publishes an unraid-rs-v<version> release. Builds
+# the linux/amd64 runraid binary, publishes the unraid-rmcp npm launcher, and
+# builds+pushes the Rust server container image (folds in runraid's former
+# standalone docker-publish workflow). All run: steps execute in unraid-rs/.
+#
+# NOTE (verified post-merge): the windows cross-build and trivy scan from the
+# standalone runraid release pipeline are intentionally omitted here for the
+# consolidated repo; re-add if a windows artifact is required.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+env:
+  CARGO_INCREMENTAL: "0"
+  CARGO_TERM_COLOR: always
+  REGISTRY: ghcr.io
+  # Distinct from the Python server image (ghcr.io/<owner>/unraid-mcp) to avoid
+  # a tag collision.
+  RUST_IMAGE: ghcr.io/${{ github.repository_owner }}/runraid
+
+defaults:
+  run:
+    working-directory: unraid-rs
+
+jobs:
+  build:
+    if: startsWith(github.event.release.tag_name, 'unraid-rs-v')
+    runs-on: [self-hosted, unraid]
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: stable
+          targets: x86_64-unknown-linux-gnu
+
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        with:
+          workspaces: unraid-rs
+
+      - name: Build linux/amd64 binary
+        run: cargo build --release --locked --target x86_64-unknown-linux-gnu --bin runraid
+
+      - name: Stage artifact + checksum
+        run: |
+          set -euo pipefail
+          cp "target/x86_64-unknown-linux-gnu/release/runraid" runraid-linux-x86_64
+          sha256sum runraid-linux-x86_64 > runraid-linux-x86_64.sha256
+          tar -czf runraid-x86_64.tar.gz runraid-linux-x86_64
+          sha256sum runraid-x86_64.tar.gz > runraid-x86_64.tar.gz.sha256
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4
+        with:
+          subject-path: unraid-rs/runraid-linux-x86_64
+
+      - name: Attach binary + checksums to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$TAG" \
+            runraid-linux-x86_64 runraid-linux-x86_64.sha256 \
+            runraid-x86_64.tar.gz runraid-x86_64.tar.gz.sha256 --clobber
+
+  npm:
+    needs: build
+    if: startsWith(github.event.release.tag_name, 'unraid-rs-v')
+    runs-on: [self-hosted, unraid]
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Verify npm package version matches release tag
+        id: npm-version
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./packages/unraid-rmcp/package.json').version")"
+          if [[ "$TAG" != "unraid-rs-v${version}" ]]; then
+            echo "::error::release tag ${TAG} does not match packages/unraid-rmcp/package.json version ${version}"
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Test npm launcher
+        run: npm test --prefix packages/unraid-rmcp
+      - name: Check npm launcher syntax
+        run: npm run check --prefix packages/unraid-rmcp
+
+      - name: Publish npm package if not already present
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="${{ steps.npm-version.outputs.version }}"
+          if npm view "unraid-rmcp@${version}" version >/dev/null 2>&1; then
+            echo "unraid-rmcp@${version} already published; skipping."
+          else
+            npm publish --provenance --access public ./packages/unraid-rmcp
+          fi
+
+  docker:
+    needs: build
+    if: startsWith(github.event.release.tag_name, 'unraid-rs-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Derive image tags
+        id: tags
+        run: echo "version=${TAG#unraid-rs-v}" >> "$GITHUB_OUTPUT"
+      - name: Build and push the Rust server image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: ./unraid-rs
+          file: ./unraid-rs/config/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.RUST_IMAGE }}:${{ steps.tags.outputs.version }}
+            ${{ env.RUST_IMAGE }}:latest

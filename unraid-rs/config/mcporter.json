@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "unraid": {
+      "url": "http://localhost:6970/mcp",
+      "transport": "http"
+    }
+  }
+}

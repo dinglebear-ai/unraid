@@ -1,0 +1,42 @@
+#!/bin/bash
+# Fires when the array is being taken down. Stop all jails and incusd cleanly
+# BEFORE the array (which holds INCUS_DIR) unmounts, or state gets corrupted.
+CFG="/boot/config/plugins/incus/incus.cfg"
+[ -f "$CFG" ] || exit 0
+. "$CFG"
+[ "${SERVICE:-disabled}" = "enabled" ] || exit 0
+
+PREFIX="/usr/local/incus"
+EMHTTP="/usr/local/emhttp/plugins/incus"
+. "${EMHTTP}/scripts/incus-env.sh"
+
+logger -t incus "array down: stopping jails"
+# Stop every running instance in parallel, then wait for all to finish.
+# Uses process substitution (not a pipe) so backgrounded jobs are children
+# of this shell and `wait` actually catches them.
+declare -a stop_pids=() stop_names=()
+while IFS=, read -r name state; do
+  if [ "$state" = "RUNNING" ]; then
+    logger -t incus "stopping $name"
+    "${PREFIX}/bin/incus" stop "$name" --timeout=30 </dev/null &
+    stop_pids+=("$!")
+    stop_names+=("$name")
+  fi
+done < <("${PREFIX}/bin/incus" list -f csv -c n,s </dev/null 2>/dev/null)
+
+fail=0
+for i in "${!stop_pids[@]}"; do
+  if ! wait "${stop_pids[$i]}"; then
+    logger -t incus "graceful stop failed for ${stop_names[$i]}; retrying forced"
+    if ! "${PREFIX}/bin/incus" stop "${stop_names[$i]}" --force --timeout=10 </dev/null; then
+      logger -t incus "ERROR: failed to stop ${stop_names[$i]} before array unmount"
+      fail=1
+    fi
+  fi
+done
+
+if ! /etc/rc.d/rc.incus stop; then
+  logger -t incus "ERROR: incusd did not stop cleanly before array unmount"
+  fail=1
+fi
+exit "$fail"

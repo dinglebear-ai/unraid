@@ -1,33 +1,62 @@
 # Dependabot configuration.
 # Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates
+#
+# MONOREPO NOTE: dependabot does NOT recurse — each `directory` must name the
+# exact folder holding the manifest. A `directory` matching nothing produces no
+# PRs AND no error, so a stale path silently kills an update stream. The docker
+# and uv entries pointed at "/" after the consolidation moved the Python server
+# into unraid-py/, which stopped both streams unnoticed. meta-ci.yml now asserts
+# every directory below exists.
 version: 2
 updates:
-  # Keep the SHA-pinned GitHub Actions fresh.
+  # Keep the SHA-pinned GitHub Actions fresh. Workflows stay at the repo root.
   - package-ecosystem: "github-actions"
     directory: "/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "deps"
-      prefix-development: "deps"
-      include: "scope"
+    schedule: { interval: "weekly" }
+    commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
 
-  # Keep the Dockerfile base images fresh.
+  # ── Python server (unraid-py) ──────────────────────────────────────────────
   - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "deps"
-      prefix-development: "deps"
-      include: "scope"
-
-  # Python dependencies (pyproject.toml + uv.lock, including dependency-groups).
+    directory: "/unraid-py"
+    schedule: { interval: "weekly" }
+    commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
   - package-ecosystem: "uv"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "deps"
-      prefix-development: "deps"
-      include: "scope"
+    directory: "/unraid-py"
+    schedule: { interval: "weekly" }
+    commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+
+  # ── Rust server (unraid-rs) ────────────────────────────────────────────────
+  - package-ecosystem: "cargo"
+    directory: "/unraid-rs"
+    schedule: { interval: "weekly" }
+    commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+  - package-ecosystem: "docker"
+    directory: "/unraid-rs/config"
+    schedule: { interval: "weekly" }
+    commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+
+  # ── Node packages (one entry per tracked package-lock.json) ────────────────
+  - package-ecosystem: "npm"
+    directory: "/unraid-py/scripts/openwiki"
+    schedule: { interval: "weekly" }
+    commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+  - package-ecosystem: "npm"
+    directory: "/unraid-py/tests/mock"
+    schedule: { interval: "weekly" }
+    commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+  - package-ecosystem: "npm"
+    directory: "/plugins/mcp/web"
+    schedule: { interval: "weekly" }
+    commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+  - package-ecosystem: "npm"
+    directory: "/plugins/codex/web-src"
+    schedule: { interval: "weekly" }
+    commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+  - package-ecosystem: "npm"
+    directory: "/plugins/incus/unraid-api-plugin-incus"
+    schedule: { interval: "weekly" }
+    commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+  - package-ecosystem: "npm"
+    directory: "/plugins/incus/unraid-api-plugin-incus/web"
+    schedule: { interval: "weekly" }
+    commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }

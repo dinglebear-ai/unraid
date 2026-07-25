@@ -1,0 +1,26 @@
+# Build artifacts
+unraid-api-plugin-incus/dist/
+unraid-api-plugin-incus/node_modules/
+unraid-api-plugin-incus/dist-web/
+unraid-api-plugin-incus/dist-web-dashboard/
+unraid-api-plugin-incus/web/node_modules/
+unraid-api-plugin-incus/coverage/
+unraid-api-plugin-incus/web/coverage/
+unraid-api-plugin-incus/.stryker-tmp/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+.worktrees/
+
+# Logs
+*.log
+.env
+
+# plugin build artifacts are release assets, never tracked
+packages/*.txz

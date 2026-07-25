@@ -1,0 +1,12 @@
+           |-----handy-ruler------------------------------------------------------|
+unraid-codex: unraid-codex (persistent Codex chathead for Unraid)
+unraid-codex:
+unraid-codex: Adds an Aurora-styled Codex chathead to the authenticated Unraid
+unraid-codex: webGUI and connects it to Codex app-server running inside a managed
+unraid-codex: unprivileged Incus container.
+unraid-codex:
+unraid-codex: This package does not modify Unraid core webGUI files.
+unraid-codex:
+unraid-codex:
+unraid-codex:
+unraid-codex:

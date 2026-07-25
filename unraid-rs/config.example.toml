@@ -1,0 +1,69 @@
+# unraid-rmcp configuration example
+# Copy this to config.toml and adjust as needed.
+# Secrets and URLs belong in .env — not here.
+# All non-secret settings live here. Env vars override values below.
+
+[unraid]
+# TLS verification for the Unraid GraphQL endpoint.
+# Override with UNRAID_API_SKIP_TLS_VERIFY=true in .env if the server
+# uses a self-signed certificate.
+skip_tls_verify = false
+
+[mcp]
+# Bind address for the MCP HTTP server.
+# Use 127.0.0.1 to restrict to local connections only.
+# Use 0.0.0.0 to listen on all interfaces (requires auth token or OAuth).
+host = "0.0.0.0"
+
+# Port for the MCP HTTP server.
+port = 40010
+
+# Server name reported in MCP metadata.
+server_name = "unraid-rmcp"
+
+# Disable all HTTP auth. ONLY use when fronted by a gateway that enforces auth.
+# When set, UNRAID_NOAUTH=true must also be set if binding to a non-loopback address.
+# no_auth = false
+
+# Extra Host header values allowed beyond localhost variants.
+# Required when accessed via a reverse proxy with a custom domain.
+# allowed_hosts = ["unraid.example.com"]
+
+# Extra CORS origins allowed beyond the server's own origin.
+# allowed_origins = ["https://unraid.example.com"]
+
+[mcp.auth]
+# Authentication mode: "bearer" (static token) or "oauth" (Google OAuth).
+mode = "bearer"
+
+# Public URL for OAuth metadata and callbacks. Required when mode = "oauth".
+# public_url = "https://unraid.example.com"
+
+# Admin email for OAuth. Required when mode = "oauth".
+admin_email = ""
+
+# Additional emails allowed to authenticate via OAuth.
+# allowed_emails = ["user@example.com"]
+
+# Path for the auth SQLite database. Defaults to ~/.unraid/auth.db locally,
+# /data/auth.db in containers.
+# sqlite_path = "/data/auth.db"
+
+# Path for the JWT signing key. Defaults to ~/.unraid/auth-jwt.pem locally,
+# /data/auth-jwt.pem in containers.
+# key_path = "/data/auth-jwt.pem"
+
+# Token TTLs in seconds.
+access_token_ttl_secs = 3600      # 1 hour
+refresh_token_ttl_secs = 2592000  # 30 days
+auth_code_ttl_secs = 300          # 5 minutes
+
+# Rate limits (requests per minute).
+register_rpm = 10
+authorize_rpm = 60
+
+# Prevent using both static bearer token and OAuth at the same time.
+disable_static_token_with_oauth = true
+
+# OAuth client redirect URIs to allow (for dynamic client registration).
+# allowed_client_redirect_uris = []

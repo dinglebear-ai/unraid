@@ -1,0 +1,109 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "ai.dinglebear/unraid-rmcp",
+  "title": "Unraid RMCP",
+  "description": "Rust MCP server and CLI for Unraid GraphQL, NAS, Docker, VM, and storage workflows.",
+  "version": "0.2.3",
+  "websiteUrl": "https://github.com/dinglebear-ai/unraid-mcp",
+  "repository": {
+    "url": "https://github.com/dinglebear-ai/unraid-mcp",
+    "source": "github",
+    "id": "1238227303"
+  },
+  "icons": [
+    {
+      "src": "https://avatars.githubusercontent.com/u/38927646?v=4",
+      "mimeType": "image/png",
+      "sizes": [
+        "460x460"
+      ],
+      "theme": "dark"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "unraid-rmcp",
+      "version": "0.2.3",
+      "runtimeHint": "npx",
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp",
+          "description": "Run Unraid RMCP over stdio.",
+          "format": "string",
+          "isRequired": true,
+          "isSecret": false,
+          "isRepeated": false
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "UNRAID_API_URL",
+          "description": "Full Unraid GraphQL endpoint URL.",
+          "format": "string",
+          "isRequired": true,
+          "isSecret": false,
+          "placeholder": "https://unraid.example.com/graphql"
+        },
+        {
+          "name": "UNRAID_API_KEY",
+          "description": "Unraid API key.",
+          "format": "string",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "UNRAID_RMCP_VERSION",
+          "description": "Optional GitHub release tag override for the downloaded Unraid RMCP binary.",
+          "format": "string",
+          "isRequired": false,
+          "isSecret": false,
+          "placeholder": "v0.2.2"
+        },
+        {
+          "name": "UNRAID_RMCP_REPO",
+          "description": "Optional GitHub owner/repo override for release asset downloads.",
+          "format": "string",
+          "isRequired": false,
+          "isSecret": false,
+          "default": "dinglebear-ai/unraid-mcp",
+          "placeholder": "dinglebear-ai/unraid-mcp"
+        },
+        {
+          "name": "UNRAID_RMCP_RELEASE_BASE_URL",
+          "description": "Optional release download base URL override.",
+          "format": "string",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "RUST_LOG",
+          "description": "Tracing filter for Unraid RMCP logs.",
+          "format": "string",
+          "isRequired": false,
+          "isSecret": false,
+          "default": "info",
+          "placeholder": "info"
+        }
+      ],
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ],
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "namespace": "ai.dinglebear",
+      "dnsDomain": "dinglebear.ai",
+      "distribution": {
+        "nodePackage": "unraid-rmcp"
+      },
+      "buildInfo": {
+        "version": "0.2.3",
+        "repository": "https://github.com/dinglebear-ai/unraid-mcp"
+      }
+    }
+  }
+}

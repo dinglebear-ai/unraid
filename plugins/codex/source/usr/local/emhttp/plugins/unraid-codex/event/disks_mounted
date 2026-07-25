@@ -1,0 +1,2 @@
+#!/bin/bash
+/usr/local/emhttp/plugins/unraid-codex/scripts/start-appserver.sh

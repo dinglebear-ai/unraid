@@ -1,0 +1,281 @@
+/* Vendored from @unraid/ui monorepo: @tailwind-shared/unraid-theme.css — Unraid's real design tokens/theme system. Do not hand-edit; re-sync from upstream if it drifts. */
+@theme static {
+  /* Breakpoints */
+  --breakpoint-xs: 30rem;
+  --breakpoint-2xl: 100rem;
+  --breakpoint-3xl: 120rem;
+  /* Container settings */
+  --container-center: true;
+  --container-padding: 2rem;
+  --container-screen-2xl: 1400px;
+
+  /* Font families */
+  --font-sans:
+    clear-sans, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
+
+  /* Grid template columns */
+  --grid-template-columns-settings: 35% 1fr;
+
+  /* Border color default */
+  --default-border-color: var(--color-border);
+  --ui-border-muted: hsl(var(--border));
+  --ui-radius: 0.5rem;
+  --ui-primary: var(--color-primary-500);
+  --ui-primary-hover: var(--color-primary-600);
+  --ui-primary-active: var(--color-primary-700);
+
+  /* Color palette */
+  --color-inherit: inherit;
+  --color-transparent: transparent;
+  --color-black: #1c1b1b;
+  --color-grey-darkest: #222;
+  --color-grey-darker: #606f7b;
+  --color-grey-dark: #383735;
+  --color-grey-mid: #999999;
+  --color-grey: #e0e0e0;
+  --color-grey-light: #dae1e7;
+  --color-grey-lighter: #f1f5f8;
+  --color-grey-lightest: #f2f2f2;
+  --color-white: #ffffff;
+
+  /* Unraid colors */
+  --color-yellow-accent: #e9bf41;
+  --color-orange-dark: #f15a2c;
+  --color-orange: #ff8c2f;
+
+  /* Unraid red palette */
+  --color-unraid-red: #e22828;
+  --color-unraid-red-50: #fef2f2;
+  --color-unraid-red-100: #ffe1e1;
+  --color-unraid-red-200: #ffc9c9;
+  --color-unraid-red-300: #fea3a3;
+  --color-unraid-red-400: #fc6d6d;
+  --color-unraid-red-500: #f43f3f;
+  --color-unraid-red-600: #e22828;
+  --color-unraid-red-700: #bd1818;
+  --color-unraid-red-800: #9c1818;
+  --color-unraid-red-900: #821a1a;
+  --color-unraid-red-950: #470808;
+
+  /* Unraid green palette */
+  --color-unraid-green: #63a659;
+  --color-unraid-green-50: #f5f9f4;
+  --color-unraid-green-100: #e7f3e5;
+  --color-unraid-green-200: #d0e6cc;
+  --color-unraid-green-300: #aad1a4;
+  --color-unraid-green-400: #7db474;
+  --color-unraid-green-500: #63a659;
+  --color-unraid-green-600: #457b3e;
+  --color-unraid-green-700: #396134;
+  --color-unraid-green-800: #314e2d;
+  --color-unraid-green-900: #284126;
+  --color-unraid-green-950: #122211;
+
+  /* Primary colors (orange) */
+  --color-primary-50: #fff7ed;
+  --color-primary-100: #ffedd5;
+  --color-primary-200: #fed7aa;
+  --color-primary-300: #fdba74;
+  --color-primary-400: #fb923c;
+  --color-primary-500: #ff6600;
+  --color-primary-600: #ea580c;
+  --color-primary-700: #c2410c;
+  --color-primary-800: #9a3412;
+  --color-primary-900: #7c2d12;
+  --color-primary-950: #431407;
+
+  /* Header colors - defaults will be overridden by theme */
+  --color-header-text-primary: var(--header-text-primary, #1c1c1c);
+  --color-header-text-secondary: var(--header-text-secondary, #999999);
+  --color-header-background: var(--header-background-color, #f2f2f2);
+
+  /* Legacy colors - defaults (overridden by theme-variants.css) */
+  --color-alpha: #ff8c2f;
+  --color-beta: #f2f2f2;
+  --color-gamma: #999999;
+  --color-gamma-opaque: rgba(153, 153, 153, 0.5);
+  --color-customgradient-start: rgba(242, 242, 242, 0);
+  --color-customgradient-end: rgba(242, 242, 242, 0.85);
+
+  /* Gradients - defaults (overridden by theme-variants.css) */
+  --color-header-gradient-start: rgba(242, 242, 242, 0);
+  --color-header-gradient-end: rgba(242, 242, 242, 0.85);
+  --color-banner-gradient: none;
+
+  /* Font sizes */
+  --font-10px: 10px;
+  --font-12px: 12px;
+  --font-14px: 14px;
+  --font-16px: 16px;
+  --font-18px: 18px;
+  --font-20px: 20px;
+  --font-24px: 24px;
+  --font-30px: 30px;
+
+  /* Spacing */
+  --spacing-4_5: 1.125rem;
+  --spacing--8px: -8px;
+  --spacing-2px: 2px;
+  --spacing-4px: 4px;
+  --spacing-6px: 6px;
+  --spacing-8px: 8px;
+  --spacing-10px: 10px;
+  --spacing-12px: 12px;
+  --spacing-14px: 14px;
+  --spacing-16px: 16px;
+  --spacing-20px: 20px;
+  --spacing-24px: 24px;
+  --spacing-28px: 28px;
+  --spacing-32px: 32px;
+  --spacing-36px: 36px;
+  --spacing-40px: 40px;
+  --spacing-64px: 64px;
+  --spacing-80px: 80px;
+  --spacing-90px: 90px;
+  --spacing-150px: 150px;
+  --spacing-160px: 160px;
+  --spacing-200px: 200px;
+  --spacing-260px: 260px;
+  --spacing-300px: 300px;
+  --spacing-310px: 310px;
+  --spacing-350px: 350px;
+  --spacing-448px: 448px;
+  --spacing-512px: 512px;
+  --spacing-640px: 640px;
+  --spacing-800px: 800px;
+
+  /* Width and Height values */
+  --width-36px: 36px;
+  --height-36px: 36px;
+
+  /* Min/Max widths */
+  --min-width-86px: 86px;
+  --min-width-160px: 160px;
+  --min-width-260px: 260px;
+  --min-width-300px: 300px;
+  --min-width-310px: 310px;
+  --min-width-350px: 350px;
+  --min-width-800px: 800px;
+
+  --max-width-86px: 86px;
+  --max-width-160px: 160px;
+  --max-width-260px: 260px;
+  --max-width-300px: 300px;
+  --max-width-310px: 310px;
+  --max-width-350px: 350px;
+  --max-width-640px: 640px;
+  --max-width-800px: 800px;
+  --max-width-1024px: 1024px;
+
+  /* Container sizes adjusted for 10px base font size (1.6x scale) */
+  --container-xs: 32rem;
+  --container-sm: 38.4rem;
+  --container-md: 44.8rem;
+  --container-lg: 51.2rem;
+  --container-xl: 57.6rem;
+  --container-2xl: 67.2rem;
+  --container-3xl: 76.8rem;
+  --container-4xl: 89.6rem;
+  --container-5xl: 102.4rem;
+  --container-6xl: 115.2rem;
+  --container-7xl: 128rem;
+  
+  /* Extended width scale for max-w-* utilities */
+  --width-5xl: 102.4rem;
+  --width-6xl: 115.2rem;
+  --width-7xl: 128rem;
+  --width-8xl: 140.8rem;
+  --width-9xl: 153.6rem;
+  --width-10xl: 166.4rem;
+
+  /* Animations */
+  --animate-mark-2: mark-2 1.5s ease infinite;
+  --animate-mark-3: mark-3 1.5s ease infinite;
+  --animate-mark-6: mark-6 1.5s ease infinite;
+  --animate-mark-7: mark-7 1.5s ease infinite;
+
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* Text Resizing */
+  --text-xs: 1.2rem; /* 12px at 10px base */
+  --text-sm: 1.4rem; /* 14px at 10px base */
+  --text-base: 1.6rem; /* 16px at 10px base */
+  --text-lg: 1.8rem; /* 18px at 10px base */
+  --text-xl: 2rem; /* 20px at 10px base */
+  --text-2xl: 2.4rem; /* 24px at 10px base */
+  --text-3xl: 3rem; /* 30px at 10px base */
+  --text-4xl: 3.6rem; /* 36px at 10px base */
+  --text-5xl: 4.8rem; /* 48px at 10px base */
+  --text-6xl: 6rem; /* 60px at 10px base */
+  --text-7xl: 7.2rem; /* 72px at 10px base */
+  --text-8xl: 9.6rem; /* 96px at 10px base */
+  --text-9xl: 12.8rem; /* 128px at 10px base */
+  --spacing: 0.4rem; /* 4px at 10px base */
+}
+
+/* Keyframes */
+@keyframes mark-2 {
+  50% {
+    transform: translateY(-40px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes mark-3 {
+  50% {
+    transform: translateY(-62px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes mark-6 {
+  50% {
+    transform: translateY(40px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes mark-7 {
+  50% {
+    transform: translateY(62px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Theme colors that reference CSS variables */
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-ring: hsl(var(--ring));
+  --color-chart-1: hsl(var(--chart-1, 12 76% 61%));
+  --color-chart-2: hsl(var(--chart-2, 173 58% 39%));
+  --color-chart-3: hsl(var(--chart-3, 197 37% 24%));
+  --color-chart-4: hsl(var(--chart-4, 43 74% 66%));
+  --color-chart-5: hsl(var(--chart-5, 27 87% 67%));
+}

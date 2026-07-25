@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CommunityApplications>
+  <Profile>Incus Dev Containers for Unraid installs and manages isolated system containers for coding agents and stdio MCP workspaces. Source, documentation, and support are maintained in the project repository.</Profile>
+  <Icon>https://raw.githubusercontent.com/dinglebear-ai/incus-unraid/main/icon.svg</Icon>
+  <WebPage>https://github.com/dinglebear-ai/incus-unraid</WebPage>
+</CommunityApplications>

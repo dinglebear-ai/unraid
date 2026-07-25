@@ -1,0 +1,18 @@
+name: unrust
+
+# Local development stack. Builds from this checkout.
+services:
+  unraid-rmcp:
+    extends:
+      file: docker-compose.prod.yml
+      service: unraid-rmcp
+    image: unrust:dev
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: config/Dockerfile
+
+networks:
+  unrust:
+    name: ${DOCKER_NETWORK:-unrust}
+    external: true

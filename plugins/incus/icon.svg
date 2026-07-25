@@ -1,0 +1,21 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <title>Incus Dev Containers</title>
+  <desc>A cyan system container enclosed by a shield on a dark navy field</desc>
+  <defs>
+    <linearGradient id="background" x1="64" y1="40" x2="448" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0d2635"/>
+      <stop offset="1" stop-color="#07131c"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="153" y1="111" x2="359" y2="407" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67cbfa"/>
+      <stop offset="1" stop-color="#29b6f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#background)"/>
+  <path d="M256 74 394 126v111c0 91-55 164-138 201-83-37-138-110-138-201V126L256 74Z" fill="#0b1d28" stroke="url(#shield)" stroke-width="22" stroke-linejoin="round"/>
+  <path d="m256 151 87 47-87 47-87-47 87-47Z" fill="#67cbfa"/>
+  <path d="m169 198 87 47v101l-87-47V198Z" fill="#29b6f6"/>
+  <path d="m343 198-87 47v101l87-47V198Z" fill="#168bc3"/>
+  <path d="M256 245v101" stroke="#07131c" stroke-width="12" stroke-linecap="round" opacity=".42"/>
+  <circle cx="256" cy="394" r="12" fill="#7dd3c7"/>
+</svg>

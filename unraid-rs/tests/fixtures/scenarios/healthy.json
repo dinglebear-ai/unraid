@@ -1,0 +1,2372 @@
+{
+  "array": {
+    "array": {
+      "state": "STARTED",
+      "capacity": {
+        "kilobytes": {
+          "free": "5860000000",
+          "used": "9540000000",
+          "total": "15400000000"
+        },
+        "disks": {
+          "free": "1",
+          "used": "3",
+          "total": "4"
+        }
+      },
+      "parityCheckStatus": {
+        "status": "COMPLETED",
+        "running": false,
+        "progress": 0,
+        "speed": null,
+        "errors": 0,
+        "correcting": false,
+        "paused": false
+      },
+      "parities": [
+        {
+          "id": "parity-1",
+          "name": "parity",
+          "device": "sdb",
+          "size": 7810000000,
+          "status": "DISK_OK",
+          "temp": 33,
+          "numErrors": 0,
+          "type": "PARITY",
+          "isSpinning": true,
+          "rotational": true
+        }
+      ],
+      "disks": [
+        {
+          "id": "disk-1",
+          "name": "disk1",
+          "device": "sdc",
+          "size": 7810000000,
+          "status": "DISK_OK",
+          "temp": 34,
+          "numErrors": 0,
+          "numReads": 142033,
+          "numWrites": 88210,
+          "fsSize": 7810000000,
+          "fsFree": 2100000000,
+          "fsUsed": 5710000000,
+          "type": "DATA",
+          "color": "GREEN_ON",
+          "isSpinning": true,
+          "rotational": true,
+          "fsType": "xfs",
+          "comment": "media"
+        },
+        {
+          "id": "disk-2",
+          "name": "disk2",
+          "device": "sdd",
+          "size": 7810000000,
+          "status": "DISK_OK",
+          "temp": 32,
+          "numErrors": 0,
+          "numReads": 98221,
+          "numWrites": 41002,
+          "fsSize": 7810000000,
+          "fsFree": 3760000000,
+          "fsUsed": 4050000000,
+          "type": "DATA",
+          "color": "GREEN_ON",
+          "isSpinning": true,
+          "rotational": true,
+          "fsType": "xfs",
+          "comment": "appdata"
+        }
+      ],
+      "caches": [
+        {
+          "id": "cache-1",
+          "name": "cache",
+          "device": "nvme0n1",
+          "size": 1000000000,
+          "status": "DISK_OK",
+          "temp": 38,
+          "numErrors": 0,
+          "fsSize": 1000000000,
+          "fsFree": 640000000,
+          "fsUsed": 360000000,
+          "type": "CACHE",
+          "color": "GREEN_ON",
+          "isSpinning": true,
+          "rotational": false,
+          "fsType": "btrfs"
+        }
+      ]
+    }
+  },
+  "disks": {
+    "disks": [
+      {
+        "id": "WDC_WD80EFAX-1",
+        "device": "/dev/sdb",
+        "type": "HDD",
+        "name": "WDC_WD80EFAX",
+        "vendor": "Western Digital",
+        "size": 8001563222016,
+        "serialNum": "VAGH1234",
+        "interfaceType": "SATA",
+        "smartStatus": "OK",
+        "temperature": 33,
+        "isSpinning": true,
+        "partitions": [
+          {
+            "name": "sdb1",
+            "fsType": "XFS",
+            "size": 8001561124864
+          }
+        ]
+      },
+      {
+        "id": "WDC_WD80EFAX-2",
+        "device": "/dev/sdc",
+        "type": "HDD",
+        "name": "WDC_WD80EFAX",
+        "vendor": "Western Digital",
+        "size": 8001563222016,
+        "serialNum": "VAGH5678",
+        "interfaceType": "SATA",
+        "smartStatus": "OK",
+        "temperature": 34,
+        "isSpinning": true,
+        "partitions": [
+          {
+            "name": "sdc1",
+            "fsType": "XFS",
+            "size": 8001561124864
+          }
+        ]
+      },
+      {
+        "id": "Samsung_SSD_980-1",
+        "device": "/dev/nvme0n1",
+        "type": "SSD",
+        "name": "Samsung_SSD_980_1TB",
+        "vendor": "Samsung",
+        "size": 1000204886016,
+        "serialNum": "S5GXNX0T123456",
+        "interfaceType": "PCIE",
+        "smartStatus": "OK",
+        "temperature": 38,
+        "isSpinning": false,
+        "partitions": [
+          {
+            "name": "nvme0n1p1",
+            "fsType": "BTRFS",
+            "size": 1000203837440
+          }
+        ]
+      }
+    ]
+  },
+  "docker": {
+    "docker": {
+      "containers": [
+        {
+          "id": "a1b2c3d4e5f6",
+          "names": [
+            "plex"
+          ],
+          "image": "lscr.io/linuxserver/plex:latest",
+          "state": "RUNNING",
+          "status": "Up 3 days (healthy)",
+          "autoStart": true,
+          "autoStartOrder": 1,
+          "ports": [
+            {
+              "privatePort": 32400,
+              "publicPort": 32400,
+              "type": "TCP",
+              "ip": "0.0.0.0"
+            }
+          ],
+          "webUiUrl": "http://192.168.1.10:32400/web",
+          "iconUrl": "/state/plugins/dockerMan/images/plex-icon.png",
+          "isOrphaned": false,
+          "isUpdateAvailable": false
+        },
+        {
+          "id": "f6e5d4c3b2a1",
+          "names": [
+            "sonarr"
+          ],
+          "image": "lscr.io/linuxserver/sonarr:latest",
+          "state": "RUNNING",
+          "status": "Up 3 days",
+          "autoStart": true,
+          "autoStartOrder": 2,
+          "ports": [
+            {
+              "privatePort": 8989,
+              "publicPort": 8989,
+              "type": "TCP",
+              "ip": "0.0.0.0"
+            }
+          ],
+          "webUiUrl": "http://192.168.1.10:8989",
+          "iconUrl": "/state/plugins/dockerMan/images/sonarr-icon.png",
+          "isOrphaned": false,
+          "isUpdateAvailable": true
+        },
+        {
+          "id": "0a9b8c7d6e5f",
+          "names": [
+            "radarr"
+          ],
+          "image": "lscr.io/linuxserver/radarr:latest",
+          "state": "EXITED",
+          "status": "Exited (0) 2 hours ago",
+          "autoStart": false,
+          "autoStartOrder": 0,
+          "ports": [],
+          "webUiUrl": "http://192.168.1.10:7878",
+          "iconUrl": "/state/plugins/dockerMan/images/radarr-icon.png",
+          "isOrphaned": false,
+          "isUpdateAvailable": false
+        }
+      ]
+    }
+  },
+  "docker_logs": {
+    "docker": {
+      "logs": {
+        "containerId": "a1b2c3d4e5f6",
+        "lines": [
+          {
+            "timestamp": "2026-06-15T10:00:01.000Z",
+            "message": "Plex Media Server started"
+          },
+          {
+            "timestamp": "2026-06-15T10:00:02.000Z",
+            "message": "Loaded 12 libraries"
+          },
+          {
+            "timestamp": "2026-06-15T10:05:14.000Z",
+            "message": "Transcoder: started session abc123"
+          }
+        ],
+        "cursor": "2026-06-15T10:05:14.000Z"
+      }
+    }
+  },
+  "vms": {
+    "vms": {
+      "domains": [
+        {
+          "id": "vm-win11",
+          "name": "Windows 11",
+          "state": "RUNNING"
+        },
+        {
+          "id": "vm-ubuntu",
+          "name": "Ubuntu Server",
+          "state": "SHUTOFF"
+        }
+      ]
+    }
+  },
+  "server": {
+    "server": {
+      "id": "server-1",
+      "name": "Tower",
+      "comment": "Home media + storage",
+      "status": "ONLINE",
+      "wanip": "203.0.113.7",
+      "lanip": "192.168.1.10",
+      "localurl": "http://tower.local",
+      "remoteurl": "https://example.unraid.net",
+      "guid": "0000-0000-DEADBEEF-0000"
+    }
+  },
+  "info": {
+    "info": {
+      "time": "2026-06-15T18:00:00.000Z",
+      "os": {
+        "platform": "linux",
+        "distro": "Unraid",
+        "release": "7.0.0",
+        "kernel": "6.6.78-Unraid",
+        "arch": "x86_64",
+        "hostname": "Tower",
+        "fqdn": "tower.local",
+        "uptime": "2026-06-08T12:30:00.000Z"
+      },
+      "cpu": {
+        "brand": "AMD Ryzen 7 5700G",
+        "manufacturer": "AMD",
+        "cores": 8,
+        "threads": 16,
+        "speed": 3.8,
+        "speedmax": 4.6,
+        "socket": "AM4"
+      },
+      "memory": {
+        "layout": [
+          {
+            "size": 17179869184,
+            "type": "DDR4",
+            "clockSpeed": 3200
+          },
+          {
+            "size": 17179869184,
+            "type": "DDR4",
+            "clockSpeed": 3200
+          }
+        ]
+      },
+      "versions": {
+        "core": {
+          "unraid": "7.0.0",
+          "kernel": "6.6.78-Unraid"
+        }
+      }
+    }
+  },
+  "shares": {
+    "shares": [
+      {
+        "id": "share-media",
+        "name": "media",
+        "free": 5860000000,
+        "used": 9540000000,
+        "size": 15400000000,
+        "cache": false,
+        "comment": "Movies and TV",
+        "allocator": "highwater",
+        "luksStatus": "0"
+      },
+      {
+        "id": "share-appdata",
+        "name": "appdata",
+        "free": 640000000,
+        "used": 360000000,
+        "size": 1000000000,
+        "cache": true,
+        "comment": "Docker app data",
+        "allocator": "highwater",
+        "luksStatus": "0"
+      }
+    ]
+  },
+  "notifications": {
+    "notifications": {
+      "overview": {
+        "unread": {
+          "warning": 0,
+          "alert": 0,
+          "info": 1,
+          "total": 1
+        },
+        "archive": {
+          "warning": 2,
+          "alert": 0,
+          "info": 14,
+          "total": 16
+        }
+      },
+      "warningsAndAlerts": []
+    }
+  },
+  "log_files": {
+    "logFiles": [
+      {
+        "name": "syslog",
+        "path": "/var/log/syslog",
+        "size": 4194304,
+        "modifiedAt": "2026-06-15T18:00:00.000Z"
+      },
+      {
+        "name": "docker.log",
+        "path": "/var/log/docker.log",
+        "size": 262144,
+        "modifiedAt": "2026-06-15T17:42:00.000Z"
+      }
+    ]
+  },
+  "log_file": {
+    "logFile": {
+      "path": "/var/log/syslog",
+      "content": "Jun 15 17:58:01 Tower kernel: mdcmd (54): check\nJun 15 17:58:01 Tower emhttpd: read SMART /dev/sdb\nJun 15 18:00:00 Tower crond[1234]: USER root pid 5678 cmd /usr/local/sbin/mover\n",
+      "totalLines": 3,
+      "startLine": 0
+    }
+  },
+  "services": {
+    "services": [
+      {
+        "id": "svc-unraid-api",
+        "name": "unraid-api",
+        "online": true,
+        "version": "4.6.0",
+        "uptime": {
+          "timestamp": "2026-06-08T12:30:00.000Z"
+        }
+      },
+      {
+        "id": "svc-flash-backup",
+        "name": "flash-backup",
+        "online": true,
+        "version": "1.0.0",
+        "uptime": {
+          "timestamp": "2026-06-08T12:30:00.000Z"
+        }
+      }
+    ]
+  },
+  "network": {
+    "network": {
+      "id": "net-1",
+      "accessUrls": [
+        {
+          "type": "LAN",
+          "name": "LAN",
+          "ipv4": "http://192.168.1.10",
+          "ipv6": null
+        },
+        {
+          "type": "WIREGUARD",
+          "name": "WireGuard",
+          "ipv4": "http://10.253.0.1",
+          "ipv6": null
+        }
+      ]
+    }
+  },
+  "ups": {
+    "upsDevices": [
+      {
+        "id": "ups-1",
+        "name": "APC Back-UPS",
+        "model": "Back-UPS ES 700G",
+        "status": "Online",
+        "battery": {
+          "chargeLevel": 100,
+          "estimatedRuntime": 2820,
+          "health": "Good"
+        },
+        "power": {
+          "inputVoltage": 121.0,
+          "outputVoltage": 121.0,
+          "loadPercentage": 28
+        }
+      }
+    ]
+  },
+  "ups_config": {
+    "upsConfiguration": {
+      "service": "enable",
+      "upsCable": "usb",
+      "upsType": "usb",
+      "device": "",
+      "batteryLevel": 10,
+      "minutes": 5,
+      "timeout": 0,
+      "killUps": "no",
+      "nisIp": "",
+      "netServer": "no",
+      "upsName": "ups",
+      "modelName": "Back-UPS ES 700G"
+    }
+  },
+  "metrics": {
+    "metrics": {
+      "cpu": {
+        "percentTotal": 12.4,
+        "cpus": [
+          {
+            "percentTotal": 14.0,
+            "percentUser": 9.0,
+            "percentSystem": 4.0,
+            "percentIdle": 86.0
+          },
+          {
+            "percentTotal": 10.8,
+            "percentUser": 6.0,
+            "percentSystem": 4.8,
+            "percentIdle": 89.2
+          }
+        ]
+      },
+      "memory": {
+        "total": 34359738368,
+        "used": 12884901888,
+        "free": 21474836480,
+        "available": 21474836480,
+        "percentTotal": 37.5,
+        "swapTotal": 0,
+        "swapUsed": 0,
+        "swapFree": 0,
+        "percentSwapTotal": 0.0
+      },
+      "temperature": {
+        "sensors": [
+          {
+            "id": "cpu-pkg",
+            "name": "Tctl",
+            "type": "CPU_PACKAGE",
+            "location": "k10temp",
+            "current": {
+              "value": 46.0,
+              "unit": "CELSIUS"
+            },
+            "warning": 80.0,
+            "critical": 95.0
+          },
+          {
+            "id": "mb",
+            "name": "MB Temp",
+            "type": "MOTHERBOARD",
+            "location": "nct6798",
+            "current": {
+              "value": 34.0,
+              "unit": "CELSIUS"
+            },
+            "warning": 60.0,
+            "critical": 70.0
+          }
+        ],
+        "summary": {
+          "average": 40.0,
+          "warningCount": 0,
+          "criticalCount": 0
+        }
+      }
+    }
+  },
+  "plugins": {
+    "plugins": [
+      {
+        "name": "unraid-api",
+        "version": "4.6.0",
+        "hasApiModule": true,
+        "hasCliModule": true
+      },
+      {
+        "name": "dynamix.system.temp",
+        "version": "2025.01.01",
+        "hasApiModule": false,
+        "hasCliModule": false
+      }
+    ]
+  },
+  "parity_history": {
+    "parityHistory": [
+      {
+        "date": "2026-06-01T04:00:00.000Z",
+        "duration": 28800,
+        "speed": "151 MB/s",
+        "status": "COMPLETED",
+        "errors": 0,
+        "progress": 100,
+        "correcting": true,
+        "paused": false,
+        "running": false
+      },
+      {
+        "date": "2026-05-01T04:00:00.000Z",
+        "duration": 29400,
+        "speed": "148 MB/s",
+        "status": "COMPLETED",
+        "errors": 0,
+        "progress": 100,
+        "correcting": true,
+        "paused": false,
+        "running": false
+      }
+    ]
+  },
+  "vars": {
+    "vars": {
+      "version": "7.0.0",
+      "name": "Tower",
+      "timeZone": "America/New_York",
+      "comment": "Home media + storage",
+      "sysModel": "Custom",
+      "useSsl": false,
+      "port": 80,
+      "portssl": 443,
+      "useSsh": true,
+      "portssh": 22,
+      "useTelnet": false,
+      "porttelnet": 23,
+      "startArray": true,
+      "spindownDelay": "30",
+      "shareSmbEnabled": true,
+      "shareNfsEnabled": false,
+      "shareAfpEnabled": false,
+      "configValid": true,
+      "configError": null,
+      "regState": "PRO",
+      "regTo": "Jacob Magar",
+      "deviceCount": 4,
+      "flashGuid": "0000-0000-DEADBEEF-0000",
+      "flashProduct": "Cruzer Fit",
+      "flashVendor": "SanDisk",
+      "sbName": "/boot/config/super.dat",
+      "sbVersion": "2.9.13",
+      "sbUpdated": "2026-06-08T12:29:00.000Z",
+      "sbState": "normal"
+    }
+  },
+  "registration": {
+    "registration": {
+      "id": "reg-1",
+      "type": "PRO",
+      "state": "PRO",
+      "expiration": null,
+      "updateExpiration": "2026-12-31T00:00:00.000Z"
+    }
+  },
+  "flash": {
+    "flash": {
+      "id": "flash-1",
+      "vendor": "SanDisk",
+      "product": "Cruzer Fit"
+    }
+  },
+  "rclone": {
+    "rclone": {
+      "remotes": [
+        {
+          "name": "gdrive",
+          "type": "drive"
+        },
+        {
+          "name": "backblaze",
+          "type": "b2"
+        }
+      ],
+      "drives": [
+        {
+          "name": "gdrive"
+        }
+      ]
+    }
+  },
+  "remote_access": {
+    "remoteAccess": {
+      "accessType": "DISABLED",
+      "forwardType": "UPNP",
+      "port": null
+    }
+  },
+  "connect": {
+    "connect": {
+      "id": "connect-1",
+      "dynamicRemoteAccess": {
+        "enabledType": "DISABLED",
+        "runningType": "DISABLED",
+        "error": null
+      },
+      "settings": {
+        "values": {
+          "accessType": "DISABLED",
+          "forwardType": "UPNP",
+          "port": null
+        }
+      }
+    }
+  },
+  "online": {
+    "online": true
+  },
+  "system_time": {
+    "systemTime": {
+      "currentTime": "2026-06-15T18:00:00.000Z",
+      "timeZone": "America/New_York",
+      "useNtp": true,
+      "ntpServers": [
+        "time.cloudflare.com",
+        "pool.ntp.org"
+      ]
+    }
+  },
+  "installed_unraid_plugins": {
+    "installedUnraidPlugins": [
+      "unraid-api",
+      "dynamix.system.temp",
+      "community.applications"
+    ]
+  },
+  "public_oidc_providers": {
+    "publicOidcProviders": [
+      {
+        "id": "google",
+        "name": "Google",
+        "buttonText": "Sign in with Google",
+        "buttonIcon": "https://www.google.com/favicon.ico",
+        "buttonVariant": "outline",
+        "buttonStyle": "background: #fff; border-radius: 9999px;"
+      },
+      {
+        "id": "authelia",
+        "name": "Authelia",
+        "buttonText": "Sign in with Authelia",
+        "buttonIcon": null,
+        "buttonVariant": "solid",
+        "buttonStyle": null
+      }
+    ]
+  },
+  "oidc_providers": {
+    "oidcProviders": [
+      {
+        "id": "oidc-provider-google",
+        "name": "Google",
+        "clientId": "1234567890-abcdefg.apps.googleusercontent.com",
+        "issuer": "https://accounts.google.com",
+        "authorizationEndpoint": "https://accounts.google.com/o/oauth2/v2/auth",
+        "tokenEndpoint": "https://oauth2.googleapis.com/token",
+        "jwksUri": "https://www.googleapis.com/oauth2/v3/certs",
+        "scopes": [
+          "openid",
+          "profile",
+          "email"
+        ],
+        "authorizationRules": [
+          {
+            "claim": "email",
+            "operator": "ENDS_WITH",
+            "value": [
+              "@example.com"
+            ]
+          },
+          {
+            "claim": "hd",
+            "operator": "EQUALS",
+            "value": [
+              "example.com"
+            ]
+          }
+        ],
+        "authorizationRuleMode": "OR",
+        "buttonText": "Sign in with Google",
+        "buttonIcon": "https://www.google.com/favicon.ico",
+        "buttonVariant": "outline"
+      }
+    ]
+  },
+  "oidc_configuration": {
+    "oidcConfiguration": {
+      "providers": [
+        {
+          "id": "oidc-provider-google",
+          "name": "Google",
+          "clientId": "1234567890-abcdefg.apps.googleusercontent.com",
+          "issuer": "https://accounts.google.com",
+          "authorizationEndpoint": "https://accounts.google.com/o/oauth2/v2/auth",
+          "tokenEndpoint": "https://oauth2.googleapis.com/token",
+          "jwksUri": "https://www.googleapis.com/oauth2/v3/certs",
+          "scopes": [
+            "openid",
+            "profile",
+            "email"
+          ],
+          "authorizationRules": [
+            {
+              "claim": "email",
+              "operator": "ENDS_WITH",
+              "value": [
+                "@example.com"
+              ]
+            },
+            {
+              "claim": "hd",
+              "operator": "EQUALS",
+              "value": [
+                "example.com"
+              ]
+            }
+          ],
+          "authorizationRuleMode": "OR",
+          "buttonText": "Sign in with Google",
+          "buttonIcon": "https://www.google.com/favicon.ico",
+          "buttonVariant": "outline"
+        }
+      ],
+      "defaultAllowedOrigins": [
+        "https://unraid.example.ts.net",
+        "https://tower.example.com"
+      ]
+    }
+  },
+  "is_sso_enabled": {
+    "isSSOEnabled": true
+  },
+  "api_keys": {
+    "apiKeys": [
+      {
+        "id": "abc123:key-001",
+        "key": "unraid_ak_4f9c2e1b7a6d8390",
+        "name": "homelab-readonly",
+        "description": "Read-only key for monitoring dashboards",
+        "roles": [
+          "VIEWER"
+        ],
+        "createdAt": "2026-02-14T09:21:00.000Z",
+        "permissions": [
+          {
+            "resource": "ARRAY",
+            "actions": [
+              "READ_ANY"
+            ]
+          },
+          {
+            "resource": "DISK",
+            "actions": [
+              "READ_ANY"
+            ]
+          },
+          {
+            "resource": "DOCKER",
+            "actions": [
+              "READ_ANY"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "abc123:key-002",
+        "key": "unraid_ak_91d3c0fe5b27a4e8",
+        "name": "automation-admin",
+        "description": null,
+        "roles": [
+          "ADMIN"
+        ],
+        "createdAt": "2026-05-30T17:04:12.000Z",
+        "permissions": [
+          {
+            "resource": "API_KEY",
+            "actions": [
+              "CREATE_ANY",
+              "READ_ANY",
+              "UPDATE_ANY",
+              "DELETE_ANY"
+            ]
+          },
+          {
+            "resource": "DOCKER",
+            "actions": [
+              "READ_ANY",
+              "UPDATE_ANY"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "api_key_possible_roles": {
+    "apiKeyPossibleRoles": [
+      "ADMIN",
+      "CONNECT",
+      "GUEST",
+      "VIEWER"
+    ]
+  },
+  "api_key_possible_permissions": {
+    "apiKeyPossiblePermissions": [
+      {
+        "resource": "ARRAY",
+        "actions": [
+          "CREATE_ANY",
+          "READ_ANY",
+          "UPDATE_ANY",
+          "DELETE_ANY"
+        ]
+      },
+      {
+        "resource": "DOCKER",
+        "actions": [
+          "READ_ANY",
+          "UPDATE_ANY"
+        ]
+      },
+      {
+        "resource": "API_KEY",
+        "actions": [
+          "CREATE_ANY",
+          "READ_ANY",
+          "UPDATE_ANY",
+          "DELETE_ANY"
+        ]
+      },
+      {
+        "resource": "CONNECT__REMOTE_ACCESS",
+        "actions": [
+          "READ_OWN",
+          "UPDATE_OWN"
+        ]
+      },
+      {
+        "resource": "NOTIFICATIONS",
+        "actions": [
+          "READ_ANY"
+        ]
+      }
+    ]
+  },
+  "get_available_auth_actions": {
+    "getAvailableAuthActions": [
+      "CREATE_ANY",
+      "CREATE_OWN",
+      "READ_ANY",
+      "READ_OWN",
+      "UPDATE_ANY",
+      "UPDATE_OWN",
+      "DELETE_ANY",
+      "DELETE_OWN"
+    ]
+  },
+  "get_api_key_creation_form_schema": {
+    "getApiKeyCreationFormSchema": {
+      "id": "abc123:apikey-form",
+      "dataSchema": {
+        "type": "object",
+        "required": [
+          "name",
+          "roles"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "roles": {
+            "type": "array",
+            "title": "Roles",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ADMIN",
+                "CONNECT",
+                "GUEST",
+                "VIEWER"
+              ]
+            }
+          }
+        }
+      },
+      "uiSchema": {
+        "name": {
+          "ui:autofocus": true
+        },
+        "description": {
+          "ui:widget": "textarea"
+        }
+      },
+      "values": {
+        "name": "",
+        "description": "",
+        "roles": []
+      }
+    }
+  },
+  "config": {
+    "config": {
+      "id": "config-1",
+      "valid": true,
+      "error": null
+    }
+  },
+  "settings": {
+    "settings": {
+      "id": "settings-1",
+      "unified": {
+        "id": "unified-1",
+        "dataSchema": {
+          "type": "object",
+          "properties": {
+            "api": {
+              "type": "object"
+            }
+          }
+        },
+        "uiSchema": {
+          "type": "VerticalLayout",
+          "elements": []
+        },
+        "values": {
+          "api": {
+            "sandbox": false
+          }
+        }
+      },
+      "api": {
+        "version": "4.6.0",
+        "extraOrigins": [
+          "https://tower.local"
+        ],
+        "sandbox": false,
+        "ssoSubIds": [],
+        "plugins": [
+          "unraid-api"
+        ]
+      }
+    }
+  },
+  "display": {
+    "display": {
+      "id": "display-1",
+      "case": {
+        "id": "case-1",
+        "url": "/webGui/images/case-model.png",
+        "icon": "custom",
+        "error": ""
+      },
+      "theme": "white",
+      "unit": "CELSIUS",
+      "scale": true,
+      "tabs": true,
+      "resize": false,
+      "wwn": false,
+      "total": true,
+      "usage": true,
+      "text": false,
+      "warning": 45,
+      "critical": 55,
+      "hot": 45,
+      "max": 90,
+      "locale": "en_US"
+    }
+  },
+  "customization": {
+    "customization": {
+      "activationCode": {
+        "code": null
+      },
+      "onboarding": {
+        "status": "COMPLETED",
+        "isPartnerBuild": false,
+        "completed": true,
+        "completedAtVersion": "7.0.0",
+        "shouldOpen": false
+      },
+      "availableLanguages": [
+        {
+          "code": "en_US",
+          "name": "English (US)",
+          "url": "https://raw.githubusercontent.com/unraid/lang-en_US/master/en_US.xml"
+        },
+        {
+          "code": "de_DE",
+          "name": "Deutsch",
+          "url": "https://raw.githubusercontent.com/unraid/lang-de_DE/master/de_DE.xml"
+        }
+      ]
+    }
+  },
+  "internal_boot_context": {
+    "internalBootContext": {
+      "arrayStopped": true,
+      "bootEligible": true,
+      "bootedFromFlashWithInternalBootSetup": false,
+      "enableBootTransfer": null,
+      "reservedNames": [
+        "boot",
+        "disk1",
+        "cache"
+      ],
+      "shareNames": [
+        "media",
+        "appdata"
+      ],
+      "poolNames": [
+        "cache"
+      ],
+      "driveWarnings": [
+        {
+          "diskId": "Samsung_SSD_980-1",
+          "device": "/dev/nvme0n1",
+          "warnings": [
+            "Drive contains an existing filesystem"
+          ]
+        }
+      ]
+    }
+  },
+  "me": {
+    "me": {
+      "id": "0000-0000-AAAA-0001",
+      "name": "root",
+      "description": "Unraid administrator account",
+      "roles": [
+        "ADMIN"
+      ]
+    }
+  },
+  "owner": {
+    "owner": {
+      "username": "jmagar",
+      "url": "https://unraid.net/u/jmagar",
+      "avatar": "https://avatars.unraid.net/jmagar.png"
+    }
+  },
+  "servers": {
+    "servers": [
+      {
+        "id": "0000-0000-AAAA-0010",
+        "owner": {
+          "id": "0000-0000-AAAA-0001",
+          "username": "jmagar",
+          "url": "https://unraid.net/u/jmagar",
+          "avatar": "https://avatars.unraid.net/jmagar.png"
+        },
+        "guid": "0000-0000-DEADBEEF-0000",
+        "name": "Tower",
+        "comment": "Home media + storage",
+        "status": "ONLINE",
+        "wanip": "203.0.113.7",
+        "lanip": "192.168.1.10",
+        "localurl": "http://tower.local",
+        "remoteurl": "https://example.unraid.net"
+      }
+    ]
+  },
+  "is_fresh_install": {
+    "isFreshInstall": false
+  },
+  "public_theme": {
+    "publicTheme": {
+      "name": "white",
+      "showBannerImage": true,
+      "showBannerGradient": true,
+      "showHeaderDescription": true,
+      "headerBackgroundColor": "#1c1b1b",
+      "headerPrimaryTextColor": "#f2f2f2",
+      "headerSecondaryTextColor": "#a7bcc9"
+    }
+  },
+  "network_interfaces": {
+    "networkInterfaces": [
+      {
+        "id": "0000-0000-NIC0-0001",
+        "name": "eth0",
+        "description": "Onboard Ethernet",
+        "macAddress": "de:ad:be:ef:00:01",
+        "mtu": 1500,
+        "speed": 1000,
+        "duplex": "full",
+        "internal": false,
+        "virtual": false,
+        "operstate": "up",
+        "type": "wired",
+        "vlanId": null,
+        "status": "up",
+        "protocol": "static",
+        "ipAddress": "192.168.1.10",
+        "netmask": "255.255.255.0",
+        "gateway": "192.168.1.1",
+        "useDhcp": false,
+        "ipv6Address": "fe80::dead:beef:1",
+        "ipv6Netmask": "64",
+        "ipv6Gateway": null,
+        "useDhcp6": true
+      },
+      {
+        "id": "0000-0000-NIC0-0002",
+        "name": "br0",
+        "description": "Docker bridge",
+        "macAddress": "de:ad:be:ef:00:02",
+        "mtu": 1500,
+        "speed": null,
+        "duplex": null,
+        "internal": true,
+        "virtual": true,
+        "operstate": "up",
+        "type": "bridge",
+        "vlanId": null,
+        "status": "up",
+        "protocol": "static",
+        "ipAddress": "192.168.1.10",
+        "netmask": "255.255.255.0",
+        "gateway": null,
+        "useDhcp": false,
+        "ipv6Address": null,
+        "ipv6Netmask": null,
+        "ipv6Gateway": null,
+        "useDhcp6": false
+      }
+    ]
+  },
+  "time_zone_options": {
+    "timeZoneOptions": [
+      {
+        "value": "America/New_York",
+        "label": "(GMT-05:00) America/New_York"
+      },
+      {
+        "value": "America/Chicago",
+        "label": "(GMT-06:00) America/Chicago"
+      },
+      {
+        "value": "Europe/London",
+        "label": "(GMT+00:00) Europe/London"
+      },
+      {
+        "value": "UTC",
+        "label": "(GMT+00:00) UTC"
+      }
+    ]
+  },
+  "assignable_disks": {
+    "assignableDisks": [
+      {
+        "id": "0000-0000-DISK-0001",
+        "device": "/dev/sde",
+        "type": "HDD",
+        "name": "WDC_WD80EFAX",
+        "vendor": "Western Digital",
+        "size": 8001563222016,
+        "serialNum": "VAGH9012",
+        "interfaceType": "SATA",
+        "smartStatus": "OK",
+        "temperature": 31,
+        "isSpinning": true,
+        "partitions": [
+          {
+            "name": "sde1",
+            "fsType": "XFS",
+            "size": 8001561124864
+          }
+        ]
+      },
+      {
+        "id": "0000-0000-DISK-0002",
+        "device": "/dev/nvme1n1",
+        "type": "SSD",
+        "name": "Samsung_SSD_980_500GB",
+        "vendor": "Samsung",
+        "size": 500107862016,
+        "serialNum": "S5GXNX0T654321",
+        "interfaceType": "PCIE",
+        "smartStatus": "OK",
+        "temperature": 36,
+        "isSpinning": false,
+        "partitions": []
+      }
+    ]
+  },
+  "plugin_install_operations": {
+    "pluginInstallOperations": [
+      {
+        "id": "op-1a2b3c",
+        "url": "https://raw.githubusercontent.com/example/plugin/master/plugin.plg",
+        "name": "community.applications",
+        "status": "SUCCEEDED",
+        "createdAt": "2026-06-15T17:50:00.000Z",
+        "updatedAt": "2026-06-15T17:51:10.000Z",
+        "finishedAt": "2026-06-15T17:51:10.000Z",
+        "output": [
+          "Downloading plugin.plg",
+          "Verifying signature",
+          "Installation complete"
+        ]
+      },
+      {
+        "id": "op-4d5e6f",
+        "url": "https://raw.githubusercontent.com/example/other/master/other.plg",
+        "name": null,
+        "status": "RUNNING",
+        "createdAt": "2026-06-15T18:00:00.000Z",
+        "updatedAt": "2026-06-15T18:00:05.000Z",
+        "finishedAt": null,
+        "output": [
+          "Downloading other.plg"
+        ]
+      }
+    ]
+  },
+  "cloud": {
+    "cloud": {
+      "error": null,
+      "apiKey": {
+        "valid": true,
+        "error": null
+      },
+      "relay": {
+        "status": "connected",
+        "timeout": null,
+        "error": null
+      },
+      "minigraphql": {
+        "status": "CONNECTED",
+        "timeout": null,
+        "error": null
+      },
+      "cloud": {
+        "status": "ok",
+        "ip": "203.0.113.7",
+        "error": null
+      },
+      "allowedOrigins": [
+        "https://connect.myunraid.net",
+        "https://tower.local"
+      ]
+    }
+  },
+  "api_key": {
+    "apiKey": {
+      "id": "abc123:key-001",
+      "key": "unraid_ak_4f9c2e1b7a6d8390",
+      "name": "homelab-readonly",
+      "description": "Read-only key for monitoring dashboards",
+      "roles": [
+        "VIEWER"
+      ],
+      "createdAt": "2026-02-14T09:21:00.000Z",
+      "permissions": [
+        {
+          "resource": "ARRAY",
+          "actions": [
+            "READ_ANY"
+          ]
+        },
+        {
+          "resource": "DISK",
+          "actions": [
+            "READ_ANY"
+          ]
+        },
+        {
+          "resource": "DOCKER",
+          "actions": [
+            "READ_ANY"
+          ]
+        }
+      ]
+    }
+  },
+  "disk": {
+    "disk": {
+      "id": "0000-0000-DISK-0001",
+      "device": "/dev/sde",
+      "type": "HDD",
+      "name": "WDC_WD80EFAX",
+      "vendor": "Western Digital",
+      "size": 8001563222016,
+      "serialNum": "VAGH9012",
+      "interfaceType": "SATA",
+      "smartStatus": "OK",
+      "temperature": 31,
+      "isSpinning": true,
+      "partitions": [
+        {
+          "name": "sde1",
+          "fsType": "XFS",
+          "size": 8001561124864
+        }
+      ]
+    }
+  },
+  "oidc_provider": {
+    "oidcProvider": {
+      "id": "oidc-provider-google",
+      "name": "Google",
+      "clientId": "1234567890-abcdefg.apps.googleusercontent.com",
+      "issuer": "https://accounts.google.com",
+      "authorizationEndpoint": "https://accounts.google.com/o/oauth2/v2/auth",
+      "tokenEndpoint": "https://oauth2.googleapis.com/token",
+      "jwksUri": "https://www.googleapis.com/oauth2/v3/certs",
+      "scopes": [
+        "openid",
+        "profile",
+        "email"
+      ],
+      "authorizationRules": [
+        {
+          "claim": "email",
+          "operator": "ENDS_WITH",
+          "value": [
+            "@example.com"
+          ]
+        },
+        {
+          "claim": "hd",
+          "operator": "EQUALS",
+          "value": [
+            "example.com"
+          ]
+        }
+      ],
+      "authorizationRuleMode": "OR",
+      "buttonText": "Sign in with Google",
+      "buttonIcon": "https://www.google.com/favicon.ico",
+      "buttonVariant": "outline"
+    }
+  },
+  "ups_device_by_id": {
+    "upsDeviceById": {
+      "id": "ups-1",
+      "name": "APC Back-UPS",
+      "model": "Back-UPS ES 700G",
+      "status": "Online",
+      "battery": {
+        "chargeLevel": 100,
+        "estimatedRuntime": 2820,
+        "health": "Good"
+      },
+      "power": {
+        "inputVoltage": 121.0,
+        "outputVoltage": 121.0,
+        "loadPercentage": 28
+      }
+    }
+  },
+  "plugin_install_operation": {
+    "pluginInstallOperation": {
+      "id": "op-1a2b3c",
+      "url": "https://raw.githubusercontent.com/example/plugin/master/plugin.plg",
+      "name": "community.applications",
+      "status": "SUCCEEDED",
+      "createdAt": "2026-06-15T17:50:00.000Z",
+      "updatedAt": "2026-06-15T17:51:10.000Z",
+      "finishedAt": "2026-06-15T17:51:10.000Z",
+      "output": [
+        "Downloading plugin.plg",
+        "Verifying signature",
+        "Installation complete"
+      ]
+    }
+  },
+  "validate_oidc_session": {
+    "validateOidcSession": {
+      "valid": true,
+      "username": "jmagar"
+    }
+  },
+  "get_permissions_for_roles": {
+    "getPermissionsForRoles": [
+      {
+        "resource": "ARRAY",
+        "actions": [
+          "READ_ANY"
+        ]
+      },
+      {
+        "resource": "DOCKER",
+        "actions": [
+          "READ_ANY",
+          "UPDATE_ANY"
+        ]
+      }
+    ]
+  },
+  "recalculate_overview": {
+    "recalculateOverview": {
+      "unread": {
+        "info": 1,
+        "warning": 0,
+        "alert": 0,
+        "total": 1
+      },
+      "archive": {
+        "info": 14,
+        "warning": 2,
+        "alert": 0,
+        "total": 16
+      }
+    }
+  },
+  "delete_archived_notifications": {
+    "deleteArchivedNotifications": {
+      "unread": {
+        "info": 1,
+        "warning": 0,
+        "alert": 0,
+        "total": 1
+      },
+      "archive": {
+        "info": 14,
+        "warning": 2,
+        "alert": 0,
+        "total": 16
+      }
+    }
+  },
+  "archive_notification": {
+    "archiveNotification": {
+      "id": "ntf-1",
+      "title": "Test notification",
+      "subject": "Created via API",
+      "description": "A notification created through the MCP write API.",
+      "importance": "INFO",
+      "link": null,
+      "type": "ARCHIVE",
+      "timestamp": "2026-06-15T18:00:00.000Z",
+      "formattedTimestamp": "Jun 15, 2026 18:00"
+    }
+  },
+  "create_notification": {
+    "createNotification": {
+      "id": "ntf-1",
+      "title": "Test notification",
+      "subject": "Created via API",
+      "description": "A notification created through the MCP write API.",
+      "importance": "INFO",
+      "link": null,
+      "type": "UNREAD",
+      "timestamp": "2026-06-15T18:00:00.000Z",
+      "formattedTimestamp": "Jun 15, 2026 18:00"
+    }
+  },
+  "vm_start": {
+    "vm": {
+      "start": true
+    }
+  },
+  "vm_stop": {
+    "vm": {
+      "stop": true
+    }
+  },
+  "vm_pause": {
+    "vm": {
+      "pause": true
+    }
+  },
+  "vm_resume": {
+    "vm": {
+      "resume": true
+    }
+  },
+  "vm_force_stop": {
+    "vm": {
+      "forceStop": true
+    }
+  },
+  "vm_reboot": {
+    "vm": {
+      "reboot": true
+    }
+  },
+  "vm_reset": {
+    "vm": {
+      "reset": true
+    }
+  },
+  "docker_start": {
+    "docker": {
+      "start": {
+        "id": "docker/abc123",
+        "names": [
+          "plex"
+        ],
+        "image": "lscr.io/linuxserver/plex:latest",
+        "state": "RUNNING",
+        "status": "Up 3 seconds"
+      }
+    }
+  },
+  "docker_stop": {
+    "docker": {
+      "stop": {
+        "id": "docker/abc123",
+        "names": [
+          "plex"
+        ],
+        "image": "lscr.io/linuxserver/plex:latest",
+        "state": "EXITED",
+        "status": "Exited (0) 1 second ago"
+      }
+    }
+  },
+  "docker_restart": {
+    "docker": {
+      "restart": {
+        "id": "docker/abc123",
+        "names": [
+          "plex"
+        ],
+        "image": "lscr.io/linuxserver/plex:latest",
+        "state": "RUNNING",
+        "status": "Up 2 seconds"
+      }
+    }
+  },
+  "docker_pause": {
+    "docker": {
+      "pause": {
+        "id": "docker/abc123",
+        "names": [
+          "plex"
+        ],
+        "image": "lscr.io/linuxserver/plex:latest",
+        "state": "PAUSED",
+        "status": "Up 5 minutes (Paused)"
+      }
+    }
+  },
+  "docker_unpause": {
+    "docker": {
+      "unpause": {
+        "id": "docker/abc123",
+        "names": [
+          "plex"
+        ],
+        "image": "lscr.io/linuxserver/plex:latest",
+        "state": "RUNNING",
+        "status": "Up 5 minutes"
+      }
+    }
+  },
+  "docker_remove_container": {
+    "docker": {
+      "removeContainer": true
+    }
+  },
+  "docker_update_container": {
+    "docker": {
+      "updateContainer": {
+        "id": "docker/abc123",
+        "names": [
+          "plex"
+        ],
+        "image": "lscr.io/linuxserver/plex:latest",
+        "state": "RUNNING",
+        "status": "Up 2 seconds"
+      }
+    }
+  },
+  "docker_update_containers": {
+    "docker": {
+      "updateContainers": [
+        {
+          "id": "docker/abc123",
+          "names": [
+            "plex"
+          ],
+          "image": "lscr.io/linuxserver/plex:latest",
+          "state": "RUNNING",
+          "status": "Up 2 seconds"
+        },
+        {
+          "id": "docker/def456",
+          "names": [
+            "sonarr"
+          ],
+          "image": "lscr.io/linuxserver/sonarr:latest",
+          "state": "RUNNING",
+          "status": "Up 1 second"
+        }
+      ]
+    }
+  },
+  "docker_update_all_containers": {
+    "docker": {
+      "updateAllContainers": [
+        {
+          "id": "docker/abc123",
+          "names": [
+            "plex"
+          ],
+          "image": "lscr.io/linuxserver/plex:latest",
+          "state": "RUNNING",
+          "status": "Up 2 seconds"
+        },
+        {
+          "id": "docker/def456",
+          "names": [
+            "sonarr"
+          ],
+          "image": "lscr.io/linuxserver/sonarr:latest",
+          "state": "RUNNING",
+          "status": "Up 1 second"
+        }
+      ]
+    }
+  },
+  "array_set_state": {
+    "array": {
+      "setState": {
+        "id": "array/1",
+        "state": "STARTED"
+      }
+    }
+  },
+  "array_add_disk_to_array": {
+    "array": {
+      "addDiskToArray": {
+        "id": "array/1",
+        "state": "STOPPED"
+      }
+    }
+  },
+  "array_remove_disk_from_array": {
+    "array": {
+      "removeDiskFromArray": {
+        "id": "array/1",
+        "state": "STOPPED"
+      }
+    }
+  },
+  "array_mount_array_disk": {
+    "array": {
+      "mountArrayDisk": {
+        "id": "disk/sdb",
+        "name": "disk1",
+        "status": "DISK_OK"
+      }
+    }
+  },
+  "array_unmount_array_disk": {
+    "array": {
+      "unmountArrayDisk": {
+        "id": "disk/sdb",
+        "name": "disk1",
+        "status": "DISK_OK"
+      }
+    }
+  },
+  "array_clear_array_disk_statistics": {
+    "array": {
+      "clearArrayDiskStatistics": true
+    }
+  },
+  "parity_check_start": {
+    "parityCheck": {
+      "start": {
+        "status": "started",
+        "correcting": true
+      }
+    }
+  },
+  "parity_check_pause": {
+    "parityCheck": {
+      "pause": {
+        "status": "paused"
+      }
+    }
+  },
+  "parity_check_resume": {
+    "parityCheck": {
+      "resume": {
+        "status": "resumed"
+      }
+    }
+  },
+  "parity_check_cancel": {
+    "parityCheck": {
+      "cancel": {
+        "status": "cancelled"
+      }
+    }
+  },
+  "api_key_create": {
+    "apiKey": {
+      "create": {
+        "id": "apikey:0001",
+        "key": "unraid_0123456789abcdef",
+        "name": "ci-bot",
+        "description": "CI service key",
+        "roles": [
+          "VIEWER"
+        ],
+        "createdAt": "2026-06-15T12:00:00.000Z",
+        "permissions": [
+          {
+            "resource": "DOCKER",
+            "actions": [
+              "READ_ANY"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "api_key_add_role": {
+    "apiKey": {
+      "addRole": true
+    }
+  },
+  "api_key_remove_role": {
+    "apiKey": {
+      "removeRole": true
+    }
+  },
+  "api_key_delete": {
+    "apiKey": {
+      "delete": true
+    }
+  },
+  "api_key_update": {
+    "apiKey": {
+      "update": {
+        "id": "apikey:0001",
+        "key": "unraid_0123456789abcdef",
+        "name": "ci-bot-renamed",
+        "description": "rotated",
+        "roles": [
+          "VIEWER",
+          "GUEST"
+        ],
+        "createdAt": "2026-06-15T12:00:00.000Z",
+        "permissions": [
+          {
+            "resource": "DOCKER",
+            "actions": [
+              "READ_ANY",
+              "READ_OWN"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "rclone_create_r_clone_remote": {
+    "rclone": {
+      "createRCloneRemote": {
+        "name": "backup-b2",
+        "type": "b2"
+      }
+    }
+  },
+  "rclone_delete_r_clone_remote": {
+    "rclone": {
+      "deleteRCloneRemote": true
+    }
+  },
+  "unraid_plugins_install_plugin": {
+    "unraidPlugins": {
+      "installPlugin": {
+        "id": "op-1a2b",
+        "url": "https://example.com/plugin.plg",
+        "name": "my.plugin",
+        "status": "QUEUED",
+        "createdAt": "2026-06-15T12:00:00.000Z",
+        "updatedAt": null,
+        "finishedAt": null,
+        "output": []
+      }
+    }
+  },
+  "unraid_plugins_install_language": {
+    "unraidPlugins": {
+      "installLanguage": {
+        "id": "op-3c4d",
+        "url": "https://example.com/lang-de.plg",
+        "name": "lang-de",
+        "status": "RUNNING",
+        "createdAt": "2026-06-15T12:00:00.000Z",
+        "updatedAt": "2026-06-15T12:00:05.000Z",
+        "finishedAt": null,
+        "output": [
+          "downloading"
+        ]
+      }
+    }
+  },
+  "onboarding_complete_onboarding": {
+    "onboarding": {
+      "completeOnboarding": {
+        "status": "COMPLETED",
+        "completed": true
+      }
+    }
+  },
+  "onboarding_reset_onboarding": {
+    "onboarding": {
+      "resetOnboarding": {
+        "status": "INCOMPLETE",
+        "completed": false
+      }
+    }
+  },
+  "archive_notifications": {
+    "archiveNotifications": {
+      "unread": {
+        "info": 1,
+        "warning": 0,
+        "alert": 0,
+        "total": 1
+      },
+      "archive": {
+        "info": 14,
+        "warning": 2,
+        "alert": 0,
+        "total": 16
+      }
+    }
+  },
+  "unarchive_notifications": {
+    "unarchiveNotifications": {
+      "unread": {
+        "info": 1,
+        "warning": 0,
+        "alert": 0,
+        "total": 1
+      },
+      "archive": {
+        "info": 14,
+        "warning": 2,
+        "alert": 0,
+        "total": 16
+      }
+    }
+  },
+  "unread_notification": {
+    "unreadNotification": {
+      "id": "ntf-1",
+      "title": "Test notification",
+      "subject": "Created via API",
+      "description": "A notification created through the MCP write API.",
+      "importance": "INFO",
+      "link": null,
+      "type": "UNREAD",
+      "timestamp": "2026-06-15T18:00:00.000Z",
+      "formattedTimestamp": "Jun 15, 2026 18:00"
+    }
+  },
+  "archive_all": {
+    "archiveAll": {
+      "unread": {
+        "info": 0,
+        "warning": 0,
+        "alert": 0,
+        "total": 0
+      },
+      "archive": {
+        "info": 15,
+        "warning": 2,
+        "alert": 0,
+        "total": 17
+      }
+    }
+  },
+  "unarchive_all": {
+    "unarchiveAll": {
+      "unread": {
+        "info": 15,
+        "warning": 2,
+        "alert": 0,
+        "total": 17
+      },
+      "archive": {
+        "info": 0,
+        "warning": 0,
+        "alert": 0,
+        "total": 0
+      }
+    }
+  },
+  "update_server_identity": {
+    "updateServerIdentity": {
+      "id": "server-1",
+      "name": "Tower",
+      "status": "ONLINE"
+    }
+  },
+  "configure_ups": {
+    "configureUps": true
+  },
+  "update_system_time": {
+    "updateSystemTime": {
+      "currentTime": "2026-06-15T18:00:00.000Z",
+      "timeZone": "America/New_York",
+      "useNtp": true,
+      "ntpServers": [
+        "time.cloudflare.com",
+        "pool.ntp.org"
+      ]
+    }
+  },
+  "update_temperature_config": {
+    "updateTemperatureConfig": true
+  },
+  "add_plugin": {
+    "addPlugin": true
+  },
+  "remove_plugin": {
+    "removePlugin": true
+  },
+  "connect_sign_out": {
+    "connectSignOut": true
+  },
+  "docker_create_folder": {
+    "createDockerFolder": {
+      "version": 1,
+      "views": [
+        {
+          "id": "default",
+          "name": "Default",
+          "rootId": "root",
+          "flatEntries": [
+            {
+              "id": "folder-1",
+              "type": "folder",
+              "name": "Media",
+              "parentId": null,
+              "depth": 0,
+              "position": 0,
+              "path": ["folder-1"],
+              "hasChildren": false,
+              "childrenIds": [],
+              "meta": null
+            }
+          ],
+          "prefs": null
+        }
+      ]
+    }
+  },
+  "docker_create_folder_with_items": {
+    "createDockerFolderWithItems": {
+      "version": 1,
+      "views": [
+        {
+          "id": "default",
+          "name": "Default",
+          "rootId": "root",
+          "flatEntries": [
+            {
+              "id": "folder-1",
+              "type": "folder",
+              "name": "Media",
+              "parentId": null,
+              "depth": 0,
+              "position": 0,
+              "path": ["folder-1"],
+              "hasChildren": true,
+              "childrenIds": ["docker/abc123"],
+              "meta": null
+            },
+            {
+              "id": "docker/abc123",
+              "type": "container",
+              "name": "plex",
+              "parentId": "folder-1",
+              "depth": 1,
+              "position": 0,
+              "path": ["folder-1", "docker/abc123"],
+              "hasChildren": false,
+              "childrenIds": [],
+              "meta": {
+                "id": "docker/abc123",
+                "names": ["plex"],
+                "image": "lscr.io/linuxserver/plex:latest",
+                "state": "RUNNING",
+                "status": "Up 3 seconds"
+              }
+            }
+          ],
+          "prefs": null
+        }
+      ]
+    }
+  },
+  "docker_set_folder_children": {
+    "setDockerFolderChildren": {
+      "version": 1,
+      "views": [
+        {
+          "id": "default",
+          "name": "Default",
+          "rootId": "root",
+          "flatEntries": [],
+          "prefs": null
+        }
+      ]
+    }
+  },
+  "docker_delete_entries": {
+    "deleteDockerEntries": {
+      "version": 1,
+      "views": [
+        {
+          "id": "default",
+          "name": "Default",
+          "rootId": "root",
+          "flatEntries": [],
+          "prefs": null
+        }
+      ]
+    }
+  },
+  "docker_move_entries_to_folder": {
+    "moveDockerEntriesToFolder": {
+      "version": 1,
+      "views": [
+        {
+          "id": "default",
+          "name": "Default",
+          "rootId": "root",
+          "flatEntries": [],
+          "prefs": null
+        }
+      ]
+    }
+  },
+  "docker_move_items_to_position": {
+    "moveDockerItemsToPosition": {
+      "version": 1,
+      "views": [
+        {
+          "id": "default",
+          "name": "Default",
+          "rootId": "root",
+          "flatEntries": [],
+          "prefs": null
+        }
+      ]
+    }
+  },
+  "docker_rename_folder": {
+    "renameDockerFolder": {
+      "version": 1,
+      "views": [
+        {
+          "id": "default",
+          "name": "Default",
+          "rootId": "root",
+          "flatEntries": [
+            {
+              "id": "folder-1",
+              "type": "folder",
+              "name": "Media 2",
+              "parentId": null,
+              "depth": 0,
+              "position": 0,
+              "path": ["folder-1"],
+              "hasChildren": false,
+              "childrenIds": [],
+              "meta": null
+            }
+          ],
+          "prefs": null
+        }
+      ]
+    }
+  },
+  "docker_update_view_preferences": {
+    "updateDockerViewPreferences": {
+      "version": 1,
+      "views": [
+        {
+          "id": "default",
+          "name": "Default",
+          "rootId": "root",
+          "flatEntries": [],
+          "prefs": { "sortBy": "name" }
+        }
+      ]
+    }
+  },
+  "docker_update_autostart_configuration": {
+    "docker": {
+      "updateAutostartConfiguration": true
+    }
+  },
+  "refresh_docker_digests": {
+    "refreshDockerDigests": true
+  },
+  "reset_docker_template_mappings": {
+    "resetDockerTemplateMappings": true
+  },
+  "sync_docker_template_paths": {
+    "syncDockerTemplatePaths": {
+      "scanned": 12,
+      "matched": 10,
+      "skipped": 2,
+      "errors": []
+    }
+  },
+  "customization_set_locale": {
+    "customization": {
+      "setLocale": "en_US"
+    }
+  },
+  "customization_set_theme": {
+    "customization": {
+      "setTheme": {
+        "name": "black",
+        "showBannerImage": true,
+        "showBannerGradient": true,
+        "showHeaderDescription": true,
+        "headerBackgroundColor": "#1c1b1b",
+        "headerPrimaryTextColor": "#f2f2f2",
+        "headerSecondaryTextColor": "#a7bcc9"
+      }
+    }
+  },
+  "onboarding_bypass_onboarding": {
+    "onboarding": {
+      "bypassOnboarding": {
+        "status": "COMPLETED",
+        "completed": true
+      }
+    }
+  },
+  "onboarding_clear_onboarding_override": {
+    "onboarding": {
+      "clearOnboardingOverride": {
+        "status": "INCOMPLETE",
+        "completed": false
+      }
+    }
+  },
+  "onboarding_close_onboarding": {
+    "onboarding": {
+      "closeOnboarding": {
+        "status": "COMPLETED",
+        "completed": true
+      }
+    }
+  },
+  "onboarding_open_onboarding": {
+    "onboarding": {
+      "openOnboarding": {
+        "status": "INCOMPLETE",
+        "completed": false
+      }
+    }
+  },
+  "onboarding_resume_onboarding": {
+    "onboarding": {
+      "resumeOnboarding": {
+        "status": "INCOMPLETE",
+        "completed": false
+      }
+    }
+  },
+  "onboarding_refresh_internal_boot_context": {
+    "onboarding": {
+      "refreshInternalBootContext": {
+        "arrayStopped": true,
+        "bootEligible": true,
+        "bootedFromFlashWithInternalBootSetup": false,
+        "enableBootTransfer": null,
+        "reservedNames": ["bzimage", "bzroot"],
+        "shareNames": ["appdata"],
+        "poolNames": ["cache"],
+        "assignableDisks": [
+          {
+            "id": "0000-0000-DISK-0001",
+            "device": "/dev/sde",
+            "type": "HDD",
+            "name": "WDC_WD80EFAX",
+            "vendor": "Western Digital",
+            "size": 8001563222016,
+            "serialNum": "VAGH9012",
+            "interfaceType": "SATA",
+            "smartStatus": "OK",
+            "temperature": 31,
+            "isSpinning": true,
+            "partitions": [
+              {
+                "name": "sde1",
+                "fsType": "XFS",
+                "size": 8001561124864
+              }
+            ]
+          }
+        ],
+        "driveWarnings": []
+      }
+    }
+  },
+  "onboarding_set_onboarding_override": {
+    "onboarding": {
+      "setOnboardingOverride": {
+        "status": "INCOMPLETE",
+        "completed": false
+      }
+    }
+  },
+  "onboarding_create_internal_boot_pool": {
+    "onboarding": {
+      "createInternalBootPool": {
+        "ok": true,
+        "code": 0,
+        "output": "pool created"
+      }
+    }
+  },
+  "connect_sign_in": {
+    "connectSignIn": true
+  },
+  "setup_remote_access": {
+    "setupRemoteAccess": true
+  },
+  "enable_dynamic_remote_access": {
+    "enableDynamicRemoteAccess": true
+  },
+  "update_api_settings": {
+    "updateApiSettings": {
+      "accessType": "DYNAMIC",
+      "forwardType": null,
+      "port": null
+    }
+  },
+  "update_settings": {
+    "updateSettings": {
+      "restartRequired": false,
+      "values": { "foo": "bar" },
+      "warnings": []
+    }
+  },
+  "update_ssh_settings": {
+    "updateSshSettings": {
+      "version": "7.0.0",
+      "name": "Tower",
+      "timeZone": "America/New_York",
+      "comment": "Home media + storage",
+      "sysModel": "Custom",
+      "useSsl": false,
+      "port": 80,
+      "portssl": 443,
+      "useSsh": true,
+      "portssh": 22,
+      "useTelnet": false,
+      "porttelnet": 23,
+      "startArray": true,
+      "spindownDelay": "30",
+      "shareSmbEnabled": true,
+      "shareNfsEnabled": false,
+      "shareAfpEnabled": false,
+      "configValid": true,
+      "configError": null,
+      "regState": "PRO",
+      "regTo": "Jacob Magar",
+      "deviceCount": 4,
+      "flashGuid": "0000-0000-DEADBEEF-0000",
+      "flashProduct": "Cruzer Fit",
+      "flashVendor": "SanDisk",
+      "sbName": "/boot/config/super.dat",
+      "sbVersion": "2.9.13",
+      "sbUpdated": "2026-06-08T12:29:00.000Z",
+      "sbState": "normal"
+    }
+  },
+  "initiate_flash_backup": {
+    "initiateFlashBackup": {
+      "status": "queued",
+      "jobId": "backup-job-1"
+    }
+  },
+  "notify_if_unique": {
+    "notifyIfUnique": {
+      "id": "ntf-1",
+      "title": "Test notification",
+      "subject": "Created via API",
+      "description": "A notification created through the MCP write API.",
+      "importance": "INFO",
+      "link": null,
+      "type": "UNREAD",
+      "timestamp": "2026-06-15T18:00:00.000Z",
+      "formattedTimestamp": "Jun 15, 2026 18:00"
+    }
+  },
+  "preview_effective_permissions": {
+    "previewEffectivePermissions": [
+      { "resource": "DOCKER", "actions": ["READ_ANY"] }
+    ]
+  }
+}

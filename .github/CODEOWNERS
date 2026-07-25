@@ -1,9 +1,38 @@
-/.github/workflows/ @jmagar
-/.github/CODEOWNERS @jmagar
-/Dockerfile @jmagar
-/docker-compose.yaml @jmagar
-/entrypoint.sh @jmagar
-/scripts/ @jmagar
+# CODEOWNERS for the unraid-mcp monorepo.
+#
+# NOTE: a pattern matching no file is silently inert — no error, no required
+# reviewer. After the consolidation moved the Python server into unraid-py/, the
+# root-anchored /Dockerfile, /docker-compose.yaml, /entrypoint.sh, /scripts/ and
+# /server.json rules all matched nothing. meta-ci.yml now fails on a dead rule.
+
+# ── Shared root / orchestration ──────────────────────────────────────────────
+/.github/ @jmagar
 /release-please-config.json @jmagar
 /.release-please-manifest.json @jmagar
-/server.json @jmagar
+/.claude-plugin/ @jmagar
+/.agents/ @jmagar
+/.gitattributes @jmagar
+/.gitignore @jmagar
+/.gitleaks.toml @jmagar
+/.mise.toml @jmagar
+/lefthook.yml @jmagar
+/CLAUDE.md @jmagar
+/README.md @jmagar
+
+# ── Components ───────────────────────────────────────────────────────────────
+/unraid-py/ @jmagar
+/unraid-rs/ @jmagar
+/plugins/ @jmagar
+/agents/ @jmagar
+
+# ── High-risk files (explicit, so a broad rule can't hide them) ──────────────
+/unraid-py/Dockerfile @jmagar
+/unraid-py/docker-compose.yaml @jmagar
+/unraid-py/entrypoint.sh @jmagar
+/unraid-py/scripts/ @jmagar
+/unraid-py/server.json @jmagar
+/unraid-rs/server.json @jmagar
+/unraid-rs/config/Dockerfile @jmagar
+/plugins/mcp/scripts/ @jmagar
+/plugins/incus/scripts/ @jmagar
+/plugins/codex/scripts/ @jmagar
