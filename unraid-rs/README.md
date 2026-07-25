@@ -495,8 +495,6 @@ gateway.
 - `docs/INVENTORY.md` is the curated/generated inventory for actions, CLI
   commands, env vars, HTTP endpoints, and dependencies.
 - `docs/stack/ARCH.md` is the curated architecture guide.
-- `docs/SETUP.md` is curated plugin/setup guidance.
-- `docs/OAUTH.md` is curated OAuth setup guidance.
 - `agents/unraid-rs/skills/unraid/SKILL.md` is the agent usage guide.
 - `src/` is the source of truth for current GraphQL queries, config defaults,
   auth behavior, and CLI parsing.

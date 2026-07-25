@@ -168,7 +168,7 @@ one source of truth: `tests/fixtures/scenarios/*.json`.
   scenario live: `curl -XPOST http://127.0.0.1:PORT/scenario/disk-failing`.
   `--require-key KEY` exercises the upstream-auth (401) path.
 - **Schema-as-contract guard** (`tests/schema_contract.rs`). The vendored SDL
-  `tests/fixtures/unraid-schema.graphql` (provenance comment at the top — copied
+  `schema/unraid-schema.graphql` (provenance comment at the top — copied
   from `unraid/api`, re-copy when Unraid ships an API change) is the source of
   truth. The test validates **every query** `graphql.rs` sends and **every
   fixture leaf** (scalar JSON-type + enum membership) against it via

@@ -36,7 +36,39 @@ jobs:
       - name: Install build + validation tooling
         run: sudo apt-get update && sudo apt-get install -y jq xz-utils libxml2-utils shellcheck
 
+      # SEED / IDEMPOTENCY GATE.
+      # This job rebuilds the .txz by carrying the payload forward from the
+      # PREVIOUS incus release. The very first release out of the monorepo has no
+      # predecessor, so it must be seeded by hand with the legacy build-55 asset
+      # (see the error text below). Once that asset is attached to this release,
+      # there is nothing left to build — and re-running the job must not clobber a
+      # correct payload. So: if this release already carries a .txz, verify it
+      # against the .plg checksum and stop successfully.
+      - name: Skip if this release already carries its payload
+        id: seeded
+        run: |
+          set -euo pipefail
+          expected_txz="$(sed -n 's/.*<!ENTITY txz[[:space:]]*"\([^"]*\)".*/\1/p' incus.plg)"
+          expected_txz="${expected_txz//&name;/incus}"
+          expected_sha="$(sed -n 's/.*<!ENTITY[[:space:]]*sha256[[:space:]]*"\([^"]*\)".*/\1/p' incus.plg)"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+               --jq '.assets[].name' 2>/dev/null | grep -qxF "$expected_txz"; then
+            echo "release $TAG already has $expected_txz attached — verifying it"
+            tmp="$(mktemp -d)"
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" -p "$expected_txz" -D "$tmp"
+            actual_sha="$(sha256sum "$tmp/$expected_txz" | cut -d' ' -f1)"
+            if [ "$actual_sha" != "$expected_sha" ]; then
+              echo "::error::attached $expected_txz sha256 $actual_sha does not match incus.plg &sha256; $expected_sha"
+              exit 1
+            fi
+            echo "payload verified against incus.plg — nothing to rebuild"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Derive build number and fetch previous payload
+        if: steps.seeded.outputs.skip != 'true'
         run: |
           set -euo pipefail
           txz="$(sed -n 's/.*<!ENTITY txz[[:space:]]*"\([^"]*\)".*/\1/p' incus.plg)"
@@ -62,9 +94,10 @@ jobs:
           fi
 
       - name: Build classic package
+        if: steps.seeded.outputs.skip != 'true'
         run: |
           set -euo pipefail
-          prevtxz="$(ls prev/*.txz 2>/dev/null | head -1 || true)"
+          prevtxz="$(find prev -maxdepth 1 -name '*.txz' -type f | sort | head -1)"
           if [ -z "$prevtxz" ]; then
             if [ -n "${PREV_TAG:-}" ]; then
               echo "::error::previous release ${PREV_TAG} exists but shipped no .txz asset — investigate before re-running"
@@ -82,9 +115,11 @@ jobs:
           ./scripts/build-classic-package.sh "$BUILD" "$prevtxz"
 
       - name: Verify the rebuilt package
+        if: steps.seeded.outputs.skip != 'true'
         run: ./scripts/verify-classic-package.sh
 
       - name: Attach package + manifest to the release
+        if: steps.seeded.outputs.skip != 'true'
         run: |
           gh release upload "$TAG" \
             "packages/incus-unraid-7.0.0-${BUILD}-x86_64-1.txz" \
