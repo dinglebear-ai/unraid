@@ -404,13 +404,14 @@ CLI shim      (src/cli.rs)           argv -> service -> stdout
 
 ## Distribution Contract
 
-- `Cargo.toml`, `Cargo.lock`, `packages/unraid-rmcp/package.json`,
-  `.release-please-manifest.json`, and `server.json` must agree on the released
-  version.
+- `Cargo.toml`, `Cargo.lock`, both `version` and `binaryVersion` in
+  `packages/unraid-rmcp/package.json`, `.release-please-manifest.json`, agent
+  manifests, and `server.json` must agree on the released version.
 - GitHub Releases publish the linux/amd64 `runraid` binary consumed by the npm
   launcher.
 - The npm package name is `unraid-rmcp`; binary aliases are `unraid-rmcp` and
-  `runraid`.
+  `runraid`. Publishing runs from `.github/workflows/rust-release.yml` on a
+  GitHub-hosted runner using npm OIDC trusted publishing.
 - Docker/OCI metadata uses `ghcr.io/dinglebear-ai/runraid:<version>`.
 - `agents/unraid-rs/.mcp.json` must launch `npx -y unraid-rmcp mcp` so stdio
   clients start the MCP transport rather than the HTTP server.

@@ -30,6 +30,7 @@
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         { "type": "json", "path": "packages/unraid-rmcp/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "packages/unraid-rmcp/package.json", "jsonpath": "$.binaryVersion" },
         { "type": "json", "path": "server.json", "jsonpath": "$.version" },
         { "type": "json", "path": "server.json", "jsonpath": "$.packages[0].version" },
         {
