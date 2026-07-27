@@ -17,7 +17,7 @@ pub(super) struct ActionSpec {
 
 /// Scope an action requires. `unraid:admin` satisfies `unraid:read`, so a
 /// read-scoped token cannot reach a [`Scope::Write`] (mutating) action.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Scope {
     /// No scope required (the `help` meta action).
     None,

@@ -2452,6 +2452,7 @@ dependencies = [
  "tokio-util",
  "tower-service",
  "tracing",
+ "url",
  "uuid",
 ]
 
@@ -3556,6 +3557,7 @@ dependencies = [
  "lab-auth",
  "reqwest 0.12.28",
  "rmcp",
+ "schemars",
  "serde",
  "serde_json",
  "tempfile",

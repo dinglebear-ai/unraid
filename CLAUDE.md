@@ -37,15 +37,15 @@ The Python server's detailed dev guide is `unraid-py/CLAUDE.md`.
   **`ci.yml` must keep `.github/workflows/**` in its `paths:` filter**, because
   that test only runs when `ci.yml` runs; narrowing the filter silently disables
   SHA-pin enforcement for every other component's workflow.
-- **release-please drives versioning** for all four units. `unraid-py` is the
-  primary package with an empty component (unprefixed `vX.Y.Z` tags); the others
-  use `unraid-rs-v*`, `incus-v*`, `codex-v*`. The incus/codex `.plg` version
-  entities are annotated `x-release-please-version` so the plugin string version
-  stays in sync. **Unraid compares plugin versions as STRINGS**, which disagrees
-  with release-please's semver bumps on a date-shaped version: `2026.10.0` sorts
-  *before* `2026.9.0`, and every installed plugin would silently stop updating.
-  `.github/scripts/check-plg-version-ordering.sh` (run by `meta-ci.yml` and the
-  pre-commit hook) fails the build on such a regression.
+- **Release management has two explicit lanes.** release-please manages only
+  `unraid-py` and `unraid-rs`; its `bootstrap-sha` pins history to the monorepo
+  consolidation boundary so imported `Release-As:` directives cannot poison new
+  release PRs. Python uses unprefixed `vX.Y.Z` tags and Rust uses
+  `unraid-rs-vX.Y.Z`. Incus and Codex use `.github/scripts/plugin_calver.py` and
+  fixed-width `YYYYMMDD.NNN` versions with `incus-v*` / `codex-v*` tags. Unraid
+  compares plugin versions as raw strings, so fixed width is mandatory.
+  `.github/scripts/release_contract.py` and `check-plg-version-ordering.sh` run in
+  `meta-ci.yml` to reject manager drift, tag drift, and lexical regressions.
 - **This repo restricts which Actions may run** (`allowed_actions: selected`).
   A non-allowlisted action is rejected by GitHub at *compile* time: the run ends
   as `startup_failure` with no jobs, no logs and **no check-run**, so it appears
