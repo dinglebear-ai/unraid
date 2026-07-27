@@ -2,10 +2,11 @@ name: release-please
 
 # Drives versioning + changelog from Conventional Commits.
 #
-# On every push to main, release-please maintains a "release PR" that bumps the
-# version in pyproject.toml + the three plugin manifests and updates CHANGELOG.md.
-# Merging that PR creates the git tag (vX.Y.Z) and a GitHub Release, which in turn
-# trigger publish-pypi.yml (release: published) and docker-publish.yml (tag v*).
+# On every push to main, release-please maintains release PRs for the Python and
+# Rust packages only. The bootstrap boundary in release-please-config.json excludes
+# imported pre-monorepo history. Incus and Codex use the separate fixed-width
+# plugin CalVer lane in .github/scripts/plugin_calver.py. Merging a package release
+# PR creates its git tag and GitHub Release, triggering the matching publish jobs.
 #
 # IMPORTANT: `token` must be a PAT or GitHub App token with `contents: write` and
 # `pull-requests: write`. The default GITHUB_TOKEN deliberately does NOT trigger
@@ -19,8 +20,8 @@ name: release-please
 # over a classic PAT. If you must use a PAT, set a calendar reminder tied to its
 # expiry date so it gets rotated before it lapses.
 #
-# release-please bumps the version in pyproject.toml + the plugin manifests but NOT
-# in uv.lock (which records the project's own version). Left unsynced, the release
+# release-please bumps the Python version in pyproject.toml but NOT in uv.lock
+# (which records the project's own version). Left unsynced, the release
 # PR's `uv sync --locked` jobs (Test, Lint, Type Check, Security Audit) fail. The
 # "Sync uv.lock" step below regenerates uv.lock on the release PR branch so those
 # checks pass.

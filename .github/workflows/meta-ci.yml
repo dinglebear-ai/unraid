@@ -45,9 +45,12 @@ jobs:
       - name: Install PyYAML
         run: python3 -m pip install --quiet pyyaml
 
-      # release-please bumps the .plg versions in the same PR that edits
-      # .release-please-manifest.json, which is in this filter — so this is the
-      # gate that sees a version regression before it can be tagged.
+      - name: Validate release manager, versions, and tag contract
+        run: python3 ./.github/scripts/release_contract.py
+
+      - name: Test release tooling
+        run: python3 -m unittest discover -s .github/scripts/tests -p 'test_*.py'
+
       - name: Unraid .plg versions must not regress under string comparison
         run: ./.github/scripts/check-plg-version-ordering.sh
 
