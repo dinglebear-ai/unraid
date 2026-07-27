@@ -7,7 +7,7 @@ resolver = "2"
 
 [package]
 name = "unraid-rmcp"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 rust-version = "1.90"
 categories = ["command-line-utilities", "development-tools"]
