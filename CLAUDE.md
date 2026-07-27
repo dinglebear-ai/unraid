@@ -41,7 +41,10 @@ The Python server's detailed dev guide is `unraid-py/CLAUDE.md`.
   `unraid-py` and `unraid-rs`; its `bootstrap-sha` pins history to the monorepo
   consolidation boundary so imported `Release-As:` directives cannot poison new
   release PRs. Python uses unprefixed `vX.Y.Z` tags and Rust uses
-  `unraid-rs-vX.Y.Z`. Incus and Codex use `.github/scripts/plugin_calver.py` and
+  `unraid-rs-vX.Y.Z`. Rust release-please must update both `version` and
+  `binaryVersion` in the npm launcher; `rust-release.yml` publishes npm through
+  GitHub-hosted OIDC trusted publishing. Incus and Codex use
+  `.github/scripts/plugin_calver.py` and
   fixed-width `YYYYMMDD.NNN` versions with `incus-v*` / `codex-v*` tags. Unraid
   compares plugin versions as raw strings, so fixed width is mandatory.
   `.github/scripts/release_contract.py` and `check-plg-version-ordering.sh` run in

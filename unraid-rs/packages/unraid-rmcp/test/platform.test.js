@@ -5,9 +5,11 @@ const { binaryVersion, downloadUrl, releaseBaseUrl, releaseVersion, targetFor } 
 const { binaryVersion: pinnedBinaryVersion } = require("../package.json");
 test("maps supported platforms to release assets", () => {
   assert.deepEqual(targetFor("linux", "x64"), { asset: "runraid-x86_64.tar.gz", binary: "runraid" });
-  assert.deepEqual(targetFor("win32", "x64"), { asset: "runraid-windows-x86_64.tar.gz", binary: "runraid.exe" });
 });
-test("rejects unsupported platforms", () => { assert.throws(() => targetFor("darwin", "arm64"), /Unsupported platform/); });
+test("rejects unsupported platforms", () => {
+  assert.throws(() => targetFor("win32", "x64"), /Unsupported platform/);
+  assert.throws(() => targetFor("darwin", "arm64"), /Unsupported platform/);
+});
 test("uses pinned binary version as the binary tag by default", () => {
   assert.equal(binaryVersion(), pinnedBinaryVersion);
   assert.equal(releaseVersion({}), `unraid-rs-v${pinnedBinaryVersion}`);

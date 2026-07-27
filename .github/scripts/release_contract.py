@@ -93,14 +93,37 @@ def validate_release_please(repo_root: Path, errors: list[str]) -> list[ReleaseU
         "unraid-rs must produce unraid-rs-vX.Y.Z tags",
         errors,
     )
+    rust_extra_files = {
+        (entry.get("path"), entry.get("jsonpath"))
+        for entry in rust_cfg.get("extra-files", [])
+        if isinstance(entry, dict)
+    }
+    assert_true(
+        ("packages/unraid-rmcp/package.json", "$.binaryVersion") in rust_extra_files,
+        "release-please must update the npm launcher's binaryVersion",
+        errors,
+    )
 
     pyproject = tomllib.loads((repo_root / "unraid-py/pyproject.toml").read_text())
     cargo = tomllib.loads((repo_root / "unraid-rs/Cargo.toml").read_text())
+    npm_package = json.loads(
+        (repo_root / "unraid-rs/packages/unraid-rmcp/package.json").read_text()
+    )
     versions = {
         "unraid-py": pyproject["project"]["version"],
         "unraid-rs": cargo["package"]["version"],
     }
     tag_prefixes = {"unraid-py": "v", "unraid-rs": "unraid-rs-v"}
+    assert_true(
+        npm_package.get("version") == versions["unraid-rs"],
+        f"npm package version {npm_package.get('version')} != Rust {versions['unraid-rs']}",
+        errors,
+    )
+    assert_true(
+        npm_package.get("binaryVersion") == versions["unraid-rs"],
+        f"npm binaryVersion {npm_package.get('binaryVersion')} != Rust {versions['unraid-rs']}",
+        errors,
+    )
 
     units: list[ReleaseUnit] = []
     for name in sorted(RELEASE_PLEASE_PACKAGES):
