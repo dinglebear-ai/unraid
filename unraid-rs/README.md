@@ -411,8 +411,10 @@ CLI shim      (src/cli.rs)           argv -> service -> stdout
   launcher.
 - The npm package name is `unraid-rmcp`; binary aliases are `unraid-rmcp` and
   `runraid`. Publishing runs from `.github/workflows/rust-release.yml` on a
-  GitHub-hosted runner using npm OIDC trusted publishing.
-- Docker/OCI metadata uses `ghcr.io/dinglebear-ai/runraid:<version>`.
+  GitHub-hosted runner using npm OIDC trusted publishing. Automatic npm
+  publishing is enabled only when the `NPM_TRUSTED_PUBLISHING_ENABLED` repository
+  variable is `true`.
+- Docker/OCI metadata uses `ghcr.io/dinglebear-ai/unraid-rmcp:<version>`.
 - `agents/unraid-rs/.mcp.json` must launch `npx -y unraid-rmcp mcp` so stdio
   clients start the MCP transport rather than the HTTP server.
 - The root README is curated. `docs/INVENTORY.md` is the curated inventory for
