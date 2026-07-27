@@ -1,6 +1,6 @@
 {
   "name": "runraid",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Unraid NAS/homelab monitoring via MCP",
   "author": {
     "name": "jmagar"

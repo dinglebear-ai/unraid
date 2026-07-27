@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5](https://github.com/dinglebear-ai/unraid-mcp/compare/unraid-rs-v0.2.4...unraid-rs-v0.2.5) (2026-07-27)
+
+
+### Bug Fixes
+
+* repair npm release contract ([dc7b05b](https://github.com/dinglebear-ai/unraid-mcp/commit/dc7b05bdffc5a412a1a907ef9ea523a1b65239fd))
+* repair Rust container publication ([30836dc](https://github.com/dinglebear-ai/unraid-mcp/commit/30836dcdf14e5e0067793884ee95c5d65b880f99))
+
 ## [0.2.4](https://github.com/dinglebear-ai/unraid-mcp/compare/unraid-rs-v0.2.3...unraid-rs-v0.2.4) (2026-07-27)
 
 
