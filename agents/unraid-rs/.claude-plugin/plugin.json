@@ -1,6 +1,6 @@
 {
   "name": "runraid",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Unraid NAS/homelab monitoring via MCP",
   "author": {
     "name": "jmagar"
@@ -18,7 +18,7 @@
     "server_url": {
       "type": "string",
       "title": "Server URL",
-      "description": "Base URL the MCP client connects to. Keep the default http://localhost:40010 when Claude Code runs on the same machine as the unraid-rmcp server. Change to e.g. http://nas:40010 or https://unraid.example.com when connecting to a remote instance. Do NOT append /mcp \u2014 the plugin adds it.",
+      "description": "Base URL the MCP client connects to. Keep the default http://localhost:40010 when Claude Code runs on the same machine as the unraid-rmcp server. Change to e.g. http://nas:40010 or https://unraid.example.com when connecting to a remote instance. Do NOT append /mcp — the plugin adds it.",
       "required": true,
       "default": "http://localhost:40010"
     },
@@ -92,7 +92,7 @@
     "unraid_api_key": {
       "type": "string",
       "title": "Unraid API key",
-      "description": "API key for the Unraid GraphQL endpoint (x-api-key header). Generate in Unraid UI: Settings \u2192 Management Access \u2192 API Keys.",
+      "description": "API key for the Unraid GraphQL endpoint (x-api-key header). Generate in Unraid UI: Settings → Management Access → API Keys.",
       "sensitive": true,
       "required": false
     },

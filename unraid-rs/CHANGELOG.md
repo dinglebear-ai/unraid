@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4](https://github.com/dinglebear-ai/unraid-mcp/compare/unraid-rs-v0.2.3...unraid-rs-v0.2.4) (2026-07-27)
+
+
+### Bug Fixes
+
+* stabilize releases and destructive elicitation ([941d445](https://github.com/dinglebear-ai/unraid-mcp/commit/941d445a4662db6c822140ed5073a5929c2075e4))
+
+
+### Documentation
+
+* sync npm launcher README ([734c6c5](https://github.com/dinglebear-ai/unraid-mcp/commit/734c6c52953ff9e0216af75fba4a1c483e9e04ae))
+
 ## [0.2.3](https://github.com/dinglebear-ai/runraid/compare/v0.2.2...v0.2.3) (2026-07-23)
 
 
