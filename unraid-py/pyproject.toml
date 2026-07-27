@@ -10,7 +10,7 @@ build-backend = "hatchling.build"
 # ============================================================================
 [project]
 name = "unraid-mcp"
-version = "2.7.0"
+version = "2.8.0"
 description = "MCP Server for Unraid API - provides tools to interact with an Unraid server's GraphQL API"
 readme = "README.md"
 license = "MIT"
