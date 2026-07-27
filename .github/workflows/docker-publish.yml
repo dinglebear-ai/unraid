@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+  # This workflow must run for every PR because branch protection requires the
+  # Container Artifact Smoke & Scan check. The expensive image validation is
+  # conditionally skipped below when no container input changed, while an
+  # always-present gate reports the required status.
   pull_request:
     branches: [main]
-    # The PR validate job runs Trivy (~30 min); only run it when the image's
-    # own source changes. (paths can't be scoped to push branches-vs-tags, so
-    # the main-push edge stays unfiltered to keep tag-triggered publish working.)
-    paths: ["unraid-py/**", "Dockerfile", ".github/workflows/docker-publish.yml"]
   workflow_dispatch:
 
 permissions:
@@ -32,9 +32,38 @@ defaults:
     working-directory: unraid-py
 
 jobs:
-  validate:
-    name: Container Artifact Smoke & Scan
+  container_changes:
+    name: Detect Container Inputs
     if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      image_changed: ${{ steps.diff.outputs.image_changed }}
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Detect container input changes
+        id: diff
+        working-directory: ${{ github.workspace }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
+               unraid-py Dockerfile .github/workflows/docker-publish.yml; then
+            echo "image_changed=false" >> "$GITHUB_OUTPUT"
+            echo "No container inputs changed; heavy validation will be skipped."
+          else
+            echo "image_changed=true" >> "$GITHUB_OUTPUT"
+            echo "Container inputs changed; heavy validation is required."
+          fi
+
+  validate_image:
+    name: Build and Scan Container Artifact
+    needs: container_changes
+    if: github.event_name == 'pull_request' && needs.container_changes.outputs.image_changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -103,6 +132,35 @@ jobs:
           exit-code: "1"
           severity: CRITICAL,HIGH
           ignore-unfixed: true
+
+  container_gate:
+    name: Container Artifact Smoke & Scan
+    needs: [container_changes, validate_image]
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce conditional container validation
+        working-directory: ${{ github.workspace }}
+        env:
+          CHANGES_RESULT: ${{ needs.container_changes.result }}
+          IMAGE_CHANGED: ${{ needs.container_changes.outputs.image_changed }}
+          VALIDATION_RESULT: ${{ needs.validate_image.result }}
+        run: |
+          test "$CHANGES_RESULT" = "success"
+          case "$IMAGE_CHANGED" in
+            true)
+              test "$VALIDATION_RESULT" = "success"
+              echo "Container inputs changed and the image smoke/scan passed."
+              ;;
+            false)
+              test "$VALIDATION_RESULT" = "skipped"
+              echo "No container inputs changed; required check passes without rebuilding."
+              ;;
+            *)
+              echo "Invalid image_changed output: $IMAGE_CHANGED" >&2
+              exit 1
+              ;;
+          esac
 
   publish:
     name: Publish Attested Container
