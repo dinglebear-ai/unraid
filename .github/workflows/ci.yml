@@ -1,16 +1,16 @@
 name: CI
 
-# PATH-FILTER CONTRACT — do not narrow without reading this.
-# unraid-py/tests/ owns REPO-WIDE policy suites, not just Python tests:
+# REQUIRED-CHECK CONTRACT — do not add a pull_request path filter.
+# Branch protection requires this workflow's named checks on every PR, regardless
+# of which component changed. Push runs remain path-scoped to avoid duplicate work.
+# unraid-py/tests/ also owns REPO-WIDE policy suites, not just Python tests:
 #   * test_supply_chain_policy.py globs ALL .github/workflows/*.yml and enforces
 #     SHA-pinned actions, the openwiki job/permission split, and release pinning.
 #   * test_schema_drift_workflow.py asserts on the drift workflows.
 #   * the version-sync job reads agents/unraid-py/{.claude,.codex}-plugin/plugin.json.
-# Those gates only run when this workflow runs, so `.github/workflows/**` and
-# `agents/unraid-py/**` MUST stay in the filter — otherwise a floating `@v4` added
-# to another component's workflow, or a plugin-manifest version desync, merges
-# green with no error surface. (This regressed once: the consolidation added a
-# paths: filter here where previously there was none.)
+# Those gates only run when this workflow runs. Every pull request therefore runs
+# this workflow; the push filter must continue to include shared workflow and
+# Python-agent metadata so direct branch pushes receive the same policy coverage.
 on:
   push:
     branches: ["main", "feat/**", "fix/**"]
@@ -20,10 +20,6 @@ on:
       - ".github/workflows/**"
   pull_request:
     branches: ["main"]
-    paths:
-      - "unraid-py/**"
-      - "agents/unraid-py/**"
-      - ".github/workflows/**"
   schedule:
     # Weekly blocking live smoke on a tailnet-connected self-hosted runner.
     - cron: "23 7 * * 1"
@@ -39,8 +35,7 @@ concurrency:
   cancel-in-progress: true
 
 # The Python package now lives in unraid-py/; every run: step executes there.
-# Secret scanning was extracted to secret-scan.yml (unfiltered) so this
-# workflow's unraid-py/** path filter cannot gate it off.
+# Secret scanning remains extracted to the unfiltered secret-scan.yml workflow.
 defaults:
   run:
     working-directory: unraid-py
