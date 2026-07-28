@@ -6,7 +6,7 @@ Day-to-day development guide for unraid-mcp.
 
 ```bash
 # Clone
-git clone https://github.com/jmagar/unraid-mcp.git
+git clone https://github.com/dinglebear-ai/unraid.git
 cd unraid-mcp
 
 # Install all dependencies (including dev)

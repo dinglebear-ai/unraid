@@ -3,14 +3,14 @@
   "version": "0.2.5",
   "description": "Node launcher for the Unraid Rust MCP server and runraid CLI for NAS, Docker, VM, and storage workflows.",
   "license": "MIT",
-  "homepage": "https://github.com/dinglebear-ai/unraid-mcp#readme",
+  "homepage": "https://github.com/dinglebear-ai/unraid#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dinglebear-ai/unraid-mcp.git",
+    "url": "git+https://github.com/dinglebear-ai/unraid.git",
     "directory": "packages/unraid-rmcp"
   },
   "bugs": {
-    "url": "https://github.com/dinglebear-ai/unraid-mcp/issues"
+    "url": "https://github.com/dinglebear-ai/unraid/issues"
   },
   "bin": {
     "unraid-rmcp": "bin/runraid.js",

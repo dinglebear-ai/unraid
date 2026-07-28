@@ -80,7 +80,7 @@ Once pushed to GitHub, users install via:
 
 ```bash
 # Add the marketplace
-/plugin marketplace add jmagar/unraid-mcp
+/plugin marketplace add dinglebear-ai/unraid
 
 # Install the Unraid plugin
 /plugin install unraid-mcp@unraid-mcp
@@ -104,10 +104,10 @@ Install from a specific branch or commit:
 
 ```bash
 # From specific branch
-/plugin marketplace add jmagar/unraid-mcp#main
+/plugin marketplace add dinglebear-ai/unraid#main
 
 # From specific commit
-/plugin marketplace add jmagar/unraid-mcp#abc123
+/plugin marketplace add dinglebear-ai/unraid#abc123
 ```
 
 ## Validation Script
@@ -240,8 +240,8 @@ Users with the plugin installed will see the update available and can upgrade:
 
 ## Support
 
-- **Repository:** https://github.com/jmagar/unraid-mcp
-- **Issues:** https://github.com/jmagar/unraid-mcp/issues
+- **Repository:** https://github.com/dinglebear-ai/unraid
+- **Issues:** https://github.com/dinglebear-ai/unraid/issues
 - **Destructive Actions:** `docs/DESTRUCTIVE_ACTIONS.md`
 
 - Source path accuracy

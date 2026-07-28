@@ -88,7 +88,7 @@ existing deployment config.
 | Path | Command | Best for | Notes |
 |---|---|---|---|
 | npm / npx | `npx -y unraid-rmcp --help` | Local MCP clients and quick trials. | Downloads the matching `runraid` binary from GitHub Releases. |
-| Release installer | `curl -fsSL https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/unraid-rs/scripts/install.sh \| bash` | Host installs without Node. | Installs `runraid` for linux/amd64. |
+| Release installer | `curl -fsSL https://raw.githubusercontent.com/dinglebear-ai/unraid/main/unraid-rs/scripts/install.sh \| bash` | Host installs without Node. | Installs `runraid` for linux/amd64. |
 | Docker / Compose | `docker compose up -d` | Shared HTTP MCP deployments. | Reads `.env` and exposes container port `40010`. |
 | Build from source | `cargo build --release` | Development and audits. | Produces `target/release/runraid`. |
 | Plugin | `claude plugin install agents/unraid-rs` | Claude Code local plugin setup from this checkout. | Uses the packaged setup hook, skill, and local runtime metadata. |
@@ -116,7 +116,7 @@ behavior only when testing packaging:
 ### Build From Source
 
 ```bash
-git clone https://github.com/dinglebear-ai/unraid-mcp
+git clone https://github.com/dinglebear-ai/unraid
 cd unraid-mcp/unraid-rs
 cargo build --release
 ./target/release/runraid --help
