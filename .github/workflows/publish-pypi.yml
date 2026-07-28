@@ -271,11 +271,15 @@ jobs:
             "https://registry.modelcontextprotocol.io/v0/servers/tv.tootie%2Funraid-mcp/versions/${version}" |
             jq -e --arg version "$version" '.server.version == $version and .server.packages[0].version == $version'
       - name: Wait for matching GHCR release and latest digests
+        env:
+          # Pinned, not derived from github.repository: the repo was renamed
+          # unraid-mcp -> unraid and GHCR paths do not follow rename redirects.
+          GHCR_IMAGE: ${{ github.repository_owner }}/unraid-mcp
         run: |
           version="${RELEASE_TAG#v}"
           for _ in {1..30}; do
-            version_digest="$(docker buildx imagetools inspect "ghcr.io/${GITHUB_REPOSITORY}:${version}" --format '{{json .Manifest}}' 2>/dev/null | jq -r '.digest // empty')"
-            latest_digest="$(docker buildx imagetools inspect "ghcr.io/${GITHUB_REPOSITORY}:latest" --format '{{json .Manifest}}' 2>/dev/null | jq -r '.digest // empty')"
+            version_digest="$(docker buildx imagetools inspect "ghcr.io/${GHCR_IMAGE}:${version}" --format '{{json .Manifest}}' 2>/dev/null | jq -r '.digest // empty')"
+            latest_digest="$(docker buildx imagetools inspect "ghcr.io/${GHCR_IMAGE}:latest" --format '{{json .Manifest}}' 2>/dev/null | jq -r '.digest // empty')"
             if [[ -n "$version_digest" && "$version_digest" = "$latest_digest" ]]; then
               echo "GHCR ${version} and latest reconcile to ${version_digest}."
               exit 0
