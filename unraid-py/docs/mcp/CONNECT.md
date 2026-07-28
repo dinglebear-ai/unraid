@@ -7,7 +7,7 @@ How to connect to the unraid-mcp server from every supported client and transpor
 ### Install from marketplace
 
 ```bash
-/plugin marketplace add jmagar/unraid-mcp
+/plugin marketplace add dinglebear-ai/unraid
 /plugin install unraid-mcp@unraid-mcp
 ```
 
@@ -77,7 +77,7 @@ over `https://`. If the server requires a Bearer token, append
 The repo ships a Codex marketplace manifest at `.agents/plugins/marketplace.json`:
 
 ```bash
-codex plugin marketplace add jmagar/unraid-mcp
+codex plugin marketplace add dinglebear-ai/unraid
 # then enable `unraid-mcp@unraid-mcp` from the Codex `/plugins` view
 ```
 

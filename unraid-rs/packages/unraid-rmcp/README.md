@@ -14,14 +14,16 @@ direct shell commands.
 `UNRAID_RMCP_HOST=127.0.0.1 npx -y unraid-rmcp serve mcp` -> call `tools/call`
 with `{"action":"server"}`.
 
-**Status:** operational RMCP upstream-client server. Read-only action surface;
-no Unraid mutations are exposed. HTTP MCP supports loopback dev mode, static
-bearer tokens, and Google OAuth through `lab-auth`. Release binaries and Docker
-images target linux/amd64 only.
+**Status:** operational RMCP upstream-client server with the full Unraid GraphQL
+query and mutation surface. Read actions require `unraid:read`; writes require
+`unraid:admin`. Destructive operations use MCP form elicitation and fail closed
+when the client cannot obtain user approval. HTTP MCP supports loopback dev mode,
+static bearer tokens, and Google OAuth through `lab-auth`. Release binaries and
+Docker images target linux/amd64 only.
 
-**Not for:** replacing the Unraid web UI, mutating array/docker/VM state,
-running arbitrary shell commands, storing API keys for callers, multi-tenant
-isolation, or passing Unraid API keys through MCP tool arguments.
+**Not for:** replacing the Unraid web UI, running arbitrary shell commands,
+storing API keys for callers, multi-tenant isolation, or passing Unraid API keys
+through MCP tool arguments.
 
 ## Contents
 
@@ -67,9 +69,10 @@ existing deployment config.
 
 - Read Unraid array state, parity status, disk health, SMART summaries, and
   capacity.
-- Read Docker containers, container logs, VMs, shares, notifications, services,
-  network URLs, live metrics, config vars, registration, flash device details,
-  UPS, plugins, parity history, rclone, remote access, and Unraid Connect.
+- Manage array, Docker, VM, notification, plugin, API-key, rclone, onboarding,
+  settings, remote-access, and Unraid Connect state through GraphQL mutations.
+- Require MCP form elicitation for destructive operations while allowing ordinary
+  writes to proceed after scope authorization.
 - Provide pagination/filtering for MCP list actions and output truncation for
   large MCP responses.
 - Expose the `server_summary` prompt and `unraid://schema/mcp-tool` schema
@@ -78,14 +81,14 @@ existing deployment config.
 
 | This repo owns | Unraid owns | Explicitly out of scope |
 |---|---|---|
-| MCP/CLI projection, GraphQL query selection, response shaping, pagination, auth policy, setup checks, prompt/resource metadata, and read-only safety. | NAS state, array/docker/VM behavior, GraphQL schema, Unraid API key issuance, remote access, and Connect state. | Mutations, shell execution, controller UI replacement, credential brokerage, background monitoring, multi-tenant sandboxing, and direct filesystem writes. |
+| MCP/CLI projection, GraphQL operation selection, response shaping, pagination, auth policy, elicitation policy, setup checks, and prompt/resource metadata. | NAS state, array/docker/VM behavior, GraphQL schema, Unraid API key issuance, remote access, and Connect state. | Arbitrary shell execution, controller UI replacement, credential brokerage, background monitoring, multi-tenant sandboxing, and direct local filesystem writes. |
 
 ## Install
 
 | Path | Command | Best for | Notes |
 |---|---|---|---|
 | npm / npx | `npx -y unraid-rmcp --help` | Local MCP clients and quick trials. | Downloads the matching `runraid` binary from GitHub Releases. |
-| Release installer | `curl -fsSL https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/unraid-rs/scripts/install.sh \| bash` | Host installs without Node. | Installs `runraid` for linux/amd64. |
+| Release installer | `curl -fsSL https://raw.githubusercontent.com/dinglebear-ai/unraid/main/unraid-rs/scripts/install.sh \| bash` | Host installs without Node. | Installs `runraid` for linux/amd64. |
 | Docker / Compose | `docker compose up -d` | Shared HTTP MCP deployments. | Reads `.env` and exposes container port `40010`. |
 | Build from source | `cargo build --release` | Development and audits. | Produces `target/release/runraid`. |
 | Plugin | `claude plugin install agents/unraid-rs` | Claude Code local plugin setup from this checkout. | Uses the packaged setup hook, skill, and local runtime metadata. |
@@ -113,7 +116,7 @@ behavior only when testing packaging:
 ### Build From Source
 
 ```bash
-git clone https://github.com/dinglebear-ai/unraid-mcp
+git clone https://github.com/dinglebear-ai/unraid
 cd unraid-mcp/unraid-rs
 cargo build --release
 ./target/release/runraid --help
@@ -367,15 +370,19 @@ HTTP MCP auth policy:
 | Mounted OAuth | `UNRAID_RMCP_AUTH_MODE=oauth` | Uses Google OAuth/JWT through `lab-auth`. |
 | Trusted gateway | `UNRAID_NOAUTH=true` | Assumes a reverse proxy or gateway already enforced auth. |
 
-All data actions are read-only. OAuth exposes `unraid:read` and `unraid:admin`
-scopes, but no mutating Unraid action is currently registered.
+Read actions require `unraid:read`; mutating actions require `unraid:admin`.
+Configured static bearer tokens are operator credentials and receive admin scope.
+OAuth clients receive the scopes granted by the authorization flow.
 
 ## Safety And Trust Model
 
 - Unraid API keys are loaded from config/env only.
-- MCP callers select read actions and filters, not upstream credentials.
-- No mutation, shell execution, filesystem write, Docker control, VM control, or
-  array-control action is exposed.
+- MCP callers select actions and arguments, not upstream credentials.
+- Destructive actions issue an MCP form-elicitation request before dispatch. A
+  decline, cancellation, malformed response, or client without elicitation support
+  stops the operation before the GraphQL request is sent.
+- Ordinary mutations remain directly available after `unraid:admin` authorization;
+  the server does not add a second confirmation parameter or disable writes.
 - `log_file` reads through the Unraid GraphQL API, not arbitrary local files.
 - Non-loopback HTTP deployments must use bearer auth, OAuth, or a trusted
   authenticated gateway.
@@ -385,24 +392,29 @@ scopes, but no mutating Unraid action is currently registered.
 ## Architecture
 
 ```text
-GraphQL queries (src/graphql.rs)  typed/read-only query construction
+GraphQL operations (src/graphql.rs)  queries + mutations
         |
-UnraidService (src/app.rs)       action behavior and response shaping
+UnraidService (src/app.rs)           action behavior and response shaping
         |
-MCP shim      (src/mcp/tools.rs) JSON args -> service -> Value
-CLI shim      (src/cli.rs)       argv -> service -> stdout
+MCP scope + elicitation              authorization and destructive approval
+        |
+MCP shim      (src/mcp/tools.rs)     JSON args -> service -> Value
+CLI shim      (src/cli.rs)           argv -> service -> stdout
 ```
 
 ## Distribution Contract
 
-- `Cargo.toml`, `Cargo.lock`, `packages/unraid-rmcp/package.json`,
-  `.release-please-manifest.json`, and `server.json` must agree on the released
-  version.
+- `Cargo.toml`, `Cargo.lock`, both `version` and `binaryVersion` in
+  `packages/unraid-rmcp/package.json`, `.release-please-manifest.json`, agent
+  manifests, and `server.json` must agree on the released version.
 - GitHub Releases publish the linux/amd64 `runraid` binary consumed by the npm
   launcher.
 - The npm package name is `unraid-rmcp`; binary aliases are `unraid-rmcp` and
-  `runraid`.
-- Docker/OCI metadata uses `ghcr.io/dinglebear-ai/runraid:<version>`.
+  `runraid`. Publishing runs from `.github/workflows/rust-release.yml` on a
+  GitHub-hosted runner using npm OIDC trusted publishing. Automatic npm
+  publishing is enabled only when the `NPM_TRUSTED_PUBLISHING_ENABLED` repository
+  variable is `true`.
+- Docker/OCI metadata uses `ghcr.io/dinglebear-ai/unraid-rmcp:<version>`.
 - `agents/unraid-rs/.mcp.json` must launch `npx -y unraid-rmcp mcp` so stdio
   clients start the MCP transport rather than the HTTP server.
 - The root README is curated. `docs/INVENTORY.md` is the curated inventory for
