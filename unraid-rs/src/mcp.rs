@@ -4,6 +4,7 @@ use lab_auth::AuthLayer;
 
 use crate::{app::UnraidService, config::McpConfig, observability::Counters};
 
+mod elicitation;
 pub(crate) mod host_filter;
 mod prompts;
 mod rmcp_server;
@@ -71,7 +72,7 @@ pub fn build_auth_layer(
             AuthLayer::new()
                 .with_static_token(static_token)
                 .with_auth_state(auth_state.clone())
-                .with_static_token_scopes(vec!["unraid:read".into()])
+                .with_static_token_scopes(vec!["unraid:admin".into()])
                 .with_resource_url(resource_url)
                 .with_allow_session_cookie(false),
         ),

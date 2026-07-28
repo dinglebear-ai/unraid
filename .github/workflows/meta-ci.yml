@@ -37,7 +37,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Full tag history — check-plg-version-ordering.sh compares against
           # every existing incus-v*/codex-v* tag.
@@ -45,9 +45,12 @@ jobs:
       - name: Install PyYAML
         run: python3 -m pip install --quiet pyyaml
 
-      # release-please bumps the .plg versions in the same PR that edits
-      # .release-please-manifest.json, which is in this filter — so this is the
-      # gate that sees a version regression before it can be tagged.
+      - name: Validate release manager, versions, and tag contract
+        run: python3 ./.github/scripts/release_contract.py
+
+      - name: Test release tooling
+        run: python3 -m unittest discover -s .github/scripts/tests -p 'test_*.py'
+
       - name: Unraid .plg versions must not regress under string comparison
         run: ./.github/scripts/check-plg-version-ordering.sh
 

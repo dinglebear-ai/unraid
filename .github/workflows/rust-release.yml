@@ -11,12 +11,33 @@ name: rust-release
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing unraid-rs-vX.Y.Z release tag to publish
+        required: true
+        type: string
+      source_ref:
+        description: Source ref containing corrected release metadata
+        required: true
+        default: main
+        type: string
+      publish_npm:
+        description: Publish the npm launcher (requires configured npm trusted publishing)
+        required: true
+        default: false
+        type: boolean
+      publish_docker:
+        description: Publish the Rust container image
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
 concurrency:
-  group: rust-release-${{ github.event.release.tag_name }}
+  group: rust-release-${{ github.event.release.tag_name || inputs.tag }}
   cancel-in-progress: false
 
 env:
@@ -24,8 +45,8 @@ env:
   CARGO_TERM_COLOR: always
   REGISTRY: ghcr.io
   # Distinct from the Python server image (ghcr.io/<owner>/unraid-mcp) to avoid
-  # a tag collision.
-  RUST_IMAGE: ghcr.io/${{ github.repository_owner }}/runraid
+  # a tag collision and owned by this monorepo rather than the legacy runraid repo.
+  RUST_IMAGE: ghcr.io/${{ github.repository_owner }}/unraid-rmcp
 
 defaults:
   run:
@@ -33,7 +54,7 @@ defaults:
 
 jobs:
   build:
-    if: startsWith(github.event.release.tag_name, 'unraid-rs-v')
+    if: github.event_name == 'release' && startsWith(github.event.release.tag_name, 'unraid-rs-v')
     runs-on: [self-hosted, unraid]
     permissions:
       contents: write
@@ -42,7 +63,7 @@ jobs:
     env:
       TAG: ${{ github.event.release.tag_name }}
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.release.tag_name }}
 
@@ -81,21 +102,35 @@ jobs:
 
   npm:
     needs: build
-    if: startsWith(github.event.release.tag_name, 'unraid-rs-v')
-    runs-on: [self-hosted, unraid]
+    if: >-
+      always() &&
+      (
+        (github.event_name == 'release' && needs.build.result == 'success' &&
+          vars.NPM_TRUSTED_PUBLISHING_ENABLED == 'true' &&
+          startsWith(github.event.release.tag_name, 'unraid-rs-v')) ||
+        (github.event_name == 'workflow_dispatch' && inputs.publish_npm &&
+          startsWith(inputs.tag, 'unraid-rs-v'))
+      )
+    # npm trusted publishing supports GitHub-hosted runners only.
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     env:
-      TAG: ${{ github.event.release.tag_name }}
+      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
+      SOURCE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || github.event.release.tag_name }}
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.SOURCE_REF }}
+          persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Install npm with trusted-publishing support
+        run: npm install --global npm@11.5.1
 
       - name: Verify npm package version matches release tag
         id: npm-version
@@ -114,34 +149,42 @@ jobs:
         run: npm run check --prefix packages/unraid-rmcp
 
       - name: Publish npm package if not already present
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
           version="${{ steps.npm-version.outputs.version }}"
           if npm view "unraid-rmcp@${version}" version >/dev/null 2>&1; then
             echo "unraid-rmcp@${version} already published; skipping."
           else
-            npm publish --provenance --access public ./packages/unraid-rmcp
+            # OIDC trusted publishing generates provenance automatically.
+            npm publish --access public ./packages/unraid-rmcp
           fi
 
   docker:
     needs: build
-    if: startsWith(github.event.release.tag_name, 'unraid-rs-v')
+    if: >-
+      always() &&
+      (
+        (github.event_name == 'release' && needs.build.result == 'success' &&
+          startsWith(github.event.release.tag_name, 'unraid-rs-v')) ||
+        (github.event_name == 'workflow_dispatch' && inputs.publish_docker &&
+          startsWith(inputs.tag, 'unraid-rs-v'))
+      )
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     env:
-      TAG: ${{ github.event.release.tag_name }}
+      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
+      SOURCE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || github.event.release.tag_name }}
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.SOURCE_REF }}
+          persist-credentials: false
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        uses: docker/login-action@abd2ef45e78c5afb21d64d4ca52ee8550d9572c7 # v4.5.1
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}

@@ -10,7 +10,7 @@ build-backend = "hatchling.build"
 # ============================================================================
 [project]
 name = "unraid-mcp"
-version = "2.7.0"
+version = "2.8.0"
 description = "MCP Server for Unraid API - provides tools to interact with an Unraid server's GraphQL API"
 readme = "README.md"
 license = "MIT"
@@ -100,12 +100,12 @@ dependencies = [
 # Project URLs
 # ============================================================================
 [project.urls]
-Homepage = "https://github.com/jmagar/unraid-mcp"
-Documentation = "https://github.com/jmagar/unraid-mcp#readme"
-Repository = "https://github.com/jmagar/unraid-mcp"
-Issues = "https://github.com/jmagar/unraid-mcp/issues"
-Changelog = "https://github.com/jmagar/unraid-mcp/releases"
-Source = "https://github.com/jmagar/unraid-mcp"
+Homepage = "https://github.com/dinglebear-ai/unraid"
+Documentation = "https://github.com/dinglebear-ai/unraid#readme"
+Repository = "https://github.com/dinglebear-ai/unraid"
+Issues = "https://github.com/dinglebear-ai/unraid/issues"
+Changelog = "https://github.com/dinglebear-ai/unraid/releases"
+Source = "https://github.com/dinglebear-ai/unraid"
 
 # ============================================================================
 # Entry Points

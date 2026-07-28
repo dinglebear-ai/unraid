@@ -31,6 +31,19 @@ fn jsonrpc_body(method: &str) -> Vec<u8> {
     .unwrap()
 }
 
+fn tool_call_body(arguments: serde_json::Value) -> Vec<u8> {
+    serde_json::to_vec(&serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+            "name": "unraid",
+            "arguments": arguments,
+        },
+    }))
+    .unwrap()
+}
+
 async fn get_status(app: axum::Router, uri: &str) -> StatusCode {
     let req = Request::builder()
         .method("GET")
@@ -339,4 +352,65 @@ async fn jwks_response_body_has_keys_array() {
         .as_array()
         .expect("JWKS must have a 'keys' array");
     assert!(!keys.is_empty(), "JWKS 'keys' array must be non-empty");
+}
+
+// ── bearer mutation scope + elicitation contract ─────────────────────────────
+
+/// A configured static bearer token is an operator credential. It must carry
+/// unraid:admin so the advertised mutation surface is reachable; ordinary writes
+/// remain direct and fail here only because the test upstream is intentionally down.
+#[tokio::test]
+async fn static_bearer_token_reaches_ordinary_write_dispatch() {
+    let state = testing::bearer_state("admin-token");
+    let (status, value) = post_mcp(
+        router(state),
+        tool_call_body(serde_json::json!({
+            "action": "create_notification",
+            "title": "Test",
+            "subject": "Bearer mutation scope",
+            "description": "Contract test",
+            "importance": "INFO"
+        })),
+        Some("admin-token"),
+    )
+    .await;
+
+    assert_eq!(status, StatusCode::OK);
+    let body = value.to_string();
+    assert!(
+        !body.contains("forbidden") && !body.contains("requires scope: unraid:admin"),
+        "static bearer token must carry admin scope; got: {body}"
+    );
+    assert!(
+        body.contains("upstream unreachable"),
+        "ordinary write should reach dispatch and fail only at the stub upstream; got: {body}"
+    );
+}
+
+/// Destructive writes still require MCP elicitation after bearer authorization.
+/// A raw HTTP caller that did not advertise form elicitation must fail closed
+/// before the GraphQL mutation is attempted.
+#[tokio::test]
+async fn destructive_write_without_elicitation_capability_fails_closed() {
+    let state = testing::bearer_state("admin-token");
+    let (status, value) = post_mcp(
+        router(state),
+        tool_call_body(serde_json::json!({
+            "action": "vm_reset",
+            "id": "vm-1"
+        })),
+        Some("admin-token"),
+    )
+    .await;
+
+    assert_eq!(status, StatusCode::OK);
+    let body = value.to_string();
+    assert!(
+        body.contains("requires MCP form elicitation"),
+        "destructive write must require client elicitation capability; got: {body}"
+    );
+    assert!(
+        !body.contains("upstream unreachable"),
+        "destructive write must stop before GraphQL dispatch; got: {body}"
+    );
 }

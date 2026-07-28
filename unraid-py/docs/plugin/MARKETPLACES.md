@@ -4,10 +4,10 @@
 
 | Marketplace | Identifier | Install method |
 |-------------|-----------|----------------|
-| Claude Plugin Marketplace | `jmagar/unraid-mcp` | `/plugin install unraid-mcp@unraid-mcp` |
+| Claude Plugin Marketplace | `dinglebear-ai/unraid` | `/plugin install unraid-mcp@unraid-mcp` |
 | MCP Registry | `tv.tootie/unraid-mcp` | Auto-discovery by MCP clients |
 | PyPI | `unraid-mcp` | `pip install unraid-mcp` or `uvx unraid-mcp` |
-| GitHub Container Registry | `ghcr.io/jmagar/unraid-mcp` | `docker pull ghcr.io/jmagar/unraid-mcp` |
+| GitHub Container Registry | `ghcr.io/dinglebear-ai/unraid` | `docker pull ghcr.io/dinglebear-ai/unraid` |
 
 ## Claude Plugin Marketplace
 
@@ -18,7 +18,7 @@ unraid-mcp ships its own Claude Code marketplace manifest at `.claude-plugin/mar
   "unraid-mcp": {
     "source": {
       "type": "git",
-      "url": "https://github.com/jmagar/unraid-mcp"
+      "url": "https://github.com/dinglebear-ai/unraid"
     },
     "category": "infrastructure",
     "description": "Query, monitor, and manage Unraid servers via GraphQL API."
@@ -30,7 +30,7 @@ unraid-mcp ships its own Claude Code marketplace manifest at `.claude-plugin/mar
 
 ```bash
 # Add the marketplace (one-time)
-/plugin marketplace add jmagar/unraid-mcp
+/plugin marketplace add dinglebear-ai/unraid
 
 # Install the plugin
 /plugin install unraid-mcp@unraid-mcp

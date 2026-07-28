@@ -9,7 +9,7 @@ Query, monitor, and manage Unraid servers via GraphQL API using a single consoli
 ## Installation
 
 ```bash
-/plugin marketplace add dinglebear-ai/unraid-mcp
+/plugin marketplace add dinglebear-ai/unraid
 /plugin install unraid-mcp@unraid-mcp
 ```
 
@@ -274,7 +274,7 @@ action list, call `unraid(action="help")` or see `unraid-py/docs/mcp/TOOLS.md`.
 
 ## Support
 
-- **Issues:** https://github.com/dinglebear-ai/unraid-mcp/issues
-- **Repository:** https://github.com/dinglebear-ai/unraid-mcp
+- **Issues:** https://github.com/dinglebear-ai/unraid/issues
+- **Repository:** https://github.com/dinglebear-ai/unraid
 - **Skill docs:** `skills/unraid/SKILL.md`
 - **API reference:** `skills/unraid/references/`
