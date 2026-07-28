@@ -1,5 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "2f4e40d475f93a354d1420d22127b23c5aed56b5",
   "include-v-in-tag": true,
   "include-component-in-tag": true,
   "always-update": true,
@@ -14,6 +15,7 @@
       "release-type": "python",
       "package-name": "unraid-mcp",
       "component": "",
+      "include-component-in-tag": false,
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         { "type": "json", "path": "/agents/unraid-py/.claude-plugin/plugin.json", "jsonpath": "$.version" },
@@ -28,6 +30,7 @@
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         { "type": "json", "path": "packages/unraid-rmcp/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "packages/unraid-rmcp/package.json", "jsonpath": "$.binaryVersion" },
         { "type": "json", "path": "server.json", "jsonpath": "$.version" },
         { "type": "json", "path": "server.json", "jsonpath": "$.packages[0].version" },
         {
@@ -38,20 +41,6 @@
         { "type": "json", "path": "/agents/unraid-rs/.claude-plugin/plugin.json", "jsonpath": "$.version" },
         { "type": "json", "path": "/agents/unraid-rs/.codex-plugin/plugin.json", "jsonpath": "$.version" }
       ]
-    },
-    "plugins/incus": {
-      "release-type": "simple",
-      "package-name": "incus",
-      "component": "incus",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": ["incus.plg"]
-    },
-    "plugins/codex": {
-      "release-type": "simple",
-      "package-name": "codex",
-      "component": "codex",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": ["unraid-codex.plg"]
     }
   }
 }
