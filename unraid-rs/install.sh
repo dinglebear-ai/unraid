@@ -2,7 +2,7 @@
 # install.sh — One-line installer for unraid-rmcp
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/unraid-rs/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/dinglebear-ai/unraid/main/unraid-rs/install.sh | bash
 #
 # What it does:
 #   1. Runs pre-flight checks (OS/arch, tools, disk space, PATH, port)
@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-REPO="dinglebear-ai/unraid-mcp"
+REPO="dinglebear-ai/unraid"
 BIN_NAME="runraid"
 # The Rust server is one component of the unraid-mcp monorepo. Its releases are
 # tagged `unraid-rs-v<semver>` and its crate lives in the `unraid-rs/` subtree —

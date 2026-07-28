@@ -5,15 +5,17 @@ const { binaryVersion, downloadUrl, releaseBaseUrl, releaseVersion, targetFor } 
 const { binaryVersion: pinnedBinaryVersion } = require("../package.json");
 test("maps supported platforms to release assets", () => {
   assert.deepEqual(targetFor("linux", "x64"), { asset: "runraid-x86_64.tar.gz", binary: "runraid" });
-  assert.deepEqual(targetFor("win32", "x64"), { asset: "runraid-windows-x86_64.tar.gz", binary: "runraid.exe" });
 });
-test("rejects unsupported platforms", () => { assert.throws(() => targetFor("darwin", "arm64"), /Unsupported platform/); });
+test("rejects unsupported platforms", () => {
+  assert.throws(() => targetFor("win32", "x64"), /Unsupported platform/);
+  assert.throws(() => targetFor("darwin", "arm64"), /Unsupported platform/);
+});
 test("uses pinned binary version as the binary tag by default", () => {
   assert.equal(binaryVersion(), pinnedBinaryVersion);
   assert.equal(releaseVersion({}), `unraid-rs-v${pinnedBinaryVersion}`);
 });
 test("defaults to the monorepo's release download base", () => {
-  assert.equal(releaseBaseUrl({}), "https://github.com/dinglebear-ai/unraid-mcp/releases/download");
+  assert.equal(releaseBaseUrl({}), "https://github.com/dinglebear-ai/unraid/releases/download");
 });
 test("normalises bare, v-prefixed, and already-prefixed release versions to the component tag", () => {
   assert.equal(releaseVersion({ UNRAID_RMCP_BINARY_VERSION: "9.9.9" }), "unraid-rs-v9.9.9");

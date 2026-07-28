@@ -4,7 +4,7 @@
   "title": "Unraid MCP",
   "description": "MCP server for Unraid API — provides tools to interact with an Unraid server's GraphQL API.",
   "repository": {
-    "url": "https://github.com/jmagar/unraid-mcp",
+    "url": "https://github.com/dinglebear-ai/unraid",
     "source": "github"
   },
   "version": "0.0.0",
