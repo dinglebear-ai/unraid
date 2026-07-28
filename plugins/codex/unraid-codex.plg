@@ -4,8 +4,8 @@
   <!ENTITY author    "jmagar">
   <!ENTITY version   "2026.7.24"> <!-- managed by .github/scripts/plugin_calver.py -->
   <!ENTITY launch    "">
-  <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/codex">
-  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/codex-v&version;/&txz;">
+  <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/plugins/codex">
+  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid-mcp/releases/download/codex-v&version;/&txz;">
   <!ENTITY pluginURL "&gitURL;/unraid-codex.plg">
   <!ENTITY txz       "unraid-codex-&version;-x86_64-15.txz">
   <!ENTITY md5       "69784069fb5e4d285eaaf62d389a904d">
