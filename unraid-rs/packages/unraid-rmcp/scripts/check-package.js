@@ -10,7 +10,7 @@ const { spawnSync } = require("node:child_process");
 const packageRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(packageRoot, "..", "..");
 // Canonical home of this package after the monorepo consolidation.
-const CANONICAL_REPO = "dinglebear-ai/unraid-mcp";
+const CANONICAL_REPO = "dinglebear-ai/unraid";
 const packageJsonPath = path.join(packageRoot, "package.json");
 const packageJson = readJson(packageJsonPath);
 const releaseMode = process.argv.includes("--release");

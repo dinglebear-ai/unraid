@@ -15,7 +15,7 @@ test("uses pinned binary version as the binary tag by default", () => {
   assert.equal(releaseVersion({}), `unraid-rs-v${pinnedBinaryVersion}`);
 });
 test("defaults to the monorepo's release download base", () => {
-  assert.equal(releaseBaseUrl({}), "https://github.com/dinglebear-ai/unraid-mcp/releases/download");
+  assert.equal(releaseBaseUrl({}), "https://github.com/dinglebear-ai/unraid/releases/download");
 });
 test("normalises bare, v-prefixed, and already-prefixed release versions to the component tag", () => {
   assert.equal(releaseVersion({ UNRAID_RMCP_BINARY_VERSION: "9.9.9" }), "unraid-rs-v9.9.9");

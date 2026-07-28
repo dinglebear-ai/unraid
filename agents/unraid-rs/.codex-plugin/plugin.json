@@ -1,9 +1,9 @@
 {
   "name": "runraid",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Read-only MCP server for Unraid homelab servers — query array health, Docker containers, VMs, metrics, and more.",
-  "homepage": "https://github.com/dinglebear-ai/unraid-mcp",
-  "repository": "https://github.com/dinglebear-ai/unraid-mcp",
+  "homepage": "https://github.com/dinglebear-ai/unraid",
+  "repository": "https://github.com/dinglebear-ai/unraid",
   "license": "MIT",
   "keywords": [
     "unraid",
@@ -23,7 +23,7 @@
     "capabilities": [
       "Read"
     ],
-    "websiteURL": "https://github.com/dinglebear-ai/unraid-mcp",
+    "websiteURL": "https://github.com/dinglebear-ai/unraid",
     "defaultPrompt": [
       "What is my Unraid array status and how much space is used?",
       "List all running Docker containers on my Unraid server.",

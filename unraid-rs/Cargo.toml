@@ -7,13 +7,13 @@ resolver = "2"
 
 [package]
 name = "unraid-rmcp"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2021"
 rust-version = "1.90"
 categories = ["command-line-utilities", "development-tools"]
 keywords = ["mcp", "unraid", "graphql", "nas", "rmcp"]
-repository = "https://github.com/dinglebear-ai/unraid-mcp"
-homepage = "https://github.com/dinglebear-ai/unraid-mcp#readme"
+repository = "https://github.com/dinglebear-ai/unraid"
+homepage = "https://github.com/dinglebear-ai/unraid#readme"
 description = "Rust MCP server and CLI for Unraid GraphQL operations across NAS, Docker, VM, and storage workflows."
 autobins = false
 
