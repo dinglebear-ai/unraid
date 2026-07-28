@@ -4,10 +4,10 @@
   <!ENTITY author    "jmagar">
   <!ENTITY version   "2026.7.24"> <!-- managed by .github/scripts/plugin_calver.py -->
   <!ENTITY launch    "Settings/IncusSettings">
-  <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/plugins/incus">
+  <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/incus">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
   <!ENTITY txz       "&name;-unraid-7.0.0-55-x86_64-1.txz">
-  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid-mcp/releases/download/incus-v&version;/&txz;">
+  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/incus-v&version;/&txz;">
   <!ENTITY md5       "fe0ac455ac84bc928f9bdadf57c518b7">
   <!ENTITY sha256    "ae3615b26aa980f2331812fa7f8e881d16ed70f03bb0370a21ccb4de6307f157">
   <!ENTITY plugin    "/boot/config/plugins/&name;">

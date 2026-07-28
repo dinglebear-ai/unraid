@@ -4,7 +4,7 @@ Guidance for Claude Code (claude.ai/code) working in this repository.
 
 ## What this is
 
-A monorepo of Unraid tooling. It keeps the `dinglebear-ai/unraid-mcp` GitHub
+A monorepo of Unraid tooling. It keeps the `dinglebear-ai/unraid` GitHub
 identity and the `unraid-mcp` PyPI name, but internally hosts four release units
 plus two agent-plugin integrations.
 

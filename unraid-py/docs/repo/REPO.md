@@ -1,7 +1,7 @@
 # Repository Structure -- unraid-mcp
 
 > **Scope note (monorepo):** the tree below is rooted at `unraid-py/` within the
-> [dinglebear-ai/unraid-mcp](https://github.com/dinglebear-ai/unraid-mcp) monorepo,
+> [dinglebear-ai/unraid](https://github.com/dinglebear-ai/unraid) monorepo,
 > not at the repository root. The Claude/Codex plugin manifests it lists moved to
 > `agents/unraid-py/` at the repo root during the consolidation.
 

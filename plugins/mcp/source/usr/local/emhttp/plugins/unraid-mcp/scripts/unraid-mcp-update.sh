@@ -19,7 +19,7 @@ PREFIX="/usr/local/unraid-mcp"
 BUNDLED_PY="${PREFIX}/python/bin/python3"
 OVERLAY_DIR="/mnt/user/appdata/unraid-mcp/venv"
 OVERLAY_PY="${OVERLAY_DIR}/bin/python3"
-REPO="dinglebear-ai/unraid-mcp"
+REPO="dinglebear-ai/unraid"
 
 active_python() {
     if [ -x "$OVERLAY_PY" ]; then echo "$OVERLAY_PY"; else echo "$BUNDLED_PY"; fi

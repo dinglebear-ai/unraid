@@ -21,7 +21,7 @@ The server is built with FastMCP and follows a modular architecture with separat
 Add the marketplace and install the plugin:
 
 ```bash
-/plugin marketplace add jmagar/unraid-mcp
+/plugin marketplace add dinglebear-ai/unraid
 /plugin install unraid-mcp@unraid-mcp
 ```
 
@@ -62,7 +62,7 @@ The Docker image reads configuration from `/app/.env` or `~/.unraid-mcp/.env`.
 ### For Gemini CLI
 
 ```bash
-gemini extensions install https://github.com/jmagar/unraid-mcp
+gemini extensions install https://github.com/dinglebear-ai/unraid
 ```
 
 Gemini prompts for `UNRAID_API_URL` and `UNRAID_API_KEY` on install.

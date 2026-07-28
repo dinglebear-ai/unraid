@@ -5,14 +5,14 @@
   <!ENTITY version   "VERSION_PLACEHOLDER">
   <!ENTITY launch    "Settings/UnraidMCP">
   <!ENTITY txz       "unraid-mcp-VERSION_PLACEHOLDER-x86_64-1.txz">
-  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid-mcp/releases/download/vVERSION_PLACEHOLDER/&txz;">
+  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/vVERSION_PLACEHOLDER/&txz;">
   <!ENTITY md5       "MD5_PLACEHOLDER">
   <!ENTITY sha256    "SHA256_PLACEHOLDER">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
 
-<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="https://github.com/dinglebear-ai/unraid-mcp/releases/latest/download/unraid-mcp.plg" min="7.0.0">
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="https://github.com/dinglebear-ai/unraid/releases/latest/download/unraid-mcp.plg" min="7.0.0">
 
 <CHANGES>
 ###VERSION_PLACEHOLDER
