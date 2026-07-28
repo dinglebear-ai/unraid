@@ -35,7 +35,7 @@ rmcp = { version = "1.6.0", default-features = false, features = [
   "transport-streamable-http-server",
   "transport-io",
 ] }
-tower-http = { version = "0.6", features = ["cors", "limit", "trace"] }
+tower-http = { version = "0.7", features = ["cors", "limit", "trace"] }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
