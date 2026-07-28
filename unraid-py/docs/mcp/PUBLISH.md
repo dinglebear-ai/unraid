@@ -72,10 +72,10 @@ The new tag + Release trigger two independently retryable workflows:
 | Channel | Package | Install command |
 |---------|---------|----------------|
 | PyPI | `unraid-mcp` | `pip install unraid-mcp` or `uvx unraid-mcp` |
-| GHCR release | `ghcr.io/jmagar/unraid-mcp` | `docker pull ghcr.io/jmagar/unraid-mcp:latest` |
-| GHCR prerelease | `ghcr.io/jmagar/unraid-mcp:edge` | `docker pull ghcr.io/jmagar/unraid-mcp:edge` |
+| GHCR release | `ghcr.io/dinglebear-ai/unraid` | `docker pull ghcr.io/dinglebear-ai/unraid:latest` |
+| GHCR prerelease | `ghcr.io/dinglebear-ai/unraid:edge` | `docker pull ghcr.io/dinglebear-ai/unraid:edge` |
 | MCP Registry | `tv.tootie/unraid-mcp` | MCP client auto-discovery |
-| Claude Plugin | `jmagar/unraid-mcp` | `/plugin install unraid-mcp` |
+| Claude Plugin | `dinglebear-ai/unraid` | `/plugin install unraid-mcp` |
 | GitHub Release | Source + wheel | Download from releases page |
 
 ## MCP Registry
@@ -91,10 +91,10 @@ The `server.json` defines the registry entry:
 ## Artifact verification
 
 ```bash
-gh release download vX.Y.Z --repo jmagar/unraid-mcp
+gh release download vX.Y.Z --repo dinglebear-ai/unraid
 sha256sum --check SHA256SUMS
-gh attestation verify unraid_mcp-X.Y.Z-py3-none-any.whl --repo jmagar/unraid-mcp
-docker buildx imagetools inspect ghcr.io/jmagar/unraid-mcp:X.Y.Z
+gh attestation verify unraid_mcp-X.Y.Z-py3-none-any.whl --repo dinglebear-ai/unraid
+docker buildx imagetools inspect ghcr.io/dinglebear-ai/unraid:X.Y.Z
 ```
 
 Pin production containers to the reported digest when immutability is required.

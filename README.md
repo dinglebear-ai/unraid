@@ -2,7 +2,7 @@
 
 <!-- mcp-name: tv.tootie/unraid-mcp -->
 
-[![PyPI](https://img.shields.io/pypi/v/unraid-mcp)](https://pypi.org/project/unraid-mcp/) [![ghcr.io](https://img.shields.io/badge/ghcr.io-dinglebear--ai%2Funraid--mcp-blue?logo=docker)](https://github.com/dinglebear-ai/unraid-mcp/pkgs/container/unraid-mcp)
+[![PyPI](https://img.shields.io/pypi/v/unraid-mcp)](https://pypi.org/project/unraid-mcp/) [![ghcr.io](https://img.shields.io/badge/ghcr.io-dinglebear--ai%2Funraid--mcp-blue?logo=docker)](https://github.com/dinglebear-ai/unraid/pkgs/container/unraid-mcp)
 
 A monorepo of Unraid tooling: two MCP servers (Python and Rust) and three Unraid
 OS plugins, plus the Claude/Codex agent integrations that surface them.
@@ -22,7 +22,7 @@ OS plugins, plus the Claude/Codex agent integrations that surface them.
 ## Install the agent plugins (one marketplace command, two manifests)
 
 ```text
-/plugin marketplace add dinglebear-ai/unraid-mcp
+/plugin marketplace add dinglebear-ai/unraid
 /plugin install unraid-mcp@unraid-mcp   # Python server
 /plugin install runraid@unraid-mcp      # Rust server
 ```

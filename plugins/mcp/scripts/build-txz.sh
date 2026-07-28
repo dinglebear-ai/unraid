@@ -99,7 +99,7 @@ unraid-mcp:
 unraid-mcp: Exposes Unraid system control to MCP clients (Claude et al.)
 unraid-mcp: with bearer-token auth and a webGUI settings page.
 unraid-mcp:
-unraid-mcp: https://github.com/dinglebear-ai/unraid-mcp
+unraid-mcp: https://github.com/dinglebear-ai/unraid
 EOF
 
 find "${STAGE}" -type d -exec chmod 755 {} +

@@ -2452,6 +2452,7 @@ dependencies = [
  "tokio-util",
  "tower-service",
  "tracing",
+ "url",
  "uuid",
 ]
 
@@ -3543,7 +3544,7 @@ checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
 
 [[package]]
 name = "unraid-rmcp"
-version = "0.2.3"
+version = "0.2.5"
 dependencies = [
  "anyhow",
  "apollo-compiler",
@@ -3556,6 +3557,7 @@ dependencies = [
  "lab-auth",
  "reqwest 0.12.28",
  "rmcp",
+ "schemars",
  "serde",
  "serde_json",
  "tempfile",
@@ -4078,7 +4080,7 @@ checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
 
 [[package]]
 name = "xtask"
-version = "0.2.3"
+version = "0.2.5"
 dependencies = [
  "anyhow",
 ]
