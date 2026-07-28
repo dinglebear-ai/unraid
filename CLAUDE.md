@@ -4,21 +4,80 @@ Guidance for Claude Code (claude.ai/code) working in this repository.
 
 ## What this is
 
-A monorepo of Unraid tooling. It keeps the `dinglebear-ai/unraid` GitHub
-identity and the `unraid-mcp` PyPI name, but internally hosts four release units
-plus two agent-plugin integrations.
+A monorepo of Unraid tooling — four release units plus two agent-plugin
+integrations. The canonical remote is **`git@github.com:dinglebear-ai/unraid.git`**.
+
+### Identity and history (read before touching any URL)
+
+Consolidated on **2026-07-27**. Two formerly standalone repos — `runraid` and
+`incus-unraid` — were merged in and then **deleted upstream**. This repo is now the
+only home for that code; do not go looking for those repos, and do not "restore" a
+reference to them.
+
+On the same date both the local directory and the GitHub repo were renamed
+`unraid-mcp` → **`unraid`**. GitHub's transfer redirect still resolves the old name
+(verified, including `raw.githubusercontent.com/...` paths), so **already-deployed
+`.plg` install/update URLs keep working**.
+
+Docs, manifests, `server.json`, `Cargo.toml`, the npm launcher and the curl-able
+install scripts were repointed to `dinglebear-ai/unraid`. **Four files were
+deliberately left on the old URL** — the three `plugins/*/*.plg` and
+`plugins/mcp/source/.../unraid-mcp-update.sh`. Installed plugins poll their own
+`pluginURL` and resolve `txzURL`/`REPO` at runtime, so editing those ships a
+behavioural change to live Unraid boxes; that needs a deliberate release and a test
+install, not a drive-by rename. They work today via the redirect and break the day
+anyone creates a new `dinglebear-ai/unraid-mcp` — load-bearing on a redirect, and
+tracked follow-up work.
+
+New in-repo references must use `dinglebear-ai/unraid`.
+
+### "unraid-mcp" means five different things
+
+Most `unraid-mcp` strings in this tree are **correct** and must not be swept into a
+rename. Only *GitHub repo URLs* are stale.
+
+| Occurrence | Still correct? |
+|---|---|
+| PyPI distribution `unraid-mcp` (import `unraid_mcp`) | ✅ unchanged |
+| Claude/Codex plugin `name: unraid-mcp` (`agents/unraid-py`) | ✅ unchanged |
+| Unraid OS plugin dir `plugins/mcp/source/.../unraid-mcp/` and `unraid-mcp.plg` | ✅ unchanged |
+| Container image `ghcr.io/dinglebear-ai/unraid-mcp` | ✅ unchanged |
+| GitHub URL `github.com/dinglebear-ai/unraid-mcp` | ⚠️ stale — redirect only |
+
+The Rust side has its own naming split: crates.io package **`unraid-rmcp`**, binary
+**`runraid`**, plugin name **`runraid`**. Service port is **40010**.
+
+## Agent plugins ship no Claude Code hooks
+
+`agents/unraid-py/` and `agents/unraid-rs/` previously registered `SessionStart` +
+`ConfigChange` hooks (`hooks/hooks.json`) that ran `scripts/plugin-setup.sh` to
+persist plugin `userConfig` credentials. **Those hooks were removed on 2026-07-27.**
+
+- Neither `.claude-plugin/plugin.json` nor `.codex-plugin/plugin.json` may declare a
+  `"hooks"` key, and no `hooks/` directory may exist. Both invariants are asserted by
+  `unraid-rs/tests/setup_contract.rs` and `unraid-rs/scripts/validate-plugin-layout.sh`.
+- `scripts/plugin-setup.sh` is **kept** in both plugins as the manual entry point.
+- **Consequence for `agents/unraid-rs`:** its `.mcp.json` passes **no env**, so the
+  hook was the only automatic path that wrote credentials to `~/.unraid/.env`. After
+  install, credentials must now be provisioned once by hand — run
+  `runraid setup plugin-hook` (or `crgx unraid-rmcp -- setup plugin-hook`, or
+  `agents/unraid-rs/scripts/plugin-setup.sh`). Without it the server starts with no
+  `UNRAID_API_URL` / `UNRAID_API_KEY`.
+- **Consequence for `agents/unraid-py`:** none material — its `.mcp.json` injects
+  `UNRAID_API_URL` / `UNRAID_API_KEY` directly via `${CLAUDE_PLUGIN_OPTION_*}`; the
+  hook only mirrored them into `~/.unraid-mcp/.env`.
 
 ## Repository layout
 
 | Path | Component | Toolchain | Build / test from repo root |
 |------|-----------|-----------|------------------------------|
 | `unraid-py/` | Python MCP server (**unraid-mcp** on PyPI, import `unraid_mcp`). Self-contained: its own `pyproject.toml`, `uv.lock`, `Dockerfile`, `docs/`, `openwiki/`, `scripts/`, and tests. | Python / uv / hatchling | `cd unraid-py && uv sync && uv run pytest && uv build --wheel` (run `npm --prefix tests/mock install` once to un-skip the 9 mock-server tests) |
-| `unraid-rs/` | Rust MCP server + CLI (crate `unraid-rmcp`, binary `runraid`) and the `unraid-rmcp` npx wrapper. Toolchain pinned to the MSRV by `rust-toolchain.toml`. | Rust / cargo | `cd unraid-rs && cargo fmt --check && cargo clippy --all-targets --features test-support -- -D warnings && cargo test` (CI additionally runs `cargo nextest run --profile ci`, `taplo check`, and the npm launcher tests) |
+| `unraid-rs/` | Rust MCP server + CLI (crates.io package `unraid-rmcp`, binary `runraid`), frozen `lab-auth` compatibility crate, CRGX metadata, and a legacy npm wrapper. Toolchain pinned to the MSRV by `rust-toolchain.toml`. | Rust / cargo | `cd unraid-rs && cargo fmt --check && cargo clippy --all-targets --features test-support -- -D warnings && cargo test` (CI additionally packages both crates exactly as crates.io will receive them) |
 | `plugins/mcp/` | Unraid OS `.plg` shipping the Python server (was `unraid/`). | shell + Python + Node (vite settings bundle) | `bash plugins/mcp/scripts/build-txz.sh <ver> <wheel>` — build `<wheel>` first with `cd unraid-py && uv build --wheel`, otherwise the script silently pulls that version from PyPI instead of your local tree |
 | `plugins/incus/` | Unraid OS `.plg` for Incus dev-containers + nested `unraid-api-plugin-incus/` (NestJS/Vue). Build gotchas: see `plugins/incus/CLAUDE.md`. | shell + NestJS/Vue | `cd plugins/incus && ./scripts/verify-classic-package.sh && ./tests/classic-contract.sh` |
 | `plugins/codex/` | Unraid OS `.plg` for the Codex chathead (was `unraid-codex/`). | shell + React | `cd plugins/codex && ./tests/contract.sh` |
-| `agents/unraid-py/` | Claude/Codex plugin, `name: unraid-mcp`. | — | listed in **both** `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` |
-| `agents/unraid-rs/` | Claude/Codex plugin, `name: runraid`. Version is release-please-managed under the `unraid-rs` package. | — | listed in **both** `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` |
+| `agents/unraid-py/` | Claude/Codex plugin, `name: unraid-mcp`. No hooks. | — | listed in **both** `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` |
+| `agents/unraid-rs/` | Claude/Codex plugin, `name: runraid`. No hooks. Version is release-please-managed under the `unraid-rs` package and **must equal `unraid-rs/Cargo.toml`'s `version`** (`validate-plugin-layout.sh` enforces it). | — | listed in **both** `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` |
 | Root | Orchestration only: **two** marketplace manifests (`.claude-plugin/marketplace.json` for Claude, `.agents/plugins/marketplace.json` for Codex — `meta-ci.yml` asserts they list the same plugins), merged path-scoped `.github/workflows/`, unified `release-please-config.json` + `.release-please-manifest.json`, root `lefthook.yml`, umbrella README/CHANGELOG. | — | — |
 
 Per-component guidance lives in each component's own `CLAUDE.md` / `README.md`.
@@ -42,9 +101,10 @@ The Python server's detailed dev guide is `unraid-py/CLAUDE.md`.
   consolidation boundary so imported `Release-As:` directives cannot poison new
   release PRs. Python uses unprefixed `vX.Y.Z` tags and Rust uses
   `unraid-rs-vX.Y.Z`. Rust release-please must update both `version` and
-  `binaryVersion` in the npm launcher; `rust-release.yml` publishes npm through
-  GitHub-hosted OIDC trusted publishing only when the
-  `NPM_TRUSTED_PUBLISHING_ENABLED` repository variable is true, and publishes the
+  `binaryVersion` in the npm launcher. `.github/workflows/crates-publish.yml`
+  publishes `lab-auth` before `unraid-rmcp`, then smokes `cargo install` and
+  CRGX; it runs automatically only when `CRATES_IO_PUBLISHING_ENABLED=true`.
+  `rust-release.yml` keeps npm as a gated compatibility path and publishes the
   Rust image as `ghcr.io/dinglebear-ai/unraid-rmcp`. Incus and Codex use
   `.github/scripts/plugin_calver.py` and
   fixed-width `YYYYMMDD.NNN` versions with `incus-v*` / `codex-v*` tags. Unraid
@@ -83,3 +143,23 @@ carries the same pin for contributors who use rustup instead of mise. Keep
 
 Git hooks come from the **root** `lefthook.yml` (`lefthook install`). Hooks are
 per-repository, not per-directory — component-level lefthook configs do not run.
+(These are *git* hooks — unrelated to the retired Claude Code plugin hooks above.)
+
+## Gotchas
+
+- **`unraid-rs` is not read-only.** `ACTIONS` in `src/mcp/schemas.rs` currently holds
+  **146 actions: 62 `Scope::Read` and 86 `Scope::Write`** (VM start/stop/force-stop,
+  Docker start/stop/remove, array start/stop, notification create/delete, …). Any doc
+  or manifest claiming "read-only", "24 actions", or "nothing is modified" is stale —
+  fix it rather than propagating it. Writes require `unraid:admin`; `unraid:admin`
+  satisfies `unraid:read`.
+- **`unraid-rs` declares `rmcp = "1.6.0"` but builds 1.8.0.** The caret range already
+  drifted. `Cargo.lock` is the truth; do not quote the `Cargo.toml` value as the
+  effective version. Same shape of trap as a pin that silently stopped pinning.
+- **`unraid-rs` is a 3-member workspace** (root `unraid-rmcp` + `crates/lab-auth` +
+  `xtask`), edition 2021, MSRV 1.90. `crates/lab-auth` is a *frozen local copy* of the
+  shared auth crate — not the `dinglebear-ai/labby` git dependency the other rmcp
+  services use.
+- **Do not run a full `cargo build`/`cargo test` casually here.** The Rust tree is
+  large and CI already covers it; prefer targeted `cargo check -p` or the contract
+  scripts.

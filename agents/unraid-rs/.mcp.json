@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "unraid": {
-      "command": "npx",
-      "args": ["-y", "unraid-rmcp", "mcp"]
+      "command": "crgx",
+      "args": ["unraid-rmcp", "--", "mcp"]
     }
   }
 }
