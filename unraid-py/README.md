@@ -2,7 +2,7 @@
 
 <!-- mcp-name: tv.tootie/unraid-mcp -->
 
-[![PyPI](https://img.shields.io/pypi/v/unraid-mcp)](https://pypi.org/project/unraid-mcp/) [![ghcr.io](https://img.shields.io/badge/ghcr.io-jmagar%2Funraid--mcp-blue?logo=docker)](https://github.com/jmagar/unraid-mcp/pkgs/container/unraid-mcp)
+[![PyPI](https://img.shields.io/pypi/v/unraid-mcp)](https://pypi.org/project/unraid-mcp/) [![ghcr.io](https://img.shields.io/badge/ghcr.io-jmagar%2Funraid--mcp-blue?logo=docker)](https://github.com/dinglebear-ai/unraid/pkgs/container/unraid-mcp)
 
 GraphQL-backed MCP server for Unraid. Exposes a unified `unraid` tool for system inspection, management operations, live telemetry, and destructive actions gated by explicit confirmation.
 
@@ -18,7 +18,7 @@ so no local checkout is required once it's installed. You'll need
 Add this repo as a marketplace, then install the plugin:
 
 ```text
-/plugin marketplace add jmagar/unraid-mcp
+/plugin marketplace add dinglebear-ai/unraid
 /plugin install unraid-mcp@unraid-mcp
 ```
 
@@ -32,7 +32,7 @@ persisted to `~/.unraid-mcp/.env` by the SessionStart hook.
 The repo ships a Codex marketplace manifest at `.agents/plugins/marketplace.json`:
 
 ```bash
-codex plugin marketplace add jmagar/unraid-mcp
+codex plugin marketplace add dinglebear-ai/unraid
 # then enable `unraid-mcp@unraid-mcp` from the Codex `/plugins` view
 ```
 
@@ -53,7 +53,7 @@ Install the extension straight from the repo (`gemini extensions install` reads
 `gemini-extension.json` from the repo root):
 
 ```bash
-gemini extensions install https://github.com/jmagar/unraid-mcp
+gemini extensions install https://github.com/dinglebear-ai/unraid
 ```
 
 Gemini prompts for the `UNRAID_API_URL` and `UNRAID_API_KEY` settings on install

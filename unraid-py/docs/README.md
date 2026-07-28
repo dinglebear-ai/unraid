@@ -2,7 +2,7 @@
 
 <!-- mcp-name: tv.tootie/unraid-mcp -->
 
-[![PyPI](https://img.shields.io/pypi/v/unraid-mcp)](https://pypi.org/project/unraid-mcp/) [![ghcr.io](https://img.shields.io/badge/ghcr.io-jmagar%2Funraid--mcp-blue?logo=docker)](https://github.com/jmagar/unraid-mcp/pkgs/container/unraid-mcp)
+[![PyPI](https://img.shields.io/pypi/v/unraid-mcp)](https://pypi.org/project/unraid-mcp/) [![ghcr.io](https://img.shields.io/badge/ghcr.io-jmagar%2Funraid--mcp-blue?logo=docker)](https://github.com/dinglebear-ai/unraid/pkgs/container/unraid-mcp)
 
 MCP server for Unraid NAS management. Exposes a single unified `unraid` tool with 19 action domains and 178 subactions, backed by Unraid's GraphQL API and real-time WebSocket subscriptions.
 
@@ -76,7 +76,7 @@ unraid(action="help")
 ### Marketplace
 
 ```bash
-/plugin marketplace add jmagar/unraid-mcp
+/plugin marketplace add dinglebear-ai/unraid
 /plugin install unraid-mcp@unraid-mcp
 ```
 

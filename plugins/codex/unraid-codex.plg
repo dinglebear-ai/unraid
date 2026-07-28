@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "unraid-codex">
   <!ENTITY author    "jmagar">
-  <!ENTITY version   "2026.7.24"> <!-- x-release-please-version -->
+  <!ENTITY version   "2026.7.24"> <!-- managed by .github/scripts/plugin_calver.py -->
   <!ENTITY launch    "">
   <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/plugins/codex">
   <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid-mcp/releases/download/codex-v&version;/&txz;">
