@@ -19,6 +19,7 @@ use serde_json::{Map, Value};
 use crate::config::McpConfig;
 
 use super::{
+    elicitation::require_destructive_elicitation,
     host_filter::{allowed_hosts, allowed_origins},
     prompts,
     schemas::{tool_definitions, ACTIONS},
@@ -85,6 +86,21 @@ impl ServerHandler for UnraidRmcpServer {
         // `tools::dispatch`). Covers pre-dispatch validation and serialization errors.
         self.state.counters.inc_requests();
         tracing::info!(tool = %tool_name, action = %action, "MCP tool execution started");
+
+        if let Err(message) =
+            require_destructive_elicitation(&context.peer, &action, &arguments).await
+        {
+            let elapsed = started.elapsed().as_millis();
+            self.state.counters.inc_errors();
+            tracing::warn!(
+                tool = %tool_name,
+                action = %action,
+                elapsed_ms = elapsed,
+                reason = %message,
+                "MCP destructive action stopped by elicitation"
+            );
+            return Ok(CallToolResult::error(vec![Content::text(message)]));
+        }
 
         // All errors become agent-readable CallToolResult::error — never Err(ErrorData).
         // This keeps the MCP session alive even when the upstream Unraid API is down.

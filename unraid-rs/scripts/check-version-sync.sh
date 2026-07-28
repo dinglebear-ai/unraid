@@ -15,10 +15,20 @@ if [ -f "Cargo.toml" ]; then
   [ -n "$v" ] && versions+=("Cargo.toml=$v") && files_checked+=("Cargo.toml")
 fi
 
-if [ -f "package.json" ]; then
-  v=$(python3 -c "import json; print(json.load(open('package.json')).get('version',''))" 2>/dev/null)
-  [ -n "$v" ] && versions+=("package.json=$v") && files_checked+=("package.json")
+npm_manifest="packages/unraid-rmcp/package.json"
+if [ ! -f "$npm_manifest" ]; then
+  echo "[version-sync] FAIL — expected npm manifest is missing: $npm_manifest" >&2
+  exit 1
 fi
+for field in version binaryVersion; do
+  v=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get(sys.argv[2],''))" "$npm_manifest" "$field" 2>/dev/null)
+  if [ -z "$v" ]; then
+    echo "[version-sync] FAIL — $npm_manifest has no $field field" >&2
+    exit 1
+  fi
+  versions+=("$npm_manifest.$field=$v")
+  files_checked+=("$npm_manifest.$field")
+done
 
 if [ -f "pyproject.toml" ]; then
   v=$(grep -m1 '^version' pyproject.toml | sed 's/.*"\(.*\)".*/\1/')
