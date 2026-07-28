@@ -31,7 +31,7 @@ GitHub Actions configuration for unraid-mcp.
 
 **Image tags**: `latest` (main branch), `v1.2.3`, `v1.2`, `v1`, `main`, `pr-N`, `sha-<hex>`.
 
-**Registry**: `ghcr.io/jmagar/unraid-mcp`.
+**Registry**: `ghcr.io/dinglebear-ai/unraid`.
 
 ### `release-please.yml` -- Versioning and Changelog
 
