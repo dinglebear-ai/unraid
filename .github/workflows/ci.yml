@@ -35,7 +35,7 @@ concurrency:
   cancel-in-progress: true
 
 # The Python package now lives in unraid-py/; every run: step executes there.
-# Secret scanning remains extracted to the unfiltered secret-scan.yml workflow.
+# Secret scanning is handled by GitHub native secret scanning and push protection.
 defaults:
   run:
     working-directory: unraid-py

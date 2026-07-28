@@ -124,8 +124,8 @@ jobs:
         run: python3 ./.github/scripts/check-actions-allowlist.py
 
       # .github/actionlint.yaml already existed but nothing ran it. Installed as a
-      # checksum-verified release download rather than a third-party action,
-      # matching the gitleaks pattern in secret-scan.yml.
+      # checksum-verified release download rather than a third-party action, so the
+      # pinned version is verified by hash instead of trusted by reference.
       - name: Run actionlint
         env:
           ACTIONLINT_VERSION: 1.7.12
