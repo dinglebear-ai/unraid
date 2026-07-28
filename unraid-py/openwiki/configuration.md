@@ -190,7 +190,7 @@ Docker-specific variables are set via environment or docker-compose.yaml:
 ```yaml
 services:
   unraid-mcp:
-    image: ghcr.io/jmagar/unraid-mcp:latest
+    image: ghcr.io/dinglebear-ai/unraid:latest
     environment:
       - UNRAID_API_URL=https://tower.local/graphql
       - UNRAID_API_KEY=your-api-key
@@ -211,7 +211,7 @@ See `/docker-compose.yaml` for the official deployment configuration.
 
 ```bash
 # Add marketplace and install
-/plugin marketplace add jmagar/unraid-mcp
+/plugin marketplace add dinglebear-ai/unraid
 /plugin install unraid-mcp@unraid-mcp
 
 # Plugin prompts for URL and key

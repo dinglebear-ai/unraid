@@ -14,10 +14,7 @@ function targetFor(platform = process.platform, arch = process.arch) {
   if (platform === "linux" && arch === "x64") {
     return { asset: "runraid-x86_64.tar.gz", binary: "runraid" };
   }
-  if (platform === "win32" && arch === "x64") {
-    return { asset: "runraid-windows-x86_64.tar.gz", binary: "runraid.exe" };
-  }
-  throw new Error(`Unsupported platform ${platform}/${arch}. Supported targets: linux/x64, win32/x64.`);
+  throw new Error(`Unsupported platform ${platform}/${arch}. Supported target: linux/x64.`);
 }
 
 // Release tags in the unraid-mcp monorepo are component-prefixed: the Rust
@@ -34,7 +31,7 @@ function releaseVersion(env = process.env) {
 }
 
 function releaseBaseUrl(env = process.env) {
-  const repo = env.UNRAID_RMCP_REPO || "dinglebear-ai/unraid-mcp";
+  const repo = env.UNRAID_RMCP_REPO || "dinglebear-ai/unraid";
   return env.UNRAID_RMCP_RELEASE_BASE_URL || `https://github.com/${repo}/releases/download`;
 }
 

@@ -43,6 +43,11 @@ useDefault = true
 [allowlist]
 description = "Specific docs, generated wiki, and test files that contain placeholder credentials only"
 paths = [
+  # Frozen vendored copy of lab-auth. Its #[cfg(test)] module carries a
+  # TEST_RSA_KEY_PEM keypair used only to sign JWTs in unit tests
+  # (test_rsa_key/test_encoding_key). Ships to crates.io with the crate, as it
+  # does upstream. No path predates the vendoring, so this matches the one file.
+  '''(^|/)crates/lab\-auth/src/authorize\.rs$''',
   '''(^|/)docs/AUTHENTICATION\.md$''',
   '''(^|/)docs/UNRAID_API_REFERENCE\.md$''',
   '''(^|/)docs/unraid/unraid\-os/system\-administration/advanced\-tools/command\-line\-interface\.md$''',
