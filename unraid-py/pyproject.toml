@@ -331,7 +331,7 @@ dev = [
     "respx>=0.22.0",
     # Pinned exactly: ty is pre-1.0 (0.0.x) and is CI's sole type-check authority,
     # so a point release can break CI on unchanged code. Bump deliberately (Dependabot).
-    "ty==0.0.61",
+    "ty==0.0.64",
     "ruff>=0.12.8",
     "build>=1.2.2",
     "twine>=6.0.1",
