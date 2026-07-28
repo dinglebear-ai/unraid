@@ -32,7 +32,7 @@ Install and manage Incus system containers for coding agents and stdio MCP works
 [b]Security — read before use[/b]
 This plugin controls a host-level Incus daemon, firewall policy, and optional host bind mounts. Its default IPv4 policy is deny-list containment, not a complete security boundary. Review every allow-hole and bind mount, test access to your actual NAS, router, tailnet, and internal services, and add stronger controls before running hostile workloads. IPv6 is disabled until equivalent isolation policy exists.
 
-[b]Source &amp; issues:[/b] https://github.com/dinglebear-ai/unraid-mcp
+[b]Source &amp; issues:[/b] https://github.com/dinglebear-ai/unraid
 ```
 
 ## Categories
@@ -41,7 +41,7 @@ This plugin controls a host-level Incus daemon, firewall policy, and optional ho
 
 ## Support and listing screenshots
 
-- Support: https://github.com/dinglebear-ai/unraid-mcp/issues
+- Support: https://github.com/dinglebear-ai/unraid/issues
 - No listing screenshots are included in this draft. Capture sanitized settings, builder, and container-management views before portal submission.
 
 ## Preparation status

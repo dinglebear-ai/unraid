@@ -15,7 +15,7 @@ Configuration is collected by the plugin's config form — no interactive wizard
 
 1. Install as a Claude Code plugin:
    ```bash
-   /plugin marketplace add jmagar/unraid-mcp
+   /plugin marketplace add dinglebear-ai/unraid
    /plugin install unraid-mcp@unraid-mcp
    ```
 
@@ -41,7 +41,7 @@ Configuration is collected by the plugin's config form — no interactive wizard
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/jmagar/unraid-mcp.git
+   git clone https://github.com/dinglebear-ai/unraid.git
    cd unraid-mcp
    ```
 
@@ -69,7 +69,7 @@ Configuration is collected by the plugin's config form — no interactive wizard
 
 1. Clone and configure:
    ```bash
-   git clone https://github.com/jmagar/unraid-mcp.git
+   git clone https://github.com/dinglebear-ai/unraid.git
    cd unraid-mcp
    ```
 

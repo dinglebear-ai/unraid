@@ -1,9 +1,9 @@
 {
   "name": "runraid",
-  "version": "0.2.3",
-  "description": "Read-only MCP server for Unraid homelab servers \u2014 query array health, Docker containers, VMs, metrics, and more.",
-  "homepage": "https://github.com/dinglebear-ai/unraid-mcp",
-  "repository": "https://github.com/dinglebear-ai/unraid-mcp",
+  "version": "0.2.5",
+  "description": "Read-only MCP server for Unraid homelab servers — query array health, Docker containers, VMs, metrics, and more.",
+  "homepage": "https://github.com/dinglebear-ai/unraid",
+  "repository": "https://github.com/dinglebear-ai/unraid",
   "license": "MIT",
   "keywords": [
     "unraid",
@@ -17,13 +17,13 @@
   "interface": {
     "displayName": "Unraid MCP",
     "shortDescription": "Query Unraid array, Docker, VMs, and system metrics",
-    "longDescription": "Read-only MCP server that bridges Claude to the Unraid GraphQL API. Exposes 24 actions covering array health and capacity, Docker container state and logs, virtual machines, system info, CPU/memory/temperature metrics, UPS status, log files, plugins, parity history, remote access, and more. All operations are safe to run \u2014 nothing is modified.",
+    "longDescription": "Read-only MCP server that bridges Claude to the Unraid GraphQL API. Exposes 24 actions covering array health and capacity, Docker container state and logs, virtual machines, system info, CPU/memory/temperature metrics, UPS status, log files, plugins, parity history, remote access, and more. All operations are safe to run — nothing is modified.",
     "developerName": "Jacob Magar",
     "category": "Infrastructure",
     "capabilities": [
       "Read"
     ],
-    "websiteURL": "https://github.com/dinglebear-ai/unraid-mcp",
+    "websiteURL": "https://github.com/dinglebear-ai/unraid",
     "defaultPrompt": [
       "What is my Unraid array status and how much space is used?",
       "List all running Docker containers on my Unraid server.",

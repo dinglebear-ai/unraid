@@ -13,7 +13,7 @@ Local development workflow for unraid-mcp, including setup, testing, code qualit
 
 ```bash
 # Clone the repository
-git clone https://github.com/jmagar/unraid-mcp
+git clone https://github.com/dinglebear-ai/unraid
 cd unraid-mcp
 
 # Install dependencies and create virtual environment
