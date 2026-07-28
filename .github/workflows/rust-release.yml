@@ -67,7 +67,7 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name }}
 
-      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39 # stable
         with:
           toolchain: stable
           targets: x86_64-unknown-linux-gnu
