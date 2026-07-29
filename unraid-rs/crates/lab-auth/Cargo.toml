@@ -1,0 +1,44 @@
+[package]
+name = "lab-auth"
+version = "0.15.0"
+edition = "2024"
+rust-version = "1.90"
+description = "Parameterizable OAuth 2.0 and JWT authentication for Axum and MCP servers."
+license = "MIT"
+repository = "https://github.com/dinglebear-ai/unraid-mcp"
+homepage = "https://github.com/dinglebear-ai/unraid-mcp/tree/main/unraid-rs/crates/lab-auth"
+documentation = "https://docs.rs/lab-auth"
+readme = "README.md"
+authors = ["jmagar"]
+keywords = ["oauth", "auth", "axum", "jwt", "mcp"]
+categories = ["authentication", "web-programming::http-server"]
+publish = ["crates-io"]
+include = ["src/**", "Cargo.toml", "README.md", "LICENSE-MIT"]
+
+[features]
+default = []
+
+[dependencies]
+axum = { version = "0.8", features = ["macros", "json", "tokio", "http2"] }
+base64 = "0.22"
+getrandom = "0.4"
+httpdate = "1"
+jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "json", "gzip", "stream", "form", "multipart"] }
+rsa = "0.10.0-rc.16"
+rusqlite = { version = "0.39", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.11"
+subtle = "2"
+thiserror = "2"
+tokio = { version = "1.52", features = ["rt-multi-thread", "macros", "signal", "fs", "io-util", "io-std", "time", "net"] }
+tower = { version = "0.5", features = ["util"] }
+tracing = "0.1"
+url = { version = "2", features = ["serde"] }
+
+[dev-dependencies]
+rand = "0.10"
+tempfile = "3.27"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "fmt"] }
+wiremock = "0.6"

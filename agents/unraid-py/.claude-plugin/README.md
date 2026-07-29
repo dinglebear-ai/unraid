@@ -14,9 +14,13 @@ Query, monitor, and manage Unraid servers via GraphQL API using a single consoli
 ```
 
 After install, Claude Code prompts for the plugin `userConfig` values:
-**Unraid GraphQL API URL** and **Unraid API Key**. The SessionStart hook writes
-them to `~/.unraid-mcp/.env`, which is the server's canonical credentials file.
+**Unraid GraphQL API URL** and **Unraid API Key**. These are injected straight into
+the server process by the plugin's `.mcp.json`, so no further setup is required.
 Get an API key from **Unraid WebUI → Settings → Management Access → API Keys**.
+
+To also persist them to `~/.unraid-mcp/.env` (useful when running the server
+outside Claude Code), run `uvx unraid-mcp setup plugin-hook` once. This used to
+happen automatically via a `SessionStart` hook; the plugin no longer ships hooks.
 
 You can check credential status with:
 

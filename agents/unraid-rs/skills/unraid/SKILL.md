@@ -15,12 +15,17 @@ description: >
 
 # Unraid Server Skill
 
-Read-only access to an Unraid NAS server. Three access tiers in priority order:
+Access to an Unraid NAS server. Three access tiers in priority order:
 1. **MCP tool** `unraid` (preferred when available)
 2. **CLI binary** `runraid` (fallback)
 3. **Direct GraphQL curl** (last resort)
 
-All data actions are read-only — nothing modifies the server.
+**Read vs. write.** Query actions are read-only and require the `unraid:read`
+scope. The server *also* exposes mutating actions — Docker and VM lifecycle
+(`docker_start`/`docker_stop`/`vm_start`/`vm_force_stop`/…), array start/stop,
+parity check control, and notification create/delete — which require the
+`unraid:admin` scope. Do not assume a call is safe because it is on this tool;
+check the action before running it, and confirm with the user before any write.
 
 ---
 
@@ -111,7 +116,7 @@ unraid(action="parity_history")
 
 ## Tier 2 — CLI Binary
 
-Binary: `runraid` — installed on `PATH` by the plugin's npm launcher (`npx -y unraid-rmcp`) or by a local `cargo build --release`.
+Binary: `runraid` — invoked on demand through `crgx unraid-rmcp -- ...`, installed persistently with `cargo install unraid-rmcp`, or built locally with `cargo build --release`.
 
 All commands accept `--json` for machine-readable output.
 

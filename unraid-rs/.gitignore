@@ -18,9 +18,19 @@ config/docker-hosts.toml
 
 # ── Rust ──────────────────────────────────────────────────────────────────────
 /target/
+# Scratch target dirs from one-off `cargo build --target-dir` runs (auth spikes,
+# crates.io packaging probes). They hold multi-MB .rlib/.rmeta that would trip
+# no-large-blobs.yml if ever staged.
+/target-*/
 **/*.rs.bk
 *.profraw
 *.profdata
+
+# `--timings` output. The local `cargo` front door (mise-managed soldr) appends
+# --timings automatically, so these land in EVERY target dir, including ones the
+# rules above do not cover. Never committed.
+cargo-timings/
+cargo-timing*.html
 
 # ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/

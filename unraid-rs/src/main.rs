@@ -151,8 +151,20 @@ async fn serve_mcp() -> Result<()> {
 }
 
 async fn serve_stdio_mcp() -> Result<()> {
+    // Stdio is always LoopbackDev — a trusted local pipe with no HTTP auth
+    // context. Running the HTTP auth policy here yields `Mounted` (the default
+    // bind host is non-loopback and `no_auth` defaults to false), and
+    // `require_auth_context` then fails every tool call with "missing http
+    // context" because a stdio pipe carries no `request::Parts`. Matches the
+    // sibling servers (runifi, rgotify, rarcane), which hardcode this too.
     let config = Config::load()?;
-    let state = build_state(config).await?;
+    let service = UnraidService::new(UnraidClient::new(&config.unraid)?);
+    let state = AppState {
+        config: config.mcp,
+        auth_policy: AuthPolicy::LoopbackDev,
+        service,
+        counters: Counters::new(),
+    };
     let svc = mcp::rmcp_server(state).serve(stdio()).await?;
     svc.waiting().await?;
     Ok(())
