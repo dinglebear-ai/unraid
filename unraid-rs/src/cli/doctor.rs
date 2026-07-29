@@ -6,7 +6,7 @@ use std::time::Instant;
 
 use serde::Serialize;
 
-use unraid_rmcp::config::{default_data_dir, AuthMode, Config};
+use unraid_rmcp::config::{AuthMode, Config, default_data_dir};
 
 /// A single check result emitted by `doctor`.
 #[derive(Debug, Serialize)]
@@ -122,10 +122,10 @@ fn check_dir_writable(category: &'static str, label: &str, dir: &Path) -> Doctor
 fn dir_size_mb(dir: &Path) -> Option<f64> {
     let mut total: u64 = 0;
     for entry in std::fs::read_dir(dir).ok()?.flatten() {
-        if let Ok(meta) = entry.metadata() {
-            if meta.is_file() {
-                total += meta.len();
-            }
+        if let Ok(meta) = entry.metadata()
+            && meta.is_file()
+        {
+            total += meta.len();
         }
     }
     Some(total as f64 / (1024.0 * 1024.0))

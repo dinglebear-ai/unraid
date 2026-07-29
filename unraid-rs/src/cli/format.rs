@@ -667,10 +667,10 @@ fn fmt_connect(data: &Value) {
     println!("Dynamic remote access:");
     println!("  Enabled: {}", str_val(&dra["enabledType"]));
     println!("  Running: {}", str_val(&dra["runningType"]));
-    if let Some(err) = dra["error"].as_str() {
-        if !err.is_empty() {
-            println!("  Error:   {err}");
-        }
+    if let Some(err) = dra["error"].as_str()
+        && !err.is_empty()
+    {
+        println!("  Error:   {err}");
     }
     let settings = &c["settings"]["values"];
     println!("Settings:");
@@ -729,11 +729,7 @@ fn kb_to_tb(v: &Value) -> f64 {
 }
 
 fn yn(v: Option<bool>) -> &'static str {
-    if v == Some(true) {
-        "yes"
-    } else {
-        "no"
-    }
+    if v == Some(true) { "yes" } else { "no" }
 }
 
 /// Parse a GraphQL BigInt value that may arrive as a JSON number or a string.

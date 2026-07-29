@@ -1,19 +1,19 @@
 use std::{
     process::Stdio,
     sync::{
-        atomic::{AtomicUsize, Ordering},
         Arc,
+        atomic::{AtomicUsize, Ordering},
     },
 };
 
 use rmcp::{
+    ClientHandler, ErrorData,
     model::{
-        CallToolRequestParams, ClientCapabilities, ClientInfo, CreateElicitationRequestParams,
-        CreateElicitationResult, ElicitationAction, Implementation,
+        CallToolRequestParams, ClientCapabilities, ClientInfo, ElicitRequestParams, ElicitResult,
+        ElicitationAction, Implementation,
     },
     service::{RequestContext, RoleClient, RunningService, ServiceExt},
     transport::{ConfigureCommandExt, TokioChildProcess},
-    ClientHandler, ErrorData,
 };
 use serde_json::json;
 use tempfile::TempDir;
@@ -95,15 +95,13 @@ impl ClientHandler for ElicitingClient {
 
     async fn create_elicitation(
         &self,
-        _request: CreateElicitationRequestParams,
+        _request: ElicitRequestParams,
         _context: RequestContext<RoleClient>,
-    ) -> Result<CreateElicitationResult, ErrorData> {
+    ) -> Result<ElicitResult, ErrorData> {
         self.calls.fetch_add(1, Ordering::SeqCst);
         let mut result = match self.decision {
-            ElicitationDecision::Accept => CreateElicitationResult::new(ElicitationAction::Accept),
-            ElicitationDecision::Decline => {
-                CreateElicitationResult::new(ElicitationAction::Decline)
-            }
+            ElicitationDecision::Accept => ElicitResult::new(ElicitationAction::Accept),
+            ElicitationDecision::Decline => ElicitResult::new(ElicitationAction::Decline),
         };
         if matches!(self.decision, ElicitationDecision::Accept) {
             result.content = Some(json!({"confirmed": true}));

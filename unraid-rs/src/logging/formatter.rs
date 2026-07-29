@@ -2,13 +2,13 @@ use std::collections::BTreeMap;
 use std::fmt as stdfmt;
 
 use tracing::{
-    field::{Field, Visit},
     Event, Subscriber,
+    field::{Field, Visit},
 };
 use tracing_subscriber::{
     fmt::{
-        format::{FormatEvent, FormatFields, Writer},
         FmtContext,
+        format::{FormatEvent, FormatFields, Writer},
     },
     registry::LookupSpan,
 };

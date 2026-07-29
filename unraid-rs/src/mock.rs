@@ -71,14 +71,14 @@ pub fn classify_query(query: &str) -> Option<std::borrow::Cow<'static, str>> {
         "unraidPlugins",
     ];
     if is_mutation {
-        if NS.contains(&root) {
-            if let Some(sub) = subfields.first() {
-                return Some(Cow::Owned(format!(
-                    "{}_{}",
-                    to_snake_case(root),
-                    to_snake_case(sub)
-                )));
-            }
+        if NS.contains(&root)
+            && let Some(sub) = subfields.first()
+        {
+            return Some(Cow::Owned(format!(
+                "{}_{}",
+                to_snake_case(root),
+                to_snake_case(sub)
+            )));
         }
         // The Docker Organizer mutations are direct Mutation-root fields (not
         // nested under `docker { ... }`), but their MCP action names carry a

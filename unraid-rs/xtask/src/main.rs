@@ -9,7 +9,7 @@
 //!   check-env    Validate required environment variables
 
 use std::env;
-use std::process::{exit, Command};
+use std::process::{Command, exit};
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();

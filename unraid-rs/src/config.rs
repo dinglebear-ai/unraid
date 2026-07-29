@@ -235,13 +235,13 @@ impl Config {
             "UNRAID_RMCP_GOOGLE_CLIENT_SECRET",
             &mut config.mcp.auth.google_client_secret,
         );
-        if let Ok(v) = std::env::var("UNRAID_RMCP_AUTH_MODE") {
-            if !v.is_empty() {
-                config.mcp.auth.mode = match v.to_lowercase().as_str() {
-                    "oauth" => AuthMode::OAuth,
-                    _ => AuthMode::Bearer,
-                };
-            }
+        if let Ok(v) = std::env::var("UNRAID_RMCP_AUTH_MODE")
+            && !v.is_empty()
+        {
+            config.mcp.auth.mode = match v.to_lowercase().as_str() {
+                "oauth" => AuthMode::OAuth,
+                _ => AuthMode::Bearer,
+            };
         }
 
         // Unraid API
@@ -272,28 +272,28 @@ impl Config {
 // ── env helpers ───────────────────────────────────────────────────────────────
 
 fn env_str(key: &str, target: &mut String) {
-    if let Ok(v) = std::env::var(key) {
-        if !v.is_empty() {
-            *target = v;
-        }
+    if let Ok(v) = std::env::var(key)
+        && !v.is_empty()
+    {
+        *target = v;
     }
 }
 
 fn env_opt_str(key: &str, target: &mut Option<String>) {
-    if let Ok(v) = std::env::var(key) {
-        if !v.is_empty() {
-            *target = Some(v);
-        }
+    if let Ok(v) = std::env::var(key)
+        && !v.is_empty()
+    {
+        *target = Some(v);
     }
 }
 
 fn env_parse<T: std::str::FromStr>(key: &str, target: &mut T) -> anyhow::Result<()> {
-    if let Ok(v) = std::env::var(key) {
-        if !v.is_empty() {
-            *target = v
-                .parse()
-                .map_err(|_| anyhow::anyhow!("{key}: invalid value {v:?}"))?;
-        }
+    if let Ok(v) = std::env::var(key)
+        && !v.is_empty()
+    {
+        *target = v
+            .parse()
+            .map_err(|_| anyhow::anyhow!("{key}: invalid value {v:?}"))?;
     }
     Ok(())
 }

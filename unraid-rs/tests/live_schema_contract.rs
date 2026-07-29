@@ -11,10 +11,10 @@
 
 use std::collections::BTreeMap;
 
+use apollo_compiler::Schema;
 use apollo_compiler::ast::FieldDefinition;
 use apollo_compiler::schema::ExtendedType;
-use apollo_compiler::Schema;
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 const SCHEMA_SDL: &str = include_str!("../schema/unraid-schema.graphql");
 const LIVE_CONTRACT: &str = include_str!("../schema/live-introspection.json");
