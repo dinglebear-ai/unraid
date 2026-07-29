@@ -1,52 +1,51 @@
 # Hook Configuration -- unraid-mcp
 
-## Overview
+## Status: no hooks
 
-unraid-mcp registers two hooks — `SessionStart` and `ConfigChange` — that both
-run the same idempotent script to persist the plugin's userConfig credentials to
-`~/.unraid-mcp/.env`. They are **advisory** (credential-setup convenience), not
-security enforcement: the MCP server also receives credentials directly via the
-plugin's `.mcp.json` env, so a hook failure must never block the session.
+**The `unraid-mcp` plugin ships no Claude Code hooks.** They were removed on
+2026-07-27 along with the `agents/unraid-py/hooks/` directory. Neither
+`agents/unraid-py/.claude-plugin/plugin.json` nor `.codex-plugin/plugin.json`
+declares a `"hooks"` key, and no `hooks/hooks.json` exists.
 
-## Hook definition
+Do not re-add them.
 
-**File**: `hooks/hooks.json` (single source of truth; the Claude manifest
-references it via `"hooks": "./hooks/hooks.json"` rather than inlining commands).
+## What used to be here
+
+Two hooks — `SessionStart` and `ConfigChange` (matcher `user_settings`) — both ran
+`${CLAUDE_PLUGIN_ROOT}/scripts/plugin-setup.sh`, which invoked
+`uvx unraid-mcp setup plugin-hook` to mirror the plugin's `userConfig` credentials
+into `~/.unraid-mcp/.env`. They were explicitly **advisory**: idempotent, always
+exiting `0`, never permitted to block a session.
+
+## Why removing them costs nothing here
+
+The plugin's `.mcp.json` injects the credentials straight into the server process:
 
 ```json
-{
-  "hooks": {
-    "SessionStart": [
-      { "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/plugin-setup.sh" }] }
-    ],
-    "ConfigChange": [
-      { "matcher": "user_settings",
-        "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/scripts/plugin-setup.sh" }] }
-    ]
-  }
+"env": {
+  "UNRAID_MCP_TRANSPORT": "stdio",
+  "UNRAID_API_URL": "${CLAUDE_PLUGIN_OPTION_UNRAID_API_URL}",
+  "UNRAID_API_KEY": "${CLAUDE_PLUGIN_OPTION_UNRAID_API_KEY}"
 }
 ```
 
-## Hook script
+The hook only ever duplicated credentials that already reached the server.
+`~/.unraid-mcp/.env` is still the canonical credentials file when running the server
+**outside** Claude Code — populate it on demand with either of:
 
-### scripts/plugin-setup.sh
+```bash
+uvx unraid-mcp setup plugin-hook       # non-interactive, from plugin config
+unraid action=health subaction=setup   # interactive elicitation flow
+```
 
-**Purpose**: Persist the plugin's userConfig credentials to `~/.unraid-mcp/.env`.
+`scripts/plugin-setup.sh` is retained as the non-interactive entry point.
 
-- Runs `uvx unraid-mcp setup plugin-hook` (the published PyPI package — no bundled
-  uv project to sync, so the old `sync-uv.sh` hook was removed).
-- **Idempotent**: writing identical credentials is a no-op-equivalent rewrite.
-- **Never blocks**: missing `uvx`, no network, or a setup error warns to stderr
-  (greppable `plugin-setup.sh:` prefix) and exits `0`.
-
-## Triggers
-
-- **SessionStart** — fires once at session start to persist current credentials.
-- **ConfigChange** (`user_settings` matcher) — re-runs when the user edits plugin
-  settings, so updated credentials reach `~/.unraid-mcp/.env` without a restart.
+> **Contrast with `agents/unraid-rs`.** The Rust plugin's `.mcp.json` passes **no**
+> env, so for that plugin the hook *was* the only automatic credential path. After
+> installing `runraid`, `runraid setup plugin-hook` must be run once by hand.
 
 ## See Also
 
 - [../GUARDRAILS.md](../GUARDRAILS.md) -- Destructive-action and security patterns (enforced in code, not hooks)
-- [CONFIG.md](CONFIG.md) -- Plugin userConfig fields the hook persists
-- [PLUGINS.md](PLUGINS.md) -- Plugin manifest that references hooks.json
+- [CONFIG.md](CONFIG.md) -- Plugin userConfig fields
+- [PLUGINS.md](PLUGINS.md) -- Plugin manifests

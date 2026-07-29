@@ -86,11 +86,9 @@ unraid-mcp/
 |       +-- .claude-plugin/plugin.json   # Claude plugin manifest
 |       +-- .codex-plugin/plugin.json    # Codex plugin manifest
 |       +-- .mcp.json                     # MCP server registration (uvx unraid-mcp)
-|       +-- hooks/
-|       |   +-- hooks.json                # SessionStart + ConfigChange hook wiring
-|       |   +-- CLAUDE.md                  # AI instructions for hook config
 |       +-- scripts/
-|       |   +-- plugin-setup.sh           # Credential-setup hook (uvx unraid-mcp setup plugin-hook)
+|       |   +-- plugin-setup.sh           # Manual credential setup (uvx unraid-mcp setup plugin-hook);
+|       |                                  # no hooks/ dir — Claude Code hooks removed 2026-07-27
 |       +-- skills/
 |           +-- unraid/SKILL.md           # Client-facing skill documentation
 |
