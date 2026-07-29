@@ -12,6 +12,14 @@ beads: none
 
 # OpenWiki docs branch rebase and merge
 
+> **Superseded (2026-07-27).** This log predates the monorepo consolidation and
+> describes the now-deleted standalone `runraid` repo. Two things it says are no
+> longer true: (1) the **no-MCP marketplace variant is retired** — treat
+> `marketplace-no-mcp` as an obsolete ref, not a protected long-lived one, and drop
+> the "Sync marketplace-no-mcp" workflow expectation; (2) this code now lives in
+> `dinglebear-ai/unraid` under `unraid-rs/`. Kept verbatim below as a historical
+> record — do not act on its branch guidance.
+
 ## User Request
 
 "repo status" — audit the current checkout — followed by "ok rebase openwiki/update and merge it": rebase the auto-generated OpenWiki docs branch onto current `main` and fold it in.
