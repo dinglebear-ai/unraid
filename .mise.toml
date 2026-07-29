@@ -4,10 +4,20 @@
 # package. Exact Python minor follows unraid-py/pyproject.toml's >=3.12 floor.
 python = "3.12"
 uv = "latest"
-# Pinned to unraid-rs's MSRV so `cargo clippy -- -D warnings` reproduces CI.
-# rust-ci.yml pins dtolnay/rust-toolchain to 1.90 and Cargo.toml declares
-# rust-version = "1.90"; tracking `latest` here meant local clippy ran on a newer
-# stable with lints CI does not have. unraid-rs/rust-toolchain.toml carries the
-# same pin for contributors who use rustup instead of mise — keep all four in sync.
-rust = "1.90"
+# Local BUILD toolchain, tracking the fleet's current Rust (1.97.1).
+#
+# This deliberately no longer mirrors the MSRV. rust-ci.yml stays pinned to
+# Cargo.toml's rust-version so CI keeps ENFORCING the compatibility floor —
+# unraid-rmcp and lab-auth publish to crates.io, so that floor is a promise to
+# downstream users. unraid-rs/rust-toolchain.toml carries the same 1.97.1 for
+# contributors who use rustup instead of mise.
+#
+# Tradeoff, accepted knowingly: local `cargo clippy -- -D warnings` now runs on
+# a newer compiler than CI and can surface lints CI does not have. Fixing those
+# is safe (strict superset). The reverse — green locally, red in CI — is what
+# the MSRV job catches.
+#
+# Keep in sync with: unraid-rs/rust-toolchain.toml
+# Do NOT sync with:  unraid-rs/Cargo.toml rust-version, rust-ci.yml toolchain:
+rust = "1.97.1"
 node = "22"

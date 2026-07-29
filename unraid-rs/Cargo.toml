@@ -2,7 +2,7 @@
 # A root [package] is implicitly a workspace member; listing "." makes
 # release-please resolve "unraid-rs/./Cargo.toml" and log a spurious
 # "member . declared but did not find Cargo.toml" warning every run.
-members = ["xtask"]
+members = ["crates/lab-auth", "xtask"]
 resolver = "2"
 
 [package]
@@ -13,13 +13,31 @@ rust-version = "1.90"
 categories = ["command-line-utilities", "development-tools"]
 keywords = ["mcp", "unraid", "graphql", "nas", "rmcp"]
 repository = "https://github.com/dinglebear-ai/unraid"
-homepage = "https://github.com/dinglebear-ai/unraid#readme"
+homepage = "https://github.com/dinglebear-ai/unraid/tree/main/unraid-rs"
+documentation = "https://docs.rs/unraid-rmcp"
+readme = "README.md"
+license = "MIT"
 description = "Rust MCP server and CLI for Unraid GraphQL operations across NAS, Docker, VM, and storage workflows."
+publish = ["crates-io"]
+include = [
+  "/src/**",
+  "/schema/unraid-schema.graphql",
+  "/tests/fixtures/scenarios/*.json",
+  "/build.rs",
+  "/Cargo.toml",
+  "/README.md",
+  "/LICENSE",
+]
 autobins = false
 
 [[bin]]
 name = "runraid"
 path = "src/main.rs"
+
+[package.metadata.binstall.overrides.x86_64-unknown-linux-gnu]
+pkg-url = "{ repo }/releases/download/unraid-rs-v{ version }/runraid-x86_64.tar.gz"
+pkg-fmt = "tgz"
+bin-dir = "runraid-linux-x86_64"
 
 [dependencies]
 # Async runtime
@@ -49,7 +67,7 @@ chrono = { version = "0.4", features = ["serde"] }
 toml = "1.1"
 
 # OAuth + JWT
-lab-auth = { git = "https://github.com/jmagar/lab.git", rev = "87cec3241f9baef22335de9cc8629ebbcd8ba047", package = "lab-auth" }
+lab-auth = { version = "=0.15.0", path = "crates/lab-auth" }
 url = "2"
 
 # Logging

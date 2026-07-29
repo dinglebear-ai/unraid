@@ -87,16 +87,14 @@ Complete listing of all plugin components.
 | `scripts/check-version-sync.sh` | Bash | Verify version consistency across pyproject.toml and manifests |
 | `scripts/validate-marketplace.sh` | Bash | Validate Claude Code marketplace and plugin manifest structure |
 | `scripts/generate_unraid_api_reference.py` | Python | Generate canonical GraphQL API docs from live Unraid introspection |
-| `agents/unraid-py/scripts/plugin-setup.sh` | Bash | Plugin SessionStart/ConfigChange hook: persist userConfig credentials to `~/.unraid-mcp/.env` via `uvx unraid-mcp setup plugin-hook` |
+| `agents/unraid-py/scripts/plugin-setup.sh` | Bash | Manual credential setup: persist userConfig credentials to `~/.unraid-mcp/.env` via `uvx unraid-mcp setup plugin-hook` |
 
 ## Hooks
 
-Configured in `agents/unraid-py/hooks/hooks.json` (referenced by the Claude plugin manifest).
-
-| Hook | Trigger | Script |
-| --- | --- | --- |
-| Credential setup | SessionStart | `agents/unraid-py/scripts/plugin-setup.sh` |
-| Credential setup | ConfigChange (`user_settings`) | `agents/unraid-py/scripts/plugin-setup.sh` |
+**None.** The plugin's `SessionStart` + `ConfigChange` credential-setup hooks and the
+`agents/unraid-py/hooks/` directory were removed on 2026-07-27. Neither plugin manifest
+declares a `"hooks"` key. `plugin-setup.sh` survives as a manual entry point.
+See `docs/plugin/HOOKS.md`.
 
 ## CI/CD workflows
 
