@@ -26,7 +26,7 @@ httpdate = "1"
 jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 reqwest = { version = "0.13", default-features = false, features = ["rustls", "json", "gzip", "stream", "form", "multipart"] }
 rsa = "0.10.0-rc.16"
-rusqlite = { version = "0.39", features = ["bundled"] }
+rusqlite = { version = "0.40", features = ["bundled"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.11"
