@@ -45,18 +45,21 @@ Both plugins are published from a single repo. Claude reads
 path). After install, Claude Code prompts for the connection settings (the
 plugin's `userConfig`).
 
-### One manual step after installing `runraid`
+### Plugin credentials need no manual step
 
-The agent plugins ship **no Claude Code hooks**. `agents/unraid-py` needs nothing —
-its `.mcp.json` injects `UNRAID_API_URL` / `UNRAID_API_KEY` straight from your
-plugin settings. `agents/unraid-rs` passes no env, so provision its credentials once:
+The agent plugins ship **no Claude Code hooks**, and none are needed: both
+`.mcp.json` files map your plugin settings into the server environment directly
+via `${user_config.*}`. `agents/unraid-rs` wires 10 keys (endpoint, API key, TLS
+skip, bearer token, four OAuth vars); `agents/unraid-py` wires `UNRAID_API_URL`
+and `UNRAID_API_KEY`. Set them in plugin settings and the server picks them up on
+next launch.
+
+Optional, for **non-plugin** installs (systemd, Docker) that want `~/.unraid/.env`
+written to disk:
 
 ```bash
 runraid setup plugin-hook          # or: crgx unraid-rmcp -- setup plugin-hook
 ```
-
-That writes `~/.unraid/.env`, which the server loads at startup. Skip it and the
-Rust server starts with no Unraid endpoint configured.
 
 ## unraid-py quickstart (Python MCP server)
 

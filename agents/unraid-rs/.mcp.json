@@ -2,7 +2,19 @@
   "mcpServers": {
     "unraid": {
       "command": "crgx",
-      "args": ["unraid-rmcp", "--", "mcp"]
+      "args": ["unraid-rmcp", "--", "mcp"],
+      "env": {
+        "UNRAID_API_URL": "${user_config.unraid_api_url}",
+        "UNRAID_API_KEY": "${user_config.unraid_api_key}",
+        "UNRAID_API_SKIP_TLS_VERIFY": "${user_config.unraid_skip_tls}",
+        "UNRAID_RMCP_TOKEN": "${user_config.api_token}",
+        "UNRAID_RMCP_NO_AUTH": "${user_config.no_auth}",
+        "UNRAID_RMCP_AUTH_MODE": "${user_config.auth_mode}",
+        "UNRAID_RMCP_PUBLIC_URL": "${user_config.public_url}",
+        "UNRAID_RMCP_GOOGLE_CLIENT_ID": "${user_config.google_client_id}",
+        "UNRAID_RMCP_GOOGLE_CLIENT_SECRET": "${user_config.google_client_secret}",
+        "UNRAID_RMCP_AUTH_ADMIN_EMAIL": "${user_config.auth_admin_email}"
+      }
     }
   }
 }

@@ -57,15 +57,24 @@ persist plugin `userConfig` credentials. **Those hooks were removed on 2026-07-2
   `"hooks"` key, and no `hooks/` directory may exist. Both invariants are asserted by
   `unraid-rs/tests/setup_contract.rs` and `unraid-rs/scripts/validate-plugin-layout.sh`.
 - `scripts/plugin-setup.sh` is **kept** in both plugins as the manual entry point.
-- **Consequence for `agents/unraid-rs`:** its `.mcp.json` passes **no env**, so the
-  hook was the only automatic path that wrote credentials to `~/.unraid/.env`. After
-  install, credentials must now be provisioned once by hand — run
-  `runraid setup plugin-hook` (or `crgx unraid-rmcp -- setup plugin-hook`, or
-  `agents/unraid-rs/scripts/plugin-setup.sh`). Without it the server starts with no
-  `UNRAID_API_URL` / `UNRAID_API_KEY`.
-- **Consequence for `agents/unraid-py`:** none material — its `.mcp.json` injects
-  `UNRAID_API_URL` / `UNRAID_API_KEY` directly via `${CLAUDE_PLUGIN_OPTION_*}`; the
-  hook only mirrored them into `~/.unraid-mcp/.env`.
+- **Both plugins now carry the config in `.mcp.json`.** `agents/unraid-rs` maps 10
+  `userConfig` keys (`${user_config.unraid_api_url}` → `UNRAID_API_URL`, plus the
+  key, TLS skip, bearer token and four OAuth vars); `agents/unraid-py` maps
+  `UNRAID_API_URL` / `UNRAID_API_KEY`. No hook and no manual step are needed for
+  credentials.
+- **`${user_config.*}` is the correct form in `.mcp.json` — `${CLAUDE_PLUGIN_OPTION_*}`
+  is not.** The latter is what Claude Code exports to plugin *subprocesses* (hook
+  scripts); it is not substituted inside `.mcp.json`. `unraid-py` used that form from
+  v1.5.0 (2026-06-19) on the strength of claude-code #51573, but **that issue was
+  closed 2026-04-22, two months earlier** — so the workaround targeted an
+  already-fixed bug and silently broke config instead. Corrected 2026-07-28.
+- **Still unwired on `unraid-py`:** `unraid_verify_ssl` → `UNRAID_VERIFY_SSL` and
+  `unraid_allow_insecure_tls` → `UNRAID_ALLOW_INSECURE_TLS` reach the server through
+  no path. Wire them **as a pair** — `settings.py` does a module-level `sys.exit(1)`
+  when `UNRAID_VERIFY_SSL=false` without `UNRAID_ALLOW_INSECURE_TLS=true`, so wiring
+  only the first lets a user hard-kill the server from the settings UI.
+- `scripts/plugin-setup.sh` and `runraid setup plugin-hook` remain useful for
+  non-plugin (systemd/Docker) installs that need `~/.unraid/.env` written.
 
 ## Repository layout
 
