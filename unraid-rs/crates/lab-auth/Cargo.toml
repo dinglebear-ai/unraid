@@ -20,7 +20,7 @@ default = []
 
 [dependencies]
 axum = { version = "0.8", features = ["macros", "json", "tokio", "http2"] }
-base64 = "0.22"
+base64 = "0.23"
 getrandom = "0.4"
 httpdate = "1"
 jsonwebtoken = { version = "10", features = ["rust_crypto"] }
