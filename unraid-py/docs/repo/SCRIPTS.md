@@ -2,10 +2,13 @@
 
 ## Plugin hook scripts (`agents/unraid-py/scripts/`)
 
-`hooks.json` registers `plugin-setup.sh` on both `SessionStart` and `ConfigChange`
-(`user_settings` matcher). It runs `uvx unraid-mcp setup plugin-hook` to persist
-credentials to `~/.unraid-mcp/.env`, is idempotent, and always exits 0 (advisory —
-never blocks the session). The old `sync-uv.sh` hook was removed.
+`plugin-setup.sh` runs `uvx unraid-mcp setup plugin-hook` to persist credentials to
+`~/.unraid-mcp/.env`. It is idempotent and always exits 0 (advisory — never blocks).
+
+**Nothing invokes it automatically.** The plugin's `SessionStart` + `ConfigChange`
+hooks (and `hooks/hooks.json`) were removed on 2026-07-27, so this is now a manual
+entry point; the server gets its credentials from `.mcp.json` env instead. The older
+`sync-uv.sh` hook had already been removed. See `docs/plugin/HOOKS.md`.
 
 ## Repo-maintenance scripts (`scripts/`)
 
