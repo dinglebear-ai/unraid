@@ -2,7 +2,7 @@
 
 ## Overview
 
-`unraid-rmcp` is a thin GraphQL proxy. It exposes 24 read-only data actions (plus a `status` observability action and `help`) through the Model Context Protocol and an equivalent CLI. There is no local database, no ingestion pipeline, and no background tasks. All data comes from the Unraid GraphQL API on demand.
+`unraid-rmcp` is a thin GraphQL proxy. It exposes the Unraid GraphQL surface — read queries **and** mutations (see `ACTIONS` in `src/mcp/schemas.rs` for the authoritative list and per-action scope), plus a `status` observability action and `help` — through the Model Context Protocol and an equivalent CLI. Reads require `unraid:read`; mutations require `unraid:admin`. There is no local database, no ingestion pipeline, and no background tasks. All data comes from the Unraid GraphQL API on demand.
 
 ```
                       ┌─────────────────────────────────────────┐

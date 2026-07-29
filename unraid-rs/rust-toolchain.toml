@@ -1,13 +1,18 @@
-# Pin the crate's toolchain to its MSRV so local builds reproduce CI exactly.
-# rust-ci.yml pins dtolnay/rust-toolchain to 1.90 (matching Cargo.toml's
-# rust-version), and the root .mise.toml tracks `rust = "latest"` for the
-# monorepo as a whole. Without this file, `cargo clippy -- -D warnings` locally
-# runs on a newer stable carrying lints CI does not have, so a contributor can be
-# red locally and green in CI (or the reverse). This file also governs
-# contributors who do not use mise.
+# Toolchain used to BUILD unraid-rs locally. Tracks the fleet's current Rust
+# (1.97.1) rather than the MSRV.
 #
-# Keep in sync with: unraid-rs/Cargo.toml `rust-version`
-#                    .github/workflows/rust-ci.yml `toolchain:`
+# This deliberately differs from .github/workflows/rust-ci.yml, which stays
+# pinned to Cargo.toml's `rust-version` so CI keeps ENFORCING the compatibility
+# floor — unraid-rmcp and lab-auth are published to crates.io, so that floor is
+# a promise to downstream users, not just an internal preference.
+#
+# Consequence to expect: `cargo clippy -- -D warnings` locally runs on a newer
+# compiler than CI and can surface lints CI does not have. Fixing those is safe;
+# they are a superset. The reverse (green locally, red in CI) is what the MSRV
+# job exists to catch.
+#
+# Keep in sync with: the fleet's rustup default (`rustup default`)
+# Do NOT sync with:  Cargo.toml `rust-version` / rust-ci.yml `toolchain:`
 [toolchain]
-channel = "1.90"
+channel = "1.97.1"
 components = ["rustfmt", "clippy"]

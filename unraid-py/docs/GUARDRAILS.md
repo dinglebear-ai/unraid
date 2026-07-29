@@ -156,8 +156,8 @@ Subscription data with log content is capped at 1 MB / 5,000 lines to prevent un
 
 ## Hooks
 
-The plugin's only hooks are `SessionStart` + `ConfigChange`, which persist credentials
-to `~/.unraid-mcp/.env` (advisory, never-blocking). They enforce **no** guardrails — the
-safety mechanisms above (destructive-action confirmation, rate limiting, response/log
-capping) live in the server code, not in hooks. Git-side enforcement is the lefthook
+The plugin ships **no** Claude Code hooks (the advisory `SessionStart` + `ConfigChange`
+credential-setup pair was removed on 2026-07-27). No guardrail ever depended on them —
+the safety mechanisms above (destructive-action confirmation, rate limiting,
+response/log capping) live in the server code. Git-side enforcement is the lefthook
 pre-commit suite (`lefthook.yml`). See `docs/plugin/HOOKS.md` and `docs/mcp/PRE-COMMIT.md`.
