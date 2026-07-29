@@ -36,7 +36,7 @@ skills/unraid/
 This skill ships with the Unraid MCP plugin. Install via the Claude Code marketplace:
 
 ```bash
-/plugin marketplace add dinglebear-ai/unraid-mcp
+/plugin marketplace add dinglebear-ai/unraid
 /plugin install unraid-mcp @unraid-mcp
 ```
 

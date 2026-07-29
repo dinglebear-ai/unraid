@@ -1,16 +1,16 @@
 name: CI
 
-# PATH-FILTER CONTRACT — do not narrow without reading this.
-# unraid-py/tests/ owns REPO-WIDE policy suites, not just Python tests:
+# REQUIRED-CHECK CONTRACT — do not add a pull_request path filter.
+# Branch protection requires this workflow's named checks on every PR, regardless
+# of which component changed. Push runs remain path-scoped to avoid duplicate work.
+# unraid-py/tests/ also owns REPO-WIDE policy suites, not just Python tests:
 #   * test_supply_chain_policy.py globs ALL .github/workflows/*.yml and enforces
 #     SHA-pinned actions, the openwiki job/permission split, and release pinning.
 #   * test_schema_drift_workflow.py asserts on the drift workflows.
 #   * the version-sync job reads agents/unraid-py/{.claude,.codex}-plugin/plugin.json.
-# Those gates only run when this workflow runs, so `.github/workflows/**` and
-# `agents/unraid-py/**` MUST stay in the filter — otherwise a floating `@v4` added
-# to another component's workflow, or a plugin-manifest version desync, merges
-# green with no error surface. (This regressed once: the consolidation added a
-# paths: filter here where previously there was none.)
+# Those gates only run when this workflow runs. Every pull request therefore runs
+# this workflow; the push filter must continue to include shared workflow and
+# Python-agent metadata so direct branch pushes receive the same policy coverage.
 on:
   push:
     branches: ["main", "feat/**", "fix/**"]
@@ -20,10 +20,6 @@ on:
       - ".github/workflows/**"
   pull_request:
     branches: ["main"]
-    paths:
-      - "unraid-py/**"
-      - "agents/unraid-py/**"
-      - ".github/workflows/**"
   schedule:
     # Weekly blocking live smoke on a tailnet-connected self-hosted runner.
     - cron: "23 7 * * 1"
@@ -39,8 +35,7 @@ concurrency:
   cancel-in-progress: true
 
 # The Python package now lives in unraid-py/; every run: step executes there.
-# Secret scanning was extracted to secret-scan.yml (unfiltered) so this
-# workflow's unraid-py/** path filter cannot gate it off.
+# Secret scanning remains extracted to the unfiltered secret-scan.yml workflow.
 defaults:
   run:
     working-directory: unraid-py
@@ -51,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
@@ -69,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
@@ -89,7 +84,7 @@ jobs:
       matrix:
         python-version: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
@@ -108,7 +103,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "20"
@@ -129,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check all version files are in sync
         run: bash scripts/check-version-sync.sh
 
@@ -150,7 +145,7 @@ jobs:
       UNRAID_API_URL: ${{ secrets.UNRAID_API_URL }}
       UNRAID_API_KEY: ${{ secrets.UNRAID_API_KEY }}
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
@@ -168,7 +163,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.9.25"
@@ -192,7 +187,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2

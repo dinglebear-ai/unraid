@@ -101,7 +101,7 @@ uvx unraid-mcp
 ## GitHub Container Registry
 
 ```bash
-docker pull ghcr.io/jmagar/unraid-mcp:latest
+docker pull ghcr.io/dinglebear-ai/unraid:latest
 ```
 
 Release tags: `latest`, `1.2.3`, `1.2`, `1`, and `sha-<commit>`. Unreleased `main`

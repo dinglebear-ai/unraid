@@ -1,14 +1,14 @@
 {
   "name": "unraid-mcp",
   "displayName": "Unraid MCP",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "Query, monitor, and manage Unraid servers via GraphQL API through MCP tools. Supports system info, Docker, VMs, array/parity, notifications, plugins, rclone, and live telemetry.",
   "author": {
     "name": "Jacob Magar",
     "email": "jmagar@users.noreply.github.com"
   },
-  "repository": "https://github.com/dinglebear-ai/unraid-mcp",
-  "homepage": "https://github.com/dinglebear-ai/unraid-mcp",
+  "repository": "https://github.com/dinglebear-ai/unraid",
+  "homepage": "https://github.com/dinglebear-ai/unraid",
   "license": "MIT",
   "keywords": [
     "unraid",
