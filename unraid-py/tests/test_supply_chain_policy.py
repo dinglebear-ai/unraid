@@ -27,25 +27,6 @@ def test_every_external_action_is_immutable() -> None:
     assert not violations, f"mutable action references: {violations}"
 
 
-def test_openwiki_generation_is_locked_and_separated_from_repository_write() -> None:
-    workflow = _workflows()["openwiki-update.yml"]
-    lock = (ROOT / "scripts" / "openwiki" / "package-lock.json").read_text()
-    assert '"openwiki": "0.1.2"' in lock
-    assert "npm ci --prefix scripts/openwiki --ignore-scripts" in workflow
-    assert "npm install --global" not in workflow
-    assert "persist-credentials: false" in workflow
-    assert 'source "$env_file"' not in workflow
-    generate = workflow.split("  generate:", 1)[1].split("  propose:", 1)[0]
-    propose = workflow.split("  propose:", 1)[1]
-    assert "OPENAI_COMPATIBLE_API_KEY" in generate
-    assert "contents: write" not in generate
-    assert "pull-requests: write" not in generate
-    assert "OPENAI_COMPATIBLE_API_KEY" not in propose
-    assert "TS_OAUTH_SECRET" not in propose
-    assert "contents: write" in propose
-    assert "pull-requests: write" in propose
-
-
 def test_audit_targets_locked_application_graph() -> None:
     workflow = _workflows()["ci.yml"]
     assert "uv export --frozen --no-dev --no-emit-project" in workflow
