@@ -142,3 +142,28 @@ jobs:
       - name: Version sync across all unraid-rs version carriers
         working-directory: ${{ github.workspace }}
         run: bash unraid-rs/scripts/check-version-sync.sh unraid-rs
+
+  crates-package:
+    name: Crates.io Package
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39 # 1.90
+        with:
+          toolchain: "1.90"
+      - name: Package lab-auth exactly as crates.io will receive it
+        run: cargo publish --package lab-auth --locked --dry-run
+      - name: Validate unraid-rmcp payload before dependency publication
+        run: |
+          set -euo pipefail
+          files="$(cargo package --package unraid-rmcp --locked --list)"
+          if grep -Eq '^(packages/|docs/|config/|examples/|xtask/|target/)' <<<"$files"; then
+            echo "unraid-rmcp package includes repository-only files" >&2
+            exit 1
+          fi
+          grep -qx 'src/main.rs' <<<"$files"
+          grep -qx 'schema/unraid-schema.graphql' <<<"$files"
+          test "$(wc -l <<<"$files")" -lt 90

@@ -125,6 +125,82 @@ def validate_release_please(repo_root: Path, errors: list[str]) -> list[ReleaseU
         errors,
     )
 
+    rust_package = cargo.get("package", {})
+    rust_dependencies = cargo.get("dependencies", {})
+    rust_publish = rust_package.get("publish", [])
+    assert_true(
+        rust_publish == ["crates-io"],
+        "unraid-rmcp must be publishable only to crates.io",
+        errors,
+    )
+    assert_true(
+        rust_package.get("license") == "MIT"
+        and rust_package.get("documentation") == "https://docs.rs/unraid-rmcp"
+        and rust_package.get("readme") == "README.md",
+        "unraid-rmcp crates.io metadata must include MIT, docs.rs, and README",
+        errors,
+    )
+    assert_true(
+        all(not (isinstance(spec, dict) and "git" in spec) for spec in rust_dependencies.values()),
+        "unraid-rmcp dependencies must not use Git sources",
+        errors,
+    )
+    auth_dependency = rust_dependencies.get("lab-auth", {})
+    assert_true(
+        isinstance(auth_dependency, dict)
+        and auth_dependency.get("version") == "=0.15.0"
+        and auth_dependency.get("path") == "crates/lab-auth",
+        "unraid-rmcp must use the crates.io-compatible lab-auth 0.15.0 path+version dependency",
+        errors,
+    )
+    binstall = (
+        rust_package.get("metadata", {})
+        .get("binstall", {})
+        .get("overrides", {})
+        .get("x86_64-unknown-linux-gnu", {})
+    )
+    assert_true(
+        binstall.get("pkg-url")
+        == "{ repo }/releases/download/unraid-rs-v{ version }/runraid-x86_64.tar.gz"
+        and binstall.get("pkg-fmt") == "tgz"
+        and binstall.get("bin-dir") == "runraid-linux-x86_64",
+        "unraid-rmcp must advertise the linux/x64 GitHub Release asset to cargo-binstall/CRGX",
+        errors,
+    )
+
+    auth_manifest = tomllib.loads(
+        (repo_root / "unraid-rs/crates/lab-auth/Cargo.toml").read_text()
+    )
+    auth_package = auth_manifest.get("package", {})
+    assert_true(
+        auth_package.get("name") == "lab-auth"
+        and auth_package.get("version") == "0.15.0"
+        and auth_package.get("license") == "MIT"
+        and auth_package.get("publish") == ["crates-io"],
+        "lab-auth compatibility crate must remain the publishable MIT 0.15.0 snapshot",
+        errors,
+    )
+    assert_true(
+        all(
+            not (isinstance(spec, dict) and ("git" in spec or "path" in spec))
+            for spec in auth_manifest.get("dependencies", {}).values()
+        ),
+        "lab-auth compatibility crate must use registry-only dependencies",
+        errors,
+    )
+    crates_workflow = repo_root / ".github/workflows/crates-publish.yml"
+    workflow_text = crates_workflow.read_text() if crates_workflow.exists() else ""
+    assert_true(
+        "CARGO_REGISTRY_TOKEN" in workflow_text
+        and "CRATES_IO_USER_AGENT" in workflow_text
+        and 'curl -A "$CRATES_IO_USER_AGENT"' in workflow_text
+        and "cargo publish --package lab-auth" in workflow_text
+        and "cargo publish --package unraid-rmcp" in workflow_text
+        and "crgx \"unraid-rmcp@${VERSION}\" -- --version" in workflow_text,
+        "crates.io workflow must publish both crates, identify API polling, and smoke CRGX",
+        errors,
+    )
+
     units: list[ReleaseUnit] = []
     for name in sorted(RELEASE_PLEASE_PACKAGES):
         version = versions[name]

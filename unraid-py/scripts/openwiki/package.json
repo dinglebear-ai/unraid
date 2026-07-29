@@ -1,9 +1,0 @@
-{
-  "name": "unraid-mcp-openwiki-generator",
-  "private": true,
-  "version": "0.0.0",
-  "description": "Checksum-locked OpenWiki generator used only by GitHub Actions.",
-  "dependencies": {
-    "openwiki": "0.1.2"
-  }
-}
