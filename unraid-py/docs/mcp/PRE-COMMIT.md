@@ -54,8 +54,8 @@ Configured for Python 3.12 with respect for `type: ignore` comments.
 | `skills` | `just validate-skills` |
 | `env_guard` | `bash scripts/block-env-commits.sh` — blocks committing `.env` files |
 
-> Note: the **plugin's** `hooks.json` (`SessionStart` + `ConfigChange`) is unrelated —
-> it persists credentials at runtime, not a git/PostToolUse hook. See
+> Note: these are **git** hooks. The plugin's Claude Code hooks (`SessionStart` +
+> `ConfigChange`) were removed on 2026-07-27 and no longer exist. See
 > [../plugin/HOOKS.md](../plugin/HOOKS.md).
 
 ## Justfile Integration
