@@ -31,7 +31,7 @@ function releaseVersion(env = process.env) {
 }
 
 function releaseBaseUrl(env = process.env) {
-  const repo = env.UNRAID_RMCP_REPO || "dinglebear-ai/unraid-mcp";
+  const repo = env.UNRAID_RMCP_REPO || "dinglebear-ai/unraid";
   return env.UNRAID_RMCP_RELEASE_BASE_URL || `https://github.com/${repo}/releases/download`;
 }
 

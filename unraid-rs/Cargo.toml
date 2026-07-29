@@ -12,8 +12,8 @@ edition = "2021"
 rust-version = "1.90"
 categories = ["command-line-utilities", "development-tools"]
 keywords = ["mcp", "unraid", "graphql", "nas", "rmcp"]
-repository = "https://github.com/dinglebear-ai/unraid-mcp"
-homepage = "https://github.com/dinglebear-ai/unraid-mcp#readme"
+repository = "https://github.com/dinglebear-ai/unraid"
+homepage = "https://github.com/dinglebear-ai/unraid#readme"
 description = "Rust MCP server and CLI for Unraid GraphQL operations across NAS, Docker, VM, and storage workflows."
 autobins = false
 
@@ -35,7 +35,7 @@ rmcp = { version = "1.6.0", default-features = false, features = [
   "transport-streamable-http-server",
   "transport-io",
 ] }
-tower-http = { version = "0.6", features = ["cors", "limit", "trace"] }
+tower-http = { version = "0.7", features = ["cors", "limit", "trace"] }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
@@ -46,7 +46,7 @@ schemars = "1"
 chrono = { version = "0.4", features = ["serde"] }
 
 # Config
-toml = "0.8"
+toml = "1.1"
 
 # OAuth + JWT
 lab-auth = { git = "https://github.com/jmagar/lab.git", rev = "87cec3241f9baef22335de9cc8629ebbcd8ba047", package = "lab-auth" }

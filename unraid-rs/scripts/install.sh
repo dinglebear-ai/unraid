@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-REPO="${UNRAID_RMCP_REPO:-dinglebear-ai/unraid-mcp}"
+REPO="${UNRAID_RMCP_REPO:-dinglebear-ai/unraid}"
 INSTALL_DIR="${INSTALL_DIR:-${HOME}/.local/bin}"
 VERSION="${UNRAID_RMCP_VERSION:-latest}"
 RELEASE_BASE_URL="${UNRAID_RMCP_RELEASE_BASE_URL:-}"
@@ -16,7 +16,7 @@ Install runraid from GitHub Releases.
 Environment:
   INSTALL_DIR Destination directory (default: ~/.local/bin)
   UNRAID_RMCP_VERSION Release version such as 0.2.3, v0.2.3 or unraid-rs-v0.2.3 (default: latest unraid-rs release)
-  UNRAID_RMCP_REPO GitHub repo owner/name (default: dinglebear-ai/unraid-mcp)
+  UNRAID_RMCP_REPO GitHub repo owner/name (default: dinglebear-ai/unraid)
 USAGE
 }
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then usage; exit 0; fi
