@@ -81,7 +81,7 @@ dependencies = [
     # Floor raised to 1.27.2 to pull in the fix for CVE-2026-52870 (present in 1.26.0).
     "mcp>=1.27.2,<2",
     "uvicorn[standard]>=0.35.0",
-    "websockets>=15.0.1,<17.0.0",
+    "websockets>=15.0.1,<18.0.0",
     "rich>=14.1.0",
     "pydantic-settings>=2.0",
     # Runtime dependency for AST-based validation of the raw GraphQL subscription
