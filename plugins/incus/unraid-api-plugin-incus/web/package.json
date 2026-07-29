@@ -20,7 +20,7 @@
     "reka-ui": "^2.5.0",
     "smol-toml": "^1.7.0",
     "tailwind-merge": "^2.6.0",
-    "vue": "^3.5.20"
+    "vue": "^3.5.40"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.12",
