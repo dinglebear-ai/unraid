@@ -54,7 +54,8 @@ Pre-release and quality checklist. Complete all items before tagging a release.
 
 ## Hooks
 
-- [ ] `hooks/hooks.json` registers `SessionStart` + `ConfigChange` hooks (`scripts/plugin-setup.sh`)
+- [ ] No `hooks/` directory exists under `agents/unraid-py/` (Claude Code hooks retired 2026-07-27)
+- [ ] Neither plugin manifest declares a `"hooks"` key
 
 ## Documentation
 
