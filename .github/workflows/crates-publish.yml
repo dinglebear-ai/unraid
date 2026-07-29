@@ -1,0 +1,133 @@
+name: crates.io publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing unraid-rs-vX.Y.Z release tag
+        required: true
+        type: string
+      source_ref:
+        description: Source ref containing the crates.io-ready manifests
+        required: true
+        default: main
+        type: string
+      publish:
+        description: Publish both crates to crates.io
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: crates-io-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      (github.event_name == 'release' &&
+        vars.CRATES_IO_PUBLISHING_ENABLED == 'true' &&
+        startsWith(github.event.release.tag_name, 'unraid-rs-v')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.publish &&
+        startsWith(inputs.tag, 'unraid-rs-v'))
+    runs-on: ubuntu-latest
+    environment: crates-io
+    timeout-minutes: 30
+    env:
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      CRATES_IO_USER_AGENT: unraid-mcp release workflow (https://github.com/dinglebear-ai/unraid-mcp)
+      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
+      SOURCE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || github.event.release.tag_name }}
+    defaults:
+      run:
+        working-directory: unraid-rs
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ env.SOURCE_REF }}
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+        with:
+          toolchain: stable
+
+      - name: Verify release tag and package versions
+        id: versions
+        run: |
+          set -euo pipefail
+          version="$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "unraid-rmcp") | .version')"
+          auth_version="$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "lab-auth") | .version')"
+          test "$TAG" = "unraid-rs-v${version}"
+          test "$auth_version" = "0.15.0"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "auth_version=$auth_version" >> "$GITHUB_OUTPUT"
+
+      - name: Verify crates.io packages before upload
+        run: |
+          set -euo pipefail
+          cargo publish --package lab-auth --locked --dry-run
+          files="$(cargo package --package unraid-rmcp --locked --list)"
+          if grep -Eq '^(packages/|docs/|config/|examples/|xtask/|target/)' <<<"$files"; then
+            echo "unraid-rmcp package includes repository-only files" >&2
+            exit 1
+          fi
+          grep -qx 'src/main.rs' <<<"$files"
+          grep -qx 'schema/unraid-schema.graphql' <<<"$files"
+          test "$(wc -l <<<"$files")" -lt 90
+
+      - name: Publish lab-auth compatibility crate
+        env:
+          AUTH_VERSION: ${{ steps.versions.outputs.auth_version }}
+        run: |
+          set -euo pipefail
+          if curl -A "$CRATES_IO_USER_AGENT" -fsS "https://crates.io/api/v1/crates/lab-auth/${AUTH_VERSION}" >/dev/null; then
+            echo "lab-auth@${AUTH_VERSION} already exists; skipping."
+          else
+            cargo publish --package lab-auth --locked
+          fi
+          for _ in {1..60}; do
+            curl -A "$CRATES_IO_USER_AGENT" -fsS "https://crates.io/api/v1/crates/lab-auth/${AUTH_VERSION}" >/dev/null && exit 0
+            sleep 5
+          done
+          echo "lab-auth@${AUTH_VERSION} did not appear in the crates.io index" >&2
+          exit 1
+
+      - name: Publish unraid-rmcp
+        env:
+          VERSION: ${{ steps.versions.outputs.version }}
+        run: |
+          set -euo pipefail
+          if curl -A "$CRATES_IO_USER_AGENT" -fsS "https://crates.io/api/v1/crates/unraid-rmcp/${VERSION}" >/dev/null; then
+            echo "unraid-rmcp@${VERSION} already exists; skipping."
+          else
+            cargo publish --package unraid-rmcp --locked --dry-run
+            cargo publish --package unraid-rmcp --locked
+          fi
+          for _ in {1..60}; do
+            curl -A "$CRATES_IO_USER_AGENT" -fsS "https://crates.io/api/v1/crates/unraid-rmcp/${VERSION}" >/dev/null && exit 0
+            sleep 5
+          done
+          echo "unraid-rmcp@${VERSION} did not appear in the crates.io index" >&2
+          exit 1
+
+      - name: Smoke cargo install from crates.io
+        env:
+          VERSION: ${{ steps.versions.outputs.version }}
+        run: |
+          set -euo pipefail
+          root="$(mktemp -d)"
+          cargo install unraid-rmcp --version "=${VERSION}" --locked --root "$root"
+          "$root/bin/runraid" --version
+
+      - name: Smoke CRGX binary resolution
+        env:
+          VERSION: ${{ steps.versions.outputs.version }}
+        run: |
+          set -euo pipefail
+          cargo install crgx --locked
+          crgx "unraid-rmcp@${VERSION}" -- --version

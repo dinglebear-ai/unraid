@@ -24,8 +24,10 @@ Add this repo as a marketplace, then install the plugin:
 
 `marketplace add` accepts the `owner/repo` shorthand (or a full git URL / local
 path). After install, Claude Code prompts for **Unraid GraphQL API URL** and
-**Unraid API Key** (the plugin's `userConfig`); they're passed to the server and
-persisted to `~/.unraid-mcp/.env` by the SessionStart hook.
+**Unraid API Key** (the plugin's `userConfig`); they're passed straight to the server
+via `.mcp.json` env, so no further setup is needed. To *also* persist them to
+`~/.unraid-mcp/.env` (for running the server outside Claude Code), run
+`uvx unraid-mcp setup plugin-hook` — the plugin no longer ships hooks to do it for you.
 
 ### Codex (plugin + marketplace)
 
@@ -206,8 +208,7 @@ unraid-mcp/
 │       ├── .claude-plugin/      #   Claude Code plugin manifest (plugin.json) + README
 │       ├── .codex-plugin/       #   Codex plugin manifest (plugin.json)
 │       ├── .mcp.json            #   shared MCP server definition (Claude) — runs `uvx unraid-mcp`
-│       ├── hooks/               #   SessionStart / ConfigChange hooks (hooks.json)
-│       ├── scripts/             #   plugin-runtime hook scripts (plugin-setup.sh)
+│       ├── scripts/             #   manual credential-setup script (plugin-setup.sh)
 │       └── skills/unraid/       #   client-facing skill docs, references, and helpers
 ├── gemini-extension.json        # Gemini CLI extension manifest (repo root, for git-URL install)
 ├── .claude-plugin/

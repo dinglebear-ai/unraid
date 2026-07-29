@@ -10,6 +10,12 @@ beads: unrust-ycf
 
 # Unraid MCP OAuth debug session
 
+> **Superseded (2026-07-27).** This log predates the monorepo consolidation and
+> describes the now-deleted standalone `runraid` repo. The `origin/marketplace-no-mcp`
+> branch it enumerates is **retired** — the no-MCP marketplace variant no longer
+> exists. This code now lives in `dinglebear-ai/unraid` under `unraid-rs/`. Kept
+> verbatim below as a historical record.
+
 ## User Request
 
 Debug the OAuth issue with `https://unraid.tootie.tv/mcp`, then clarify whether the fix was merged, released, and present in Docker images.

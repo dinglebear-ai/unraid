@@ -9,10 +9,10 @@ system metrics, UPS, logs, network settings, plugins, parity history, rclone,
 remote access, and Unraid Connect through stdio MCP, Streamable HTTP MCP, or
 direct shell commands.
 
-**30-second path:** set `UNRAID_API_URL` and `UNRAID_API_KEY`, then run
-`npx -y unraid-rmcp server --json` -> start loopback HTTP with
-`UNRAID_RMCP_HOST=127.0.0.1 npx -y unraid-rmcp serve mcp` -> call `tools/call`
-with `{"action":"server"}`.
+**30-second path:** install CRGX, set `UNRAID_API_URL` and `UNRAID_API_KEY`,
+then run `crgx unraid-rmcp -- server --json` -> start loopback HTTP with
+`UNRAID_RMCP_HOST=127.0.0.1 crgx unraid-rmcp -- serve mcp` -> call
+`tools/call` with `{"action":"server"}`.
 
 **Status:** operational RMCP upstream-client server with the full Unraid GraphQL
 query and mutation surface. Read actions require `unraid:read`; writes require
@@ -55,8 +55,9 @@ through MCP tool arguments.
 | Repository | `unraid-rmcp` |
 | Rust crate | `unraid-rmcp` |
 | Binary / CLI | `runraid` |
-| npm package | `unraid-rmcp` |
-| npm binary aliases | `unraid-rmcp`, `runraid` |
+| crates.io package | `unraid-rmcp` |
+| CRGX command | `crgx unraid-rmcp -- <runraid args>` |
+| Legacy npm package | `unraid-rmcp` |
 | MCP tool | `unraid` |
 | Config home | `~/.unraid` on hosts, `/data` in containers |
 | Env prefixes | `UNRAID_*`, `UNRAID_RMCP_*` |
@@ -87,31 +88,29 @@ existing deployment config.
 
 | Path | Command | Best for | Notes |
 |---|---|---|---|
-| npm / npx | `npx -y unraid-rmcp --help` | Local MCP clients and quick trials. | Downloads the matching `runraid` binary from GitHub Releases. |
-| Release installer | `curl -fsSL https://raw.githubusercontent.com/dinglebear-ai/unraid/main/unraid-rs/scripts/install.sh \| bash` | Host installs without Node. | Installs `runraid` for linux/amd64. |
+| CRGX | `crgx unraid-rmcp -- --help` | Local MCP clients and quick trials. | Resolves the crate from crates.io and downloads the matching GitHub Release binary. |
+| Cargo install | `cargo install unraid-rmcp --locked` | Persistent CLI installation. | Builds `runraid` from the crates.io source package. |
+| Release installer | `curl -fsSL https://raw.githubusercontent.com/dinglebear-ai/unraid/main/unraid-rs/scripts/install.sh \| bash` | Host installs without CRGX. | Installs `runraid` for linux/amd64. |
 | Docker / Compose | `docker compose up -d` | Shared HTTP MCP deployments. | Reads `.env` and exposes container port `40010`. |
 | Build from source | `cargo build --release` | Development and audits. | Produces `target/release/runraid`. |
-| Plugin | `claude plugin install agents/unraid-rs` | Claude Code local plugin setup from this checkout. | Uses the packaged setup hook, skill, and local runtime metadata. |
+| Plugin | `claude plugin install agents/unraid-rs` | Claude Code local plugin setup from this checkout. | Ships the skill and local runtime metadata. No hooks — run `runraid setup plugin-hook` once to provision credentials. |
 
-### npm / npx
+### CRGX / crates.io
 
-Run the stdio MCP server or CLI without a manual binary install:
+Run the stdio MCP server or CLI without installing Node or compiling Rust:
 
 ```bash
-npx -y unraid-rmcp --help
-npx -y unraid-rmcp mcp
-npx -y unraid-rmcp server --json
+crgx unraid-rmcp -- --help
+crgx unraid-rmcp -- mcp
+crgx unraid-rmcp -- server --json
 ```
 
-The npm package downloads `runraid` during `postinstall`. Override download
-behavior only when testing packaging:
+CRGX resolves `unraid-rmcp` from crates.io, reads its cargo-binstall metadata,
+and downloads the matching `runraid` archive from the component-prefixed GitHub
+Release. Exact crate versions can be pinned with `unraid-rmcp@<version>`.
 
-| Variable | Purpose |
-|---|---|
-| `UNRAID_RMCP_SKIP_DOWNLOAD=1` | Skip postinstall binary download. |
-| `UNRAID_RMCP_VERSION` or `UNRAID_RMCP_BINARY_VERSION` | Select the GitHub Release tag. |
-| `UNRAID_RMCP_REPO` | Select the GitHub repo used for release downloads. |
-| `UNRAID_RMCP_RELEASE_BASE_URL` | Select a custom release base URL. |
+The npm launcher remains available only as a compatibility path for existing
+installations; new MCP configurations should use CRGX.
 
 ### Build From Source
 
@@ -141,13 +140,13 @@ a certificate your host does not trust.
 ### 2. Run A Safe CLI Call
 
 ```bash
-npx -y unraid-rmcp server --json
+crgx unraid-rmcp -- server --json
 ```
 
 ### 3. Start Loopback HTTP MCP
 
 ```bash
-UNRAID_RMCP_HOST=127.0.0.1 npx -y unraid-rmcp serve mcp
+UNRAID_RMCP_HOST=127.0.0.1 crgx unraid-rmcp -- serve mcp
 ```
 
 In another shell:
@@ -173,8 +172,8 @@ curl -s -X POST http://127.0.0.1:40010/mcp \
 {
   "mcpServers": {
     "unraid": {
-      "command": "npx",
-      "args": ["-y", "unraid-rmcp", "mcp"],
+      "command": "crgx",
+      "args": ["unraid-rmcp", "--", "mcp"],
       "env": {
         "UNRAID_API_URL": "https://10-1-0-2.<hash>.myunraid.net:31337/graphql",
         "UNRAID_API_KEY": "your-api-key-here"
@@ -207,8 +206,8 @@ server, or run it directly as stdio for local-only use.
 
 ```toml
 [mcp_servers.unraid]
-command = "npx"
-args = ["-y", "unraid-rmcp", "mcp"]
+command = "crgx"
+args = ["unraid-rmcp", "--", "mcp"]
 ```
 
 ### Generic MCP JSON
@@ -233,7 +232,7 @@ as action arguments.
 
 | Surface | Status | Entry point | Purpose |
 |---|---:|---|---|
-| MCP stdio | Supported | `runraid mcp`, `npx -y unraid-rmcp mcp` | Local child-process MCP clients. |
+| MCP stdio | Supported | `runraid mcp`, `crgx unraid-rmcp -- mcp` | Local child-process MCP clients. |
 | MCP HTTP | Supported | `runraid serve mcp`, `POST /mcp` | Streamable HTTP MCP for local or shared server deployments. |
 | CLI | Supported | `runraid <command>` | Scriptable parity and debugging. |
 | Prompt | Supported | `server_summary` | Guides a model to call `info` and summarize server state. |
@@ -407,16 +406,17 @@ CLI shim      (src/cli.rs)           argv -> service -> stdout
 - `Cargo.toml`, `Cargo.lock`, both `version` and `binaryVersion` in
   `packages/unraid-rmcp/package.json`, `.release-please-manifest.json`, agent
   manifests, and `server.json` must agree on the released version.
-- GitHub Releases publish the linux/amd64 `runraid` binary consumed by the npm
-  launcher.
-- The npm package name is `unraid-rmcp`; binary aliases are `unraid-rmcp` and
-  `runraid`. Publishing runs from `.github/workflows/rust-release.yml` on a
-  GitHub-hosted runner using npm OIDC trusted publishing. Automatic npm
-  publishing is enabled only when the `NPM_TRUSTED_PUBLISHING_ENABLED` repository
-  variable is `true`.
+- crates.io publishes `lab-auth` first and `unraid-rmcp` second through
+  `.github/workflows/crates-publish.yml`; automatic publication stays disabled
+  until `CRATES_IO_PUBLISHING_ENABLED=true` and the `crates-io` environment holds
+  `CARGO_REGISTRY_TOKEN`.
+- GitHub Releases publish the linux/amd64 `runraid` archive consumed by CRGX and
+  cargo-binstall through the manifest metadata in `Cargo.toml`.
+- The npm package remains a compatibility surface only. Automatic npm publishing
+  is enabled only when `NPM_TRUSTED_PUBLISHING_ENABLED=true`.
 - Docker/OCI metadata uses `ghcr.io/dinglebear-ai/unraid-rmcp:<version>`.
-- `agents/unraid-rs/.mcp.json` must launch `npx -y unraid-rmcp mcp` so stdio
-  clients start the MCP transport rather than the HTTP server.
+- `agents/unraid-rs/.mcp.json` must launch `crgx unraid-rmcp -- mcp` so stdio
+  clients resolve the crates.io package without requiring Node.
 - The root README is curated. `docs/INVENTORY.md` is the curated inventory for
   actions, CLI commands, env vars, HTTP endpoints, and dependencies.
 
