@@ -7,6 +7,22 @@
 # and uv entries pointed at "/" after the consolidation moved the Python server
 # into unraid-py/, which stopped both streams unnoticed. meta-ci.yml now asserts
 # every directory below exists.
+#
+# GROUPING: 11 ungrouped streams produced 36 simultaneous open PRs, each needing
+# its own CI cycle. Because main requires branches to be up to date before merge
+# (`strict: true`), those merges serialise — every merge puts the others behind
+# again — and the Rust jobs run on four self-hosted runners, so the queue
+# saturates and little lands.
+#
+# Every stream therefore carries two groups:
+#   minor-and-patch — one PR per stream, reviewable as a batch
+#   major           — one PR per stream, kept separate because majors need
+#                     individual scrutiny (0.x minors are breaking too, and a
+#                     base-image or toolchain bump can silently violate the MSRV
+#                     pin documented in the root CLAUDE.md)
+#
+# Grouping applies on dependabot's next scheduled run. It does NOT retroactively
+# regroup PRs that are already open.
 version: 2
 updates:
   # Keep the SHA-pinned GitHub Actions fresh. Workflows stay at the repo root.
@@ -14,45 +30,115 @@ updates:
     directory: "/"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
 
   # ── Python server (unraid-py) ──────────────────────────────────────────────
   - package-ecosystem: "docker"
     directory: "/unraid-py"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
   - package-ecosystem: "uv"
     directory: "/unraid-py"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
 
   # ── Rust server (unraid-rs) ────────────────────────────────────────────────
   - package-ecosystem: "cargo"
     directory: "/unraid-rs"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
   - package-ecosystem: "docker"
     directory: "/unraid-rs/config"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
 
   # ── Node packages (one entry per tracked package-lock.json) ────────────────
   - package-ecosystem: "npm"
     directory: "/unraid-py/tests/mock"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
   - package-ecosystem: "npm"
     directory: "/plugins/mcp/web"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
   - package-ecosystem: "npm"
     directory: "/plugins/codex/web-src"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
   - package-ecosystem: "npm"
     directory: "/plugins/incus/unraid-api-plugin-incus"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
   - package-ecosystem: "npm"
     directory: "/plugins/incus/unraid-api-plugin-incus/web"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
