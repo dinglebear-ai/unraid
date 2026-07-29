@@ -21,7 +21,10 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # Pinned, not derived from github.repository: the repo was renamed unraid-mcp -> unraid
+  # and GHCR package paths do not follow repo-rename redirects. Deriving this would
+  # silently start publishing to a new, empty ghcr.io/<owner>/unraid package.
+  IMAGE_NAME: ${{ github.repository_owner }}/unraid-mcp
   TEST_IMAGE: local/unraid-mcp:${{ github.sha }}
 
 # Python server sources (incl. scripts/, tests/, pyproject.toml, Dockerfile)
