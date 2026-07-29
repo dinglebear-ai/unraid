@@ -70,21 +70,50 @@ fn setup_repair_creates_env_file_without_upstream_contact() {
     assert!(env_file.contains("UNRAID_RMCP_TOKEN=mcp-secret"));
 }
 
-/// The plugin hook config calls the wrapper script, which degrades gracefully
-/// (exit 0 with a message) when `runraid` isn't on PATH instead of failing the
-/// hook outright.
+/// The setup wrapper script prefers an installed `runraid` binary, falls back to
+/// CRGX, and degrades gracefully only when neither executable is available.
+///
+/// Claude Code hooks were removed from the agent plugin (2026-07-27), so nothing
+/// invokes this script automatically any more — it is the manual credential-setup
+/// entry point. The contract on its contents still holds.
 #[test]
-fn claude_hooks_call_setup_script() {
-    let hooks: Value = serde_json::from_str(
-        &std::fs::read_to_string("../agents/unraid-rs/hooks/hooks.json").unwrap(),
-    )
-    .unwrap();
-    for hook_name in ["SessionStart", "ConfigChange"] {
-        let command = hooks["hooks"][hook_name][0]["hooks"][0]["command"]
-            .as_str()
-            .unwrap();
-        assert_eq!(command, "${CLAUDE_PLUGIN_ROOT}/scripts/plugin-setup.sh");
+fn plugin_setup_script_prefers_binary_then_crgx() {
+    let setup = std::fs::read_to_string("../agents/unraid-rs/scripts/plugin-setup.sh").unwrap();
+    assert!(setup.contains("command -v crgx"));
+    assert!(setup.contains("exec crgx unraid-rmcp -- setup plugin-hook"));
+}
+
+/// The agent plugin must ship no Claude Code hooks: no `hooks/` directory and no
+/// `hooks` key in either manifest.
+#[test]
+fn agent_plugin_declares_no_claude_hooks() {
+    assert!(
+        !std::path::Path::new("../agents/unraid-rs/hooks").exists(),
+        "agents/unraid-rs/hooks/ must not exist — Claude Code hooks are retired"
+    );
+    for manifest in [
+        "../agents/unraid-rs/.claude-plugin/plugin.json",
+        "../agents/unraid-rs/.codex-plugin/plugin.json",
+    ] {
+        let json: Value =
+            serde_json::from_str(&std::fs::read_to_string(manifest).unwrap()).unwrap();
+        assert!(
+            json.get("hooks").is_none(),
+            "{manifest} must not declare a \"hooks\" key"
+        );
     }
+}
+
+#[test]
+fn claude_mcp_config_uses_crgx() {
+    let mcp: Value =
+        serde_json::from_str(&std::fs::read_to_string("../agents/unraid-rs/.mcp.json").unwrap())
+            .unwrap();
+    assert_eq!(mcp["mcpServers"]["unraid"]["command"], "crgx");
+    assert_eq!(
+        mcp["mcpServers"]["unraid"]["args"],
+        serde_json::json!(["unraid-rmcp", "--", "mcp"])
+    );
 }
 
 /// `apply_plugin_options()` (run before `Config::load()`) must map
