@@ -144,7 +144,6 @@ exclude = [
     "/docs",
     "/dist",
     "/logs",
-    "/scripts/openwiki/node_modules",
     "*.pyc",
     "__pycache__",
 ]
