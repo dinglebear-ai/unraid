@@ -37,10 +37,6 @@ updates:
 
   # ── Node packages (one entry per tracked package-lock.json) ────────────────
   - package-ecosystem: "npm"
-    directory: "/unraid-py/scripts/openwiki"
-    schedule: { interval: "weekly" }
-    commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
-  - package-ecosystem: "npm"
     directory: "/unraid-py/tests/mock"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }

@@ -6,7 +6,7 @@
 |------|-------------|
 | [PLUGINS.md](PLUGINS.md) | Plugin manifest reference (plugin.json for Claude, Codex, Gemini) |
 | [SKILLS.md](SKILLS.md) | Skill definitions and SKILL.md format |
-| [HOOKS.md](HOOKS.md) | SessionStart + ConfigChange credential-setup hooks |
+| [HOOKS.md](HOOKS.md) | Hooks (none — removed 2026-07-27; do not re-add) |
 | [COMMANDS.md](COMMANDS.md) | Slash command definitions (none currently) |
 | [AGENTS.md](AGENTS.md) | Agent definitions (none currently) |
 | [CHANNELS.md](CHANNELS.md) | Channel integrations (none currently) |
@@ -21,7 +21,7 @@
 |-----------|-------|--------|
 | MCP servers | 1 (`unraid`) | Active |
 | Skills | 1 (`unraid`) | Active |
-| Hooks | 2 (SessionStart, ConfigChange) | Active |
+| Hooks | 0 | Removed 2026-07-27 |
 | Commands | 0 | -- |
 | Agents | 0 | -- |
 | Channels | 0 | -- |

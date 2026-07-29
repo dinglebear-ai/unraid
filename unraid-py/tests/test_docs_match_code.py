@@ -224,7 +224,6 @@ class TestOperatorDocumentationContracts:
             "README.md",
             "docs/CONFIG.md",
             "docs/mcp/ENV.md",
-            "openwiki/configuration.md",
         ):
             text = (REPO_ROOT / relpath).read_text()
             assert "UNRAID_MCP_ENABLE_RAW_SUBSCRIPTION_PROBE" in text, relpath
@@ -235,8 +234,6 @@ class TestOperatorDocumentationContracts:
             for relpath in (
                 "docs/mcp/RESOURCES.md",
                 "docs/plugin/SCHEDULES.md",
-                "openwiki/architecture.md",
-                "openwiki/configuration.md",
             )
         ).lower()
         assert "auto-start on server boot" not in generated
@@ -250,8 +247,6 @@ class TestOperatorDocumentationContracts:
                 "README.md",
                 "docs/CONFIG.md",
                 "docs/mcp/ENV.md",
-                "openwiki/configuration.md",
-                "openwiki/api-reference.md",
             )
         )
         for setting in (
@@ -279,11 +274,6 @@ class TestOperatorDocumentationContracts:
             assert field in resources
         assert "300 seconds" in resources
         assert "never returned as successful live data" in resources
-
-    def test_evergreen_docs_have_no_stale_current_version_literal(self) -> None:
-        quickstart = (REPO_ROOT / "openwiki/quickstart.md").read_text()
-        assert not re.search(r"Current version:\s*\*\*\d+\.\d+\.\d+", quickstart)
-        assert "release-please" in quickstart
 
     def test_sse_has_a_removal_boundary(self) -> None:
         for relpath in ("README.md", ".env.example", "docs/mcp/TRANSPORT.md"):
