@@ -36,7 +36,7 @@ def test_plugin_option_map_matches_manifest_userconfig():
     # the server through the setup hook (~/.unraid-mcp/.env) instead.
     mcp = json.loads((plugin_dir / ".mcp.json").read_text())
     env = mcp["mcpServers"]["unraid-mcp"]["env"]
-    for option, canonical in PLUGIN_OPTION_MAP.items():
+    for canonical in PLUGIN_OPTION_MAP.values():
         if canonical in CREDENTIAL_OPTIONS:
             # `${CLAUDE_PLUGIN_OPTION_*}` is exported to plugin *subprocesses*; it
             # is NOT substituted inside .mcp.json, so that form silently delivered
