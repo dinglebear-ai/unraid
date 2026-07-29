@@ -8,9 +8,7 @@
       "env": {
         "UNRAID_MCP_TRANSPORT": "stdio",
         "UNRAID_API_URL": "${user_config.unraid_api_url}",
-        "UNRAID_API_KEY": "${user_config.unraid_api_key}",
-        "UNRAID_VERIFY_SSL": "${user_config.unraid_verify_ssl}",
-        "UNRAID_ALLOW_INSECURE_TLS": "${user_config.unraid_allow_insecure_tls}"
+        "UNRAID_API_KEY": "${user_config.unraid_api_key}"
       }
     }
   }

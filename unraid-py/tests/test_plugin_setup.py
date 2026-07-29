@@ -38,8 +38,12 @@ def test_plugin_option_map_matches_manifest_userconfig():
     env = mcp["mcpServers"]["unraid-mcp"]["env"]
     for option, canonical in PLUGIN_OPTION_MAP.items():
         if canonical in CREDENTIAL_OPTIONS:
-            assert env.get(canonical) == f"${{{option}}}", (
-                f".mcp.json env[{canonical}] should be ${{{option}}}, got {env.get(canonical)!r}"
+            # `${CLAUDE_PLUGIN_OPTION_*}` is exported to plugin *subprocesses*; it
+            # is NOT substituted inside .mcp.json, so that form silently delivered
+            # nothing. The substituted form is `${user_config.<key>}`.
+            expected_ref = f"${{user_config.{canonical.lower()}}}"
+            assert env.get(canonical) == expected_ref, (
+                f".mcp.json env[{canonical}] should be {expected_ref}, got {env.get(canonical)!r}"
             )
         else:
             assert canonical not in env, (
