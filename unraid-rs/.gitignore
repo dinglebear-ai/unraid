@@ -11,8 +11,8 @@
 !.env.example
 
 # ── Local config (runtime settings — never commit) ───────────────────────────
-# Use /config.toml (root-anchored) so .cargo/config.toml is NOT excluded.
-/config.toml
+# The tracked config.toml is the shipped default. Local overrides use the
+# explicit config.local.toml name below.
 config.local.toml
 config/docker-hosts.toml
 

@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "ai.dinglebear/unraid-rmcp",
   "title": "Unraid RMCP",
-  "description": "Rust MCP server and CLI for Unraid GraphQL, NAS, Docker, VM, and storage workflows.",
+  "description": "Rust MCP server and CLI for Unraid GraphQL operations across NAS, Docker, VM, and storage workflows.",
   "version": "0.2.5",
   "websiteUrl": "https://github.com/dinglebear-ai/unraid",
   "repository": {

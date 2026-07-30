@@ -1,3 +1,9 @@
+---
+title: CI and CD workflows
+created: 2026-07-25
+updated: 2026-07-30
+---
+
 # CI/CD Workflows
 
 GitHub Actions configuration for unraid-mcp.
@@ -19,19 +25,19 @@ GitHub Actions configuration for unraid-mcp.
 
 ### `docker-publish.yml` -- Docker Image Build
 
-**Triggers**: Push to `main`, tags `v*`, PRs to `main`, manual dispatch.
+**Triggers**: Published GitHub release and manual dispatch.
 
 | Step | Purpose |
 |------|---------|
-| Docker Buildx setup | Multi-platform build support |
+| Docker Buildx setup | Reproducible linux/amd64 release build |
 | GHCR login | Authenticate to GitHub Container Registry |
 | Metadata extraction | Generate image tags (semver, branch, SHA, latest) |
-| Build and push | Multi-arch (amd64, arm64), layer caching (GHA), SBOM, provenance |
+| Build and push | linux/amd64, shared build caching, SBOM, provenance |
 | Trivy scan | Vulnerability scan for CRITICAL and HIGH severity |
 
-**Image tags**: `latest` (main branch), `v1.2.3`, `v1.2`, `v1`, `main`, `pr-N`, `sha-<hex>`.
+**Image tags**: `latest`, `v1.2.3`, `v1.2`, `v1`, `sha-<hex>`.
 
-**Registry**: `ghcr.io/dinglebear-ai/unraid`.
+**Registry**: `ghcr.io/dinglebear-ai/unraid-mcp`.
 
 ### `release-please.yml` -- Versioning and Changelog
 

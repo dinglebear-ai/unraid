@@ -1,3 +1,5 @@
+//! `runraid` command-line and MCP server entry point.
+
 use anyhow::Result;
 use rmcp::{ServiceExt, transport::stdio};
 use std::sync::Arc;

@@ -1,7 +1,6 @@
 # unraid-rmcp
 
-`unraid-rmcp` is a Rust MCP server and CLI for querying an Unraid NAS through
-the Unraid GraphQL API.
+Rust MCP server and CLI for Unraid GraphQL operations across NAS, Docker, VM, and storage workflows.
 
 It exposes one MCP tool, `unraid`, plus the `runraid` CLI. Agents can inspect
 array health, disks, Docker containers and logs, VMs, shares, notifications,
@@ -52,7 +51,7 @@ through MCP tool arguments.
 
 | Surface | This repo |
 |---|---|
-| Repository | `unraid-rmcp` |
+| Repository | `unraid` monorepo (`unraid-rs/` component) |
 | Rust crate | `unraid-rmcp` |
 | Binary / CLI | `runraid` |
 | crates.io package | `unraid-rmcp` |

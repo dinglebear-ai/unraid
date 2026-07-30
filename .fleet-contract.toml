@@ -1,0 +1,18 @@
+[cargo]
+# unraid-rs is an intentionally self-contained workspace: its Docker and
+# release build contexts start at that directory and use unraid-rs/Cargo.lock.
+# The root Cargo.toml is the monorepo policy mirror; the nested manifests are
+# validated by their own Cargo gates.
+manifest-exclude = ["unraid-rs/Cargo.toml", "unraid-rs/**/Cargo.toml"]
+
+[docs]
+# Historical session records and vendored/generated upstream references retain
+# their original metadata and are not edited as current fleet documentation.
+frontmatter-exclude = [
+  "unraid-py/docs/sessions/**",
+  "unraid-py/docs/unraid/**",
+  "unraid-py/openwiki/**",
+  "unraid-rs/docs/sessions/**",
+  "plugins/**/docs/sessions/**",
+  "plugins/incus/docs/unraid/**",
+]

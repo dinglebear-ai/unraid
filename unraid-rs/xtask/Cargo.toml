@@ -8,3 +8,6 @@ publish = false
 
 [dependencies]
 anyhow = "1"
+
+[lints]
+workspace = true

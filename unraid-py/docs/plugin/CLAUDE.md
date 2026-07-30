@@ -8,7 +8,7 @@
 | [SKILLS.md](SKILLS.md) | Skill definitions and SKILL.md format |
 | [HOOKS.md](HOOKS.md) | Hooks (none — removed 2026-07-27; do not re-add) |
 | [COMMANDS.md](COMMANDS.md) | Slash command definitions (none currently) |
-| [AGENTS.md](AGENTS.md) | Agent definitions (none currently) |
+| [AGENT-DEFINITIONS.md](AGENT-DEFINITIONS.md) | Agent definitions (none currently) |
 | [CHANNELS.md](CHANNELS.md) | Channel integrations (none currently) |
 | [CONFIG.md](CONFIG.md) | Plugin settings and userConfig |
 | [MARKETPLACES.md](MARKETPLACES.md) | Marketplace publishing and discovery |

@@ -616,7 +616,7 @@ pub(super) static UNRAID_ACTIONS: LazyLock<Vec<&'static str>> =
 /// The upstream-GraphQL-backed data actions (every read-only action except
 /// `status`, which is local observability with no query/fixture). Re-exported so
 /// the scenario + schema-contract integration tests cover every action
-/// automatically — adding an entry to [`ACTIONS`] is enough.
+/// automatically — adding an entry to `ACTIONS` is enough.
 pub fn data_action_names() -> Vec<&'static str> {
     ACTIONS
         .iter()

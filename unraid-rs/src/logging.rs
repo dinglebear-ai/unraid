@@ -11,7 +11,7 @@ use formatter::AuroraFormatter;
 /// Detect whether the console layer should emit ANSI color codes.
 ///
 /// Rules (in precedence order):
-/// 1. `NO_COLOR` set → no color (https://no-color.org)
+/// 1. `NO_COLOR` set → no color (<https://no-color.org>)
 /// 2. `FORCE_COLOR` set → color (useful in Docker / CI)
 /// 3. stderr is a TTY → color
 #[must_use]

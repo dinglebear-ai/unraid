@@ -1,6 +1,6 @@
 //! xtask — project automation for unraid-rmcp
 //!
-//! Usage: cargo xtask <command>
+//! Usage: `cargo xtask <command>`
 //!
 //! Commands:
 //!   dist         Build release binary and copy to bin/

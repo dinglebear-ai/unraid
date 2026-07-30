@@ -8,7 +8,7 @@ use crate::util::{expires_at, now_unix, random_token};
 
 /// Default browser session cookie name used by the lab consumer. Other
 /// consumers should not read this constant directly — instead, prefer
-/// [`AuthState::config::session_cookie_name`] and the helpers in this
+/// [`crate::config::AuthConfig::session_cookie_name`] and the helpers in this
 /// module that look up the configured name from state.
 pub const BROWSER_SESSION_COOKIE_NAME: &str = "lab_session";
 pub const BROWSER_CSRF_HEADER_NAME: &str = "x-csrf-token";

@@ -1,3 +1,6 @@
+//! Shared OAuth 2.0, JWT, session, and authorization primitives for Axum and
+//! Model Context Protocol servers.
+
 pub mod auth_context;
 pub mod authorize;
 pub mod config;
