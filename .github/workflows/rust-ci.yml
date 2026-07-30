@@ -87,7 +87,7 @@ jobs:
           workspaces: unraid-rs
 
       - name: Install cargo-nextest
-        uses: taiki-e/install-action@7572810d7dd469b651bb7793945692cf78da5dd7  # v2
+        uses: taiki-e/install-action@065d6a08a14e61e89fb0a4c10eecdbdef39c7d8e  # v2
         with:
           tool: nextest
 
@@ -110,7 +110,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install taplo
-        uses: taiki-e/install-action@7572810d7dd469b651bb7793945692cf78da5dd7  # v2
+        uses: taiki-e/install-action@065d6a08a14e61e89fb0a4c10eecdbdef39c7d8e  # v2
         with:
           tool: taplo-cli
 
@@ -148,7 +148,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39 # 1.90
