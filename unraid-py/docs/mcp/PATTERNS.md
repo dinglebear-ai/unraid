@@ -57,13 +57,17 @@ async def _handle_docker(subaction, container_id, ...):
 ```python
 _VM_DESTRUCTIVE = {"force_stop", "reset"}
 
+
 async def _handle_vm(subaction, vm_id, ctx, confirm):
     await gate_destructive_action(
-        ctx, subaction, _VM_DESTRUCTIVE, confirm,
+        ctx,
+        subaction,
+        _VM_DESTRUCTIVE,
+        confirm,
         description={
             "force_stop": "Force stop VM without graceful shutdown",
             "reset": "Hard reset VM, may cause data loss",
-        }
+        },
     )
     # If we get here, action is either non-destructive or confirmed
 ```

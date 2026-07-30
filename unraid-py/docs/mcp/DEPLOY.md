@@ -1,3 +1,9 @@
+---
+title: Deployment guide
+created: 2026-07-25
+updated: 2026-07-30
+---
+
 # Deployment Guide
 
 Deployment patterns for unraid-mcp. Choose the method that fits your environment.
@@ -101,13 +107,11 @@ uvx unraid-mcp
 ## GitHub Container Registry
 
 ```bash
-docker pull ghcr.io/dinglebear-ai/unraid:latest
+docker pull ghcr.io/dinglebear-ai/unraid-mcp:latest
 ```
 
-Release tags: `latest`, `1.2.3`, `1.2`, `1`, and `sha-<commit>`. Unreleased `main`
-builds use `edge` plus `sha-<commit>`; `latest` moves only on a semver tag.
-
-Multi-arch: `linux/amd64` and `linux/arm64`.
+Release tags: `latest`, `1.2.3`, `1.2`, `1`, and `sha-<commit>`. Images are
+built only for published releases on GitHub-hosted `linux/amd64` runners.
 
 `/health` is process liveness. `/ready` validates configuration and a bounded upstream
 probe and is the routing/container-health signal. The unauthenticated readiness endpoint is

@@ -1,3 +1,9 @@
+---
+title: Publishing strategy
+created: 2026-07-25
+updated: 2026-07-30
+---
+
 # Publishing Strategy
 
 Versioning and release workflow for unraid-mcp.
@@ -59,21 +65,20 @@ The new tag + Release trigger two independently retryable workflows:
    SHA-256 before the job receives the registry private key.
 6. Reconciles checksums, versions, and the GHCR release digest across all channels.
 
-**`docker-publish.yml`** (on pull request, `main`, and tag `v*`):
-1. Pull requests load and execute the built image against the mock upstream, validate
-   liveness/readiness and MCP discovery, assert runtime package managers are absent, and
-   run a blocking fixable High/Critical scan.
-2. `main` publishes only `edge` and SHA tags; it never moves `latest`.
-3. Semver tags publish the multi-architecture image (amd64, arm64) with semver, SHA,
-   and `latest` tags plus SBOM/provenance attestations.
+**`docker-publish.yml`** (on published GitHub releases):
+1. Builds the `linux/amd64` image on a GitHub-hosted runner.
+2. Loads and executes the image against the mock upstream, validates
+   liveness/readiness and MCP discovery, and asserts runtime package managers
+   are absent.
+3. Runs the blocking fixable High/Critical scan, then publishes semver, SHA,
+   and `latest` tags with SBOM/provenance attestations.
 
 ## Distribution channels
 
 | Channel | Package | Install command |
 |---------|---------|----------------|
 | PyPI | `unraid-mcp` | `pip install unraid-mcp` or `uvx unraid-mcp` |
-| GHCR release | `ghcr.io/dinglebear-ai/unraid` | `docker pull ghcr.io/dinglebear-ai/unraid:latest` |
-| GHCR prerelease | `ghcr.io/dinglebear-ai/unraid:edge` | `docker pull ghcr.io/dinglebear-ai/unraid:edge` |
+| GHCR release | `ghcr.io/dinglebear-ai/unraid-mcp` | `docker pull ghcr.io/dinglebear-ai/unraid-mcp:latest` |
 | MCP Registry | `tv.tootie/unraid-mcp` | MCP client auto-discovery |
 | Claude Plugin | `dinglebear-ai/unraid` | `/plugin install unraid-mcp` |
 | GitHub Release | Source + wheel | Download from releases page |

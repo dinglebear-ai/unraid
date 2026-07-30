@@ -650,6 +650,20 @@ def test_main_setup_rejects_unknown_subcommand():
     mock_hook.assert_not_called()
 
 
+@pytest.mark.parametrize("flag", ["--version", "-V"])
+def test_main_version_does_not_start_server(flag, capsys):
+    import unraid_mcp.main as main_mod
+
+    with (
+        patch.object(sys, "argv", ["unraid-mcp", flag]),
+        patch("unraid_mcp.server.run_server") as mock_run_server,
+    ):
+        main_mod.main()
+
+    assert capsys.readouterr().out.strip() == main_mod.VERSION
+    mock_run_server.assert_not_called()
+
+
 def test_main_without_setup_does_not_dispatch_hook():
     """Normal startup must not be hijacked by the setup guard."""
     import unraid_mcp.main as main_mod

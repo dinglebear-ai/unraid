@@ -1,4 +1,6 @@
 #![recursion_limit = "512"]
+//! Unraid GraphQL client, MCP server, CLI support, and testable service layer.
+
 pub mod app;
 pub mod config;
 pub mod graphql;

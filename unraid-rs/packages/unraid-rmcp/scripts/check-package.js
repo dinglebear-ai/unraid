@@ -11,6 +11,7 @@ const packageRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(packageRoot, "..", "..");
 // Canonical home of this package after the monorepo consolidation.
 const CANONICAL_REPO = "dinglebear-ai/unraid";
+const REPOSITORY_DIRECTORY = "unraid-rs/packages/unraid-rmcp";
 const packageJsonPath = path.join(packageRoot, "package.json");
 const packageJson = readJson(packageJsonPath);
 const releaseMode = process.argv.includes("--release");
@@ -122,9 +123,16 @@ function checkMetadata() {
   assert(packageJson.engines && packageJson.engines.node, "package.json must declare engines.node");
   assert(packageJson.repository && packageJson.repository.type === "git", "package.json repository.type must be git");
   assert(packageJson.repository && packageJson.repository.directory, "package.json repository.directory must point at this package");
-  assert(packageJson.repository && packageJson.repository.directory === path.relative(repoRoot, packageRoot), "package.json repository.directory must match package path");
+  assert(
+    packageJson.repository && packageJson.repository.directory === REPOSITORY_DIRECTORY,
+    "package.json repository.directory must match its monorepo path",
+  );
   assert(packageJson.bugs && packageJson.bugs.url, "package.json must include bugs.url");
   assert(packageJson.mcpName === serverJson.name, "package.json mcpName must match server.json name");
+  assert(
+    packageJson.description === serverJson.description,
+    "package.json description must match server.json description",
+  );
   assert(repoUrl === serverRepoUrl, `package repository ${repoUrl} must match server.json repository ${serverRepoUrl}`);
   assert(homepage === serverWebsite, `package homepage ${homepage} must match server.json websiteUrl ${serverWebsite}`);
   // Anchor the URLs to the canonical monorepo. Asserting only that package.json

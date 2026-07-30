@@ -13,8 +13,9 @@ uv = "latest"
 # `mise env | grep RUSTUP`. This pin previously said 1.90 while
 # rust-toolchain.toml said 1.97.1, and mise silently won.
 #
-# Four places carry the version and must move together:
-#   this file · unraid-rs/rust-toolchain.toml · unraid-rs/Cargo.toml
-#   [workspace.package] rust-version · .github/workflows/rust-ci.yml toolchain:
+# Five places carry the version and must move together:
+#   this file · rust-toolchain.toml · unraid-rs/rust-toolchain.toml
+#   unraid-rs/Cargo.toml [workspace.package] rust-version
+#   .github/workflows/rust-ci.yml toolchain:
 rust = "1.97.1"
 node = "22"

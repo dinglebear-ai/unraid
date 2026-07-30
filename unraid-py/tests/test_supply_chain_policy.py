@@ -98,10 +98,17 @@ def test_container_release_and_runtime_policies() -> None:
     workflow = _workflows()["docker-publish.yml"]
     dockerfile = (ROOT / "Dockerfile").read_text()
     compose = (ROOT / "docker-compose.yaml").read_text()
-    assert "type=raw,value=edge" in workflow
-    assert "type=raw,value=latest" in workflow
-    assert "startsWith(github.ref, 'refs/tags/v')" in workflow
-    assert "Container Artifact Smoke & Scan" in workflow
+    assert "release:\n    types: [published]" in workflow
+    assert "workflow_dispatch:" not in workflow
+    assert "pull_request:" not in workflow
+    assert "push:" not in workflow
+    assert "runs-on: ubuntu-24.04" in workflow
+    assert (
+        "dinglebear-ai/workflows/.github/workflows/"
+        "hosted-container-release.yml@d7bbe71ddc1157e32ed0bebf928fc07438ba58b0" in workflow
+    )
+    assert "needs: mcp-smoke" in workflow
+    assert "latest" in workflow
     assert "tests/test_live.sh --mode http" in workflow
     assert "/ready" in workflow
     assert "python:3.12.11-slim-bookworm@sha256:" in dockerfile

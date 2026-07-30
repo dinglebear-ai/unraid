@@ -1,3 +1,9 @@
+---
+title: Plugin checklist
+created: 2026-07-25
+updated: 2026-07-30
+---
+
 # Plugin Checklist -- unraid-mcp
 
 Pre-release and quality checklist. Complete all items before tagging a release.
@@ -48,7 +54,7 @@ Pre-release and quality checklist. Complete all items before tagging a release.
 ## CI/CD
 
 - [ ] `ci.yml` lint, typecheck, test, version-sync, audit, gitleaks jobs pass
-- [ ] `docker-publish.yml` builds multi-arch (amd64, arm64) images
+- [ ] `docker-publish.yml` builds the release-only `linux/amd64` image on GitHub-hosted runners
 - [ ] `publish-pypi.yml` tag-version check, PyPI publish, GitHub release, MCP registry publish all configured
 - [ ] Trivy vulnerability scan runs on published images
 

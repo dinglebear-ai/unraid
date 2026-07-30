@@ -9,6 +9,10 @@
 *.bak
 *.bak-*
 
+# The root Cargo.toml is a policy mirror for the self-contained unraid-rs
+# workspace. Its real dependency lock remains unraid-rs/Cargo.lock.
+/Cargo.lock
+
 # ── Claude Code / AI tooling ────────────────────────────────────────────────
 .claude/settings.local.json
 .claude/worktrees/

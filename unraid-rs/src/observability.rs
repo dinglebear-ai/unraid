@@ -87,7 +87,7 @@ impl UpstreamHealth {
     }
 }
 
-/// Probe upstream with a short timeout (see [`PROBE_TIMEOUT`]) via a simple
+/// Probe upstream with a short timeout (see `PROBE_TIMEOUT`) via a simple
 /// info query.
 pub async fn probe_upstream(client: &reqwest::Client, url: &str, api_key: &str) -> UpstreamHealth {
     let started = Instant::now();

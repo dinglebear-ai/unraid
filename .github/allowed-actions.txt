@@ -37,6 +37,7 @@ anthropics/claude-code-action@*
 aquasecurity/trivy-action@*
 astral-sh/setup-uv@*
 docker/*@*
+dinglebear-ai/workflows/.github/workflows/hosted-container-release.yml@*
 dtolnay/rust-toolchain@*
 gitleaks/gitleaks-action@*
 googleapis/release-please-action@*

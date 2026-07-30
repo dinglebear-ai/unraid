@@ -6,13 +6,29 @@ members = ["crates/lab-auth", "xtask"]
 resolver = "2"
 
 [workspace.package]
-
 # Fleet edition (ADR-0002). Members inherit via edition.workspace = true.
 edition = "2024"
 # Fleet MSRV — the floor this repo supports. A separate promise from
 # rust-toolchain.toml's channel, which is what we BUILD with. Both are
 # 1.97.1 as of 2026-07-29 (ADR-0001 toolchain, ADR-0024 MSRV).
 rust-version = "1.97.1"
+
+[workspace.lints.rust]
+missing_crate_level_docs = "deny"
+unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "deny"
+invalid_codeblock_attributes = "deny"
+invalid_html_tags = "deny"
+bare_urls = "warn"
+private_intra_doc_links = "warn"
+redundant_explicit_links = "warn"
+unescaped_backticks = "warn"
+
+[workspace.lints.clippy]
+missing_safety_doc = "deny"
+
 [package]
 name = "unraid-rmcp"
 version = "0.2.5"
@@ -49,7 +65,12 @@ bin-dir = "runraid-linux-x86_64"
 
 [dependencies]
 # Async runtime
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal"] }
+tokio = { version = "1", features = [
+  "rt-multi-thread",
+  "macros",
+  "net",
+  "signal",
+] }
 
 # HTTP / MCP transport
 axum = "0.8"
@@ -66,7 +87,7 @@ tower-http = { version = "0.7", features = ["cors", "limit", "trace"] }
 # Serialization
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-schemars = "1"
+schemars = "=1.2.2"
 
 # Time
 chrono = { version = "0.4", features = ["serde"] }
@@ -80,10 +101,17 @@ url = "2"
 
 # Logging
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
+tracing-subscriber = { version = "0.3", features = [
+  "env-filter",
+  "fmt",
+  "json",
+] }
 
 # GraphQL HTTP client
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = [
+  "json",
+  "rustls-tls",
+] }
 
 # Typed GraphQL client (codegen from the vendored Unraid SDL). SPIKE: currently
 # powers a couple of actions; being evaluated as the path to compile-time query +
@@ -122,3 +150,6 @@ wiremock = "0.6"
 # Schema-as-contract test (tests/schema_contract.rs): validates queries +
 # fixtures against the vendored Unraid SDL.
 apollo-compiler = "1"
+
+[lints]
+workspace = true

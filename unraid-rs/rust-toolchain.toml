@@ -11,7 +11,7 @@
 # `components` is self-declared because dtolnay/rust-toolchain only installs
 # components for the toolchain IT pins, not for a rust-toolchain.toml override.
 #
-# NOTE: a `.mise.toml` in this directory that sets `rust` exports
+# NOTE: the ancestor `.mise.toml` that sets `rust` exports
 # RUSTUP_TOOLCHAIN and OVERRIDES this file. Check `mise env | grep RUSTUP`
 # before trusting the channel below.
 [toolchain]

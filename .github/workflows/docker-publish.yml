@@ -1,96 +1,76 @@
 name: Container Artifact
 
 on:
-  push:
-    branches: [main]
-    tags: ["v*"]
-  # This workflow must run for every PR because branch protection requires the
-  # Container Artifact Smoke & Scan check. The expensive image validation is
-  # conditionally skipped below when no container input changed, while an
-  # always-present gate reports the required status.
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
+  release:
+    types: [published]
 
 permissions:
   contents: read
 
 concurrency:
-  group: container-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: container-release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
   # Pinned, not derived from github.repository: the repo was renamed unraid-mcp -> unraid
-  # and GHCR package paths do not follow repo-rename redirects. Deriving this would
-  # silently start publishing to a new, empty ghcr.io/<owner>/unraid package.
+  # and GHCR package paths do not follow repo-rename redirects.
   IMAGE_NAME: ${{ github.repository_owner }}/unraid-mcp
-  TEST_IMAGE: local/unraid-mcp:${{ github.sha }}
-
-# Python server sources (incl. scripts/, tests/, pyproject.toml, Dockerfile)
-# live in unraid-py/. run: steps execute there; docker build context is set to
-# ./unraid-py explicitly on each build step (action steps ignore working-directory).
-defaults:
-  run:
-    working-directory: unraid-py
+  RELEASE_IMAGE: ghcr.io/${{ github.repository_owner }}/unraid-mcp:${{ github.event.release.tag_name }}
 
 jobs:
-  container_changes:
-    name: Detect Container Inputs
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    outputs:
-      image_changed: ${{ steps.diff.outputs.image_changed }}
-    steps:
-      - name: Checkout repository with full history
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Detect container input changes
-        id: diff
-        working-directory: ${{ github.workspace }}
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
-               unraid-py Dockerfile .github/workflows/docker-publish.yml; then
-            echo "image_changed=false" >> "$GITHUB_OUTPUT"
-            echo "No container inputs changed; heavy validation will be skipped."
-          else
-            echo "image_changed=true" >> "$GITHUB_OUTPUT"
-            echo "Container inputs changed; heavy validation is required."
-          fi
-
-  validate_image:
-    name: Build and Scan Container Artifact
-    needs: container_changes
-    if: github.event_name == 'pull_request' && needs.container_changes.outputs.image_changed == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  container:
+    name: Build, scan, attest, and publish
+    if: startsWith(github.event.release.tag_name, 'v')
     permissions:
       contents: read
+      packages: write
+      id-token: write
+      attestations: write
+      security-events: write
+    uses: dinglebear-ai/workflows/.github/workflows/hosted-container-release.yml@d7bbe71ddc1157e32ed0bebf928fc07438ba58b0 # fleet-2026-07-30
+    with:
+      checkout-ref: ${{ github.event.release.tag_name }}
+      image: ghcr.io/${{ github.repository_owner }}/unraid-mcp
+      release-tag: ${{ github.event.release.tag_name }}
+      context: ./unraid-py
+      dockerfile: unraid-py/Dockerfile
+      smoke-command: docker run --rm "$IMAGE_REF" --version
+      cache-scope: unraid-python-release
+      timeout-minutes: 35
+    secrets:
+      REGISTRY_USERNAME: ${{ github.actor }}
+      REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  mcp-smoke:
+    name: Smoke published HTTP, readiness, and MCP
+    needs: container
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    defaults:
+      run:
+        working-directory: unraid-py
     steps:
-      - name: Checkout repository
+      - name: Checkout released source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.release.tag_name }}
           persist-credentials: false
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
-      - name: Build exact test image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
-          context: ./unraid-py
-          platforms: linux/amd64
-          push: false
-          load: true
-          tags: ${{ env.TEST_IMAGE }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      - name: Assert runtime image omits package managers and build tooling
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify package version and hardened runtime
         run: |
-          docker run --rm --entrypoint sh "$TEST_IMAGE" -c '
+          set -euo pipefail
+          package_version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' pyproject.toml | head -n1)"
+          test "$package_version" = "${GITHUB_REF_NAME#v}"
+          docker run --rm --entrypoint sh "$RELEASE_IMAGE" -c '
             ! command -v pip &&
             ! command -v pip3 &&
             python -c "import importlib.util; assert importlib.util.find_spec(\"pip\") is None; assert importlib.util.find_spec(\"setuptools\") is None; assert importlib.util.find_spec(\"wheel\") is None"
@@ -105,7 +85,7 @@ jobs:
           done
           cat mock.log
           exit 1
-      - name: Start built image and smoke HTTP, readiness, and MCP
+      - name: Exercise the published image
         env:
           TOKEN: ci-artifact-token
         run: |
@@ -113,7 +93,7 @@ jobs:
             --env UNRAID_API_URL=http://127.0.0.1:9002/graphql \
             --env UNRAID_API_KEY=ci-fake-key \
             --env UNRAID_MCP_BEARER_TOKEN="$TOKEN" \
-            "$TEST_IMAGE"
+            "$RELEASE_IMAGE"
           trap 'docker logs unraid-mcp-artifact || true; docker rm -f unraid-mcp-artifact || true; kill "$(cat mock.pid)" || true' EXIT
           for _ in {1..30}; do
             if curl -fsS http://127.0.0.1:6970/health >/dev/null && \
@@ -127,64 +107,15 @@ jobs:
           bash tests/test_live.sh --mode http \
             --url http://127.0.0.1:6970/mcp \
             --token "$TOKEN" --skip-tools
-      - name: Scan exact test image for fixable High or Critical vulnerabilities
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: ${{ env.TEST_IMAGE }}
-          format: table
-          exit-code: "1"
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
 
-  container_gate:
-    name: Container Artifact Smoke & Scan
-    needs: [container_changes, validate_image]
-    if: always() && github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Enforce conditional container validation
-        working-directory: ${{ github.workspace }}
-        env:
-          CHANGES_RESULT: ${{ needs.container_changes.result }}
-          IMAGE_CHANGED: ${{ needs.container_changes.outputs.image_changed }}
-          VALIDATION_RESULT: ${{ needs.validate_image.result }}
-        run: |
-          test "$CHANGES_RESULT" = "success"
-          case "$IMAGE_CHANGED" in
-            true)
-              test "$VALIDATION_RESULT" = "success"
-              echo "Container inputs changed and the image smoke/scan passed."
-              ;;
-            false)
-              test "$VALIDATION_RESULT" = "skipped"
-              echo "No container inputs changed; required check passes without rebuilding."
-              ;;
-            *)
-              echo "Invalid image_changed output: $IMAGE_CHANGED" >&2
-              exit 1
-              ;;
-          esac
-
-  publish:
-    name: Publish Attested Container
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
+  promote-tags:
+    name: Promote verified release aliases
+    needs: mcp-smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
-      contents: read
       packages: write
-      id-token: write
-      security-events: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Verify release tag matches package version
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          package_version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' pyproject.toml | head -n1)"
-          test "$package_version" = "${GITHUB_REF_NAME#v}"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
       - name: Log in to GitHub Container Registry
@@ -193,46 +124,22 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Derive release and edge tags
-        id: meta
-        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=edge,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
-            type=sha
-      - name: Build and publish the attested multi-architecture image once
-        id: build
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        with:
-          context: ./unraid-py
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          sbom: true
-          provenance: mode=max
-      - name: Record immutable published digest
+      - name: Promote the verified digest
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          test -n "${{ steps.build.outputs.digest }}"
-          printf '%s@%s\n' \
-            "${REGISTRY}/${IMAGE_NAME}" \
-            "${{ steps.build.outputs.digest }}" | tee image-digest.txt
-      - name: Scan published digest
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
-          format: sarif
-          output: trivy-results.sarif
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-      - name: Upload advisory scan results
-        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
-        with:
-          sarif_file: trivy-results.sarif
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "::error::release tag must be vMAJOR.MINOR.PATCH"
+            exit 1
+          }
+          minor="${version%.*}"
+          major="${version%%.*}"
+          image="${REGISTRY}/${IMAGE_NAME}"
+          digest="$(docker buildx imagetools inspect "${image}:${RELEASE_TAG}" --format '{{.Manifest.Digest}}')"
+          short_sha="${GITHUB_SHA:0:7}"
+          for tag in "$version" "$minor" "$major" latest "sha-${short_sha}"; do
+            docker buildx imagetools create --tag "${image}:${tag}" "${image}@${digest}"
+          done

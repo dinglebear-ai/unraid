@@ -1,13 +1,13 @@
 {
   "name": "unraid-rmcp",
   "version": "0.2.5",
-  "description": "Node launcher for the Unraid Rust MCP server and runraid CLI for NAS, Docker, VM, and storage workflows.",
+  "description": "Rust MCP server and CLI for Unraid GraphQL operations across NAS, Docker, VM, and storage workflows.",
   "license": "MIT",
   "homepage": "https://github.com/dinglebear-ai/unraid#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dinglebear-ai/unraid.git",
-    "directory": "packages/unraid-rmcp"
+    "directory": "unraid-rs/packages/unraid-rmcp"
   },
   "bugs": {
     "url": "https://github.com/dinglebear-ai/unraid/issues"

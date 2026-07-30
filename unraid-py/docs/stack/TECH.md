@@ -1,3 +1,9 @@
+---
+title: Technology choices
+created: 2026-07-25
+updated: 2026-07-30
+---
+
 # Technology Choices -- unraid-mcp
 
 ## Language: Python 3.12
@@ -86,7 +92,7 @@
 - Non-root user (`mcp:1000`)
 - uv cache mount for fast builds
 - Health check via wget
-- Multi-arch: amd64, arm64
+- Release-only image: linux/amd64 on GitHub-hosted runners
 
 ## Environment management: python-dotenv
 

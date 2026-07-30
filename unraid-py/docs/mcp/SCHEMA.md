@@ -8,9 +8,21 @@ Tool schemas in unraid-mcp are defined using Python type hints and Pydantic mode
 
 ```python
 UNRAID_ACTIONS = Literal[
-    "array", "customization", "disk", "docker", "health",
-    "key", "live", "notification", "oidc", "plugin",
-    "rclone", "setting", "system", "user", "vm",
+    "array",
+    "customization",
+    "disk",
+    "docker",
+    "health",
+    "key",
+    "live",
+    "notification",
+    "oidc",
+    "plugin",
+    "rclone",
+    "setting",
+    "system",
+    "user",
+    "vm",
 ]
 ```
 
