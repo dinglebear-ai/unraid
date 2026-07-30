@@ -7,10 +7,16 @@ the modular server implementation from unraid_mcp.server.
 
 import sys
 
+from .version import VERSION
+
 
 def main() -> None:
     """Main entry point for the Unraid MCP Server."""
     argv = sys.argv[1:]
+    if argv and argv[0] in {"--version", "-V"}:
+        print(VERSION)
+        return
+
     if argv and argv[0] == "setup":
         # `setup` (bare) and `setup plugin-hook` run the non-interactive plugin hook,
         # which maps CLAUDE_PLUGIN_OPTION_* -> ~/.unraid-mcp/.env. Used by the plugin's

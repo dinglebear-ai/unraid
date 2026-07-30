@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+case "${1:-}" in
+  --version|-V)
+    exec unraid-mcp-server "$@"
+    ;;
+esac
+
 # Validate required environment variables before starting the server
 required_vars=(
   UNRAID_API_URL
