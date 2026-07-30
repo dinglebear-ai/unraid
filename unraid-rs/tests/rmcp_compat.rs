@@ -1,13 +1,13 @@
 use axum::{
-    body::{to_bytes, Body},
-    http::{header, Request, StatusCode},
     Router,
+    body::{Body, to_bytes},
+    http::{Request, StatusCode, header},
 };
 use rmcp::{
-    transport::streamable_http_server::{
-        session::local::LocalSessionManager, StreamableHttpServerConfig, StreamableHttpService,
-    },
     ServerHandler,
+    transport::streamable_http_server::{
+        StreamableHttpServerConfig, StreamableHttpService, session::local::LocalSessionManager,
+    },
 };
 use tower::util::ServiceExt;
 
@@ -66,7 +66,7 @@ async fn post_initialize(router: Router) -> (StatusCode, axum::http::HeaderMap, 
 #[tokio::test]
 async fn rmcp_stateless_json_response_returns_application_json() {
     let config = StreamableHttpServerConfig::default()
-        .with_stateful_mode(false)
+        .with_legacy_session_mode(false)
         .with_json_response(true)
         .with_sse_keep_alive(None);
 
@@ -91,7 +91,7 @@ async fn rmcp_stateless_json_response_returns_application_json() {
 #[tokio::test]
 async fn rmcp_stateless_sse_mode_is_distinct_from_json_response_target() {
     let config = StreamableHttpServerConfig::default()
-        .with_stateful_mode(false)
+        .with_legacy_session_mode(false)
         .with_sse_keep_alive(None);
 
     let (status, headers, body) = post_initialize(compat_router(config)).await;

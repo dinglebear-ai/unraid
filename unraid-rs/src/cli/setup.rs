@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 use serde::Serialize;
 
-use unraid_rmcp::config::{default_data_dir, AuthMode, Config};
+use unraid_rmcp::config::{AuthMode, Config, default_data_dir};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SetupCommand {
@@ -107,8 +107,12 @@ pub fn apply_plugin_options() {
             if s.is_empty() || s.contains('\n') || s.contains('\r') {
                 continue;
             }
-            // edition 2021: set_var is safe (no unsafe block required).
-            std::env::set_var(dest, v);
+            // SAFETY: edition 2024 marks `set_var` unsafe because a concurrent
+            // environment read from another thread is UB. This runs once during
+            // CLI startup, before `Config::load()` and before any task or thread
+            // that reads the environment is spawned, so no concurrent access is
+            // possible.
+            unsafe { std::env::set_var(dest, v) };
         }
     }
 }

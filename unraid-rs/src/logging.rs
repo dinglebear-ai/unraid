@@ -4,7 +4,7 @@ mod formatter;
 use std::io::IsTerminal;
 use std::path::Path;
 
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
+use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
 use formatter::AuroraFormatter;
 
@@ -40,12 +40,11 @@ pub fn init_logging(data_dir: &Path, service_name: &str) -> anyhow::Result<()> {
     let max_bytes: u64 = 10 * 1024 * 1024; // 10 MB
 
     // Truncate if over the cap.
-    if log_path.exists() {
-        if let Ok(meta) = log_path.metadata() {
-            if meta.len() >= max_bytes {
-                let _ = std::fs::write(&log_path, b"");
-            }
-        }
+    if log_path.exists()
+        && let Ok(meta) = log_path.metadata()
+        && meta.len() >= max_bytes
+    {
+        let _ = std::fs::write(&log_path, b"");
     }
 
     let log_file = std::fs::OpenOptions::new()

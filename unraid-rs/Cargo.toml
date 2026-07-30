@@ -5,11 +5,19 @@
 members = ["crates/lab-auth", "xtask"]
 resolver = "2"
 
+[workspace.package]
+
+# Fleet edition (ADR-0002). Members inherit via edition.workspace = true.
+edition = "2024"
+# Fleet MSRV — the floor this repo supports. A separate promise from
+# rust-toolchain.toml's channel, which is what we BUILD with. Both are
+# 1.97.1 as of 2026-07-29 (ADR-0001 toolchain, ADR-0024 MSRV).
+rust-version = "1.97.1"
 [package]
 name = "unraid-rmcp"
 version = "0.2.5"
-edition = "2021"
-rust-version = "1.90"
+edition.workspace = true
+rust-version.workspace = true
 categories = ["command-line-utilities", "development-tools"]
 keywords = ["mcp", "unraid", "graphql", "nas", "rmcp"]
 repository = "https://github.com/dinglebear-ai/unraid"
@@ -45,7 +53,7 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal
 
 # HTTP / MCP transport
 axum = "0.8"
-rmcp = { version = "1.6.0", default-features = false, features = [
+rmcp = { version = "=3.0.0-beta.2", default-features = false, features = [
   "server",
   "macros",
   "elicitation",
@@ -106,7 +114,7 @@ test-support = ["dep:graphql-parser"]
 unraid-rmcp = { path = ".", features = ["test-support"] }
 tempfile = "3"
 tower = { version = "0.5", features = ["util"] }
-rmcp = { version = "1.6.0", default-features = false, features = [
+rmcp = { version = "=3.0.0-beta.2", default-features = false, features = [
   "client",
   "transport-child-process",
 ] }

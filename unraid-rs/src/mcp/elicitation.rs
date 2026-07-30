@@ -1,4 +1,4 @@
-use rmcp::{service::ElicitationError, Peer, RoleServer};
+use rmcp::{Peer, RoleServer, service::ElicitationError};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::Value;
@@ -226,7 +226,7 @@ mod tests {
     use serde_json::json;
 
     use super::*;
-    use crate::mcp::schemas::{Scope, ACTIONS};
+    use crate::mcp::schemas::{ACTIONS, Scope};
 
     #[test]
     fn destructive_registry_is_unique_and_write_scoped() {
@@ -244,16 +244,14 @@ mod tests {
 
     #[test]
     fn array_stop_elicits_but_start_does_not() {
-        assert!(destructive_action_description(
-            "array_set_state",
-            &json!({"desired_state": "STOP"})
-        )
-        .is_some());
-        assert!(destructive_action_description(
-            "array_set_state",
-            &json!({"desired_state": "START"})
-        )
-        .is_none());
+        assert!(
+            destructive_action_description("array_set_state", &json!({"desired_state": "STOP"}))
+                .is_some()
+        );
+        assert!(
+            destructive_action_description("array_set_state", &json!({"desired_state": "START"}))
+                .is_none()
+        );
     }
 
     #[test]

@@ -2,11 +2,11 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use axum::{
+    Router,
     extract::State,
-    http::{header, HeaderName, HeaderValue, Method, StatusCode},
+    http::{HeaderName, HeaderValue, Method, StatusCode, header},
     response::{IntoResponse, Json},
     routing::get,
-    Router,
 };
 use serde_json::json;
 use tower_http::{cors::CorsLayer, limit::RequestBodyLimitLayer};
@@ -15,7 +15,7 @@ use crate::observability::probe_upstream;
 
 use super::host_filter::allowed_origins;
 use super::rmcp_server::{streamable_http_config, streamable_http_service};
-use super::{build_auth_layer, AppState, AuthPolicy};
+use super::{AppState, AuthPolicy, build_auth_layer};
 
 const MCP_BODY_LIMIT_BYTES: usize = 65_536;
 

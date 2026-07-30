@@ -13,7 +13,7 @@ mod schemas;
 pub(crate) mod tools;
 
 pub use rmcp_server::{
-    rmcp_server, streamable_http_config, streamable_http_service, UnraidRmcpServer,
+    UnraidRmcpServer, rmcp_server, streamable_http_config, streamable_http_service,
 };
 pub use routes::router;
 pub use schemas::{data_action_names, write_action_names};
