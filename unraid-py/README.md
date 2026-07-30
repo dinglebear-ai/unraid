@@ -697,9 +697,9 @@ unraid(action="health", subaction="check")
 
 ```python
 unraid(action="array", subaction="parity_status")
-unraid(action="array", subaction="parity_start", correct=True)   # correcting pass
+unraid(action="array", subaction="parity_start", correct=True)  # correcting pass
 unraid(action="array", subaction="parity_start", correct=False)  # read-only pass
-unraid(action="live",  subaction="parity_progress", timeout=15.0)
+unraid(action="live", subaction="parity_progress", timeout=15.0)
 unraid(action="array", subaction="parity_pause")
 unraid(action="array", subaction="parity_resume")
 unraid(action="array", subaction="parity_cancel")
@@ -710,8 +710,8 @@ unraid(action="array", subaction="parity_history")
 
 ```python
 unraid(action="docker", subaction="list")
-unraid(action="docker", subaction="start",   container_id="plex")
-unraid(action="docker", subaction="stop",    container_id="plex")
+unraid(action="docker", subaction="start", container_id="plex")
+unraid(action="docker", subaction="stop", container_id="plex")
 unraid(action="docker", subaction="restart", container_id="plex")
 unraid(action="docker", subaction="details", container_id="plex")
 unraid(action="docker", subaction="networks")
@@ -721,18 +721,18 @@ unraid(action="docker", subaction="networks")
 
 ```python
 unraid(action="vm", subaction="list")
-unraid(action="vm", subaction="start",      vm_id="windows11")
-unraid(action="vm", subaction="stop",       vm_id="windows11")
-unraid(action="vm", subaction="pause",      vm_id="windows11")
-unraid(action="vm", subaction="resume",     vm_id="windows11")
+unraid(action="vm", subaction="start", vm_id="windows11")
+unraid(action="vm", subaction="stop", vm_id="windows11")
+unraid(action="vm", subaction="pause", vm_id="windows11")
+unraid(action="vm", subaction="resume", vm_id="windows11")
 unraid(action="vm", subaction="force_stop", vm_id="windows11", confirm=True)
 ```
 
 ### Log tailing
 
 ```python
-unraid(action="live", subaction="log_tail",  path="/var/log/syslog", collect_for=5.0)
-unraid(action="disk", subaction="logs",      log_path="/var/log/syslog", tail_lines=200)
+unraid(action="live", subaction="log_tail", path="/var/log/syslog", collect_for=5.0)
+unraid(action="disk", subaction="logs", log_path="/var/log/syslog", tail_lines=200)
 unraid(action="disk", subaction="log_files")
 ```
 

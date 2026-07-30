@@ -105,8 +105,7 @@ def test_container_release_and_runtime_policies() -> None:
     assert "runs-on: ubuntu-24.04" in workflow
     assert (
         "dinglebear-ai/workflows/.github/workflows/"
-        "hosted-container-release.yml@d7bbe71ddc1157e32ed0bebf928fc07438ba58b0"
-        in workflow
+        "hosted-container-release.yml@d7bbe71ddc1157e32ed0bebf928fc07438ba58b0" in workflow
     )
     assert "needs: mcp-smoke" in workflow
     assert "latest" in workflow
