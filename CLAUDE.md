@@ -145,7 +145,7 @@ The Python server's detailed dev guide is `unraid-py/CLAUDE.md`.
 
 The root `.mise.toml` is polyglot (python + rust + node) so every component's
 toolchain is available from a single `mise install`. Rust is pinned to
-`unraid-rs`'s MSRV (1.90) so local `clippy` reproduces CI; `unraid-rs/rust-toolchain.toml`
+`unraid-rs`'s MSRV (1.97.1) so local `clippy` reproduces CI; `unraid-rs/rust-toolchain.toml`
 carries the same pin for contributors who use rustup instead of mise. Keep
 `.mise.toml`, `rust-toolchain.toml`, `unraid-rs/Cargo.toml` (`rust-version`), and
 `rust-ci.yml` in sync.

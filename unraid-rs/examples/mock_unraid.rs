@@ -28,14 +28,14 @@
 use std::sync::{Arc, RwLock};
 
 use axum::{
+    Json, Router,
     extract::{Path, State},
     http::{HeaderMap, StatusCode},
     response::IntoResponse,
     routing::{get, post},
-    Json, Router,
 };
-use serde_json::{json, Value};
-use unraid_rmcp::mock::{Scenario, SCENARIOS};
+use serde_json::{Value, json};
+use unraid_rmcp::mock::{SCENARIOS, Scenario};
 
 #[derive(Clone)]
 struct AppState {

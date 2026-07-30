@@ -7,7 +7,7 @@
 //!      gracefully and raw upstream bodies are never relayed to the caller.
 //!   C. Test L3 — `Counters` survives concurrent increments with no lost updates.
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use unraid_rmcp::observability::Counters;
 use unraid_rmcp::testing::{execute_tool, state_with_upstream};
 use wiremock::matchers::method;

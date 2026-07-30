@@ -25,7 +25,7 @@ use apollo_compiler::schema::ExtendedType;
 use apollo_compiler::validation::Valid;
 use apollo_compiler::{ExecutableDocument, Name, Schema};
 use serde_json::Value;
-use unraid_rmcp::mock::{Scenario, SCENARIOS};
+use unraid_rmcp::mock::{SCENARIOS, Scenario};
 use unraid_rmcp::testing::{execute_tool, state_with_upstream};
 use wiremock::{Mock, MockServer, Request, Respond, ResponseTemplate};
 

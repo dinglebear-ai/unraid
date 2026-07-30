@@ -3,7 +3,7 @@ pub(crate) mod paginate;
 
 use std::sync::LazyLock;
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use thiserror::Error;
 
 use crate::graphql::UpstreamError;
@@ -11,8 +11,8 @@ use crate::token_limit::truncate_if_needed;
 
 use self::arg_helpers::{i64_arg, string_arg, string_array_arg, usize_arg};
 use self::paginate::paginate_array;
-use super::schemas::ACTIONS;
 use super::AppState;
+use super::schemas::ACTIONS;
 
 /// Typed outcome of a tool dispatch, used to *route* failures at the MCP protocol
 /// boundary without matching on message prose.
@@ -371,9 +371,11 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
         "preview_effective_permissions" => {
             let roles = string_array_arg(args, "roles");
             let permissions = args.get("permissions").cloned().unwrap_or(Value::Null);
-            svc!(state
-                .service
-                .preview_effective_permissions(roles.as_deref(), &permissions))
+            svc!(
+                state
+                    .service
+                    .preview_effective_permissions(roles.as_deref(), &permissions)
+            )
         }
 
         // ── mutations (require unraid:admin) ──
@@ -530,9 +532,11 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
                         .to_string(),
                 )
             })?;
-            svc!(state
-                .service
-                .docker_move_entries_to_folder(&source_entry_ids, &destination_folder_id))
+            svc!(
+                state
+                    .service
+                    .docker_move_entries_to_folder(&source_entry_ids, &destination_folder_id)
+            )
         }
         "docker_move_items_to_position" => {
             let source_entry_ids = string_array_arg(args, "source_entry_ids").ok_or_else(|| {
@@ -580,9 +584,11 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
                 .get("prefs")
                 .cloned()
                 .unwrap_or_else(|| serde_json::json!({}));
-            svc!(state
-                .service
-                .docker_update_view_preferences(string_arg(args, "view_id").as_deref(), prefs))
+            svc!(
+                state
+                    .service
+                    .docker_update_view_preferences(string_arg(args, "view_id").as_deref(), prefs)
+            )
         }
         "docker_update_autostart_configuration" => {
             let entries = args
@@ -595,11 +601,13 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
                             .to_string(),
                     )
                 })?;
-            svc!(state.service.docker_update_autostart_configuration(
-                entries,
-                args.get("persist_user_preferences")
-                    .and_then(|v| v.as_bool())
-            ))
+            svc!(
+                state.service.docker_update_autostart_configuration(
+                    entries,
+                    args.get("persist_user_preferences")
+                        .and_then(|v| v.as_bool())
+                )
+            )
         }
         "refresh_docker_digests" => svc!(state.service.refresh_docker_digests()),
         "reset_docker_template_mappings" => svc!(state.service.reset_docker_template_mappings()),
@@ -766,9 +774,11 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
                 .get("parameters")
                 .cloned()
                 .unwrap_or_else(|| serde_json::json!({}));
-            svc!(state
-                .service
-                .rclone_create_r_clone_remote(&name, &ty, parameters))
+            svc!(
+                state
+                    .service
+                    .rclone_create_r_clone_remote(&name, &ty, parameters)
+            )
         }
         "rclone_delete_r_clone_remote" => {
             let name = string_arg(args, "name").ok_or_else(|| {
@@ -894,12 +904,16 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
             let id = require_id(args, "unread_notification")?;
             svc!(state.service.unread_notification(&id))
         }
-        "archive_all" => svc!(state
-            .service
-            .archive_all(string_arg(args, "importance").as_deref())),
-        "unarchive_all" => svc!(state
-            .service
-            .unarchive_all(string_arg(args, "importance").as_deref())),
+        "archive_all" => svc!(
+            state
+                .service
+                .archive_all(string_arg(args, "importance").as_deref())
+        ),
+        "unarchive_all" => svc!(
+            state
+                .service
+                .unarchive_all(string_arg(args, "importance").as_deref())
+        ),
         "update_server_identity" => {
             let name = string_arg(args, "name").ok_or_else(|| {
                 ToolError::InvalidParams(
@@ -954,9 +968,11 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
                     "\"api_key\" is required for action=connect_sign_in.".to_string(),
                 )
             })?;
-            svc!(state
-                .service
-                .connect_sign_in(&api_key, args.get("user_info").cloned()))
+            svc!(
+                state
+                    .service
+                    .connect_sign_in(&api_key, args.get("user_info").cloned())
+            )
         }
         "setup_remote_access" => {
             let access_type = string_arg(args, "access_type").ok_or_else(|| {

@@ -27,10 +27,10 @@ pub(crate) fn allowed_origins(config: &McpConfig) -> Vec<String> {
         format!("http://127.0.0.1:{}", config.port),
     ];
     origins.extend(config.allowed_origins.iter().cloned());
-    if let Some(public_url) = config.auth.public_url.as_deref() {
-        if let Some(origin) = extract_origin(public_url) {
-            origins.push(origin);
-        }
+    if let Some(public_url) = config.auth.public_url.as_deref()
+        && let Some(origin) = extract_origin(public_url)
+    {
+        origins.push(origin);
     }
     origins.sort();
     origins.dedup();

@@ -1,18 +1,20 @@
-# Toolchain used to BUILD unraid-rs locally. Tracks the fleet's current Rust
-# (1.97.1) rather than the MSRV.
+# Toolchain used to BUILD this repo, locally and in CI. Pinned fleet-wide to
+# Rust 1.97.1 by ADR-0001: 1.97.1 is a point release that fixes an LLVM
+# miscompilation present since at least 1.87, so every toolchain below it —
+# including every version this fleet previously pinned — is affected.
 #
-# This deliberately differs from .github/workflows/rust-ci.yml, which stays
-# pinned to Cargo.toml's `rust-version` so CI keeps ENFORCING the compatibility
-# floor — unraid-rmcp and lab-auth are published to crates.io, so that floor is
-# a promise to downstream users, not just an internal preference.
+# This is deliberately NOT the same promise as Cargo.toml's `rust-version`.
+# This file says "build with exactly this"; `rust-version` says "refuse to
+# build on anything older". As of ADR-0024 both are 1.97.1, but they remain
+# separate keys and can diverge again.
 #
-# Consequence to expect: `cargo clippy -- -D warnings` locally runs on a newer
-# compiler than CI and can surface lints CI does not have. Fixing those is safe;
-# they are a superset. The reverse (green locally, red in CI) is what the MSRV
-# job exists to catch.
+# `components` is self-declared because dtolnay/rust-toolchain only installs
+# components for the toolchain IT pins, not for a rust-toolchain.toml override.
 #
-# Keep in sync with: the fleet's rustup default (`rustup default`)
-# Do NOT sync with:  Cargo.toml `rust-version` / rust-ci.yml `toolchain:`
+# NOTE: a `.mise.toml` in this directory that sets `rust` exports
+# RUSTUP_TOOLCHAIN and OVERRIDES this file. Check `mise env | grep RUSTUP`
+# before trusting the channel below.
 [toolchain]
 channel = "1.97.1"
 components = ["rustfmt", "clippy"]
+profile = "minimal"

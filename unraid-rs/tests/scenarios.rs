@@ -7,8 +7,8 @@
 //! if a query were misrouted, the action would get the wrong (or an `errors`)
 //! payload and the dispatch would fail.
 
-use serde_json::{json, Value};
-use unraid_rmcp::mock::{Scenario, SCENARIOS};
+use serde_json::{Value, json};
+use unraid_rmcp::mock::{SCENARIOS, Scenario};
 use unraid_rmcp::testing::{execute_tool, state_with_upstream};
 use wiremock::{Mock, MockServer, Request, Respond, ResponseTemplate};
 

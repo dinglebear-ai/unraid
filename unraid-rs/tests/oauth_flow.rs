@@ -6,7 +6,7 @@
 
 use axum::{
     body::to_bytes,
-    http::{header, Request, StatusCode},
+    http::{Request, StatusCode, header},
 };
 use lab_auth::jwt::AccessClaims;
 use lab_auth::metadata::canonical_resource_url;

@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 use super::{commands::CliCommand, setup::SetupCommand};
 
@@ -94,15 +94,20 @@ impl CliCommand {
             ["recalculate-overview"] => Self::RecalculateOverview,
             ["delete-archived-notifications"] => Self::DeleteArchivedNotifications,
             ["archive-notification", id] => Self::ArchiveNotification(id.to_string()),
-            ["create-notification", title, subject, description, importance, rest @ ..] => {
-                Self::CreateNotification {
-                    title: title.to_string(),
-                    subject: subject.to_string(),
-                    description: description.to_string(),
-                    importance: importance.to_string(),
-                    link: rest.first().map(|s| s.to_string()),
-                }
-            }
+            [
+                "create-notification",
+                title,
+                subject,
+                description,
+                importance,
+                rest @ ..,
+            ] => Self::CreateNotification {
+                title: title.to_string(),
+                subject: subject.to_string(),
+                description: description.to_string(),
+                importance: importance.to_string(),
+                link: rest.first().map(|s| s.to_string()),
+            },
             ["vm-start", id] => Self::VmStart(id.to_string()),
             ["vm-stop", id] => Self::VmStop(id.to_string()),
             ["vm-pause", id] => Self::VmPause(id.to_string()),
@@ -141,25 +146,26 @@ impl CliCommand {
             ["docker-delete-entries", entry_ids @ ..] if !entry_ids.is_empty() => {
                 Self::DockerDeleteEntries(entry_ids.iter().map(|s| s.to_string()).collect())
             }
-            ["docker-move-entries-to-folder", destination_folder_id, source_entry_ids @ ..]
-                if !source_entry_ids.is_empty() =>
-            {
-                Self::DockerMoveEntriesToFolder {
-                    source_entry_ids: source_entry_ids.iter().map(|s| s.to_string()).collect(),
-                    destination_folder_id: destination_folder_id.to_string(),
-                }
-            }
-            ["docker-move-items-to-position", destination_folder_id, position, source_entry_ids @ ..]
-                if !source_entry_ids.is_empty() =>
-            {
-                Self::DockerMoveItemsToPosition {
-                    source_entry_ids: source_entry_ids.iter().map(|s| s.to_string()).collect(),
-                    destination_folder_id: destination_folder_id.to_string(),
-                    position: position
-                        .parse()
-                        .map_err(|e| anyhow::anyhow!("invalid position \"{position}\": {e}"))?,
-                }
-            }
+            [
+                "docker-move-entries-to-folder",
+                destination_folder_id,
+                source_entry_ids @ ..,
+            ] if !source_entry_ids.is_empty() => Self::DockerMoveEntriesToFolder {
+                source_entry_ids: source_entry_ids.iter().map(|s| s.to_string()).collect(),
+                destination_folder_id: destination_folder_id.to_string(),
+            },
+            [
+                "docker-move-items-to-position",
+                destination_folder_id,
+                position,
+                source_entry_ids @ ..,
+            ] if !source_entry_ids.is_empty() => Self::DockerMoveItemsToPosition {
+                source_entry_ids: source_entry_ids.iter().map(|s| s.to_string()).collect(),
+                destination_folder_id: destination_folder_id.to_string(),
+                position: position
+                    .parse()
+                    .map_err(|e| anyhow::anyhow!("invalid position \"{position}\": {e}"))?,
+            },
             ["docker-rename-folder", folder_id, new_name] => Self::DockerRenameFolder {
                 folder_id: folder_id.to_string(),
                 new_name: new_name.to_string(),
@@ -216,19 +222,21 @@ impl CliCommand {
             ["onboarding-refresh-internal-boot-context"] => {
                 Self::OnboardingRefreshInternalBootContext
             }
-            ["onboarding-create-internal-boot-pool", pool_name, boot_size_mib, update_bios, devices @ ..]
-                if !devices.is_empty() =>
-            {
-                Self::OnboardingCreateInternalBootPool {
-                    pool_name: pool_name.to_string(),
-                    devices: devices.iter().map(|s| s.to_string()).collect(),
-                    boot_size_mib: boot_size_mib.parse().map_err(|e| {
-                        anyhow::anyhow!("invalid boot_size_mib \"{boot_size_mib}\": {e}")
-                    })?,
-                    update_bios: update_bios.eq_ignore_ascii_case("true"),
-                    reboot: None,
-                }
-            }
+            [
+                "onboarding-create-internal-boot-pool",
+                pool_name,
+                boot_size_mib,
+                update_bios,
+                devices @ ..,
+            ] if !devices.is_empty() => Self::OnboardingCreateInternalBootPool {
+                pool_name: pool_name.to_string(),
+                devices: devices.iter().map(|s| s.to_string()).collect(),
+                boot_size_mib: boot_size_mib.parse().map_err(|e| {
+                    anyhow::anyhow!("invalid boot_size_mib \"{boot_size_mib}\": {e}")
+                })?,
+                update_bios: update_bios.eq_ignore_ascii_case("true"),
+                reboot: None,
+            },
             ["archive-notifications", ids @ ..] if !ids.is_empty() => {
                 Self::ArchiveNotifications(ids.iter().map(|s| s.to_string()).collect())
             }
@@ -269,22 +277,30 @@ impl CliCommand {
                     .parse()
                     .map_err(|e| anyhow::anyhow!("invalid port \"{port}\": {e}"))?,
             },
-            ["initiate-flash-backup", remote_name, source_path, destination_path] => {
-                Self::InitiateFlashBackup {
-                    remote_name: remote_name.to_string(),
-                    source_path: source_path.to_string(),
-                    destination_path: destination_path.to_string(),
-                }
-            }
-            ["notify-if-unique", title, subject, description, importance, rest @ ..] => {
-                Self::NotifyIfUnique {
-                    title: title.to_string(),
-                    subject: subject.to_string(),
-                    description: description.to_string(),
-                    importance: importance.to_string(),
-                    link: rest.first().map(|s| s.to_string()),
-                }
-            }
+            [
+                "initiate-flash-backup",
+                remote_name,
+                source_path,
+                destination_path,
+            ] => Self::InitiateFlashBackup {
+                remote_name: remote_name.to_string(),
+                source_path: source_path.to_string(),
+                destination_path: destination_path.to_string(),
+            },
+            [
+                "notify-if-unique",
+                title,
+                subject,
+                description,
+                importance,
+                rest @ ..,
+            ] => Self::NotifyIfUnique {
+                title: title.to_string(),
+                subject: subject.to_string(),
+                description: description.to_string(),
+                importance: importance.to_string(),
+                link: rest.first().map(|s| s.to_string()),
+            },
             ["doctor"] => Self::Doctor,
             ["setup", "check"] => Self::Setup(SetupCommand::Check),
             ["setup", "repair"] => Self::Setup(SetupCommand::Repair),

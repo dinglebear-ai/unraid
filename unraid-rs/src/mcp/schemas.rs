@@ -1,6 +1,6 @@
 use std::sync::LazyLock;
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Canonical specification for one `unraid` tool action.
 ///

@@ -1,12 +1,12 @@
-// Regression test: verifies rmcp 1.6 axum-extension propagation (syslog-mcp-brt0.10).
+// Regression test: verifies rmcp axum-extension propagation (syslog-mcp-brt0.10).
 // See docs/internal/rmcp-auth-spike.md for the investigation that confirmed Pattern (a).
 //
 // Proves that axum request extensions set by middleware ARE propagated into
-// rmcp 1.6's `RequestContext.extensions` for tool handlers, when using
+// rmcp's `RequestContext.extensions` for tool handlers, when using
 // `transport-streamable-http-server`. This is the empirical verification for
 // the syslog-mcp-brt0.10 spike.
 //
-// rmcp 1.6 publishes `http::request::Parts` into the JSON-RPC request's
+// rmcp publishes `http::request::Parts` into the JSON-RPC request's
 // extensions before dispatching. Any axum middleware that calls
 // `request.extensions_mut().insert(value)` upstream of the rmcp
 // `StreamableHttpService` will be visible inside a tool handler via:
@@ -14,31 +14,33 @@
 //     let parts = ctx.extensions.get::<http::request::Parts>().unwrap();
 //     let value = parts.extensions.get::<AuthContext>().unwrap();
 //
-// This works in BOTH `stateful_mode(true)` and `stateful_mode(false)`. The
-// current syslog-mcp deployment uses stateful_mode(false); no flip required.
+// This works with the session knob in BOTH positions. The knob was named
+// `stateful_mode` up to rmcp 2.x and is `legacy_session_mode` from 3.0 on
+// (SEP-2567 drops sessions from the current draft, so it now only governs
+// legacy protocol versions). The deployment sets it to false; no flip required.
 //
 // See `docs/internal/rmcp-auth-spike.md` for full write-up.
 
 use std::sync::{Arc, Mutex};
 
 use axum::{
-    body::{to_bytes, Body},
+    Router,
+    body::{Body, to_bytes},
     extract::Request,
-    http::{header, StatusCode},
+    http::{StatusCode, header},
     middleware::{self, Next},
     response::Response,
-    Router,
 };
 use rmcp::{
+    ErrorData, RoleServer, ServerHandler,
     model::{
-        CallToolRequestParams, CallToolResult, Content, ListToolsResult, PaginatedRequestParams,
-        ServerCapabilities, ServerInfo, Tool,
+        CallToolRequestParams, CallToolResponse, CallToolResult, ContentBlock, ListToolsResult,
+        PaginatedRequestParams, ServerCapabilities, ServerInfo, Tool,
     },
     service::RequestContext,
     transport::streamable_http_server::{
-        session::local::LocalSessionManager, StreamableHttpServerConfig, StreamableHttpService,
+        StreamableHttpServerConfig, StreamableHttpService, session::local::LocalSessionManager,
     },
-    ErrorData, RoleServer, ServerHandler,
 };
 use tower::util::ServiceExt;
 
@@ -88,7 +90,7 @@ impl ServerHandler for SpikeServer {
         &self,
         _request: CallToolRequestParams,
         context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, ErrorData> {
+    ) -> Result<CallToolResponse, ErrorData> {
         // Pattern (a): rmcp injects http::request::Parts into request extensions.
         // Axum middleware extensions live inside Parts.extensions.
         let parts = context
@@ -108,10 +110,11 @@ impl ServerHandler for SpikeServer {
 
         *self.observed.0.lock().unwrap() = Some(auth.clone());
 
-        Ok(CallToolResult::success(vec![Content::text(format!(
+        Ok(CallToolResult::success(vec![ContentBlock::text(format!(
             "subject={} scopes={:?}",
             auth.subject, auth.scopes
-        ))]))
+        ))])
+        .into())
     }
 
     fn get_info(&self) -> ServerInfo {
@@ -131,7 +134,7 @@ async fn auth_middleware(mut req: Request, next: Next) -> Response {
 
 fn build_router(observed: Observed, stateful: bool) -> Router {
     let config = StreamableHttpServerConfig::default()
-        .with_stateful_mode(stateful)
+        .with_legacy_session_mode(stateful)
         .with_json_response(true)
         .with_sse_keep_alive(None);
 
