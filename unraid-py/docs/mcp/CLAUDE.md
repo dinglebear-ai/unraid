@@ -32,7 +32,7 @@ Documentation for the unraid-mcp MCP server.
 1. ENV.md -- understand required configuration
 2. AUTH.md -- set up authentication
 3. TRANSPORT.md -- choose a transport and connect
-4. TOOLS.md -- learn available operations (19 actions, 178 subactions)
+4. TOOLS.md -- learn available operations (19 actions, 179 subactions)
 5. RESOURCES.md -- discover live subscription data endpoints
 6. ELICITATION.md -- understand the destructive action gates
 
@@ -45,7 +45,7 @@ Documentation for the unraid-mcp MCP server.
 ## At a glance
 
 - **One tool**, `unraid`, routed by `action` (domain) + `subaction` (operation):
-  `unraid(action="docker", subaction="list")`. 19 actions / 178 subactions.
+  `unraid(action="docker", subaction="list")`. 19 actions / 179 subactions.
 - **Destructive subactions require `confirm=True`** (e.g. `array/stop_array`,
   `docker/remove_container`); without it, an MCP elicitation form is raised.
 - **List subactions are capped** via the `limit` param (default 20; `limit<=0` =

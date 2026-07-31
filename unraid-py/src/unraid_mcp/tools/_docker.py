@@ -1,12 +1,11 @@
 """Docker domain handler for the Unraid MCP tool.
 
-Covers: list, details, ports, start, stop, restart, unpause, networks,
+Covers: list, details, logs, check_updates, ports, start, stop, restart, unpause, networks,
 network_details, remove_container*, update_container, update_containers,
 update_all_containers, update_autostart, refresh_digests, sync_template_paths,
 reset_template_mappings*, create_folder, create_folder_with_items, rename_folder,
 set_folder_children, delete_entries*, move_entries_to_folder,
-move_items_to_position, update_view_preferences (25 subactions, plus a deprecated
-`logs` stub that returns an informative ToolError — not counted).
+move_items_to_position, update_view_preferences (27 subactions).
 """
 
 import re
@@ -37,6 +36,8 @@ _DOCKER_QUERIES: dict[str, str] = {
     # The "ports" subaction still needs every running container's bindings, so
     # it keeps a list-based query (trimmed to just ports + state + names).
     "ports": "query GetContainerPorts { docker { containers { id names state ports { ip privatePort publicPort type } } } }",
+    "logs": "query GetContainerLogs($id: PrefixedID!, $tail: Int) { docker { logs(id: $id, tail: $tail) { containerId lines { timestamp message } cursor } } }",
+    "check_updates": "query CheckContainerUpdates { docker { containerUpdateStatuses { name updateStatus } } }",
     "networks": "query GetDockerNetworks { docker { networks { id name driver scope } } }",
     "network_details": "query GetDockerNetwork { docker { networks { id name driver scope enableIPv6 internal attachable containers options labels } } }",
 }
@@ -148,9 +149,6 @@ _DOCKER_ORGANIZER: dict[str, _OrganizerSpec] = {
     },
 }
 
-# "logs" has no GraphQL query (field removed in Unraid 7.2.x) but is still a
-# recognised subaction so validation passes and the informative ToolError below
-# is returned rather than a generic "Invalid action" message.
 # "ports" has a dedicated list query and aggregates host port bindings client-side.
 _DOCKER_SUBACTIONS: set[str] = (
     set(_DOCKER_QUERIES)
@@ -158,14 +156,22 @@ _DOCKER_SUBACTIONS: set[str] = (
     | set(_DOCKER_BULK_MUTATIONS)
     | set(_DOCKER_ROOT_MUTATIONS)
     | set(_DOCKER_ORGANIZER)
-    | {"logs"}
 )
-_DOCKER_NEEDS_CONTAINER_ID = {"start", "stop", "details", "restart", "unpause", "update_container"}
+_DOCKER_NEEDS_CONTAINER_ID = {
+    "start",
+    "stop",
+    "details",
+    "logs",
+    "restart",
+    "unpause",
+    "update_container",
+}
 # remove_container deletes the container (and optionally its image); reset_template_mappings
 # wipes user template path overrides; delete_entries removes organizer entries.
 _DOCKER_DESTRUCTIVE: set[str] = {"remove_container", "reset_template_mappings", "delete_entries"}
 _DOCKER_ID_PATTERN = re.compile(r"^[a-f0-9]{64}(:[a-z0-9]+)?$", re.IGNORECASE)
 _DOCKER_SHORT_ID_PATTERN = re.compile(r"^[a-f0-9]{12,63}$", re.IGNORECASE)
+_MAX_TAIL_LINES = 10_000
 
 
 def _container_names(c: dict[str, Any]) -> list[str]:
@@ -251,6 +257,7 @@ async def _handle_docker(
     subaction: str,
     container_id: str | None,
     network_id: str | None,
+    tail_lines: int = 100,
     limit: int | None = None,
     ctx: Context | None = None,
     confirm: bool = False,
@@ -264,6 +271,8 @@ async def _handle_docker(
         raise ToolError(f"container_id is required for docker/{subaction}")
     if subaction == "network_details" and not network_id:
         raise ToolError("network_id is required for docker/network_details")
+    if subaction == "logs" and not 1 <= tail_lines <= _MAX_TAIL_LINES:
+        raise ToolError(f"tail_lines must be between 1 and {_MAX_TAIL_LINES}, got {tail_lines}")
 
     await gate_destructive_action(
         ctx,
@@ -340,11 +349,21 @@ async def _handle_docker(
             raise ToolError(f"Network '{network_id}' not found.")
 
         if subaction == "logs":
-            raise ToolError(
-                "Container logs are not available via the Unraid GraphQL API. "
-                "Use the Unraid terminal or SSH to run: "
-                f"`docker logs {container_id or '<container_id>'} --tail 100`"
+            actual_id = await _resolve_container_id(container_id or "")
+            data = await _client.make_graphql_request(
+                _DOCKER_QUERIES["logs"],
+                {"id": actual_id, "tail": tail_lines},
             )
+            logs = safe_get(data, "docker", "logs", default=None)
+            if logs is None:
+                raise ToolError(f"No logs returned for container '{container_id}'.")
+            return dict(logs)
+
+        if subaction == "check_updates":
+            data = await _client.make_graphql_request(_DOCKER_QUERIES["check_updates"])
+            updates = safe_get(data, "docker", "containerUpdateStatuses", default=[])
+            capped, page = cap_list(updates, limit)
+            return {"updates": capped, "page": page}
 
         # Root-level no-arg mutations (refresh digests / template sync + reset).
         if subaction in _DOCKER_ROOT_MUTATIONS:

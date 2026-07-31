@@ -27,12 +27,12 @@ MCP Client (Claude Code / Codex / Gemini / HTTP)
 +----------------------------------------------+
     |
     +----> Tools (1 registered)
-    |      +-- unraid (action+subaction router, 19 actions / 178 subactions)
+    |      +-- unraid (action+subaction router, 19 actions / 179 subactions)
     |      |   +-- _system.py    (25 subactions)
     |      |   +-- _health.py    (4 subactions)
     |      |   +-- _array.py     (14 subactions)
     |      |   +-- _disk.py      (6 subactions)
-    |      |   +-- _docker.py    (26 subactions)
+    |      |   +-- _docker.py    (27 subactions)
     |      |   +-- _vm.py        (9 subactions)
     |      |   +-- _notification (13 subactions)
     |      |   +-- _key.py       (13 subactions)
@@ -118,7 +118,7 @@ MCP Client (Claude Code / Codex / Gemini / HTTP)
 
 ### Consolidated tool pattern
 
-One `unraid` tool with 19 actions (178 subactions) instead of many separate tools. This:
+One `unraid` tool with 19 actions (179 subactions) instead of many separate tools. This:
 - Reduces MCP context window usage (one tool description covers all operations)
 - Simplifies client tool selection
 - Enables shared parameters across domains

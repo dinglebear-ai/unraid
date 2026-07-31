@@ -376,6 +376,8 @@ unraid(action="health", subaction="check")
 ```text
 unraid(action="docker", subaction="list")
 unraid(action="docker", subaction="details", container_id="plex")
+unraid(action="docker", subaction="logs", container_id="plex", tail_lines=100)
+unraid(action="docker", subaction="check_updates")
 unraid(action="docker", subaction="restart", container_id="sonarr")
 ```
 
@@ -412,7 +414,7 @@ unraid(action="vm", subaction="force_stop", vm_id="<id>", confirm=True)
 
 - **Rate limit:** 100 requests / 10 seconds
 - **Log path validation:** Only `/var/log/`, `/boot/logs/`, `/mnt/` prefixes accepted
-- **Container logs:** Docker container stdout/stderr are NOT accessible via API — use SSH + `docker logs`
+- **Container logs:** Use `docker/logs` with `container_id` and optional `tail_lines`
 - **`arraySubscription`:** Known Unraid API bug — `live/array_state` may show "connecting" indefinitely
 - **Event-driven subs** (`notifications_overview`, `owner`, `server_status`, `ups_status`): Only populate cache on first real server event
 

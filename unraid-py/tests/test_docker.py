@@ -23,18 +23,47 @@ def _make_tool():
 
 
 class TestDockerValidation:
-    @pytest.mark.parametrize("subaction", ["start", "stop", "details"])
+    @pytest.mark.parametrize("subaction", ["start", "stop", "details", "logs"])
     async def test_container_actions_require_id(
         self, _mock_graphql: AsyncMock, subaction: str
     ) -> None:
         tool_fn = _make_tool()
-        with pytest.raises(ToolError, match="container_id"):
+        with pytest.raises(
+            ToolError,
+            match=rf"^container_id is required for docker/{subaction}$",
+        ):
             await tool_fn(action="docker", subaction=subaction)
 
     async def test_network_details_requires_id(self, _mock_graphql: AsyncMock) -> None:
         tool_fn = _make_tool()
         with pytest.raises(ToolError, match="network_id"):
             await tool_fn(action="docker", subaction="network_details")
+
+    @pytest.mark.parametrize("tail_lines", [0, 10_001])
+    async def test_logs_rejects_out_of_range_tail_lines(
+        self, _mock_graphql: AsyncMock, tail_lines: int
+    ) -> None:
+        container_id = "a" * 64 + ":local"
+        _mock_graphql.return_value = {
+            "docker": {
+                "logs": {
+                    "containerId": container_id,
+                    "lines": [],
+                    "cursor": None,
+                }
+            }
+        }
+
+        with pytest.raises(
+            ToolError,
+            match=rf"^tail_lines must be between 1 and 10000, got {tail_lines}$",
+        ):
+            await _make_tool()(
+                action="docker",
+                subaction="logs",
+                container_id=container_id,
+                tail_lines=tail_lines,
+            )
 
     async def test_non_logs_action_ignores_tail_lines_validation(
         self, _mock_graphql: AsyncMock
@@ -106,6 +135,69 @@ class TestDockerActions:
         tool_fn = _make_tool()
         result = await tool_fn(action="docker", subaction="networks")
         assert len(result["networks"]) == 1
+
+    async def test_logs_returns_structured_lines(self, _mock_graphql: AsyncMock) -> None:
+        container_id = "a" * 64 + ":local"
+        _mock_graphql.side_effect = [
+            {"docker": {"containers": [{"id": container_id, "names": ["plex"]}]}},
+            {
+                "docker": {
+                    "logs": {
+                        "containerId": container_id,
+                        "lines": [
+                            {
+                                "timestamp": "2026-07-30T12:00:00.000Z",
+                                "message": "server ready",
+                            }
+                        ],
+                        "cursor": "2026-07-30T12:00:00.000Z",
+                    }
+                }
+            },
+        ]
+
+        result = await _make_tool()(
+            action="docker",
+            subaction="logs",
+            container_id="plex",
+            tail_lines=25,
+        )
+
+        assert result == {
+            "containerId": container_id,
+            "lines": [
+                {
+                    "timestamp": "2026-07-30T12:00:00.000Z",
+                    "message": "server ready",
+                }
+            ],
+            "cursor": "2026-07-30T12:00:00.000Z",
+        }
+        logs_call = _mock_graphql.call_args_list[1]
+        assert "logs(id: $id, tail: $tail)" in logs_call.args[0]
+        assert logs_call.args[1] == {"id": container_id, "tail": 25}
+
+    async def test_check_updates_returns_current_status_shape(
+        self, _mock_graphql: AsyncMock
+    ) -> None:
+        _mock_graphql.return_value = {
+            "docker": {
+                "containerUpdateStatuses": [
+                    {"name": "plex", "updateStatus": "UP_TO_DATE"},
+                    {"name": "sonarr", "updateStatus": "UPDATE_AVAILABLE"},
+                ]
+            }
+        }
+
+        result = await _make_tool()(action="docker", subaction="check_updates")
+
+        assert result == {
+            "updates": [
+                {"name": "plex", "updateStatus": "UP_TO_DATE"},
+                {"name": "sonarr", "updateStatus": "UPDATE_AVAILABLE"},
+            ],
+            "page": {"returned": 2, "total": 2, "truncated": False},
+        }
 
     async def test_idempotent_start(self, _mock_graphql: AsyncMock) -> None:
         # Resolve + idempotent success

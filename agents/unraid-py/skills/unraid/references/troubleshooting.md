@@ -108,6 +108,7 @@ Use `unraid(action="disk", subaction="log_files")` to list available logs before
 
 ---
 
-## Container Logs Not Available
+## Container Logs
 
-Docker container stdout/stderr are **not accessible via the Unraid API**. SSH to the Unraid server and use `docker logs <container>` directly.
+Use `unraid(action="docker", subaction="logs", container_id="<name-or-id>", tail_lines=100)`.
+The response includes timestamped lines and a continuation cursor.

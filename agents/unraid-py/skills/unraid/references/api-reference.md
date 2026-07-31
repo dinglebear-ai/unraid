@@ -323,7 +323,8 @@ curl -s -X POST "https://YOUR-UNRAID/graphql" \
 }
 ```
 
-**Note:** Container logs are NOT accessible via this API. Use `docker logs` via SSH.
+**Container logs:** Query `docker.logs(id:, tail:)` and select
+`containerId`, `lines { timestamp message }`, and `cursor`.
 
 ---
 
@@ -955,7 +956,7 @@ Common differences from online documentation:
 
 ## 🚫 Known Limitations
 
-1. **No Docker container logs** - Container output logs are NOT accessible via the read-only query API (use `docker.logs` mutation)
+1. **Docker logs require a sub-selection** - Query `docker.logs(id:, tail:) { containerId lines { timestamp message } cursor }`
 2. **WebSocket subscriptions are available** - The Unraid API supports real-time subscriptions (array, Docker stats, notifications, etc.) via WebSocket
 3. **Some queries require higher permissions** - Read-only "Viewer" role may not access all queries
 4. **No mutation examples included** - This guide covers read-only queries only

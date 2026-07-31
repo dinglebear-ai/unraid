@@ -108,7 +108,7 @@ Copy `.env.example` to `.env` and configure:
 ### Tool Categories (1 Tool)
 
 The server registers a **single MCP tool**, `unraid`, with `action` (domain) +
-`subaction` (operation) routing (19 actions / 178 subactions). Call it as
+`subaction` (operation) routing (19 actions / 179 subactions). Call it as
 `unraid(action="docker", subaction="list")`. Subscription diagnostics and the
 Markdown reference that used to be standalone tools are now actions of `unraid`:
 - **`subscriptions`** — `diagnose` (connection states, errors, WebSocket URLs) and
@@ -126,7 +126,7 @@ The handler functions live in `src/unraid_mcp/subscriptions/diagnostics.py`
 | **health** (4) | check, test_connection, diagnose, setup |
 | **array** (14) | parity_status, parity_history, assignable_disks, parity_start, parity_pause, parity_resume, parity_cancel, start_array, stop_array*, add_disk, remove_disk*, mount_disk, unmount_disk, clear_disk_stats* |
 | **disk** (6) | shares, disks, disk_details, log_files, logs, flash_backup* |
-| **docker** (26) | list, details, logs, ports, start, stop, restart, unpause, networks, network_details, remove_container*, update_container, update_containers, update_all_containers, update_autostart, refresh_digests, sync_template_paths, reset_template_mappings*, create_folder, create_folder_with_items, rename_folder, set_folder_children, delete_entries*, move_entries_to_folder, move_items_to_position, update_view_preferences |
+| **docker** (27) | list, details, logs, check_updates, ports, start, stop, restart, unpause, networks, network_details, remove_container*, update_container, update_containers, update_all_containers, update_autostart, refresh_digests, sync_template_paths, reset_template_mappings*, create_folder, create_folder_with_items, rename_folder, set_folder_children, delete_entries*, move_entries_to_folder, move_items_to_position, update_view_preferences |
 | **vm** (9) | list, details, start, stop, pause, resume, force_stop*, reboot, reset* |
 | **notification** (13) | overview, list, create, notify_if_unique, archive, mark_unread, recalculate, archive_all, archive_many, unarchive_many, unarchive_all, delete*, delete_archived* |
 | **key** (13) | list, get, possible_roles, possible_permissions, permissions_for_roles, preview_permissions, auth_actions, creation_form_schema, create, update, delete*, add_role, remove_role |

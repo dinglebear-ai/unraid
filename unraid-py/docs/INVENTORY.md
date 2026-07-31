@@ -6,7 +6,7 @@ Complete listing of all plugin components.
 
 | Tool | Type | Module | Description |
 | --- | --- | --- | --- |
-| `unraid` | Primary (only tool) | `tools/unraid.py` | Unified action/subaction router: 19 actions, 178 subactions. The Markdown reference (`help` action) and WebSocket diagnostics (`subscriptions` action, handled in `subscriptions/diagnostics.py`) are folded into this single tool. |
+| `unraid` | Primary (only tool) | `tools/unraid.py` | Unified action/subaction router: 19 actions, 179 subactions. The Markdown reference (`help` action) and WebSocket diagnostics (`subscriptions` action, handled in `subscriptions/diagnostics.py`) are folded into this single tool. |
 
 ## MCP resources
 
@@ -31,7 +31,7 @@ Complete listing of all plugin components.
 | `health` | 4 | `tools/_health.py` (+ handler in `tools/unraid.py`) | No |
 | `array` | 14 | `tools/_array.py` | Yes (3) |
 | `disk` | 6 | `tools/_disk.py` | Yes (1) |
-| `docker` | 26 | `tools/_docker.py` | Yes (3) |
+| `docker` | 27 | `tools/_docker.py` | Yes (3) |
 | `vm` | 9 | `tools/_vm.py` | Yes (2) |
 | `notification` | 13 | `tools/_notification.py` | Yes (2) |
 | `key` | 13 | `tools/_key.py` | Yes (1) |
