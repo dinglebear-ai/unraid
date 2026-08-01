@@ -1,0 +1,40 @@
+name: Repository contract
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: repository-contract-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions: {}
+
+jobs:
+  contract:
+    permissions:
+      contents: read
+    uses: dinglebear-ai/workflows/.github/workflows/fleet-contract.yml@d1a41a7af9c41189e0f1062234364f5814bda99d # fleet-2026-07-31
+    with:
+      profile: rust
+      implementation-ref: d1a41a7af9c41189e0f1062234364f5814bda99d
+    secrets: inherit
+
+  repository-contract:
+    name: Repository Contract
+    if: always()
+    needs: [contract]
+    runs-on: ci-pool-ops
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require repository contract
+        env:
+          RESULT: ${{ needs.contract.result }}
+        run: |
+          if [[ "$RESULT" != "success" ]]; then
+            echo "repository contract concluded $RESULT" >&2
+            exit 1
+          fi

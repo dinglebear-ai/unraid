@@ -8,3 +8,4 @@ self-hosted-runner:
   labels:
     - tailscale
     - unraid
+    - ci-pool-ops
