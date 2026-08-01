@@ -1,5 +1,5 @@
 {
-  "name": "unraid-rmcp",
+  "name": "@dinglebear/unraid",
   "version": "0.2.5",
   "description": "Rust MCP server and CLI for Unraid GraphQL operations across NAS, Docker, VM, and storage workflows.",
   "license": "MIT",
@@ -54,10 +54,13 @@
     "automation",
     "oauth"
   ],
-  "mcpName": "ai.dinglebear/unraid-rmcp",
+  "mcpName": "ai.dinglebear/unraid",
   "binaryVersion": "0.2.5",
   "author": {
     "name": "dinglebear.ai",
     "url": "https://dinglebear.ai"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

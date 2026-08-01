@@ -1,7 +1,7 @@
 name: rust-release
 
 # Triggered when release-please publishes an unraid-rs-v<version> release. Builds
-# the linux/amd64 runraid binary, publishes the unraid-rmcp npm launcher, and
+# the linux/amd64 runraid binary, publishes the @dinglebear/unraid npm launcher, and
 # builds+pushes the Rust server container image (folds in runraid's former
 # standalone docker-publish workflow). All run: steps execute in unraid-rs/.
 #
@@ -134,6 +134,11 @@ jobs:
       - name: Install npm with trusted-publishing support
         run: npm install --global npm@11.5.1
 
+      - name: Validate npm publication identity
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm whoami >/dev/null
+
       - name: Verify npm package version matches release tag
         id: npm-version
         run: |
@@ -151,14 +156,15 @@ jobs:
         run: npm run check --prefix packages/unraid-rmcp
 
       - name: Publish npm package if not already present
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
           version="${{ steps.npm-version.outputs.version }}"
-          if npm view "unraid-rmcp@${version}" version >/dev/null 2>&1; then
-            echo "unraid-rmcp@${version} already published; skipping."
+          if npm view "@dinglebear/unraid@${version}" version >/dev/null 2>&1; then
+            echo "@dinglebear/unraid@${version} already published; skipping."
           else
-            # OIDC trusted publishing generates provenance automatically.
-            npm publish --access public ./packages/unraid-rmcp
+            npm publish --provenance --access public ./packages/unraid-rmcp
           fi
 
   docker:

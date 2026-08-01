@@ -11,3 +11,4 @@ self-hosted-runner:
     - tailscale
     - unraid
     - ci-pool-ops
+    - ci-pool-system

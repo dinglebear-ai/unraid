@@ -74,7 +74,7 @@ def test_ci_runs_blocking_live_integration_on_tailnet_runner() -> None:
     workflow = (MONOREPO_ROOT / ".github" / "workflows" / "ci.yml").read_text()
     assert "secrets.UNRAID_API_URL" in workflow
     assert "secrets.UNRAID_API_KEY" in workflow
-    assert "runs-on: [self-hosted, linux, tailscale]" in workflow
+    assert "runs-on: ci-pool-system" in workflow
     assert "github.event_name == 'schedule'" in workflow
     integration_job = workflow.split("  mcp-integration:", 1)[1].split("\n  audit:", 1)[0]
     assert "continue-on-error: true" not in integration_job
