@@ -55,7 +55,8 @@ defaults:
 jobs:
   build:
     if: github.event_name == 'release' && startsWith(github.event.release.tag_name, 'unraid-rs-v')
-    runs-on: [self-hosted, unraid]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     permissions:
       contents: write
       id-token: write
@@ -113,6 +114,7 @@ jobs:
       )
     # npm trusted publishing supports GitHub-hosted runners only.
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       id-token: write
@@ -170,6 +172,7 @@ jobs:
           startsWith(inputs.tag, 'unraid-rs-v'))
       )
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
       packages: write
