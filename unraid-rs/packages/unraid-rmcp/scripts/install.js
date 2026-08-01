@@ -71,6 +71,18 @@ function extract(archive, destination) {
   const result = spawnSync("tar", ["-xzf", archive, "-C", destination], { encoding: "utf8" });
   if (result.status !== 0) throw new Error((result.stderr || result.stdout || "tar extraction failed").trim());
 }
+
+function promoteExtractedBinary(target, destination, root = installRoot()) {
+  const extracted = path.join(root, target.archiveBinary || target.binary);
+  if (!fs.existsSync(extracted)) {
+    throw new Error(`archive did not contain expected binary ${path.basename(extracted)}`);
+  }
+  if (path.resolve(extracted) !== path.resolve(destination)) {
+    fs.rmSync(destination, { force: true });
+    fs.renameSync(extracted, destination);
+  }
+  fs.chmodSync(destination, 0o755);
+}
 async function main() {
   if (process.env.UNRAID_RMCP_SKIP_DOWNLOAD === "1") { log("skipping binary download because UNRAID_RMCP_SKIP_DOWNLOAD=1"); return; }
   const target = targetFor();
@@ -84,8 +96,12 @@ async function main() {
     await download(url, archive);
     await verifyChecksum(url, archive);
     extract(archive, installRoot());
-    fs.chmodSync(destination, 0o755);
+    promoteExtractedBinary(target, destination);
     log(`installed ${destination}`);
   } finally { fs.rmSync(tempDir, { recursive: true, force: true }); }
 }
-main().catch((error) => { log(error.message); process.exitCode = 1; });
+if (require.main === module) {
+  main().catch((error) => { log(error.message); process.exitCode = 1; });
+}
+
+module.exports = { checksumFromText, promoteExtractedBinary };

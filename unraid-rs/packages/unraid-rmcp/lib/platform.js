@@ -12,7 +12,7 @@ function binaryVersion() {
 
 function targetFor(platform = process.platform, arch = process.arch) {
   if (platform === "linux" && arch === "x64") {
-    return { asset: "runraid-x86_64.tar.gz", binary: "runraid" };
+    return { asset: "runraid-x86_64.tar.gz", archiveBinary: "runraid-linux-x86_64", binary: "runraid" };
   }
   throw new Error(`Unsupported platform ${platform}/${arch}. Supported target: linux/x64.`);
 }
