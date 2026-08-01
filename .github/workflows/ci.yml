@@ -130,7 +130,7 @@ jobs:
 
   mcp-integration:
     name: MCP Integration Tests
-    runs-on: [self-hosted, linux, tailscale]
+    runs-on: ci-pool-system
     timeout-minutes: 15
     # Live smoke test against the REAL Unraid box (via repo secrets). The homelab
     # Unraid API lives on a private/Tailscale network that GitHub's cloud runners
