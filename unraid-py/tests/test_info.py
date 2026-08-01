@@ -173,6 +173,35 @@ class TestUnraidInfoTool:
         assert result["httpsPort"] == 31337
         assert any(u["type"] == "LAN" and u["ipv4"] == "10.1.0.2" for u in result["accessUrls"])
 
+    async def test_owner_uses_server_owner_url(self, _mock_graphql: AsyncMock) -> None:
+        _mock_graphql.side_effect = [
+            {"owner": {"username": "owner@example.com", "avatar": "avatar.png"}},
+            {"server": {"owner": {"url": "https://account.unraid.net/owner"}}},
+        ]
+        result = await _make_tool()(action="system", subaction="owner")
+
+        owner_query = _mock_graphql.call_args_list[0].args[0]
+        url_query = _mock_graphql.call_args_list[1].args[0]
+        assert "owner { username avatar }" in owner_query
+        assert "owner { username avatar url }" not in owner_query
+        assert "server { owner { url } }" in url_query
+        assert result == {
+            "username": "owner@example.com",
+            "avatar": "avatar.png",
+            "url": "https://account.unraid.net/owner",
+        }
+
+    async def test_owner_defaults_url_when_server_owner_is_unavailable(
+        self, _mock_graphql: AsyncMock
+    ) -> None:
+        _mock_graphql.side_effect = [
+            {"owner": {"username": "owner@example.com", "avatar": ""}},
+            ToolError("HTTP error 403: Forbidden"),
+        ]
+        result = await _make_tool()(action="system", subaction="owner")
+
+        assert result == {"username": "owner@example.com", "avatar": "", "url": ""}
+
     async def test_network_interfaces_includes_address_details(
         self, _mock_graphql: AsyncMock
     ) -> None:

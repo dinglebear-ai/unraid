@@ -560,7 +560,7 @@ curl -s -X POST "https://YOUR-UNRAID/graphql" \
   -H "Content-Type: application/json" \
   -H "x-api-key: YOUR_API_KEY" \
   -d '{
-    "query": "{ owner { username url avatar } }"
+    "query": "{ owner { username avatar } }"
   }' | jq '.'
 ```
 
@@ -571,12 +571,15 @@ curl -s -X POST "https://YOUR-UNRAID/graphql" \
   "data": {
     "owner": {
       "username": "root",
-      "url": "",
       "avatar": ""
     }
   }
 }
 ```
+
+The consolidated `system/owner` MCP action also attempts to read `server.owner.url`.
+That optional lookup requires the separate `SERVERS` permission and defaults to an empty
+string when unavailable.
 
 ---
 

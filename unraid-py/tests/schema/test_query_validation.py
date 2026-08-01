@@ -97,10 +97,13 @@ class TestInfoQueries:
         assert not errors, f"online query validation failed: {errors}"
 
     def test_owner_query(self, schema: GraphQLSchema) -> None:
+        from unraid_mcp.tools._system import _OWNER_URL_QUERY
         from unraid_mcp.tools._system import _SYSTEM_QUERIES as QUERIES
 
         errors = _validate_operation(schema, QUERIES["owner"])
         assert not errors, f"owner query validation failed: {errors}"
+        url_errors = _validate_operation(schema, _OWNER_URL_QUERY)
+        assert not url_errors, f"owner URL query validation failed: {url_errors}"
 
     def test_settings_query(self, schema: GraphQLSchema) -> None:
         from unraid_mcp.tools._system import _SYSTEM_QUERIES as QUERIES
