@@ -443,9 +443,7 @@ run_phase4() {
   call_unraid "unraid system/display"         "system"       "display"
   call_unraid "unraid system/config"          "system"       "config"
   call_unraid "unraid system/online"          "system"       "online"
-  call_unraid_optional "unraid system/owner"  "system"       "owner" \
-    'Cannot return null for non-nullable field Owner\.url' \
-    "upstream owner profile has null url"
+  call_unraid "unraid system/owner"           "system"       "owner"
   call_unraid "unraid system/settings"        "system"       "settings"
   call_unraid "unraid system/server"          "system"       "server"
   call_unraid "unraid system/servers"         "system"       "servers"

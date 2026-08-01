@@ -103,7 +103,7 @@ _SYSTEM_QUERIES: dict[str, str] = {
     """,
     "config": "query GetConfig { config { valid error } }",
     "online": "query GetOnline { online }",
-    "owner": "query GetOwner { owner { username avatar url } }",
+    "owner": "query GetOwner { owner { username avatar } }",
     # settings.unified.values is an opaque JSON! scalar in the GraphQL schema
     # (no selectable subfields), so field-level narrowing is not possible here.
     "settings": "query GetSettings { settings { unified { values } } }",
@@ -177,6 +177,12 @@ _SYSTEM_QUERIES: dict[str, str] = {
     """,
 }
 
+# Root owner.url is non-null in the schema but omitted for signed-in owners on
+# Unraid 7.3.x. The local server profile exposes a stable empty-string URL, but
+# that root requires the separate SERVERS permission. Fetch it opportunistically
+# so an OWNER-only API key still receives the owner profile.
+_OWNER_URL_QUERY = "query GetOwnerUrl { server { owner { url } } }"
+
 _SYSTEM_SUBACTIONS: set[str] = set(_SYSTEM_QUERIES)
 
 # Subactions whose response is a single object echoed back under a stable key.
@@ -186,7 +192,6 @@ _SYSTEM_SIMPLE_KEYS: dict[str, str] = {
     "variables": "vars",
     "metrics": "metrics",
     "config": "config",
-    "owner": "owner",
     "flash": "flash",
     "ups_config": "upsConfiguration",
     "server_time": "systemTime",
@@ -266,6 +271,24 @@ async def _handle_system(subaction: str, device_id: str | None, limit: int = 20)
 
     with tool_error_handler("system", subaction, logger):
         logger.info(f"Executing unraid action=system subaction={subaction}")
+
+        if subaction == "owner":
+            data = await _client.make_graphql_request(query)
+            owner = data.get("owner")
+            if not isinstance(owner, dict):
+                return {}
+            result = dict(owner)
+            result["url"] = ""
+            try:
+                url_data = await _client.make_graphql_request(_OWNER_URL_QUERY)
+            except ToolError as exc:
+                logger.warning("Owner URL unavailable from server profile: %s", exc)
+            else:
+                server_owner = safe_get(url_data, "server", "owner", default={})
+                if isinstance(server_owner, dict) and isinstance(server_owner.get("url"), str):
+                    result["url"] = server_owner["url"]
+            return result
+
         data = await _client.make_graphql_request(query, variables)
 
         if subaction == "overview":

@@ -97,10 +97,13 @@ class TestInfoQueries:
         assert not errors, f"online query validation failed: {errors}"
 
     def test_owner_query(self, schema: GraphQLSchema) -> None:
+        from unraid_mcp.tools._system import _OWNER_URL_QUERY
         from unraid_mcp.tools._system import _SYSTEM_QUERIES as QUERIES
 
         errors = _validate_operation(schema, QUERIES["owner"])
         assert not errors, f"owner query validation failed: {errors}"
+        url_errors = _validate_operation(schema, _OWNER_URL_QUERY)
+        assert not url_errors, f"owner URL query validation failed: {url_errors}"
 
     def test_settings_query(self, schema: GraphQLSchema) -> None:
         from unraid_mcp.tools._system import _SYSTEM_QUERIES as QUERIES
@@ -409,6 +412,18 @@ class TestDockerQueries:
         errors = _validate_operation(schema, QUERIES["ports"])
         assert not errors, f"ports query validation failed: {errors}"
 
+    def test_logs_query(self, schema: GraphQLSchema) -> None:
+        from unraid_mcp.tools._docker import _DOCKER_QUERIES as QUERIES
+
+        errors = _validate_operation(schema, QUERIES["logs"])
+        assert not errors, f"logs query validation failed: {errors}"
+
+    def test_check_updates_query(self, schema: GraphQLSchema) -> None:
+        from unraid_mcp.tools._docker import _DOCKER_QUERIES as QUERIES
+
+        errors = _validate_operation(schema, QUERIES["check_updates"])
+        assert not errors, f"check_updates query validation failed: {errors}"
+
     def test_all_docker_queries_covered(self, schema: GraphQLSchema) -> None:
         from unraid_mcp.tools._docker import _DOCKER_QUERIES as QUERIES
 
@@ -416,6 +431,8 @@ class TestDockerQueries:
             "list",
             "details",
             "ports",
+            "logs",
+            "check_updates",
             "networks",
             "network_details",
         }

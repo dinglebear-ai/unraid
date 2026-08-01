@@ -96,6 +96,6 @@ UPS/power status, live CPU/memory, API keys, and rclone remotes.
 ## Notes
 
 - Array/disk sizes are in **kilobytes**; memory values are in **bytes**; temperatures in **Celsius**.
-- Docker container logs are **not** available via the API — use SSH + `docker logs`.
+- Docker container logs are available through `unraid(action="docker", subaction="logs", container_id=...)`.
 - Destructive subactions require `confirm=True` (see the Destructive Actions table in `SKILL.md`).
 - Rate limit: 100 requests / 10 seconds.

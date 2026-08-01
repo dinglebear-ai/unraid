@@ -8,7 +8,7 @@ Actions:
   health       - Health checks, connection test, diagnostics, setup (4 subactions)
   array        - Parity checks, array state, disk operations (14 subactions)
   disk         - Shares, physical disks, log files (6 subactions)
-  docker       - Container lifecycle, updates, organizer, networks (26 subactions)
+  docker       - Container lifecycle, updates, organizer, networks (27 subactions)
   vm           - Virtual machine lifecycle (9 subactions)
   notification - System notifications CRUD (13 subactions)
   key          - API key & permission management (13 subactions)
@@ -157,7 +157,7 @@ Single entry point for all operations. Use `action` + `subaction` to select an o
 | `health` | `check`, `test_connection`, `diagnose`, `setup` | |
 | `array` | `parity_status`, `parity_history`, `assignable_disks`, `parity_start`, `parity_pause`, `parity_resume`, `parity_cancel`, `start_array`, `stop_array`*, `add_disk`, `remove_disk`*, `mount_disk`, `unmount_disk`, `clear_disk_stats`* | |
 | `disk` | `shares`, `disks`, `disk_details`, `log_files`, `logs`, `flash_backup`* | |
-| `docker` | `list`, `details`, `logs`, `ports`, `start`, `stop`, `restart`, `unpause`, `networks`, `network_details`, `remove_container`*, `update_container`, `update_containers`, `update_all_containers`, `update_autostart`, `refresh_digests`, `sync_template_paths`, `reset_template_mappings`*, `create_folder`, `create_folder_with_items`, `rename_folder`, `set_folder_children`, `delete_entries`*, `move_entries_to_folder`, `move_items_to_position`, `update_view_preferences` | organizer ops use `organizer_input` |
+| `docker` | `list`, `details`, `logs`, `check_updates`, `ports`, `start`, `stop`, `restart`, `unpause`, `networks`, `network_details`, `remove_container`*, `update_container`, `update_containers`, `update_all_containers`, `update_autostart`, `refresh_digests`, `sync_template_paths`, `reset_template_mappings`*, `create_folder`, `create_folder_with_items`, `rename_folder`, `set_folder_children`, `delete_entries`*, `move_entries_to_folder`, `move_items_to_position`, `update_view_preferences` | organizer ops use `organizer_input` |
 | `vm` | `list`, `details`, `start`, `stop`, `pause`, `resume`, `force_stop`*, `reboot`, `reset`* | |
 | `notification` | `overview`, `list`, `create`, `notify_if_unique`, `archive`, `mark_unread`, `recalculate`, `archive_all`, `archive_many`, `unarchive_many`, `unarchive_all`, `delete`*, `delete_archived`* | |
 | `key` | `list`, `get`, `possible_roles`, `possible_permissions`, `permissions_for_roles`, `preview_permissions`, `auth_actions`, `creation_form_schema`, `create`, `update`, `delete`*, `add_role`, `remove_role` | |
@@ -324,7 +324,10 @@ class UnraidInput(BaseModel):
     slot: int | None = Field(default=None, description="Disk slot number (array add/remove).")
     # disk
     log_path: str | None = Field(default=None, description="Log file path (disk/logs).")
-    tail_lines: int = Field(default=100, description="Number of trailing log lines (disk/logs).")
+    tail_lines: int = Field(
+        default=100,
+        description="Number of trailing log lines (disk/logs and docker/logs).",
+    )
     remote_name: str | None = Field(
         default=None, description="Rclone remote name (disk/flash_backup)."
     )
@@ -528,6 +531,7 @@ async def _dispatch_docker(inp: UnraidInput, ctx: Context | None) -> dict[str, A
         inp.subaction,
         container_id=inp.container_id,
         network_id=inp.network_id,
+        tail_lines=inp.tail_lines,
         limit=inp.limit,
         ctx=ctx,
         confirm=inp.confirm,
@@ -853,7 +857,8 @@ def register_unraid_tool(
         ├─────────────────┼──────────────────────────────────────────────────────────────────────┤
         │ disk            │ shares, disks, disk_details, log_files, logs, flash_backup*          │
         ├─────────────────┼──────────────────────────────────────────────────────────────────────┤
-        │ docker          │ list, details, logs, ports, start, stop, restart, unpause,           │
+        │ docker          │ list, details, logs, check_updates, ports, start, stop, restart,     │
+        │                 │ unpause,                                                              │
         │                 │ networks, network_details, remove_container*, update_container,      │
         │                 │ update_containers, update_all_containers, update_autostart,          │
         │                 │ refresh_digests, sync_template_paths, reset_template_mappings*,      │

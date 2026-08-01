@@ -2,9 +2,9 @@
 
 <!-- mcp-name: tv.tootie/unraid-mcp -->
 
-[![PyPI](https://img.shields.io/pypi/v/unraid-mcp)](https://pypi.org/project/unraid-mcp/) [![ghcr.io](https://img.shields.io/badge/ghcr.io-jmagar%2Funraid--mcp-blue?logo=docker)](https://github.com/dinglebear-ai/unraid/pkgs/container/unraid-mcp)
+[![PyPI](https://img.shields.io/pypi/v/unraid-mcp)](https://pypi.org/project/unraid-mcp/) [![ghcr.io](https://img.shields.io/badge/ghcr.io-dinglebear--ai%2Funraid--mcp-blue?logo=docker)](https://github.com/dinglebear-ai/unraid/pkgs/container/unraid-mcp)
 
-MCP server for Unraid NAS management. Exposes a single unified `unraid` tool with 19 action domains and 178 subactions, backed by Unraid's GraphQL API and real-time WebSocket subscriptions.
+MCP server for Unraid NAS management. Exposes a single unified `unraid` tool with 19 action domains and 179 subactions, backed by Unraid's GraphQL API and real-time WebSocket subscriptions.
 
 ## Overview
 
@@ -12,7 +12,7 @@ A single MCP tool is exposed:
 
 | Tool | Purpose |
 | --- | --- |
-| `unraid` | Unified action/subaction router for all operations (19 actions, 178 subactions). The Markdown reference and WebSocket diagnostics, which used to be standalone tools, are now the `help` and `subscriptions` actions of this tool. |
+| `unraid` | Unified action/subaction router for all operations (19 actions, 179 subactions). The Markdown reference and WebSocket diagnostics, which used to be standalone tools, are now the `help` and `subscriptions` actions of this tool. |
 
 Discover the full surface with `unraid(action="help")`. WebSocket subscription diagnostics are available via `unraid(action="subscriptions", subaction="diagnose")` and `unraid(action="subscriptions", subaction="test_query", subscription_query=...)`.
 
@@ -43,7 +43,7 @@ Single entry point for all Unraid operations. Select the operation with `action`
 | `health` (4) | `check`, `test_connection`, `diagnose`, `setup` | Health checks, connection test, credential setup |
 | `array` (14) | `parity_status`, `parity_history`, `assignable_disks`, `parity_start`, `parity_pause`, `parity_resume`, `parity_cancel`, `start_array`, `stop_array`\*, `add_disk`, `remove_disk`\*, `mount_disk`, `unmount_disk`, `clear_disk_stats`\* | Parity checks, array lifecycle, disk operations |
 | `disk` (6) | `shares`, `disks`, `disk_details`, `log_files`, `logs`, `flash_backup`\* | Shares, physical disks, log files |
-| `docker` (26) | `list`, `details`, `logs`, `ports`, `start`, `stop`, `restart`, `unpause`, `networks`, `network_details`, `remove_container`\*, `update_container`, `update_containers`, `update_all_containers`, `update_autostart`, `refresh_digests`, `sync_template_paths`, `reset_template_mappings`\*, `create_folder`, `create_folder_with_items`, `rename_folder`, `set_folder_children`, `delete_entries`\*, `move_entries_to_folder`, `move_items_to_position`, `update_view_preferences` | Container lifecycle, updates, organizer folders, network inspection |
+| `docker` (27) | `list`, `details`, `logs`, `check_updates`, `ports`, `start`, `stop`, `restart`, `unpause`, `networks`, `network_details`, `remove_container`\*, `update_container`, `update_containers`, `update_all_containers`, `update_autostart`, `refresh_digests`, `sync_template_paths`, `reset_template_mappings`\*, `create_folder`, `create_folder_with_items`, `rename_folder`, `set_folder_children`, `delete_entries`\*, `move_entries_to_folder`, `move_items_to_position`, `update_view_preferences` | Container lifecycle, updates, organizer folders, network inspection |
 | `vm` (9) | `list`, `details`, `start`, `stop`, `pause`, `resume`, `force_stop`\*, `reboot`, `reset`\* | Virtual machine lifecycle |
 | `notification` (13) | `overview`, `list`, `create`, `notify_if_unique`, `archive`, `mark_unread`, `recalculate`, `archive_all`, `archive_many`, `unarchive_many`, `unarchive_all`, `delete`\*, `delete_archived`\* | Notification CRUD |
 | `key` (13) | `list`, `get`, `possible_roles`, `possible_permissions`, `permissions_for_roles`, `preview_permissions`, `auth_actions`, `creation_form_schema`, `create`, `update`, `delete`\*, `add_role`, `remove_role` | API key and permission management |

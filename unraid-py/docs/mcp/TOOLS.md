@@ -6,9 +6,9 @@ unraid-mcp exposes a single MCP tool, `unraid`, with `action` (domain) + `subact
 
 | Tool | Purpose | Parameters |
 |------|---------|------------|
-| `unraid` | The only tool -- action+subaction dispatch across 19 actions / 178 subactions. The Markdown reference and WebSocket diagnostics are the `help` and `subscriptions` actions. | `action`, `subaction`, plus domain-specific params |
+| `unraid` | The only tool -- action+subaction dispatch across 19 actions / 179 subactions. The Markdown reference and WebSocket diagnostics are the `help` and `subscriptions` actions. | `action`, `subaction`, plus domain-specific params |
 
-The consolidated action pattern keeps the MCP surface to one tool while supporting 178 subactions across 19 actions. Clients call `unraid(action="help")` first to discover available operations, then call `unraid` with the appropriate action and subaction. WebSocket subscription diagnostics live under `unraid(action="subscriptions", subaction="diagnose"|"test_query")`.
+The consolidated action pattern keeps the MCP surface to one tool while supporting 179 subactions across 19 actions. Clients call `unraid(action="help")` first to discover available operations, then call `unraid` with the appropriate action and subaction. WebSocket subscription diagnostics live under `unraid(action="subscriptions", subaction="diagnose"|"test_query")`.
 
 ## Primary Tool: `unraid`
 
@@ -122,7 +122,7 @@ Shares, physical disks, log files.
 | `logs` | Read log content | `log_path`, `tail_lines` | -- |
 | `flash_backup` | Trigger a flash backup | `remote_name`, `source_path`, `destination_path`, `backup_options` | Yes |
 
-#### `docker` (26 subactions)
+#### `docker` (27 subactions)
 
 Container lifecycle, image updates, template/digest maintenance, organizer
 folders, and network inspection.
@@ -131,7 +131,8 @@ folders, and network inspection.
 |-----------|-------------|-------------|-------------|
 | `list` | All containers with status, image, state | -- | -- |
 | `details` | Single container details | `container_id` | -- |
-| `logs` | Not available via the Unraid GraphQL API -- returns guidance to use `docker logs` on the host | `container_id` | -- |
+| `logs` | Structured container log lines with timestamps and a continuation cursor | `container_id`, `tail_lines` | -- |
+| `check_updates` | Current image-update status for every container | -- | -- |
 | `ports` | All host port bindings across running containers, sorted by host port | -- | -- |
 | `start` | Start a container | `container_id` | -- |
 | `stop` | Stop a container | `container_id` | -- |

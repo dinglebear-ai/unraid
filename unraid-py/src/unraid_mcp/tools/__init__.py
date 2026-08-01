@@ -1,6 +1,6 @@
 """MCP tools — single consolidated unraid tool with action + subaction routing.
 
-unraid - All Unraid operations (19 actions, 178 subactions)
+unraid - All Unraid operations (19 actions, 179 subactions)
 system        - System info, metrics, UPS, network, registration
 health        - Health checks, connection test, diagnostics, setup
 array         - Parity, array state, assignable/add/remove/mount disks
