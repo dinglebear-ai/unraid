@@ -25,7 +25,7 @@ jobs:
     # fork-PR code here (build.rs/proc-macros/npm run arbitrary code). Runs on
     # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, unraid]
+    runs-on: ci-pool-rust
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -44,7 +44,7 @@ jobs:
     # fork-PR code here (build.rs/proc-macros/npm run arbitrary code). Runs on
     # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, unraid]
+    runs-on: ci-pool-rust
     env:
       # Keep git dependencies out of the runner's shared Cargo checkout cache.
       # A partially-pruned checkout there can make Clippy fail before compiling.
@@ -73,7 +73,7 @@ jobs:
     # fork-PR code here (build.rs/proc-macros/npm run arbitrary code). Runs on
     # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, unraid]
+    runs-on: ci-pool-rust
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -105,7 +105,7 @@ jobs:
     # fork-PR code here (build.rs/proc-macros/npm run arbitrary code). Runs on
     # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, unraid]
+    runs-on: ci-pool-ops
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -123,7 +123,7 @@ jobs:
     # fork-PR code here (build.rs/proc-macros/npm run arbitrary code). Runs on
     # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, unraid]
+    runs-on: ci-pool-typescript
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0

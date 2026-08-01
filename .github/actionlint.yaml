@@ -6,6 +6,8 @@
 # This file existed before but was run by nothing; meta-ci.yml now runs actionlint.
 self-hosted-runner:
   labels:
+    - ci-pool-rust
+    - ci-pool-typescript
     - tailscale
     - unraid
     - ci-pool-ops
