@@ -14,7 +14,7 @@ const CANONICAL_REPO = "dinglebear-ai/unraid";
 const REPOSITORY_DIRECTORY = "unraid-rs/packages/unraid-rmcp";
 const packageJsonPath = path.join(packageRoot, "package.json");
 const packageJson = readJson(packageJsonPath);
-const expectedPackageName = "@dinglebear/unraid-mcp";
+const expectedPackageName = "@dinglebear/unraid";
 const releaseMode = process.argv.includes("--release");
 const skipReleaseAssets = process.argv.includes("--skip-release-assets");
 

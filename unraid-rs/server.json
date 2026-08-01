@@ -24,7 +24,7 @@
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
-      "identifier": "@dinglebear/unraid-mcp",
+      "identifier": "@dinglebear/unraid",
       "version": "0.2.5",
       "runtimeHint": "npx",
       "packageArguments": [
@@ -98,8 +98,8 @@
       "namespace": "ai.dinglebear",
       "dnsDomain": "dinglebear.ai",
       "distribution": {
-        "nodePackage": "@dinglebear/unraid-mcp",
-        "npm": "@dinglebear/unraid-mcp@0.2.5"
+        "nodePackage": "@dinglebear/unraid",
+        "npm": "@dinglebear/unraid@0.2.5"
       },
       "buildInfo": {
         "version": "0.2.5",

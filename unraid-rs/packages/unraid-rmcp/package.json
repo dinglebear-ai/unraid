@@ -1,5 +1,5 @@
 {
-  "name": "@dinglebear/unraid-mcp",
+  "name": "@dinglebear/unraid",
   "version": "0.2.5",
   "description": "Rust MCP server and CLI for Unraid GraphQL operations across NAS, Docker, VM, and storage workflows.",
   "license": "MIT",

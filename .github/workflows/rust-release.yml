@@ -1,7 +1,7 @@
 name: rust-release
 
 # Triggered when release-please publishes an unraid-rs-v<version> release. Builds
-# the linux/amd64 runraid binary, publishes the @dinglebear/unraid-mcp npm launcher, and
+# the linux/amd64 runraid binary, publishes the @dinglebear/unraid npm launcher, and
 # builds+pushes the Rust server container image (folds in runraid's former
 # standalone docker-publish workflow). All run: steps execute in unraid-rs/.
 #
@@ -161,8 +161,8 @@ jobs:
         run: |
           set -euo pipefail
           version="${{ steps.npm-version.outputs.version }}"
-          if npm view "@dinglebear/unraid-mcp@${version}" version >/dev/null 2>&1; then
-            echo "@dinglebear/unraid-mcp@${version} already published; skipping."
+          if npm view "@dinglebear/unraid@${version}" version >/dev/null 2>&1; then
+            echo "@dinglebear/unraid@${version} already published; skipping."
           else
             npm publish --provenance --access public ./packages/unraid-rmcp
           fi
