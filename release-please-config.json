@@ -5,10 +5,22 @@
   "include-component-in-tag": true,
   "always-update": true,
   "changelog-sections": [
-    { "type": "feat", "section": "Features" },
-    { "type": "fix", "section": "Bug Fixes" },
-    { "type": "deps", "section": "Dependencies" },
-    { "type": "docs", "section": "Documentation" }
+    {
+      "type": "feat",
+      "section": "Features"
+    },
+    {
+      "type": "fix",
+      "section": "Bug Fixes"
+    },
+    {
+      "type": "deps",
+      "section": "Dependencies"
+    },
+    {
+      "type": "docs",
+      "section": "Documentation"
+    }
   ],
   "packages": {
     "unraid-py": {
@@ -18,9 +30,21 @@
       "include-component-in-tag": false,
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
-        { "type": "json", "path": "/agents/unraid-py/.claude-plugin/plugin.json", "jsonpath": "$.version" },
-        { "type": "json", "path": "/agents/unraid-py/.codex-plugin/plugin.json", "jsonpath": "$.version" },
-        { "type": "json", "path": "gemini-extension.json", "jsonpath": "$.version" }
+        {
+          "type": "json",
+          "path": "/agents/unraid-py/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "/agents/unraid-py/.codex-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "gemini-extension.json",
+          "jsonpath": "$.version"
+        }
       ]
     },
     "unraid-rs": {
@@ -29,17 +53,46 @@
       "component": "unraid-rs",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
-        { "type": "json", "path": "packages/unraid-rmcp/package.json", "jsonpath": "$.version" },
-        { "type": "json", "path": "packages/unraid-rmcp/package.json", "jsonpath": "$.binaryVersion" },
-        { "type": "json", "path": "server.json", "jsonpath": "$.version" },
-        { "type": "json", "path": "server.json", "jsonpath": "$.packages[0].version" },
+        {
+          "type": "json",
+          "path": "packages/unraid-rmcp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/unraid-rmcp/package.json",
+          "jsonpath": "$.binaryVersion"
+        },
+        {
+          "type": "json",
+          "path": "server.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "server.json",
+          "jsonpath": "$.packages[0].version"
+        },
         {
           "type": "json",
           "path": "server.json",
           "jsonpath": "$._meta['io.modelcontextprotocol.registry/publisher-provided'].buildInfo.version"
         },
-        { "type": "json", "path": "/agents/unraid-rs/.claude-plugin/plugin.json", "jsonpath": "$.version" },
-        { "type": "json", "path": "/agents/unraid-rs/.codex-plugin/plugin.json", "jsonpath": "$.version" }
+        {
+          "type": "json",
+          "path": "/agents/unraid-rs/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "/agents/unraid-rs/.codex-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "server.json",
+          "jsonpath": "$._meta['io.modelcontextprotocol.registry/publisher-provided'].distribution.npm"
+        }
       ]
     }
   }

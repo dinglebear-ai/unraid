@@ -99,7 +99,7 @@
       "dnsDomain": "dinglebear.ai",
       "distribution": {
         "nodePackage": "@dinglebear/unraid",
-        "npm": "@dinglebear/unraid@0.2.5"
+        "npm": "@dinglebear/unraid@0.3.0"
       },
       "buildInfo": {
         "version": "0.3.0",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 import sys
 import tempfile
 import unittest
@@ -11,6 +12,7 @@ sys.path.insert(0, str(SCRIPTS))
 
 import plugin_calver  # noqa: E402
 import release_contract  # noqa: E402
+import release_pr_fixup  # noqa: E402
 
 
 class PluginCalverTests(unittest.TestCase):
@@ -75,6 +77,84 @@ class ReleaseContractTests(unittest.TestCase):
             plugin_calver.calendar_date("2026.7.24"),
             dt.date(2026, 7, 24),
         )
+
+
+class ReleasePrFixupTests(unittest.TestCase):
+    def test_restores_compatibility_crate_and_npm_distribution(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "unraid-rs/crates/lab-auth").mkdir(parents=True)
+            (root / ".release-please-manifest.json").write_text(
+                '{"unraid-rs": "0.3.0"}\n',
+                encoding="utf-8",
+            )
+            (root / "unraid-rs/Cargo.toml").write_text(
+                '[package]\n'
+                'name = "unraid-rmcp"\n'
+                'version = "0.3.0"\n'
+                '[dependencies]\n'
+                'lab-auth = { version = "0.3.0", path = "crates/lab-auth" }\n',
+                encoding="utf-8",
+            )
+            (root / "unraid-rs/crates/lab-auth/Cargo.toml").write_text(
+                '[package]\n'
+                'name = "lab-auth"\n'
+                'version = "0.3.0"\n'
+                'license = "MIT"\n',
+                encoding="utf-8",
+            )
+            (root / "unraid-rs/Cargo.lock").write_text(
+                'version = 4\n\n'
+                '[[package]]\n'
+                'name = "lab-auth"\n'
+                'version = "0.3.0"\n',
+                encoding="utf-8",
+            )
+            (root / "unraid-rs/server.json").write_text(
+                json.dumps(
+                    {
+                        "_meta": {
+                            "io.modelcontextprotocol.registry/publisher-provided": {
+                                "distribution": {
+                                    "npm": "@dinglebear/unraid@0.2.5"
+                                }
+                            }
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            changed = release_pr_fixup.apply(root)
+            self.assertEqual(
+                {path.relative_to(root).as_posix() for path in changed},
+                {
+                    "unraid-rs/Cargo.toml",
+                    "unraid-rs/Cargo.lock",
+                    "unraid-rs/crates/lab-auth/Cargo.toml",
+                    "unraid-rs/server.json",
+                },
+            )
+            self.assertIn(
+                'version = "=0.15.0"',
+                (root / "unraid-rs/Cargo.toml").read_text(),
+            )
+            self.assertIn(
+                'version = "0.15.0"',
+                (root / "unraid-rs/crates/lab-auth/Cargo.toml").read_text(),
+            )
+            self.assertIn(
+                'version = "0.15.0"',
+                (root / "unraid-rs/Cargo.lock").read_text(),
+            )
+            server = json.loads((root / "unraid-rs/server.json").read_text())
+            self.assertEqual(
+                server["_meta"][
+                    "io.modelcontextprotocol.registry/publisher-provided"
+                ]["distribution"]["npm"],
+                "@dinglebear/unraid@0.3.0",
+            )
+            self.assertEqual(release_pr_fixup.apply(root), [])
 
 
 if __name__ == "__main__":
