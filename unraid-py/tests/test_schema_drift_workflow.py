@@ -54,3 +54,12 @@ def test_sensitive_workflows_pin_privileged_actions() -> None:
         "actions/upload-artifact",
     ):
         assert_uses_pinned_action(combined, action)
+
+
+def test_scheduled_live_ci_validates_complete_operation_inventory() -> None:
+    ci = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
+
+    assert "Validate every runtime operation against the live GraphQL schema" in ci
+    assert "python -m unraid_mcp.devtools.live_schema_validation" in ci
+    assert "UNRAID_API_URL: ${{ secrets.UNRAID_API_URL }}" in ci
+    assert "UNRAID_API_KEY: ${{ secrets.UNRAID_API_KEY }}" in ci
