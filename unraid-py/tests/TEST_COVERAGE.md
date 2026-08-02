@@ -26,6 +26,10 @@ A QA engineer should be able to verify correctness of the script without executi
   business data.
 - It does not test write operations (container start/stop, VM actions beyond force_stop guard
   check, array operations, etc.) to avoid causing data loss or service disruption.
+- Before this smoke test runs in scheduled/manual CI, the live-schema gate introspects the
+  authenticated Unraid API and statically validates every emitted query, mutation, and
+  subscription document. This covers write-operation schema compatibility without executing
+  destructive actions.
 - It intentionally covers new read-only schema-drift surfaces in the live phase, including
   `system/network_interfaces`, `system/network_metrics`, `onboarding/internal_boot_context`,
   `live/network_metrics`, and `subscriptions/test_query` for `systemMetricsNetwork`.
