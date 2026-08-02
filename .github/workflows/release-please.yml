@@ -77,3 +77,27 @@ jobs:
             "HEAD:${{ fromJson(steps.release.outputs.pr).headBranchName }}"
         env:
           RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+      - name: Restore Rust release invariants
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/release_pr_fixup.py
+          files=(
+            unraid-rs/Cargo.toml
+            unraid-rs/Cargo.lock
+            unraid-rs/crates/lab-auth/Cargo.toml
+            unraid-rs/server.json
+          )
+          if git diff --quiet -- "${files[@]}"; then
+            echo "Rust release invariants already in sync; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${files[@]}"
+          git commit -m "chore: sync Rust release invariants"
+          git push "https://x-access-token:${RELEASE_PLEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            "HEAD:${{ fromJson(steps.release.outputs.pr).headBranchName }}"
+        env:
+          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}

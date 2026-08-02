@@ -1645,7 +1645,7 @@ wheels = [
 
 [[package]]
 name = "unraid-mcp"
-version = "2.8.0"
+version = "2.9.0"
 source = { editable = "." }
 dependencies = [
     { name = "anyio" },

@@ -103,6 +103,15 @@ def validate_release_please(repo_root: Path, errors: list[str]) -> list[ReleaseU
         "release-please must update the npm launcher's binaryVersion",
         errors,
     )
+    assert_true(
+        (
+            "server.json",
+            "$._meta['io.modelcontextprotocol.registry/publisher-provided'].distribution.npm",
+        )
+        in rust_extra_files,
+        "release-please must update the npm distribution reference",
+        errors,
+    )
 
     pyproject = tomllib.loads((repo_root / "unraid-py/pyproject.toml").read_text())
     cargo = tomllib.loads((repo_root / "unraid-rs/Cargo.toml").read_text())

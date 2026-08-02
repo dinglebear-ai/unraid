@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0](https://github.com/dinglebear-ai/unraid/compare/v2.8.0...v2.9.0) (2026-08-02)
+
+
+### Features
+
+* **unraid-rs:** publish unraid-rmcp and lab-auth to crates.io via CRGX ([#262](https://github.com/dinglebear-ai/unraid/issues/262)) ([42bc569](https://github.com/dinglebear-ai/unraid/commit/42bc569b4a2ccd37f25a8d6c8639a633e1a4e469))
+
+
+### Bug Fixes
+
+* publish npm launcher as @dinglebear/unraid ([c7938d1](https://github.com/dinglebear-ai/unraid/commit/c7938d1a1999f8a69c30f3c7ba538239ec3ad017))
+* **unraid-py:** support Unraid 7.3 GraphQL changes ([#314](https://github.com/dinglebear-ai/unraid/issues/314)) ([20c592b](https://github.com/dinglebear-ai/unraid/commit/20c592b98fcae02ba8b609a710057bb50a46566c))
+
+
+### Dependencies
+
+* **deps-dev:** bump happy-dom in /plugins/mcp/web ([#226](https://github.com/dinglebear-ai/unraid/issues/226)) ([ad237e2](https://github.com/dinglebear-ai/unraid/commit/ad237e22166888cc173e2fe16d9aba4e8b82fd3d))
+* **deps-dev:** bump ruff from 0.15.22 to 0.16.0 in /unraid-py ([#249](https://github.com/dinglebear-ai/unraid/issues/249)) ([44695f0](https://github.com/dinglebear-ai/unraid/commit/44695f0d19863ba8d8e9ad3a4ee36f1273712531))
+* **deps-dev:** bump ty from 0.0.61 to 0.0.64 in /unraid-py ([#247](https://github.com/dinglebear-ai/unraid/issues/247)) ([29ed317](https://github.com/dinglebear-ai/unraid/commit/29ed31766733feddb418106e92be789da3dab95c))
+* **deps:** bump @graphql-tools/mock in /unraid-py/tests/mock ([#224](https://github.com/dinglebear-ai/unraid/issues/224)) ([eb09cd0](https://github.com/dinglebear-ai/unraid/commit/eb09cd03040ad762d6cccef716abed2d06bb337e))
+* **deps:** bump graphql-ws from 6.0.8 to 6.2.0 in /unraid-py/tests/mock ([#230](https://github.com/dinglebear-ai/unraid/issues/230)) ([9a934b5](https://github.com/dinglebear-ai/unraid/commit/9a934b5ae1dae132dd8231d46ffa1d16babd0cbd))
+* **deps:** bump the major group across 1 directory with 2 updates ([#297](https://github.com/dinglebear-ai/unraid/issues/297)) ([6174ba2](https://github.com/dinglebear-ai/unraid/commit/6174ba29bfd69482ea561072b10c332d5a5933ea))
+* **deps:** bump the minor-and-patch group across 1 directory with 2 updates ([#299](https://github.com/dinglebear-ai/unraid/issues/299)) ([7e24ae4](https://github.com/dinglebear-ai/unraid/commit/7e24ae40013febdd165fb8a5bcef09c954241b92))
+* **deps:** bump the minor-and-patch group across 1 directory with 3 updates ([#300](https://github.com/dinglebear-ai/unraid/issues/300)) ([69f17a5](https://github.com/dinglebear-ai/unraid/commit/69f17a5c79a82566e05be671c66094d4df5e5882))
+* **deps:** bump ws from 8.21.0 to 8.21.1 in /unraid-py/tests/mock ([#228](https://github.com/dinglebear-ai/unraid/issues/228)) ([a987d25](https://github.com/dinglebear-ai/unraid/commit/a987d25abe0af8e5137ca09081935157c7e4e9a1))
+
 ## [2.8.0](https://github.com/dinglebear-ai/unraid-mcp/compare/v2.7.0...v2.8.0) (2026-07-27)
 
 

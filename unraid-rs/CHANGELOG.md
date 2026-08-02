@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.2.5...unraid-rs-v0.3.0) (2026-08-02)
+
+
+### Features
+
+* **unraid-rs:** publish unraid-rmcp and lab-auth to crates.io via CRGX ([#262](https://github.com/dinglebear-ai/unraid/issues/262)) ([42bc569](https://github.com/dinglebear-ai/unraid/commit/42bc569b4a2ccd37f25a8d6c8639a633e1a4e469))
+
+
+### Bug Fixes
+
+* normalize npm release archive binary ([1a0b172](https://github.com/dinglebear-ai/unraid/commit/1a0b172546e9ba37a2873c355c4733ea35a6e137))
+* publish npm launcher as @dinglebear/unraid ([c7938d1](https://github.com/dinglebear-ai/unraid/commit/c7938d1a1999f8a69c30f3c7ba538239ec3ad017))
+
+
+### Dependencies
+
+* **deps-dev:** bump happy-dom in /plugins/mcp/web ([#226](https://github.com/dinglebear-ai/unraid/issues/226)) ([ad237e2](https://github.com/dinglebear-ai/unraid/commit/ad237e22166888cc173e2fe16d9aba4e8b82fd3d))
+* **deps:** bump anyhow from 1.0.103 to 1.0.104 in /unraid-rs ([#248](https://github.com/dinglebear-ai/unraid/issues/248)) ([c0b581e](https://github.com/dinglebear-ai/unraid/commit/c0b581e2613ca6291428c6edb8ed7ab846630d8d))
+* **deps:** bump graphql-ws from 6.0.8 to 6.2.0 in /unraid-py/tests/mock ([#230](https://github.com/dinglebear-ai/unraid/issues/230)) ([9a934b5](https://github.com/dinglebear-ai/unraid/commit/9a934b5ae1dae132dd8231d46ffa1d16babd0cbd))
+* **deps:** bump rmcp from 1.8.0 to 2.2.0 in /unraid-rs ([#237](https://github.com/dinglebear-ai/unraid/issues/237)) ([ab53dbc](https://github.com/dinglebear-ai/unraid/commit/ab53dbc7db4a54661e93c48ee01dace950fb386b))
+* **deps:** bump rust in /unraid-rs/config ([#216](https://github.com/dinglebear-ai/unraid/issues/216)) ([6e6c652](https://github.com/dinglebear-ai/unraid/commit/6e6c65266b6269e6bb331e1a614b275f1e096164))
+* **deps:** bump serde_json from 1.0.150 to 1.0.151 in /unraid-rs ([#245](https://github.com/dinglebear-ai/unraid/issues/245)) ([5165e9e](https://github.com/dinglebear-ai/unraid/commit/5165e9e46c27241a92474008214e98bbeb44e6da))
+* **deps:** bump the major group across 1 directory with 3 updates ([#309](https://github.com/dinglebear-ai/unraid/issues/309)) ([b9fcca4](https://github.com/dinglebear-ai/unraid/commit/b9fcca4412949773b583b11987065ab6308a720f))
+* **deps:** bump the minor-and-patch group across 1 directory with 7 updates ([#303](https://github.com/dinglebear-ai/unraid/issues/303)) ([009de5b](https://github.com/dinglebear-ai/unraid/commit/009de5b915731d8948f0356816a46e03d640a0b5))
+* **deps:** bump toml from 0.8.23 to 1.1.3+spec-1.1.0 in /unraid-rs ([#250](https://github.com/dinglebear-ai/unraid/issues/250)) ([260009e](https://github.com/dinglebear-ai/unraid/commit/260009e2622d10b3600e4786c17b86d7092498ca))
+* **deps:** bump tower-http from 0.6.11 to 0.7.0 in /unraid-rs ([#251](https://github.com/dinglebear-ai/unraid/issues/251)) ([a1f993e](https://github.com/dinglebear-ai/unraid/commit/a1f993e51c6409607bc18fa74a9438ae6c2a0cde))
+* **deps:** bump ws from 8.21.0 to 8.21.1 in /unraid-py/tests/mock ([#228](https://github.com/dinglebear-ai/unraid/issues/228)) ([a987d25](https://github.com/dinglebear-ai/unraid/commit/a987d25abe0af8e5137ca09081935157c7e4e9a1))
+
 ## [0.2.5](https://github.com/dinglebear-ai/unraid-mcp/compare/unraid-rs-v0.2.4...unraid-rs-v0.2.5) (2026-07-27)
 
 

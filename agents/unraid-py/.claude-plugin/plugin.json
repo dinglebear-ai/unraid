@@ -1,7 +1,7 @@
 {
   "name": "unraid-mcp",
   "displayName": "Unraid MCP",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "Query, monitor, and manage Unraid servers via GraphQL API through MCP tools. Supports system info, Docker, VMs, array/parity, notifications, plugins, rclone, and live telemetry.",
   "author": {
     "name": "Jacob Magar",
