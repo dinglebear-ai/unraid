@@ -12,9 +12,72 @@ const Select = SelectPrimitive.Root
 const SelectGroup = SelectPrimitive.Group
 const SelectValue = SelectPrimitive.Value
 
+type SelectTone = "primary" | "neutral" | "orange"
+type SelectToneStyle = React.CSSProperties & Record<`--aurora-select-${string}`, string>
+
+const selectToneStyles: Record<SelectTone, SelectToneStyle> = {
+  primary: {
+    "--aurora-select-trigger-bg": "var(--aurora-control-surface)",
+    "--aurora-select-trigger-border": "var(--aurora-border-strong)",
+    "--aurora-select-focus-shadow": "0 0 0 3px var(--aurora-focus-ring), 0 0 0 1px var(--aurora-focus-ring-strong)",
+    "--aurora-select-content-bg": "var(--aurora-panel-strong)",
+    "--aurora-select-content-border": "var(--aurora-border-strong)",
+    "--aurora-select-content-shadow": "var(--aurora-shadow-medium), 0 0 0 1px var(--aurora-accent-primary-border)",
+    "--aurora-select-highlight-bg": "var(--aurora-hover-bg)",
+    "--aurora-select-highlight-text": "var(--aurora-accent-strong)",
+    "--aurora-select-selected-bg": "var(--aurora-selected-bg)",
+    "--aurora-select-selected-text": "var(--aurora-accent-strong)",
+    "--aurora-select-selected-border": "var(--aurora-accent-primary-border)",
+    "--aurora-select-selected-shadow": "var(--aurora-active-glow)",
+    "--aurora-select-indicator": "var(--aurora-accent-primary)",
+  },
+  neutral: {
+    "--aurora-select-trigger-bg": "var(--aurora-panel-medium)",
+    "--aurora-select-trigger-border": "var(--aurora-border-default)",
+    "--aurora-select-focus-shadow": "0 0 0 3px var(--aurora-focus-ring), 0 0 0 1px var(--aurora-focus-ring-strong)",
+    "--aurora-select-content-bg": "var(--aurora-panel-strong)",
+    "--aurora-select-content-border": "var(--aurora-border-default)",
+    "--aurora-select-content-shadow": "var(--aurora-shadow-medium)",
+    "--aurora-select-highlight-bg": "var(--aurora-subtle-bg)",
+    "--aurora-select-highlight-text": "var(--aurora-text-primary)",
+    "--aurora-select-selected-bg": "var(--aurora-neutral-surface)",
+    "--aurora-select-selected-text": "var(--aurora-neutral-foreground)",
+    "--aurora-select-selected-border": "var(--aurora-neutral-border)",
+    "--aurora-select-selected-shadow": "inset 0 1px 0 var(--aurora-panel-medium-top)",
+    "--aurora-select-indicator": "var(--aurora-neutral-foreground)",
+  },
+  orange: {
+    "--aurora-select-trigger-bg": "var(--aurora-panel-strong)",
+    "--aurora-select-trigger-border": "var(--aurora-border-strong)",
+    "--aurora-select-focus-shadow": "0 0 0 3px color-mix(in srgb, var(--axon-orange) 18%, transparent), 0 0 0 1px var(--axon-orange-border)",
+    "--aurora-select-content-bg": "var(--aurora-panel-strong)",
+    "--aurora-select-content-border": "var(--aurora-border-default)",
+    "--aurora-select-content-shadow": "var(--aurora-shadow-strong)",
+    "--aurora-select-highlight-bg": "var(--aurora-subtle-bg)",
+    "--aurora-select-highlight-text": "var(--aurora-text-primary)",
+    "--aurora-select-selected-bg": "var(--axon-orange-surface)",
+    "--aurora-select-selected-text": "var(--axon-orange-deep)",
+    "--aurora-select-selected-border": "var(--axon-orange-border)",
+    "--aurora-select-selected-shadow": "inset 0 1px 0 var(--aurora-panel-medium-top)",
+    "--aurora-select-indicator": "var(--axon-orange)",
+  },
+}
+
 // ─── Trigger ─────────────────────────────────────────────────────────────────
 
-function SelectTrigger({ ref, className, children, ...props }: React.ComponentProps<typeof SelectPrimitive.Trigger> & { ref?: React.Ref<React.ComponentRef<typeof SelectPrimitive.Trigger>> }) {
+function SelectTrigger({
+  ref,
+  className,
+  children,
+  tone = "primary",
+  style,
+  onFocus,
+  onBlur,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
+  ref?: React.Ref<React.ComponentRef<typeof SelectPrimitive.Trigger>>
+  tone?: SelectTone
+}) {
   return (
     <SelectPrimitive.Trigger
       ref={ref}
@@ -31,23 +94,23 @@ function SelectTrigger({ ref, className, children, ...props }: React.ComponentPr
         className
       )}
       style={{
-        background: "var(--aurora-control-surface)",
+        ...selectToneStyles[tone],
+        background: "var(--aurora-select-trigger-bg)",
+        borderColor: "var(--aurora-select-trigger-border)",
         fontFamily: "var(--aurora-font-sans)",
         fontSize: "var(--aurora-type-body-sm)",
         fontWeight: "var(--aurora-weight-ui)",
         letterSpacing: "var(--aurora-letter-ui)",
         lineHeight: "var(--aurora-line-ui)",
+        ...style,
       }}
-      onFocus={(e) => {
-        e.currentTarget.style.boxShadow = [
-          "0 0 0 3px color-mix(in srgb, var(--aurora-accent-primary) 22%, transparent)",
-          "0 0 0 1px color-mix(in srgb, var(--aurora-accent-primary) 45%, transparent)",
-        ].join(", ")
-        props.onFocus?.(e)
+      onFocus={(event) => {
+        event.currentTarget.style.boxShadow = "var(--aurora-select-focus-shadow)"
+        onFocus?.(event)
       }}
-      onBlur={(e) => {
-        e.currentTarget.style.boxShadow = "none"
-        props.onBlur?.(e)
+      onBlur={(event) => {
+        event.currentTarget.style.boxShadow = "none"
+        onBlur?.(event)
       }}
       {...props}
       >
@@ -87,7 +150,18 @@ function SelectScrollDownButton({ ref, className, ...props }: React.ComponentPro
 
 // ─── Content (dropdown panel) ─────────────────────────────────────────────────
 
-function SelectContent({ ref, className, children, position = "popper", ...props }: React.ComponentProps<typeof SelectPrimitive.Content> & { ref?: React.Ref<React.ComponentRef<typeof SelectPrimitive.Content>> }) {
+function SelectContent({
+  ref,
+  className,
+  children,
+  position = "popper",
+  tone = "primary",
+  style,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Content> & {
+  ref?: React.Ref<React.ComponentRef<typeof SelectPrimitive.Content>>
+  tone?: SelectTone
+}) {
   const portalContainer = usePortalContainer()
   return (
     <SelectPrimitive.Portal container={portalContainer ?? undefined}>
@@ -112,8 +186,11 @@ function SelectContent({ ref, className, children, position = "popper", ...props
           className
         )}
         style={{
-          background: "var(--aurora-panel-strong)",
-          boxShadow: "var(--aurora-shadow-medium), 0 0 0 1px color-mix(in srgb, var(--aurora-accent-primary) 8%, transparent)",
+          ...selectToneStyles[tone],
+          background: "var(--aurora-select-content-bg)",
+          borderColor: "var(--aurora-select-content-border)",
+          boxShadow: "var(--aurora-select-content-shadow)",
+          ...style,
         }}
         position={position}
         {...props}
@@ -162,14 +239,13 @@ function SelectItem({ ref, className, children, ...props }: React.ComponentProps
         "rounded-[10px] py-1.5 pl-2.5 pr-8",
         "border border-transparent",
         "outline-none transition-colors duration-100",
-        "data-[highlighted]:bg-[var(--aurora-hover-bg)] data-[highlighted]:text-[var(--aurora-accent-strong)]",
+        "data-[highlighted]:bg-[var(--aurora-select-highlight-bg)] data-[highlighted]:text-[var(--aurora-select-highlight-text)]",
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-45",
         "text-[var(--aurora-text-primary)]",
-        // Selected item — Aurora "selected glow"
-        "[&[data-state=checked]]:text-[var(--aurora-accent-strong)]",
-        "[&[data-state=checked]]:bg-[var(--aurora-selected-bg)]",
-        "[&[data-state=checked]]:border-[color-mix(in_srgb,var(--aurora-accent-primary)_32%,transparent)]",
-        "[&[data-state=checked]]:[box-shadow:var(--aurora-active-glow)]",
+        "[&[data-state=checked]]:text-[var(--aurora-select-selected-text)]",
+        "[&[data-state=checked]]:bg-[var(--aurora-select-selected-bg)]",
+        "[&[data-state=checked]]:border-[var(--aurora-select-selected-border)]",
+        "[&[data-state=checked]]:[box-shadow:var(--aurora-select-selected-shadow)]",
         className
       )}
       style={{
@@ -183,7 +259,7 @@ function SelectItem({ ref, className, children, ...props }: React.ComponentProps
     >
       <span className="absolute right-2.5 flex h-3.5 w-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <CheckIcon className="h-3.5 w-3.5 text-[var(--aurora-accent-primary)]" aria-hidden="true" />
+          <CheckIcon className="h-3.5 w-3.5 text-[var(--aurora-select-indicator)]" aria-hidden="true" />
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>

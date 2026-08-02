@@ -58,6 +58,7 @@ for path in \
 done
 
 node --check "${source_dir}/web/unraid-codex.js"
+node --check "${plugin_dir}/tests/aurora-contract.cjs"
 node --check "${plugin_dir}/tests/appserver-smoke.cjs"
 node --check "${plugin_dir}/tests/appserver-device-login.cjs"
 bash -n \
@@ -75,6 +76,11 @@ file "${source_dir}/codex.png" | grep -Fq 'PNG image data, 128 x 128, 8-bit/colo
 grep -Fq '<URL>&txzURL;</URL>' "${plugin_dir}/unraid-codex.plg"
 grep -Fq 'attachShadow({ mode: "open" })' "${web_src}/main.tsx"
 grep -Fq 'openSettings: () => void' "${web_src}/main.tsx"
+grep -Fq 'event.code !== "KeyU"' "${web_src}/main.tsx"
+grep -Fq 'isEditableShortcutTarget(event.target)' "${web_src}/main.tsx"
+grep -Fq '__unraidCodexShortcutHandler' "${web_src}/main.tsx"
+grep -Fq 'aria-keyshortcuts="Control+Shift+U Meta+Shift+U"' "${web_src}/App.tsx"
+grep -Fq 'Open Codex · Ctrl/⌘+Shift+U' "${web_src}/App.tsx"
 grep -Fq 'unraid-codex:open-settings' "${web_src}/App.tsx"
 grep -Fq 'thread/resume' "${web_src}/protocol.ts"
 grep -Fq 'item/agentMessage/delta' "${web_src}/protocol.ts"
@@ -84,6 +90,7 @@ grep -Fq 'mcpServer/elicitation/request' "${web_src}/renderers.tsx"
 grep -Fq 'item/permissions/requestApproval' "${web_src}/renderers.tsx"
 grep -Fq 'mcp_elicitations: true' "${web_src}/protocol.ts"
 grep -Fq 'aurora-btn' "${source_dir}/web/unraid-codex.css"
+node "${plugin_dir}/tests/aurora-contract.cjs" "${web_src}"
 grep -Fq 'proxy_set_header Sec-WebSocket-Extensions "";' "${source_dir}/scripts/configure-nginx.sh"
 if grep -E '^[[:space:]]*incus[[:space:]]' \
   "${source_dir}/scripts/start-appserver.sh" \
@@ -91,8 +98,26 @@ if grep -E '^[[:space:]]*incus[[:space:]]' \
   echo "every bare incus invocation must redirect stdin from /dev/null" >&2
   exit 1
 fi
-grep -Fq 'unix:///run/unraid-codex/appserver.sock' "${source_dir}/container/codex-appserver.service"
+grep -Fq 'unix:///mnt/unraid-codex/appserver.sock' "${source_dir}/container/codex-appserver.service"
+grep -Fq 'url = "__UNRAID_MCP_URL__"' "${source_dir}/container/codex-config.toml"
 grep -Fq 'bearer_token_env_var = "UNRAID_MCP_TOKEN"' "${source_dir}/container/codex-config.toml"
+grep -Fq 'allow_login_shell = false' "${source_dir}/container/codex-config.toml"
+grep -Fq 'shell_snapshot = false' "${source_dir}/container/codex-config.toml"
+grep -Fq 'inherit = "all"' "${source_dir}/container/codex-config.toml"
+grep -Fq 'exclude = ["UNRAID_MCP_TOKEN"]' "${source_dir}/container/codex-config.toml"
+grep -Fq 'UNRAID_MCP_URL' "${source_dir}/scripts/start-appserver.sh"
+grep -Fq 'UNRAID_MCP_PROXY_HOST' "${source_dir}/scripts/start-appserver.sh"
+grep -Fq '# unraid-codex-mcp' "${source_dir}/scripts/start-appserver.sh"
+grep -Fq 'systemctl restart codex-appserver.service' "${source_dir}/scripts/start-appserver.sh"
+grep -Fq 'NFS_RC=/etc/rc.d/rc.nfsd' "${source_dir}/scripts/start-appserver.sh"
+grep -Fq 'RESTORE_NFS=1' "${source_dir}/scripts/start-appserver.sh"
+grep -Fq 'for target in /proc/fs/nfsd /proc/fs/nfs' "${source_dir}/scripts/start-appserver.sh"
+grep -Fq 'Retrying $CONTAINER start inside an NFS procfs compatibility window' "${source_dir}/scripts/start-appserver.sh"
+grep -Fq 'App-server service started but $SOCKET_PATH did not become ready' "${source_dir}/scripts/start-appserver.sh"
+if grep -R -F 'unraid.dinglebear.ai' "${source_dir}" >/dev/null; then
+  echo "personal Unraid MCP URL must not be hardcoded in plugin source" >&2
+  exit 1
+fi
 grep -Fq 'Treat every write, mutation, command execution' "${source_dir}/container/workspace-CLAUDE.md"
 grep -Fq '/workspace/AGENTS.md' "${source_dir}/scripts/start-appserver.sh"
 grep -Fq '/workspace/GEMINI.md' "${source_dir}/scripts/start-appserver.sh"

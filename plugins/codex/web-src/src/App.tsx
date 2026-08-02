@@ -1,10 +1,17 @@
 import * as React from "react"
 import {
-  ArrowLeft,
+  Activity,
+  ArrowDown,
+  ArrowUpRight,
+  Blocks,
   Bot,
+  ListChecks,
+  LoaderCircle,
   MessageSquare,
   PanelRightClose,
   PanelRightOpen,
+  SearchCode,
+  ShieldCheck,
   SlidersHorizontal,
 } from "lucide-react"
 import { CodeBlock } from "@/components/aurora/code-block"
@@ -46,6 +53,7 @@ import {
 import { useCodexAppServer } from "@/protocol"
 import {
   ContextRenderer,
+  ExtensionsRenderer,
   PlanRenderer,
   RequestRenderer,
   SessionContextRenderer,
@@ -73,6 +81,27 @@ const PERMISSIONS: ToolPermission[] = [
   },
 ]
 
+const QUICK_STARTS = [
+  {
+    label: "Server health",
+    description: "Array, pools, Docker, and VMs",
+    prompt: "Inspect this Unraid server and summarize array, pool, Docker, and VM health.",
+    icon: Activity,
+  },
+  {
+    label: "Review changes",
+    description: "Risks, regressions, and missing tests",
+    prompt: "Review the current workspace changes and call out risks, regressions, and missing tests.",
+    icon: SearchCode,
+  },
+  {
+    label: "Plan the work",
+    description: "Turn the next task into clear steps",
+    prompt: "Create a concise implementation plan for the next task in this workspace.",
+    icon: ListChecks,
+  },
+] as const
+
 function connectionTone(status: string) {
   if (status === "connected" || status === "working") return "online" as const
   if (status === "connecting") return "syncing" as const
@@ -80,7 +109,16 @@ function connectionTone(status: string) {
   return "offline" as const
 }
 
+function connectionLabel(status: string) {
+  if (status === "working") return "Working"
+  if (status === "connected") return "Ready"
+  if (status === "connecting") return "Connecting"
+  if (status === "error") return "Attention"
+  return "Offline"
+}
+
 export type ChatTheme = "aurora" | "unraid"
+type CodexSurface = "conversation" | "extensions" | "inspector"
 
 export function readChatTheme(): ChatTheme {
   return localStorage.getItem("unraid-codex.theme") === "unraid" ? "unraid" : "aurora"
@@ -116,16 +154,20 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
   })
   const [viewportWidth, setViewportWidth] = React.useState(() => window.innerWidth)
   const [theme, setTheme] = React.useState<ChatTheme>(readChatTheme)
-  const [inspectorOpen, setInspectorOpen] = React.useState(isCodexSettingsRoute)
+  const [surface, setSurface] = React.useState<CodexSurface>(() =>
+    isCodexSettingsRoute() ? "inspector" : "conversation",
+  )
   const [permissionsOpen, setPermissionsOpen] = React.useState(false)
   const [prompt, setPrompt] = React.useState("")
   const [attachments, setAttachments] = React.useState<Attachment[]>([])
+  const [showJumpToLatest, setShowJumpToLatest] = React.useState(false)
   const scrollRef = React.useRef<HTMLDivElement>(null)
+  const stickToBottomRef = React.useRef(true)
 
   React.useEffect(() => {
     const openSettings = () => {
       setOpen(true)
-      setInspectorOpen(true)
+      setSurface("inspector")
     }
     window.addEventListener("unraid-codex:open-settings", openSettings)
     return () => window.removeEventListener("unraid-codex:open-settings", openSettings)
@@ -147,12 +189,21 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
   React.useEffect(() => {
     const node = scrollRef.current
     if (!node) return
-    node.scrollTo({ top: node.scrollHeight, behavior: "smooth" })
+    if (stickToBottomRef.current) {
+      requestAnimationFrame(() => {
+        node.scrollTo({ top: node.scrollHeight, behavior: "smooth" })
+        setShowJumpToLatest(false)
+      })
+    } else {
+      setShowJumpToLatest(true)
+    }
   }, [state.items, state.requests, state.plan, state.diff, state.notices])
 
   React.useEffect(() => {
-    if (state.requests.length) setOpen(true)
-  }, [state.requests.length])
+    // Pending requests should surface automatically only on desktop. On mobile,
+    // opening the full-screen chathead must always be an explicit user action.
+    if (state.requests.length && viewportWidth >= 900) setOpen(true)
+  }, [state.requests.length, viewportWidth])
 
   React.useEffect(() => {
     const root = document.documentElement
@@ -254,12 +305,41 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
   const submit = React.useCallback(
     (value: string, submittedAttachments: Attachment[]) => {
       if (!value.trim()) return
+      stickToBottomRef.current = true
+      setShowJumpToLatest(false)
       void send(value.trim(), submittedAttachments)
       setPrompt("")
       setAttachments([])
     },
     [send],
   )
+
+  const selectQuickStart = React.useCallback(
+    (value: string) => {
+      setPrompt(value)
+      requestAnimationFrame(() =>
+        rootElement.querySelector<HTMLTextAreaElement>('[aria-label="Prompt input"]')?.focus(),
+      )
+    },
+    [rootElement],
+  )
+
+  const handleConversationScroll = React.useCallback(() => {
+    const node = scrollRef.current
+    if (!node) return
+    const distanceFromBottom = node.scrollHeight - node.scrollTop - node.clientHeight
+    const nearLatest = distanceFromBottom < 96
+    stickToBottomRef.current = nearLatest
+    setShowJumpToLatest(!nearLatest)
+  }, [])
+
+  const jumpToLatest = React.useCallback(() => {
+    const node = scrollRef.current
+    if (!node) return
+    stickToBottomRef.current = true
+    setShowJumpToLatest(false)
+    node.scrollTo({ top: node.scrollHeight, behavior: "smooth" })
+  }, [])
 
   const currentModel =
     state.settings?.model ??
@@ -297,9 +377,17 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
     state: currentApproval === "never" ? ("allow" as const) : ("ask" as const),
   }))
 
+  const handleOpenChange = React.useCallback((nextOpen: boolean) => {
+    setOpen(nextOpen)
+    if (!nextOpen && !isCodexSettingsRoute()) {
+      setSurface("conversation")
+      setPermissionsOpen(false)
+    }
+  }, [])
+
   return (
     <TooltipProvider delayDuration={250}>
-      <Sheet open={open} onOpenChange={setOpen} modal={false}>
+      <Sheet open={open} onOpenChange={handleOpenChange} modal={false}>
         {!open ? (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -309,12 +397,13 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                   size="icon"
                   className={`uc-launcher uc-theme-${theme}`}
                   aria-label="Open Codex"
+                  aria-keyshortcuts="Control+Shift+U Meta+Shift+U"
                 >
                   <Bot size={22} strokeWidth={1.65} aria-hidden />
                 </Button>
               </SheetTrigger>
             </TooltipTrigger>
-            <TooltipContent side="left">Open Codex</TooltipContent>
+            <TooltipContent side="left">Open Codex · Ctrl/⌘+Shift+U</TooltipContent>
           </Tooltip>
         ) : null}
 
@@ -355,7 +444,11 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
               <div className="uc-brand-copy">
                 <SheetTitle className="aurora-text-section">Codex</SheetTitle>
                 <SheetDescription className="aurora-text-meta">
-                  Unraid
+                  {surface === "extensions"
+                    ? "Extensions workspace"
+                    : surface === "inspector"
+                      ? "Session inspector"
+                      : "Unraid workspace"}
                 </SheetDescription>
               </div>
             </div>
@@ -375,13 +468,24 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                   <TooltipContent side="bottom">Session permissions</TooltipContent>
                 </Tooltip>
                 {permissionsOpen ? (
-                  <div className="uc-header-popover">
-                    <div>
-                      <div className="aurora-text-label">Permission Profile</div>
-                      <div className="aurora-text-meta">
-                        Applies to subsequent turns in this session.
+                  <div
+                    className="uc-header-popover"
+                    role="dialog"
+                    aria-label="Session permissions"
+                  >
+                    <div className="uc-permission-popover-heading">
+                      <span className="uc-permission-popover-icon">
+                        <ShieldCheck size={17} strokeWidth={1.7} aria-hidden />
+                      </span>
+                      <div>
+                        <div className="aurora-text-label">Session permissions</div>
+                        <div className="aurora-text-meta">
+                          Policy changes apply to subsequent turns in this session.
+                        </div>
                       </div>
                     </div>
+                    <div className="uc-permission-section">
+                      <div className="aurora-text-label">Permission Profile</div>
                     <Select
                       value={String(currentPermissionProfile ?? "")}
                       onValueChange={(permissions) => {
@@ -389,10 +493,14 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                         setPermissionsOpen(false)
                       }}
                     >
-                      <SelectTrigger aria-label="Quick permission profile">
+                      <SelectTrigger
+                        tone="orange"
+                        className="uc-permission-select"
+                        aria-label="Quick permission profile"
+                      >
                         <SelectValue placeholder="Default profile" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent tone="orange">
                         {state.permissionProfiles
                           .filter((entry) => entry.allowed !== false)
                           .map((entry) => (
@@ -402,7 +510,8 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                           ))}
                       </SelectContent>
                     </Select>
-                    <div>
+                    </div>
+                    <div className="uc-permission-section">
                       <div className="aurora-text-label">Approval Gate</div>
                       <div className="uc-approval-toggle">
                         {[
@@ -412,8 +521,10 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                         ].map(([value, label]) => (
                           <Button
                             key={value}
-                            variant={currentApproval === value ? "aurora" : "neutral"}
-                            size="sm"
+                            variant="plain"
+                            size="unstyled"
+                            className={`uc-policy-option${currentApproval === value ? " is-active" : ""}`}
+                            aria-pressed={currentApproval === value}
                             onClick={() => {
                               void updateThreadSettings({ approvalPolicy: value })
                               setPermissionsOpen(false)
@@ -431,20 +542,46 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="uc-dock-toggle"
-                    aria-label={inspectorOpen ? "Back to conversation" : "Inspect session"}
-                    onClick={() => setInspectorOpen((current) => !current)}
+                    size="sm"
+                    className={`uc-dock-toggle uc-surface-toggle${surface === "extensions" ? " is-active" : ""}`}
+                    aria-pressed={surface === "extensions"}
+                    aria-label={surface === "extensions" ? "Back to conversation" : "Open extensions"}
+                    onClick={() => {
+                      setPermissionsOpen(false)
+                      setSurface((current) =>
+                        current === "extensions" ? "conversation" : "extensions",
+                      )
+                    }}
                   >
-                    {inspectorOpen ? (
-                      <ArrowLeft size={17} aria-hidden />
-                    ) : (
-                      <SlidersHorizontal size={17} aria-hidden />
-                    )}
+                    <Blocks size={16} aria-hidden />
+                    <span className="uc-surface-toggle-label">Extensions</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  {inspectorOpen ? "Back to conversation" : "Inspect session"}
+                  {surface === "extensions" ? "Back to conversation" : "Extensions"}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`uc-dock-toggle uc-surface-toggle${surface === "inspector" ? " is-active" : ""}`}
+                    aria-pressed={surface === "inspector"}
+                    aria-label={surface === "inspector" ? "Back to conversation" : "Inspect session"}
+                    onClick={() => {
+                      setPermissionsOpen(false)
+                      setSurface((current) =>
+                        current === "inspector" ? "conversation" : "inspector",
+                      )
+                    }}
+                  >
+                    <SlidersHorizontal size={16} aria-hidden />
+                    <span className="uc-surface-toggle-label">Session</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {surface === "inspector" ? "Back to conversation" : "Session Inspector"}
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -469,7 +606,12 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="uc-connection">
+                  <span
+                    className="uc-connection"
+                    role="status"
+                    tabIndex={0}
+                    aria-label={`${connectionLabel(state.status)}. ${state.statusText}`}
+                  >
                     <StatusIndicator
                       tone={connectionTone(state.status)}
                       label={state.statusText}
@@ -484,29 +626,23 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
           </SheetHeader>
 
           <SheetBody className="uc-conversation-shell">
-            {inspectorOpen ? (
+            {surface === "inspector" ? (
               <div className="uc-inspector">
                 <div className="uc-inspector-heading">
-                  <div className="aurora-text-section">Session Inspector</div>
-                  <div className="aurora-text-meta">
-                    Runtime inventory and policy for the active Codex session.
-                  </div>
-                </div>
-                <div className="uc-theme-setting">
-                  <div>
-                    <div className="aurora-text-label">Chat Theme</div>
+                  <div className="uc-inspector-heading-copy">
+                    <div className="aurora-text-section">Session Inspector</div>
                     <div className="aurora-text-meta">
-                      Switch the complete token and component treatment.
+                      Model, policy, runtime, usage, and diagnostics for the active thread.
                     </div>
                   </div>
                   <Select
                     value={theme}
                     onValueChange={(value) => setTheme(value as ChatTheme)}
                   >
-                    <SelectTrigger aria-label="Chat theme">
+                    <SelectTrigger tone="neutral" className="uc-inspector-theme" aria-label="Chat theme">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent tone="neutral">
                       <SelectItem value="aurora">Aurora Light</SelectItem>
                       <SelectItem value="unraid">Unraid</SelectItem>
                     </SelectContent>
@@ -514,19 +650,25 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                 </div>
                 <SessionContextRenderer
                   state={state}
-                  onMcpLogin={(name) => void loginMcpServer(name)}
                   onUpdateSettings={(settings) => void updateThreadSettings(settings)}
-                  onSaveMcpServer={(definition) => saveMcpServer(definition)}
-                  onRemoveMcpServer={(name) => removeMcpServer(name)}
-                  onInstallPlugin={(plugin) => installPlugin(plugin)}
-                  onUninstallPlugin={(plugin) => uninstallPlugin(plugin)}
                 />
               </div>
+            ) : surface === "extensions" ? (
+              <ExtensionsRenderer
+                state={state}
+                onMcpLogin={(name) => void loginMcpServer(name)}
+                onSaveMcpServer={(definition) => saveMcpServer(definition)}
+                onRemoveMcpServer={(name) => removeMcpServer(name)}
+                onInstallPlugin={(plugin) => installPlugin(plugin)}
+                onUninstallPlugin={(plugin) => uninstallPlugin(plugin)}
+              />
             ) : (
+              <>
               <Conversation
                 ref={scrollRef}
                 className="uc-conversation"
                 maxHeight={Number.MAX_SAFE_INTEGER}
+                onScroll={handleConversationScroll}
                 style={{
                   height: "100%",
                   maxHeight: "none",
@@ -535,7 +677,9 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                   boxShadow: "none",
                 }}
               >
-            {!state.authenticated ? (
+            {state.initialized &&
+            state.requiresOpenaiAuth === true &&
+            !state.authenticated ? (
               <Banner
                 variant="info"
                 title="Sign in to Codex"
@@ -574,17 +718,57 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
               />
             ))}
 
-            {!state.items.length &&
+            {!state.initialized ? (
+              <div className="uc-boot-state" role="status" aria-live="polite">
+                <span className="uc-boot-state-icon" aria-hidden>
+                  <LoaderCircle size={20} strokeWidth={1.7} />
+                </span>
+                <div>
+                  <div className="aurora-text-label">Starting Codex</div>
+                  <div className="aurora-text-meta">
+                    Connecting to the isolated app server and restoring your session.
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {state.initialized &&
+            !state.items.length &&
             !state.requests.length &&
             !state.plan &&
             !state.diff ? (
               <div className="uc-empty">
-                <span className="uc-empty-mark">
-                  <MessageSquare size={22} strokeWidth={1.65} aria-hidden />
-                </span>
-                <div className="aurora-text-section">Codex is ready.</div>
-                <div className="aurora-text-body uc-muted">
-                  Ask about the server, inspect a workspace, or start a development task.
+                <div className="uc-empty-hero">
+                  <span className="uc-empty-mark">
+                    <MessageSquare size={22} strokeWidth={1.65} aria-hidden />
+                  </span>
+                  <div className="aurora-text-display-2">What can I help with?</div>
+                  <div className="aurora-text-body uc-muted">
+                    Ask about this server, review the workspace, or plan what comes next.
+                  </div>
+                </div>
+                <div className="uc-quick-starts" aria-label="Quick starts">
+                  {QUICK_STARTS.map(({ label, description, prompt: quickPrompt, icon: Icon }) => (
+                    <Button
+                      key={label}
+                      type="button"
+                      variant="plain"
+                      size="unstyled"
+                      className="uc-quick-start"
+                      onClick={() => selectQuickStart(quickPrompt)}
+                    >
+                      <span className="uc-quick-start-icon">
+                        <Icon size={17} strokeWidth={1.7} aria-hidden />
+                      </span>
+                      <span className="uc-quick-start-copy">
+                        <span className="uc-quick-start-label">{label}</span>
+                        <span className="uc-quick-start-description">{description}</span>
+                      </span>
+                      <span className="uc-quick-start-arrow" aria-hidden>
+                        <ArrowUpRight size={16} strokeWidth={1.7} />
+                      </span>
+                    </Button>
+                  ))}
                 </div>
               </div>
             ) : null}
@@ -614,10 +798,24 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
               />
             ))}
               </Conversation>
+              {showJumpToLatest ? (
+                <Button
+                  type="button"
+                  variant="neutral"
+                  size="sm"
+                  className="uc-jump-latest"
+                  onClick={jumpToLatest}
+                  aria-label="Jump to latest message"
+                >
+                  <ArrowDown size={14} strokeWidth={1.8} aria-hidden />
+                  Latest
+                </Button>
+              ) : null}
+              </>
             )}
           </SheetBody>
 
-          {!inspectorOpen ? <SheetFooter className="uc-footer">
+          {surface === "conversation" ? <SheetFooter className="uc-footer">
             {state.tokenUsage ? <ContextRenderer tokenUsage={state.tokenUsage} /> : null}
             <div className="uc-prompt">
               <PromptInput
@@ -647,19 +845,20 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                   : [{ id: "codex", label: "Codex" }]
               }
               isStreaming={Boolean(state.activeTurnId)}
-              placeholder={theme === "unraid" ? "Ask Codex about your server…" : "Ask Codex…"}
+              placeholder={theme === "unraid" ? "Ask Codex about your server…" : "Ask about your server or workspace…"}
               toolbarStart={
                 <Select
                   value={String(currentEffort)}
                   onValueChange={(effort) => void updateThreadSettings({ effort })}
                 >
                   <SelectTrigger
+                    tone="neutral"
                     className="uc-effort-select"
                     aria-label="Quick reasoning effort"
                   >
                     <SelectValue placeholder="Effort" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent tone="neutral">
                     {effortOptions.map((effort: string) => (
                       <SelectItem key={effort} value={effort}>
                         {effort.charAt(0).toUpperCase() + effort.slice(1)}

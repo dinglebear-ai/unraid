@@ -25,7 +25,7 @@ class UnraidCodexChathead extends HTMLElement {
     const shadow = this.attachShadow({ mode: "open" })
     const stylesheet = document.createElement("link")
     stylesheet.rel = "stylesheet"
-    stylesheet.href = "/plugins/unraid-codex/web/unraid-codex.css?v=14"
+    stylesheet.href = "/plugins/unraid-codex/web/unraid-codex.css?v=32"
     const mount = document.createElement("div")
     const theme = readChatTheme()
     mount.className = `uc-root light uc-theme-${theme}`
@@ -52,6 +52,7 @@ declare global {
       close: () => void
       toggle: () => void
     }
+    __unraidCodexShortcutHandler?: (event: KeyboardEvent) => void
   }
 }
 
@@ -73,9 +74,57 @@ const openSettings = () => {
   window.setTimeout(notify, 0)
 }
 
+const focusPrompt = () => {
+  const focus = () =>
+    getHost()?.shadowRoot?.querySelector<HTMLTextAreaElement>('[aria-label="Prompt input"]')?.focus()
+  requestAnimationFrame(() => requestAnimationFrame(focus))
+}
+
+const openChathead = () => {
+  mountChathead()
+  const open = () => {
+    const shadow = getHost()?.shadowRoot
+    const prompt = shadow?.querySelector<HTMLTextAreaElement>('[aria-label="Prompt input"]')
+    if (prompt) {
+      prompt.focus()
+      return true
+    }
+    const launcher = shadow?.querySelector<HTMLButtonElement>(".uc-launcher")
+    if (!launcher) return false
+    launcher.click()
+    focusPrompt()
+    return true
+  }
+  if (!open()) window.setTimeout(open, 0)
+}
+
+const isEditableShortcutTarget = (target: EventTarget | null) => {
+  if (!(target instanceof Element)) return false
+  return Boolean(
+    target.closest(
+      'input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"]',
+    ),
+  )
+}
+
+const handleShortcut = (event: KeyboardEvent) => {
+  if (event.repeat || event.isComposing || event.altKey) return
+  if (!(event.ctrlKey || event.metaKey) || !event.shiftKey || event.code !== "KeyU") return
+  if (isEditableShortcutTarget(event.target)) return
+  event.preventDefault()
+  event.stopPropagation()
+  openChathead()
+}
+
+if (window.__unraidCodexShortcutHandler) {
+  window.removeEventListener("keydown", window.__unraidCodexShortcutHandler, true)
+}
+window.__unraidCodexShortcutHandler = handleShortcut
+window.addEventListener("keydown", handleShortcut, true)
+
 window.UnraidCodex = {
   mount: mountChathead,
-  open: () => getHost()?.shadowRoot?.querySelector<HTMLButtonElement>(".uc-launcher")?.click(),
+  open: openChathead,
   openSettings,
   close: () =>
     getHost()?.shadowRoot?.querySelector<HTMLButtonElement>('[aria-label="Close"]')?.click(),

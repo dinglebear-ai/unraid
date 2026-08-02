@@ -26,6 +26,8 @@ export interface ReasoningProps {
   duration?: number
   /** Start expanded. */
   defaultOpen?: boolean
+  /** Whether the runtime exposed expandable reasoning details for this item. */
+  hasDetails?: boolean
   /** Reasoning body. Prefer children; `content` is kept for back-compat. */
   content?: string
   children?: React.ReactNode
@@ -50,22 +52,36 @@ function Cursor() {
   )
 }
 
-const Reasoning = function Reasoning({ ref, isStreaming, duration, defaultOpen, content, children }: ReasoningProps & { ref?: React.Ref<HTMLDivElement> }) {
+const Reasoning = function Reasoning({
+  ref,
+  isStreaming,
+  duration,
+  defaultOpen,
+  hasDetails,
+  content,
+  children,
+}: ReasoningProps & { ref?: React.Ref<HTMLDivElement> }) {
     const [open, setOpen] = React.useState(defaultOpen ?? false)
+    const reactId = React.useId()
+    const contentId = `${reactId}-reasoning-details`
 
     const label =
       duration !== undefined ? `Reasoned for ${duration}s` : isStreaming ? "Reasoning…" : "Reasoning"
 
     const body = children ?? content
+    const detailsAvailable = hasDetails ?? Boolean(content?.trim() || children)
 
     return (
       <div ref={ref} style={{ display: "block", width: "100%", minWidth: 0 }}>
         {/* Header — brain glyph + label + disclosure chevron */}
         <Button
+          type="button"
           variant="plain"
           size="unstyled"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
+          aria-controls={contentId}
+          aria-label={`${label}. ${open ? "Collapse" : "Expand"} reasoning details`}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -119,18 +135,25 @@ const Reasoning = function Reasoning({ ref, isStreaming, duration, defaultOpen, 
         {/* Body — orange left rail + reasoning text */}
         {open && (
           <div
+            id={contentId}
+            role="region"
+            aria-label={`${label} details`}
+            aria-live={isStreaming ? "polite" : undefined}
             style={{
               borderLeft: `3px solid ${AXON}`,
-              paddingLeft: "16px",
+              padding: "8px 12px 10px 16px",
+              marginTop: "4px",
               marginLeft: "8px",
+              borderRadius: "0 var(--aurora-radius-1) var(--aurora-radius-1) 0",
+              background: "var(--aurora-subtle-bg)",
               fontSize: "var(--aurora-type-body)",
               lineHeight: "var(--aurora-line-body)",
               color: "var(--aurora-text-muted)",
               whiteSpace: "pre-wrap",
             }}
           >
-            {body}
-            {isStreaming && <Cursor />}
+            {detailsAvailable ? body : "Reasoning details were not provided for this turn."}
+            {isStreaming && detailsAvailable && <Cursor />}
           </div>
         )}
       </div>

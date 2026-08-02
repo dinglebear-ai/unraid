@@ -317,9 +317,10 @@ const S = {
     minWidth: 0,
     flex: "1 1 168px",
     maxWidth: "min(100%, 190px)",
-    color: "var(--axon-orange)",
-    borderColor: "color-mix(in srgb, var(--axon-orange) 32%, transparent)",
-    background: "color-mix(in srgb, var(--axon-orange) 12%, var(--aurora-panel-medium))",
+    color: "var(--aurora-text-muted)",
+    borderColor: "var(--aurora-border-default)",
+    background: "color-mix(in srgb, var(--aurora-control-surface) 82%, var(--aurora-panel-medium))",
+    boxShadow: "var(--aurora-highlight-medium)",
   } as React.CSSProperties,
 
   modelLabel: {
@@ -336,9 +337,9 @@ const S = {
     minHeight: 28,
     padding: "0 9px",
     borderRadius: "999px",
-    border: "1px solid var(--axon-orange-border)",
-    background: "var(--axon-orange-surface)",
-    color: "var(--axon-orange-strong)",
+    border: "1px solid var(--aurora-border-default)",
+    background: "var(--aurora-control-surface)",
+    color: "var(--aurora-text-muted)",
     fontFamily: "var(--aurora-font-sans)",
     fontSize: "11px",
     fontWeight: 650,
@@ -395,17 +396,15 @@ function modelRowStyle(active: boolean): React.CSSProperties {
     display: "block",
     width: "100%",
     padding: "7px 10px",
-    background: active ? "var(--aurora-hover-bg)" : "transparent",
+    background: active ? "var(--aurora-selected-bg)" : "transparent",
     border: "none",
     borderRadius: "10px",
     cursor: "pointer",
     textAlign: "left",
     fontSize: "13px",
-    color: active ? "var(--axon-orange)" : "var(--aurora-text-primary)",
+    color: "var(--aurora-text-primary)",
     fontWeight: active ? 600 : 400,
-    boxShadow: active
-      ? "inset 0 0 0 1px color-mix(in srgb, var(--axon-orange) 18%, transparent)"
-      : "none",
+    boxShadow: active ? "inset 0 0 0 1px var(--aurora-border-strong)" : "none",
   }
 }
 
@@ -931,7 +930,7 @@ export function PromptInput({
             </div>
           )}
 
-          <div style={S.spacer} />
+          <div className="uc-prompt-spacer" style={S.spacer} />
 
           {isStreaming && (
             <Button type="button" variant="destructive" size="icon" onClick={onStop} aria-label="Stop generation" style={S.iconBtnShrink}>
@@ -942,8 +941,9 @@ export function PromptInput({
           {!isStreaming && (
             <Button
               type="button"
-              variant="rose"
+              variant="aurora"
               size="icon"
+              filled
               onClick={handleSubmit}
               disabled={!value.trim() && attachments.length === 0}
               aria-label="Send message"

@@ -2634,3 +2634,260 @@
 }
 
 @keyframes aurora-context-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+@layer aurora-components {
+  .aurora-tool-activity {
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--aurora-border-default) 82%, transparent);
+    border-radius: var(--aurora-radius-1);
+    background: color-mix(in srgb, var(--aurora-panel-medium) 72%, transparent);
+    box-shadow: var(--aurora-highlight-medium);
+  }
+
+  .aurora-tool-activity.is-running {
+    border-color: color-mix(in srgb, var(--axon-orange) 24%, var(--aurora-border-default));
+  }
+
+  .aurora-tool-activity.is-error {
+    border-color: var(--aurora-error-border);
+    background: var(--aurora-error-surface);
+  }
+
+  .aurora-tool-activity__trigger {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px !important;
+    width: 100%;
+    min-height: 42px !important;
+    padding: 7px 10px !important;
+    color: var(--aurora-text-primary) !important;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .aurora-tool-activity__trigger:hover {
+    background: color-mix(in srgb, var(--aurora-hover-bg) 66%, transparent) !important;
+  }
+
+  .aurora-tool-activity__trigger:focus-visible {
+    border-radius: var(--aurora-radius-1) !important;
+    box-shadow: inset 0 0 0 2px var(--aurora-focus-ring-strong) !important;
+  }
+
+  .aurora-tool-activity__copy {
+    display: grid;
+    min-width: 0;
+    gap: 1px;
+  }
+
+  .aurora-tool-activity__label {
+    overflow: hidden;
+    color: var(--aurora-text-primary);
+    font-family: var(--aurora-font-sans);
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .aurora-tool-activity__meta {
+    overflow: hidden;
+    color: var(--aurora-text-muted);
+    font-family: var(--aurora-font-sans);
+    font-size: 10.5px;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .aurora-tool-activity__status {
+    flex: 0 0 auto;
+    color: var(--aurora-text-muted);
+  }
+
+  .aurora-tool-activity__status.is-running {
+    color: var(--axon-orange);
+    animation: aurora-tool-spin 0.75s linear infinite;
+  }
+
+  .aurora-tool-activity__status.is-completed {
+    color: var(--aurora-success);
+  }
+
+  .aurora-tool-activity__status.is-error {
+    color: var(--aurora-error);
+  }
+
+  .aurora-tool-activity__chevron,
+  .aurora-tool-group-detail__chevron {
+    flex: 0 0 auto;
+    color: var(--aurora-text-muted);
+    transition: transform 160ms var(--motion-ease-out);
+  }
+
+  .aurora-tool-activity__chevron[data-expanded="true"],
+  .aurora-tool-group-detail[open] .aurora-tool-group-detail__chevron {
+    transform: rotate(180deg);
+  }
+
+  .aurora-tool-activity__details {
+    display: grid;
+    gap: 6px;
+    padding: 7px;
+    border-top: 1px solid color-mix(in srgb, var(--aurora-border-default) 72%, transparent);
+    background: color-mix(in srgb, var(--aurora-panel-medium) 55%, transparent);
+  }
+
+  .aurora-tool-group-detail {
+    overflow: hidden;
+    border: 1px solid var(--aurora-border-default);
+    border-radius: var(--aurora-radius-1);
+    background: var(--aurora-panel-medium);
+  }
+
+  .aurora-tool-group-detail > summary {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 7px 9px;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .aurora-tool-group-detail > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .aurora-tool-group-detail > summary:hover {
+    background: var(--aurora-hover-bg);
+  }
+
+  .aurora-tool-group-detail__icon {
+    display: inline-grid;
+    width: 24px;
+    height: 24px;
+    place-items: center;
+    color: var(--axon-orange);
+    border: 1px solid var(--axon-orange-border);
+    border-radius: 8px;
+    background: var(--axon-orange-surface);
+  }
+
+  .aurora-tool-group-detail__identity {
+    display: grid;
+    min-width: 0;
+    gap: 1px;
+    font-family: var(--aurora-font-sans);
+  }
+
+  .aurora-tool-group-detail__identity strong,
+  .aurora-tool-group-detail__identity span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .aurora-tool-group-detail__identity strong {
+    color: var(--aurora-text-primary);
+    font-size: 11.5px;
+    font-weight: 650;
+  }
+
+  .aurora-tool-group-detail__identity span,
+  .aurora-tool-group-detail__duration {
+    color: var(--aurora-text-muted);
+    font-size: 10.5px;
+  }
+
+  .aurora-tool-group-detail__duration {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .aurora-tool-group-detail__body {
+    display: grid;
+    gap: 8px;
+    padding: 0 9px 9px;
+  }
+
+  .aurora-tool-call-instance {
+    display: grid;
+    gap: 7px;
+  }
+
+  .aurora-tool-call-instance + .aurora-tool-call-instance {
+    padding-top: 8px;
+    border-top: 1px solid var(--aurora-border-default);
+  }
+
+  .aurora-tool-call-instance__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--aurora-text-muted);
+    font-family: var(--aurora-font-sans);
+    font-size: 10px;
+  }
+
+  .aurora-tool-detail-card {
+    min-width: 0;
+    padding: 8px 9px;
+    color: var(--aurora-text-primary);
+    border: 1px solid var(--aurora-border-default);
+    border-radius: var(--aurora-radius-1);
+    background: var(--aurora-control-surface);
+  }
+
+  .aurora-tool-detail-card.is-error {
+    color: var(--aurora-error-foreground);
+    border-color: var(--aurora-error-border);
+    background: var(--aurora-error-surface);
+  }
+
+  .aurora-tool-detail-card__label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--aurora-text-muted);
+    font-family: var(--aurora-font-sans);
+    font-size: 9.5px;
+    font-weight: 650;
+    letter-spacing: var(--aurora-letter-eyebrow);
+    text-transform: uppercase;
+  }
+
+  .aurora-tool-detail-card pre {
+    max-width: 100%;
+    margin: 0;
+    overflow: auto;
+    font-family: var(--aurora-font-mono);
+    font-size: 11px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .aurora-tool-activity-empty {
+    width: 100%;
+    padding: 24px 20px;
+    border: 1px dashed var(--aurora-border-default);
+    border-radius: var(--aurora-radius-1);
+    background: var(--aurora-panel-medium);
+  }
+
+  @container (max-width: 420px) {
+    .aurora-tool-group-detail > summary {
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+    }
+
+    .aurora-tool-group-detail__duration,
+    .aurora-tool-group-detail > summary > .aurora-badge {
+      display: none;
+    }
+  }
+}

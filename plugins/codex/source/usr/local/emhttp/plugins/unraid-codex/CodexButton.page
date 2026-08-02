@@ -10,7 +10,7 @@ Code="e93e"
  * an isolated shadow root so neither side can leak styles into the other.
  */
 ?>
-<script src="/plugins/unraid-codex/web/unraid-codex.js?v=14"></script>
+<script src="/plugins/unraid-codex/web/unraid-codex.js?v=32"></script>
 <script>
 function CodexButton() {
   if (window.UnraidCodex) window.UnraidCodex.toggle();

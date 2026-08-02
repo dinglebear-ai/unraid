@@ -37,6 +37,7 @@ export interface CodexState {
   statusText: string
   initialized: boolean
   authenticated: boolean
+  requiresOpenaiAuth: boolean | null
   threadId: string | null
   activeTurnId: string | null
   items: TimelineItem[]
@@ -67,6 +68,7 @@ const INITIAL_STATE: CodexState = {
   statusText: "Connecting to Codex",
   initialized: false,
   authenticated: false,
+  requiresOpenaiAuth: null,
   threadId: localStorage.getItem(STORAGE_THREAD),
   activeTurnId: null,
   items: [],
@@ -90,6 +92,28 @@ const INITIAL_STATE: CodexState = {
   plugins: [],
   marketplaceErrors: [],
   events: [],
+}
+
+function accountState(result: JsonObject) {
+  const requiresOpenaiAuth =
+    typeof result.requiresOpenaiAuth === "boolean" ? result.requiresOpenaiAuth : true
+  const authenticated = Boolean(result.account) || !requiresOpenaiAuth
+  return {
+    authenticated,
+    requiresOpenaiAuth,
+    statusText: authenticated ? "Connected" : "Connected. Sign-in required.",
+  }
+}
+
+function isBundledBubblewrapFallbackWarning(params: JsonObject) {
+  const text = [params.message, params.summary, params.details]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+  return (
+    text.includes("could not find bubblewrap on path") &&
+    text.includes("bundled bubblewrap")
+  )
 }
 
 function flattenTurns(thread: JsonObject): TimelineItem[] {
@@ -227,6 +251,14 @@ export function useCodexAppServer() {
       notices: [...current.notices.slice(-5), { ...notice, id: crypto.randomUUID() }],
     }))
   }, [])
+
+  const readAccount = React.useCallback(async () => {
+    let result = await rpc("account/read", { refreshToken: false })
+    if (!result.account && result.requiresOpenaiAuth === true) {
+      result = await rpc("account/read", { refreshToken: true }).catch(() => result)
+    }
+    return result
+  }, [rpc])
 
   const handleNotification = React.useCallback(
     (message: JsonObject) => {
@@ -429,10 +461,21 @@ export function useCodexAppServer() {
             setState((current) => ({
               ...current,
               authenticated: true,
+              requiresOpenaiAuth: true,
               deviceLogin: null,
               status: "connected",
               statusText: "Connected",
             }))
+            readAccount()
+              .then((result) => {
+                setState((current) => ({
+                  ...current,
+                  ...accountState(result),
+                  deviceLogin: null,
+                  status: "connected",
+                }))
+              })
+              .catch(() => undefined)
           } else {
             addNotice({ tone: "error", title: "Sign-in failed", description: params.error })
           }
@@ -448,6 +491,12 @@ export function useCodexAppServer() {
         case "guardianWarning":
         case "configWarning":
         case "deprecationNotice":
+          if (
+            message.method === "configWarning" &&
+            isBundledBubblewrapFallbackWarning(params)
+          ) {
+            break
+          }
           addNotice({
             tone: "warn",
             title: message.method === "deprecationNotice" ? "Deprecation notice" : "Codex warning",
@@ -522,11 +571,29 @@ export function useCodexAppServer() {
           setState((current) => ({ ...current, apps: params.data ?? [] }))
           break
         case "account/updated":
-          setState((current) => ({
-            ...current,
-            authenticated: Boolean(params.authMode),
-            statusText: params.authMode ? "Connected" : "Connected. Sign-in required.",
-          }))
+          if (params.authMode) {
+            setState((current) => ({
+              ...current,
+              authenticated: true,
+              requiresOpenaiAuth: true,
+              statusText: "Connected",
+            }))
+          } else {
+            // Confirm an apparent logout against account/read before changing the UI.
+            // This avoids stale or transient notifications masking persisted auth.
+            readAccount()
+              .then((result) => {
+                setState((current) => ({ ...current, ...accountState(result) }))
+              })
+              .catch(() => {
+                setState((current) => ({
+                  ...current,
+                  authenticated: false,
+                  requiresOpenaiAuth: true,
+                  statusText: "Connected. Sign-in required.",
+                }))
+              })
+          }
           break
         case "serverRequest/resolved":
           setState((current) => ({
@@ -569,7 +636,7 @@ export function useCodexAppServer() {
           break
       }
     },
-    [addNotice, rpc],
+    [addNotice, readAccount, rpc],
   )
 
   const handleMessage = React.useCallback(
@@ -658,7 +725,7 @@ export function useCodexAppServer() {
       notify("initialized")
 
       const [account, models] = await Promise.all([
-        rpc("account/read", { refreshToken: false }),
+        readAccount(),
         rpc("model/list", {}).catch(() => ({ data: [] })),
       ])
 
@@ -730,9 +797,8 @@ export function useCodexAppServer() {
       setState((current) => ({
         ...current,
         status: "connected",
-        statusText: account.account ? "Connected" : "Connected. Sign-in required.",
+        ...accountState(account),
         initialized: true,
-        authenticated: Boolean(account.account),
         threadId,
         thread,
         items: thread ? flattenTurns(thread) : current.items,
@@ -809,7 +875,7 @@ export function useCodexAppServer() {
       if (reconnectRef.current) window.clearTimeout(reconnectRef.current)
       socketRef.current?.close()
     }
-  }, [handleMessage, notify, rpc])
+  }, [handleMessage, notify, readAccount, rpc])
 
   const send = React.useCallback(
     async (text: string, attachments: Array<{ type: string; url?: string }> = []) => {

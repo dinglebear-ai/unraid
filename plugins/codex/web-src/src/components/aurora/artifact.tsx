@@ -177,7 +177,7 @@ function CodeDisplay({
             display: "inline-block",
             width: 2,
             height: "1em",
-            background: "var(--axon-orange, #ff9645)",
+            background: "var(--axon-orange)",
             marginLeft: 1,
             verticalAlign: "text-bottom",
             borderRadius: 1,
@@ -308,7 +308,7 @@ function ArtifactPanel({
               width: 8,
               height: 8,
               borderRadius: "50%",
-              border: "1.5px solid var(--axon-orange, #ff9645)",
+              border: "1.5px solid var(--axon-orange)",
               borderTopColor: "transparent",
               animation: "aurora-spin 0.7s linear infinite",
             }}
@@ -480,7 +480,7 @@ function ArtifactCard({ title, language, code, isStreaming, style }: ArtifactPro
               width: 7,
               height: 7,
               borderRadius: "50%",
-              border: "1.5px solid var(--axon-orange, #ff9645)",
+              border: "1.5px solid var(--axon-orange)",
               borderTopColor: "transparent",
               animation: "aurora-spin 0.7s linear infinite",
             }}

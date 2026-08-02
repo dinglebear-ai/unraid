@@ -96,6 +96,7 @@ const plugins = [
 ]
 
 webSocketServer.on("connection", (webSocket) => {
+  let accountReadCount = 0
   webSocket.on("message", (buffer) => {
     const message = JSON.parse(buffer.toString())
     if (!Object.hasOwn(message, "id")) return
@@ -120,12 +121,25 @@ webSocketServer.on("connection", (webSocket) => {
           platformOs: "linux",
           platformArch: "x86_64",
         })
+        setTimeout(() => {
+          send(webSocket, "configWarning", {
+            summary:
+              "Codex could not find bubblewrap on PATH. Install bubblewrap with your OS package manager. Codex will use the bundled bubblewrap in the meantime.",
+            details: null,
+          })
+        }, 10)
         break
       case "account/read":
+        accountReadCount += 1
         response(webSocket, message.id, {
           account: { type: "chatgpt", email: "agent@example.test", planType: "plus" },
           requiresOpenaiAuth: true,
         })
+        if (accountReadCount === 1) {
+          setTimeout(() => {
+            send(webSocket, "account/updated", { authMode: null, planType: null })
+          }, 25)
+        }
         break
       case "model/list":
         response(webSocket, message.id, {
@@ -323,6 +337,24 @@ webSocketServer.on("connection", (webSocket) => {
           item: reasoning,
           completedAtMs: Date.now() + 400,
         })
+        const emptyReasoning = {
+          type: "reasoning",
+          id: "reasoning-empty",
+          summary: [],
+          content: [],
+        }
+        send(webSocket, "item/started", {
+          threadId: "thread-mock",
+          turnId,
+          item: emptyReasoning,
+          startedAtMs: Date.now(),
+        })
+        send(webSocket, "item/completed", {
+          threadId: "thread-mock",
+          turnId,
+          item: emptyReasoning,
+          completedAtMs: Date.now() + 450,
+        })
         send(webSocket, "turn/plan/updated", {
           threadId: "thread-mock",
           turnId,
@@ -378,12 +410,12 @@ webSocketServer.on("connection", (webSocket) => {
         const tool = {
           type: "mcpToolCall",
           id: "tool-1",
-          server: "labby",
-          tool: "time.get_current_time",
-          arguments: { timezone: "UTC" },
+          server: "unraid",
+          tool: "unraid",
+          arguments: { action: "status" },
           status: "completed",
           result: {
-            content: [{ type: "text", text: "2026-07-23 05:20 UTC" }],
+            content: [{ type: "text", text: "Array started · 8 disks healthy" }],
             structuredContent: null,
           },
           error: null,
