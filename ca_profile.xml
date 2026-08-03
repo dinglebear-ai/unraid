@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CommunityApplications>
+  <Profile>Dinglebear AI builds native Unraid plugins and integrations. This repository publishes Unraid Codex, a persistent authenticated Codex chathead that runs in a dedicated non-root Incus container with verified updates, automatic rollback, persistent state, and encrypted scheduled backups.</Profile>
+  <Icon>https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/codex/source/usr/local/emhttp/plugins/unraid-codex/codex-icon.svg</Icon>
+  <WebPage>https://github.com/dinglebear-ai/unraid</WebPage>
+</CommunityApplications>

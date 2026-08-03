@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Plugin>
   <Name>Unraid Codex</Name>
-  <PluginURL>https://raw.githubusercontent.com/dinglebear-ai/unraid-codex/main/unraid-codex.plg</PluginURL>
+  <PluginURL>https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/codex/unraid-codex.plg</PluginURL>
   <PluginAuthor>Dinglebear AI</PluginAuthor>
   <Beta>False</Beta>
-  <Support>https://github.com/dinglebear-ai/unraid-codex/issues</Support>
-  <Project>https://github.com/dinglebear-ai/unraid-mcp/tree/main/plugins/codex</Project>
+  <Support>https://github.com/dinglebear-ai/unraid/issues</Support>
+  <Project>https://github.com/dinglebear-ai/unraid/tree/main/plugins/codex</Project>
   <Overview>Add a persistent Codex chathead to authenticated stock Unraid webGUI pages. The plugin automatically creates a dedicated non-root Incus container, installs SHA-256-verified official Codex releases with automatic rollback, exposes app-server only through an authenticated Unix-socket proxy, persists Codex state, and creates encrypted scheduled backups. Requires the Incus Dev Containers plugin to be installed, enabled, and initialized before installation.</Overview>
   <Category>Productivity: Tools:</Category>
-  <Icon>https://raw.githubusercontent.com/dinglebear-ai/unraid-codex/main/icon.svg</Icon>
-  <ReadMe>https://raw.githubusercontent.com/dinglebear-ai/unraid-codex/main/README.md</ReadMe>
+  <Icon>https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/codex/source/usr/local/emhttp/plugins/unraid-codex/codex-icon.svg</Icon>
+  <ReadMe>https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/codex/README.md</ReadMe>
 </Plugin>

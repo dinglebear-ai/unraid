@@ -114,13 +114,11 @@ The package builder requires explicit fixed-width CalVer and build arguments:
 
 ## Community Applications publication
 
-Community Applications metadata lives under `ca/`. Publish it from a dedicated
-repository so CA does not scan unrelated XML from this monorepo.
+Community Applications publishes this plugin directly from the public
+`dinglebear-ai/unraid` monorepo. Repository-level metadata lives at
+`/ca_profile.xml`, while the Codex wrapper is
+`plugins/codex/ca/unraid-codex.xml` and points to the plugin manifest, icon,
+README, support page, and release assets in this repository.
 
-Create an empty export directory and run:
-
-`./scripts/export-ca-repository.sh /absolute/path/to/unraid-codex-publication`
-
-The export contains the root `LICENSE`, `README.md`, `ca_profile.xml`,
-`unraid-codex.xml`, self-updating `unraid-codex.plg`, and `icon.svg`
-expected by the standalone `dinglebear-ai/unraid-codex` publication repository.
+Submit `https://github.com/dinglebear-ai/unraid` through the Community
+Applications portal, then run Validate and Scan before requesting review.

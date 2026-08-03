@@ -4,8 +4,8 @@
   <!ENTITY author    "Dinglebear AI">
   <!ENTITY version   "20260802.001"> <!-- managed by .github/scripts/plugin_calver.py -->
   <!ENTITY launch    "Settings/CodexSettings">
-  <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/plugins/codex">
-  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid-mcp/releases/download/codex-v&version;/&txz;">
+  <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/codex">
+  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/codex-v&version;/&txz;">
   <!ENTITY pluginURL "&gitURL;/unraid-codex.plg">
   <!ENTITY txz       "unraid-codex-20260802.001-x86_64-34.txz">
   <!ENTITY md5       "4839ae50c3aebd665f922e3cad75e027">
@@ -14,7 +14,7 @@
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
 
-<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="7.0.0" support="https://github.com/dinglebear-ai/unraid-mcp/issues">
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="7.0.0" support="https://github.com/dinglebear-ai/unraid/issues">
 
 <CHANGES>
 ###2026.08.02

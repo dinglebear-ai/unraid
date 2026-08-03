@@ -69,5 +69,5 @@ plugin, then retry the Codex installation.
 ## Source and support
 
 The maintained source is the Codex plugin directory in the
-`dinglebear-ai/unraid-mcp` repository. Use this publication repository's
-Issues tab for support and bug reports.
+`dinglebear-ai/unraid` repository. Use the monorepo Issues tab for support
+and bug reports.
