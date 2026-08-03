@@ -59,6 +59,11 @@ assert publisher.get("dnsDomain") == "dinglebear.ai", publisher
 PY
 fi
 
+if [ -f "README.md" ] && ! grep -Fq '<!-- mcp-name: ai.dinglebear/unraid-mcp -->' README.md; then
+  echo "[version-sync] FAIL — README.md must prove canonical MCP ownership" >&2
+  exit 1
+fi
+
 # Need at least one version source
 if [ ${#versions[@]} -eq 0 ]; then
   echo "[version-sync] No version-bearing files found — skipping"
