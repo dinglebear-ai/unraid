@@ -27,6 +27,7 @@ on:
       - "lefthook.yml"
       - "CLAUDE.md"
       - "README.md"
+      - "ca_profile.xml"
   pull_request:
     paths: *meta_paths
 
@@ -42,8 +43,17 @@ jobs:
           # Full tag history — check-plg-version-ordering.sh compares against
           # every existing incus-v*/codex-v* tag.
           fetch-depth: 0
-      - name: Install PyYAML
-        run: python3 -m pip install --quiet pyyaml
+      - name: Install validation tools
+        run: |
+          python3 -m pip install --quiet pyyaml
+          sudo apt-get update
+          sudo apt-get install -y libxml2-utils
+
+      - name: Validate all Community Applications metadata
+        run: |
+          plugins/incus/tests/ca-metadata.sh
+          plugins/mcp/tests/ca-metadata.sh
+          plugins/codex/tests/ca-metadata.sh
 
       - name: Validate release manager, versions, and tag contract
         run: python3 ./.github/scripts/release_contract.py

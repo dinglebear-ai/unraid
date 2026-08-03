@@ -59,6 +59,11 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Install plugin packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2-utils xz-utils
+
       - name: Build wheel from source
         run: cd unraid-py && uv build --wheel --out-dir dist
 
@@ -73,7 +78,7 @@ jobs:
         with:
           name: unraid-plugin-${{ steps.v.outputs.version }}
           path: |
-            plugins/mcp/packages/unraid-mcp-${{ steps.v.outputs.version }}-x86_64-1.txz
+            plugins/mcp/packages/unraid-mcp-${{ steps.v.outputs.version }}-x86_64-2.txz
             plugins/mcp/packages/unraid-mcp.plg
           retention-days: 14
 
@@ -84,6 +89,7 @@ jobs:
         run: |
           set -euo pipefail
           gh release upload "${GITHUB_REF_NAME}" \
-            "plugins/mcp/packages/unraid-mcp-${{ steps.v.outputs.version }}-x86_64-1.txz" \
+            "plugins/mcp/packages/unraid-mcp-${{ steps.v.outputs.version }}-x86_64-2.txz" \
             "plugins/mcp/packages/unraid-mcp.plg" \
             --clobber
+          gh release edit "${GITHUB_REF_NAME}" --latest

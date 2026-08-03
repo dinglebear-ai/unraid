@@ -55,6 +55,9 @@ jobs:
             class-transformer@0.5.1 class-validator@0.15.1 \
             @unraid/shared@file:.ci-stubs/unraid-shared
 
+      - name: Audit packaged backend dependencies
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Typecheck
         run: npx tsc --noEmit
 
@@ -116,6 +119,9 @@ jobs:
           cache-dependency-path: plugins/incus/unraid-api-plugin-incus/web/package-lock.json
 
       - run: npm ci
+
+      - name: Audit frontend production dependencies
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Typecheck
         run: npx vue-tsc --noEmit

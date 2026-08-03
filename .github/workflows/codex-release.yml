@@ -64,3 +64,6 @@ jobs:
             "$PACKAGE" \
             "dist/unraid-codex-${VERSION}-checksums.txt" \
             unraid-codex.plg --clobber
+
+      - name: Keep the primary Unraid MCP release marked latest
+        run: gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${{ github.event.release.id }}" -f make_latest=false >/dev/null

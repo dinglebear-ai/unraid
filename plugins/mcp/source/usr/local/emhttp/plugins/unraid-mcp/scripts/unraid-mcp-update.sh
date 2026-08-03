@@ -19,7 +19,7 @@ PREFIX="/usr/local/unraid-mcp"
 BUNDLED_PY="${PREFIX}/python/bin/python3"
 OVERLAY_DIR="/mnt/user/appdata/unraid-mcp/venv"
 OVERLAY_PY="${OVERLAY_DIR}/bin/python3"
-REPO="dinglebear-ai/unraid-mcp"
+REPO="dinglebear-ai/unraid"
 
 active_python() {
     if [ -x "$OVERLAY_PY" ]; then echo "$OVERLAY_PY"; else echo "$BUNDLED_PY"; fi
@@ -33,9 +33,14 @@ PY
 }
 
 latest_tag() {
-    # No jq dependency assumed; parse the tag_name from the releases API.
-    curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null \
-        | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1
+    # This monorepo publishes several components. Select the highest primary
+    # Python/MCP vX.Y.Z release explicitly instead of trusting GitHub's global
+    # "latest" designation, which may temporarily point at Incus, Codex, or Rust.
+    curl -fsSL "https://api.github.com/repos/${REPO}/releases?per_page=100" 2>/dev/null \
+        | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' \
+        | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+        | sort -V \
+        | tail -n1
 }
 
 # Compare dotted versions: returns 0 if $1 < $2 (a strict downgrade).

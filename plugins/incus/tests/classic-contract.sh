@@ -23,6 +23,7 @@ for unsafe_build in 48 49 50 51 52; do
     exit 1
   }
 done
+"$ROOT/tests/ca-metadata.sh"
 "$ROOT/tests/package-directory-modes.sh"
 "$ROOT/tests/start-instance.sh"
 

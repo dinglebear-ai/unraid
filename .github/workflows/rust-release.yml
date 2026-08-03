@@ -100,6 +100,7 @@ jobs:
           gh release upload "$TAG" \
             runraid-linux-x86_64 runraid-linux-x86_64.sha256 \
             runraid-x86_64.tar.gz runraid-x86_64.tar.gz.sha256 --clobber
+          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${{ github.event.release.id }}" -f make_latest=false >/dev/null
 
   npm:
     needs: build
