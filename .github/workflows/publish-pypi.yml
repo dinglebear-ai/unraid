@@ -217,7 +217,11 @@ jobs:
         if: steps.state.outputs.published != 'true'
         env:
           MCP_PRIVATE_KEY: ${{ secrets.MCP_PRIVATE_KEY }}
-        run: ./mcp-publisher login dns --domain tootie.tv --private-key "$MCP_PRIVATE_KEY"
+          MCP_REGISTRY_DOMAIN: ${{ vars.MCP_REGISTRY_DOMAIN }}
+        run: |
+          set -euo pipefail
+          test "$MCP_REGISTRY_DOMAIN" = dinglebear.ai
+          ./mcp-publisher login dns --domain "$MCP_REGISTRY_DOMAIN" --private-key "$MCP_PRIVATE_KEY"
       - name: Publish MCP Registry channel
         if: steps.state.outputs.published != 'true'
         run: |
