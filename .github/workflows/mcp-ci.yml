@@ -28,7 +28,7 @@ concurrency:
 jobs:
   mcp:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: plugins/mcp
@@ -37,15 +37,19 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.9.25"
+          enable-cache: false
       - name: Install static validators
-        run: sudo apt-get update && sudo apt-get install -y libxml2-utils shellcheck
+        run: sudo apt-get update && sudo apt-get install -y file libxml2-utils shellcheck xz-utils
 
       # These run as root on Unraid (Slackware). A syntax error ships to users.
       - name: Shellcheck packaging and on-box scripts
         run: |
           set -euo pipefail
           mapfile -t scripts < <(
-            find scripts source -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' \) | sort
+            find scripts source tests -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' \) | sort
           )
           printf 'checking %d scripts\n' "${#scripts[@]}"
           printf '%s\n' "${scripts[@]}"
@@ -58,7 +62,7 @@ jobs:
           while IFS= read -r f; do
             [ -x "$f" ] || { echo "not executable: $f"; status=1; }
             if grep -qU $'\r' "$f"; then echo "CRLF line endings: $f"; status=1; fi
-          done < <(find source -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' \))
+          done < <(find scripts source tests -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' \))
           exit "$status"
 
       # Unraid parses the .plg as XML; a malformed entity block bricks the install.
@@ -78,8 +82,17 @@ jobs:
               || { echo "::error::unraid-mcp.plg lost its ${placeholder} — build-txz.sh substitutes these at package time"; exit 1; }
           done
 
-      - name: Build the web bundle
-        run: npm ci --no-audit --no-fund --prefix web && npm run build --prefix web
+      - name: Validate Community Applications metadata
+        run: ./tests/ca-metadata.sh
+
+      - name: Audit the bundled Python runtime lock
+        run: uvx --from pip-audit pip-audit -r runtime-requirements.txt --disable-pip
+
+      - name: Build and audit the web bundle
+        run: |
+          npm ci --no-audit --no-fund --prefix web
+          npm audit --omit=dev --audit-level=high --prefix web
+          npm run build --prefix web
 
       # Catches a stale pinned interpreter hash before release day.
       - name: Pinned CPython hash must match upstream SHA256SUMS
@@ -94,3 +107,18 @@ jobs:
             exit 1
           fi
           echo "pinned CPython hash matches upstream SHA256SUMS"
+
+      - name: Build, verify, and reproduce the full plugin package
+        run: |
+          set -euo pipefail
+          version="$(python3 -c 'import tomllib; print(tomllib.load(open("../../unraid-py/pyproject.toml", "rb"))["project"]["version"])')"
+          (cd ../../unraid-py && uv build --wheel --out-dir dist)
+          wheel="../../unraid-py/dist/unraid_mcp-${version}-py3-none-any.whl"
+          test -s "$wheel"
+          SOURCE_DATE_EPOCH=0 ./scripts/build-txz.sh "$version" "$wheel"
+          package="packages/unraid-mcp-${version}-x86_64-2.txz"
+          first="$(sha256sum "$package" | cut -d' ' -f1)"
+          SOURCE_DATE_EPOCH=0 ./scripts/build-txz.sh "$version" "$wheel"
+          second="$(sha256sum "$package" | cut -d' ' -f1)"
+          test "$first" = "$second" || { echo "::error::Unraid MCP package is not reproducible: $first != $second"; exit 1; }
+          echo "reproducible package sha256=$second"

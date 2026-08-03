@@ -1,22 +1,31 @@
 <?xml version="1.0" standalone="yes"?>
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "incus">
-  <!ENTITY author    "jmagar">
-  <!ENTITY version   "2026.7.24"> <!-- managed by .github/scripts/plugin_calver.py -->
+  <!ENTITY author    "Dinglebear AI">
+  <!ENTITY version   "20260803.001"> <!-- managed by .github/scripts/plugin_calver.py -->
   <!ENTITY launch    "Settings/IncusSettings">
-  <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/plugins/incus">
+  <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/incus">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY txz       "&name;-unraid-7.0.0-55-x86_64-1.txz">
-  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid-mcp/releases/download/incus-v&version;/&txz;">
-  <!ENTITY md5       "fe0ac455ac84bc928f9bdadf57c518b7">
-  <!ENTITY sha256    "ae3615b26aa980f2331812fa7f8e881d16ed70f03bb0370a21ccb4de6307f157">
+  <!ENTITY txz       "&name;-unraid-7.0.0-56-x86_64-1.txz">
+  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/incus-v&version;/&txz;">
+  <!ENTITY md5       "b987f9122eed2e18a56f89440b25efe8">
+  <!ENTITY sha256    "92e05ce7723712a75efe2ef401bf78d5099e7212687dd673dcbd1c9a89cbf467">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
 
-<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;">
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="7.0.0" support="https://github.com/dinglebear-ai/unraid/issues">
 
 <CHANGES>
+###2026.08.03
+- Publish build 56 from the dinglebear-ai/unraid monorepo with the current API
+  backend, start-instance compatibility recovery, complete CA metadata, and
+  deterministic source-overlay package verification.
+
+###2026.07.24
+- Community Applications publication now uses the dinglebear-ai/unraid monorepo
+  for the manifest, release assets, source, documentation, and support.
+
 ###2026.07.23a
 - Prepare root's subordinate UID/GID ranges during daemon preflight so Incus
   starts with a functional idmap on fresh Unraid boots and can launch

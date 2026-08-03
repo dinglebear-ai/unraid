@@ -102,6 +102,27 @@
   --aurora-shadow-strong: 0 20px 38px rgba(0, 0, 0, 0.26);
   --aurora-highlight-medium: inset 0 1px 0 rgba(255, 255, 255, 0.035);
   --aurora-highlight-strong: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  --aurora-highlight-control: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --aurora-highlight-control-soft: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --aurora-highlight-control-hover: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --aurora-highlight-control-solid: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  --aurora-shadow-control: 0 1px 2px rgba(0, 0, 0, 0.34), 0 2px 6px rgba(0, 0, 0, 0.16);
+  --aurora-shadow-control-hover: 0 1px 2px rgba(0, 0, 0, 0.4), 0 3px 9px rgba(0, 0, 0, 0.22);
+  --aurora-shadow-swatch: 0 0 0 1px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.5);
+  --aurora-shadow-sheet-backdrop: 0 -28px 72px rgba(0, 0, 0, 0.42);
+  --aurora-solid-rose-foreground: #2a0f18;
+  --aurora-solid-accent-foreground: #06131c;
+  --aurora-solid-success-foreground: #06201b;
+  --aurora-solid-warn-foreground: #211803;
+  --aurora-solid-success-border: color-mix(in srgb, var(--aurora-success) 60%, #000000);
+  --aurora-solid-warn-border: color-mix(in srgb, var(--aurora-warn) 60%, #000000);
+  --aurora-swatch-border: #ffffff;
+  --aurora-spectrum-red: #ff0000;
+  --aurora-spectrum-yellow: #ffff00;
+  --aurora-spectrum-green: #00ff00;
+  --aurora-spectrum-cyan: #00ffff;
+  --aurora-spectrum-blue: #0000ff;
+  --aurora-spectrum-magenta: #ff00ff;
   --aurora-active-glow: 0 0 0 1px color-mix(in srgb, #29b6f6 28%, transparent),
                         0 2px 8px color-mix(in srgb, #29b6f6 18%, transparent);
   --aurora-focus-ring: color-mix(in srgb, #29b6f6 30%, transparent);
@@ -324,6 +345,27 @@
   --aurora-switch-thumb-gradient: linear-gradient(180deg, #ffffff 0%, #d8edf6 100%);
   --aurora-shadow-medium: 0 4px 12px rgba(7, 19, 28, 0.08);
   --aurora-shadow-strong: 0 8px 24px rgba(7, 19, 28, 0.12);
+  --aurora-highlight-control: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --aurora-highlight-control-soft: inset 0 1px 0 rgba(255, 255, 255, 0.58);
+  --aurora-highlight-control-hover: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  --aurora-highlight-control-solid: inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  --aurora-shadow-control: 0 1px 2px rgba(7, 19, 28, 0.1), 0 2px 6px rgba(7, 19, 28, 0.06);
+  --aurora-shadow-control-hover: 0 1px 2px rgba(7, 19, 28, 0.14), 0 3px 9px rgba(7, 19, 28, 0.09);
+  --aurora-shadow-swatch: 0 0 0 1px rgba(7, 19, 28, 0.28), 0 1px 4px rgba(7, 19, 28, 0.18);
+  --aurora-shadow-sheet-backdrop: 0 -28px 72px rgba(7, 19, 28, 0.16);
+  --aurora-solid-rose-foreground: #4b1028;
+  --aurora-solid-accent-foreground: #ffffff;
+  --aurora-solid-success-foreground: #ffffff;
+  --aurora-solid-warn-foreground: #2d2104;
+  --aurora-solid-success-border: color-mix(in srgb, var(--aurora-success) 72%, var(--aurora-text-primary));
+  --aurora-solid-warn-border: color-mix(in srgb, var(--aurora-warn) 72%, var(--aurora-text-primary));
+  --aurora-swatch-border: #ffffff;
+  --aurora-spectrum-red: #ff0000;
+  --aurora-spectrum-yellow: #ffff00;
+  --aurora-spectrum-green: #00ff00;
+  --aurora-spectrum-cyan: #00ffff;
+  --aurora-spectrum-blue: #0000ff;
+  --aurora-spectrum-magenta: #ff00ff;
   --aurora-shell-bg: radial-gradient(circle at 12% 0%, rgba(2, 136, 209, 0.06), transparent 28%),
                      radial-gradient(circle at 88% 0%, rgba(1, 87, 155, 0.05), transparent 24%),
                      var(--aurora-page-bg);

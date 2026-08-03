@@ -448,6 +448,11 @@ export function PermissionChip({
   return (
     <Button variant="plain" size="unstyled"
       type="button"
+      aria-label={
+        hasRestrictions
+          ? `Session permissions: ${restrictedCount} require approval`
+          : "Session permissions: all tools allowed"
+      }
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

@@ -15,10 +15,10 @@ import { Action } from "@/components/aurora/ai/action"
 import { Actions } from "@/components/aurora/ai/actions"
 import { Agent } from "@/components/aurora/ai/agent"
 import { Checkpoint } from "@/components/aurora/ai/checkpoint"
-import { Context } from "@/components/aurora/ai/context"
 import { Image as AuroraImage } from "@/components/aurora/ai/image"
 import {
   Message,
+  MessageAvatar,
   MessageContent,
 } from "@/components/aurora/ai/message"
 import { Plan } from "@/components/aurora/ai/plan"
@@ -79,6 +79,21 @@ function humanizeStatus(value: unknown): string {
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
     .replace(/[_-]+/g, " ")
     .replace(/^./, (letter) => letter.toUpperCase())
+}
+
+function isDiagnosticIssueEvent(event: { method: string; params: JsonObject }) {
+  if (!/(error|warning|failed|deprecation|configWarning)/i.test(event.method)) {
+    return false
+  }
+  if (event.method !== "configWarning") return true
+  const text = [event.params.message, event.params.summary, event.params.details]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+  return !(
+    text.includes("could not find bubblewrap on path") &&
+    text.includes("bundled bubblewrap")
+  )
 }
 
 function InventoryBadges({ values }: { values: string[] }) {
@@ -191,10 +206,10 @@ function McpServerManager({
                 value={draft.transport}
                 onValueChange={(transport) => setDraft({ ...draft, transport })}
               >
-                <SelectTrigger aria-label="MCP transport">
+                <SelectTrigger tone="neutral" aria-label="MCP transport">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent tone="neutral">
                   <SelectItem value="http">Streamable HTTP</SelectItem>
                   <SelectItem value="stdio">STDIO</SelectItem>
                 </SelectContent>
@@ -464,38 +479,189 @@ function PluginCatalog({
   )
 }
 
-export function SessionContextRenderer({
+type ExtensionView = "mcp" | "catalog" | "skills"
+
+export function ExtensionsRenderer({
   state,
   onMcpLogin,
-  onUpdateSettings,
   onSaveMcpServer,
   onRemoveMcpServer,
   onInstallPlugin,
   onUninstallPlugin,
 }: {
   state: {
-    thread: JsonObject | null
-    settings: JsonObject | null
     config: JsonObject | null
-    models: JsonObject[]
     skills: JsonObject[]
     mcpServers: JsonObject[]
-    goal: JsonObject | null
-    rateLimits: JsonObject | null
-    permissionProfiles: JsonObject[]
-    hooks: JsonObject[]
     apps: JsonObject[]
     plugins: JsonObject[]
     marketplaceErrors: JsonObject[]
-    events: Array<{ method: string; params: JsonObject; at: number }>
-    items: TimelineItem[]
   }
   onMcpLogin?: (name: string) => void
-  onUpdateSettings?: (settings: JsonObject) => void
   onSaveMcpServer?: (definition: McpEditorValue) => Promise<unknown>
   onRemoveMcpServer?: (name: string) => Promise<unknown>
   onInstallPlugin?: (plugin: JsonObject) => Promise<unknown>
   onUninstallPlugin?: (plugin: JsonObject) => Promise<unknown>
+}) {
+  const [view, setView] = React.useState<ExtensionView>("mcp")
+  const config = state.config ?? {}
+  const mcpCount = new Set([
+    ...Object.keys(config.mcp_servers ?? {}),
+    ...state.mcpServers.map((server) => server.name).filter(Boolean),
+  ]).size
+  const catalogCount = state.apps.length + state.plugins.length
+  const views: Array<{
+    id: ExtensionView
+    label: string
+    count: number
+    title: string
+    description: string
+  }> = [
+    {
+      id: "mcp",
+      label: "MCP",
+      count: mcpCount,
+      title: "MCP servers and tools",
+      description: "Connect tool providers, manage transports, and complete server authentication.",
+    },
+    {
+      id: "catalog",
+      label: "Apps & Plugins",
+      count: catalogCount,
+      title: "Apps and plugin library",
+      description: "Install reusable packages and connect app surfaces available to this Codex runtime.",
+    },
+    {
+      id: "skills",
+      label: "Skills",
+      count: state.skills.length,
+      title: "Workspace skills",
+      description: "Review the instruction packages Codex can load while working in this workspace.",
+    },
+  ]
+  const selected = views.find((entry) => entry.id === view) ?? views[0]
+
+  return (
+    <div className="uc-extensions">
+      <div className="uc-extensions-heading">
+        <div>
+          <div className="aurora-text-section">{selected.title}</div>
+          <div className="aurora-text-meta">{selected.description}</div>
+        </div>
+        <div className="uc-extension-total">
+          <strong>{selected.count}</strong>
+          <span>{selected.label}</span>
+        </div>
+      </div>
+
+      <div className="uc-extension-tabs" role="tablist" aria-label="Extension categories">
+        {views.map((entry) => (
+          <Button
+            key={entry.id}
+            id={`uc-extension-tab-${entry.id}`}
+            type="button"
+            variant="plain"
+            size="unstyled"
+            className={`uc-extension-tab${view === entry.id ? " is-active" : ""}`}
+            role="tab"
+            aria-selected={view === entry.id}
+            aria-controls="uc-extension-panel"
+            onClick={() => setView(entry.id)}
+          >
+            <span>{entry.label}</span>
+            <span className="uc-extension-count">{entry.count}</span>
+          </Button>
+        ))}
+      </div>
+
+      <section
+        id="uc-extension-panel"
+        className="uc-extension-panel"
+        role="tabpanel"
+        aria-labelledby={`uc-extension-tab-${view}`}
+      >
+        {view === "mcp" ? (
+          <McpServerManager
+            config={config}
+            servers={state.mcpServers}
+            onLogin={onMcpLogin}
+            onSave={onSaveMcpServer}
+            onRemove={onRemoveMcpServer}
+          />
+        ) : null}
+
+        {view === "catalog" ? (
+          <>
+            <PluginCatalog
+              plugins={state.plugins}
+              apps={state.apps}
+              onInstall={onInstallPlugin}
+              onUninstall={onUninstallPlugin}
+            />
+            {state.marketplaceErrors.map((error, index) => (
+              <Banner
+                key={`marketplace-error-${index}`}
+                variant="warn"
+                title="Plugin catalog unavailable"
+                description={error.message ?? formatJson(error)}
+              />
+            ))}
+          </>
+        ) : null}
+
+        {view === "skills" ? (
+          <div className="uc-skill-catalog">
+            {state.skills.length ? state.skills.map((skill) => (
+              <article className="uc-skill-card" key={`${skill.name}-${skill.path}`}>
+                <div className="uc-inventory-heading">
+                  <strong>{skill.name}</strong>
+                  <Badge tone={skill.enabled ? "success" : "neutral"} size="sm">
+                    {skill.enabled ? compactValue(skill.scope) : "disabled"}
+                  </Badge>
+                </div>
+                <div className="aurora-text-meta">
+                  {skill.shortDescription ??
+                    skill.interface?.short_description ??
+                    skill.description ??
+                    "No description provided."}
+                </div>
+                {skill.path ? <code className="uc-skill-path">{skill.path}</code> : null}
+              </article>
+            )) : (
+              <div className="uc-extension-empty">
+                <BookOpenCheck size={20} strokeWidth={1.6} aria-hidden />
+                <div>
+                  <div className="aurora-text-label">No skills discovered</div>
+                  <div className="aurora-text-meta">
+                    This workspace has not exposed any skill packages to Codex yet.
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </section>
+    </div>
+  )
+}
+
+export function SessionContextRenderer({
+  state,
+  onUpdateSettings,
+}: {
+  state: {
+    thread: JsonObject | null
+    settings: JsonObject | null
+    config: JsonObject | null
+    models: JsonObject[]
+    goal: JsonObject | null
+    rateLimits: JsonObject | null
+    permissionProfiles: JsonObject[]
+    hooks: JsonObject[]
+    events: Array<{ method: string; params: JsonObject; at: number }>
+    items: TimelineItem[]
+  }
+  onUpdateSettings?: (settings: JsonObject) => void
 }) {
   const config = state.config ?? {}
   const settings = state.settings ?? {}
@@ -547,10 +713,10 @@ export function SessionContextRenderer({
               value={String(currentModel)}
               onValueChange={(model) => onUpdateSettings?.({ model })}
             >
-              <SelectTrigger className="uc-setting-select" aria-label="Session model">
+              <SelectTrigger tone="neutral" className="uc-setting-select" aria-label="Session model">
                 <SelectValue placeholder="Select a model" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent tone="neutral">
                 {visibleModels.map((model) => (
                   <SelectItem
                     key={model.model ?? model.id}
@@ -571,10 +737,10 @@ export function SessionContextRenderer({
               value={String(effort)}
               onValueChange={(nextEffort) => onUpdateSettings?.({ effort: nextEffort })}
             >
-              <SelectTrigger className="uc-setting-select" aria-label="Reasoning effort">
+              <SelectTrigger tone="neutral" className="uc-setting-select" aria-label="Reasoning effort">
                 <SelectValue placeholder="Select effort" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent tone="neutral">
                 {effortOptions.map((option: string) => (
                   <SelectItem key={option} value={option}>
                     {option.charAt(0).toUpperCase() + option.slice(1)}
@@ -628,74 +794,6 @@ export function SessionContextRenderer({
       <Collapsible
         title={
           <span className="uc-collapsible-title">
-            MCP Servers & Tools
-            <Badge tone="info" size="sm">{state.mcpServers.length}</Badge>
-          </span>
-        }
-      >
-        <McpServerManager
-          config={config}
-          servers={state.mcpServers}
-          onLogin={onMcpLogin}
-          onSave={onSaveMcpServer}
-          onRemove={onRemoveMcpServer}
-        />
-      </Collapsible>
-
-      <Collapsible
-        title={
-          <span className="uc-collapsible-title">
-            Apps & Plugins
-            <Badge tone="info" size="sm">
-              {state.apps.length + state.plugins.length}
-            </Badge>
-          </span>
-        }
-      >
-        <PluginCatalog
-          plugins={state.plugins}
-          apps={state.apps}
-          onInstall={onInstallPlugin}
-          onUninstall={onUninstallPlugin}
-        />
-        {state.marketplaceErrors.map((error, index) => (
-          <Banner
-            key={`marketplace-error-${index}`}
-            variant="warn"
-            title="Plugin marketplace unavailable"
-            description={error.message ?? formatJson(error)}
-          />
-        ))}
-      </Collapsible>
-
-      <Collapsible
-        title={
-          <span className="uc-collapsible-title">
-            Skills
-            <Badge tone="info" size="sm">{state.skills.length}</Badge>
-          </span>
-        }
-      >
-        <div className="uc-inventory-list">
-          {state.skills.length ? state.skills.map((skill) => (
-            <div className="uc-inventory-row" key={`${skill.name}-${skill.path}`}>
-              <div className="uc-inventory-heading">
-                <strong>{skill.name}</strong>
-                <Badge tone={skill.enabled ? "success" : "neutral"} size="sm">
-                  {skill.enabled ? compactValue(skill.scope) : "disabled"}
-                </Badge>
-              </div>
-              <div className="aurora-text-meta">
-                {skill.shortDescription ?? skill.interface?.short_description ?? skill.description}
-              </div>
-            </div>
-          )) : <div className="aurora-text-meta">No skills discovered for this workspace.</div>}
-        </div>
-      </Collapsible>
-
-      <Collapsible
-        title={
-          <span className="uc-collapsible-title">
             Runtime
             <Badge tone="neutral" size="sm">
               {state.models.length} models
@@ -726,10 +824,10 @@ export function SessionContextRenderer({
                     onUpdateSettings?.({ permissions })
                   }
                 >
-                  <SelectTrigger aria-label="Permission profile">
+                  <SelectTrigger tone="neutral" aria-label="Permission profile">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent tone="neutral">
                     {state.permissionProfiles
                       .filter((entry) => entry.allowed !== false)
                       .map((entry) => (
@@ -753,10 +851,10 @@ export function SessionContextRenderer({
                   onUpdateSettings?.({ personality })
                 }
               >
-                <SelectTrigger aria-label="Personality">
+                <SelectTrigger tone="neutral" aria-label="Personality">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent tone="neutral">
                   <SelectItem value="none">None</SelectItem>
                   <SelectItem value="friendly">Friendly</SelectItem>
                   <SelectItem value="pragmatic">Pragmatic</SelectItem>
@@ -794,17 +892,13 @@ export function SessionContextRenderer({
             Diagnostics
             <Badge
               tone={
-                state.events.some((event) =>
-                  /(error|warning|failed|deprecation|configWarning)/i.test(event.method),
-                )
+                state.events.some(isDiagnosticIssueEvent)
                   ? "warn"
                   : "success"
               }
               size="sm"
             >
-              {state.events.filter((event) =>
-                /(error|warning|failed|deprecation|configWarning)/i.test(event.method),
-              ).length}{" "}
+              {state.events.filter(isDiagnosticIssueEvent).length}{" "}
               issues
             </Badge>
           </span>
@@ -822,9 +916,7 @@ export function SessionContextRenderer({
           </div>
           <div className="uc-protocol-events">
             {state.events
-              .filter((event) =>
-                /(error|warning|failed|deprecation|configWarning)/i.test(event.method),
-              )
+              .filter(isDiagnosticIssueEvent)
               .slice(-8)
               .reverse()
               .map((event, index) => (
@@ -845,9 +937,7 @@ export function SessionContextRenderer({
                   ) : null}
                 </div>
               ))}
-            {!state.events.some((event) =>
-              /(error|warning|failed|deprecation|configWarning)/i.test(event.method),
-            ) ? (
+            {!state.events.some(isDiagnosticIssueEvent) ? (
               <div className="aurora-text-meta">No warnings or failures in this session.</div>
             ) : null}
           </div>
@@ -957,11 +1047,15 @@ function UnraidTerminalItem({ entry }: { entry: TimelineItem }) {
   )
 }
 
-function UnraidReasoningItem({ entry }: { entry: TimelineItem }) {
-  const item = entry.item
-  const summary = [...(item.summary ?? []), ...(item.content ?? [])]
+function reasoningMarkdown(item: JsonObject): string {
+  return [...(item.summary ?? []), ...(item.content ?? [])]
     .filter(Boolean)
     .join("\n\n")
+}
+
+function UnraidReasoningItem({ entry }: { entry: TimelineItem }) {
+  const item = entry.item
+  const summary = reasoningMarkdown(item)
   const preview =
     String(item.summary?.[0] ?? item.content?.[0] ?? "Working through the request")
       .replace(/\s+/g, " ")
@@ -1024,6 +1118,7 @@ function MessageItem({ entry }: { entry: TimelineItem }) {
   return (
     <Message
       role={user ? "user" : "assistant"}
+      className="uc-message"
       time={
         timestamp
           ? new Date(timestamp).toLocaleTimeString([], {
@@ -1047,6 +1142,13 @@ function MessageItem({ entry }: { entry: TimelineItem }) {
         ) : undefined
       }
     >
+      {!user ? (
+        <MessageAvatar
+          label="Codex"
+          tone="axon"
+          className="uc-message-avatar uc-message-avatar-assistant"
+        />
+      ) : null}
       <MessageContent
         tone={user ? "user" : "assistant"}
         streaming={!user && !entry.completedAtMs}
@@ -1054,22 +1156,31 @@ function MessageItem({ entry }: { entry: TimelineItem }) {
       >
         <Response markdown={markdown} streaming={!user && !entry.completedAtMs} />
       </MessageContent>
+      {user ? (
+        <MessageAvatar
+          label="You"
+          tone="cyan"
+          className="uc-message-avatar uc-message-avatar-user"
+        />
+      ) : null}
     </Message>
   )
 }
 
 function PlanItem({ entry }: { entry: TimelineItem }) {
   return (
-    <Plan
-      title="Plan"
-      steps={[
-        {
-          label: entry.item.text || "Building a plan",
-          status: entry.completedAtMs ? "done" : "inprog",
-        },
-      ]}
-      isStreaming={!entry.completedAtMs}
-    />
+    <div className="uc-activity-item uc-plan-item">
+      <Plan
+        title="Plan"
+        steps={[
+          {
+            label: entry.item.text || "Building a plan",
+            status: entry.completedAtMs ? "done" : "inprog",
+          },
+        ]}
+        isStreaming={!entry.completedAtMs}
+      />
+    </div>
   )
 }
 
@@ -1156,7 +1267,7 @@ function SkillUsageItem({
   theme: "aurora" | "unraid"
 }) {
   return (
-    <section className="uc-skill-usage">
+    <section className="uc-skill-usage uc-activity-item">
       <div className="uc-skill-usage-heading">
         <BookOpenCheck size={15} strokeWidth={1.65} aria-hidden />
         <div>
@@ -1203,16 +1314,7 @@ export function TimelineRenderer({
             calls.push(mappedToolCall(entries[cursor]))
           }
           return (
-            <section className="uc-tool-group" key={`tools-${entry.id}`}>
-              <div className="uc-tool-group-heading">
-                <span>Tool Activity</span>
-                <Badge
-                  tone={calls.some((call) => call.status === "error") ? "error" : "info"}
-                  size="sm"
-                >
-                  {calls.length} {calls.length === 1 ? "call" : "calls"}
-                </Badge>
-              </div>
+            <section className="uc-tool-group uc-activity-item" key={`tools-${entry.id}`}>
               <ToolCalls calls={calls} />
             </section>
           )
@@ -1233,29 +1335,30 @@ export function TimelineRenderer({
                 </MessageContent>
               </Message>
             )
-          case "reasoning":
+          case "reasoning": {
             if (theme === "unraid") {
               return <UnraidReasoningItem key={entry.id} entry={entry} />
             }
+            const markdown = reasoningMarkdown(item)
             return (
-              <Reasoning
-                key={entry.id}
-                isStreaming={!entry.completedAtMs}
-                duration={
-                  entry.completedAtMs && entry.startedAtMs
-                    ? Math.round((entry.completedAtMs - entry.startedAtMs) / 1000)
-                    : undefined
-                }
-                defaultOpen={false}
-              >
-                <Response
-                  markdown={[...(item.summary ?? []), ...(item.content ?? [])]
-                    .filter(Boolean)
-                    .join("\n\n")}
-                  streaming={!entry.completedAtMs}
-                />
-              </Reasoning>
+              <div className="uc-activity-item uc-reasoning-item" key={entry.id}>
+                <Reasoning
+                  isStreaming={!entry.completedAtMs}
+                  duration={
+                    entry.completedAtMs && entry.startedAtMs
+                      ? Math.max(1, Math.round((entry.completedAtMs - entry.startedAtMs) / 1000))
+                      : undefined
+                  }
+                  defaultOpen={false}
+                  hasDetails={Boolean(markdown.trim())}
+                >
+                  {markdown ? (
+                    <Response markdown={markdown} streaming={!entry.completedAtMs} />
+                  ) : null}
+                </Reasoning>
+              </div>
             )
+          }
           case "plan":
             return <PlanItem key={entry.id} entry={entry} />
           case "commandExecution":
@@ -1280,19 +1383,20 @@ export function TimelineRenderer({
               return <UnraidTerminalItem key={entry.id} entry={entry} />
             }
             return (
-              <Terminal
-                key={entry.id}
-                title={item.cwd ? `Terminal · ${item.cwd}` : "Terminal"}
-                status={
-                  item.status === "failed"
-                    ? "error"
-                    : entry.completedAtMs
-                      ? "idle"
-                      : "connected"
-                }
-                lines={terminalLines(item)}
-                compact
-              />
+              <div className="uc-activity-item uc-command-item" key={entry.id}>
+                <Terminal
+                  title={item.cwd ? `Terminal · ${item.cwd}` : "Terminal"}
+                  status={
+                    item.status === "failed"
+                      ? "error"
+                      : entry.completedAtMs
+                        ? "idle"
+                        : "connected"
+                  }
+                  lines={terminalLines(item)}
+                  compact
+                />
+              </div>
             )
           case "fileChange":
             return <FileChangeItem key={entry.id} entry={entry} />
@@ -1414,7 +1518,7 @@ function ApprovalCard({
   const resolved = approved || denied
   return (
     <section
-      className={`uc-approval-card${resolved ? " is-resolved" : ""}`}
+      className={`uc-approval-card uc-activity-item${resolved ? " is-resolved" : ""}`}
       aria-label={resolved ? "Approval result" : "Approval needed"}
     >
       <div className="uc-approval-eyebrow">
@@ -1654,10 +1758,10 @@ function ElicitationRequest({
               value={String(content[name] ?? "")}
               onValueChange={(value) => setContent((current) => ({ ...current, [name]: value }))}
             >
-              <SelectTrigger>
+              <SelectTrigger tone="neutral">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent tone="neutral">
                 {field.enum.map((value: unknown) => (
                   <SelectItem key={String(value)} value={String(value)}>
                     {String(value)}
@@ -1768,18 +1872,28 @@ export function PlanRenderer({
 
 export function ContextRenderer({ tokenUsage }: { tokenUsage: JsonObject }) {
   const current = tokenUsage.last ?? tokenUsage.total ?? {}
-  const cached = Math.min(current.cachedInputTokens ?? 0, current.inputTokens ?? 0)
-  const reasoning = Math.min(current.reasoningOutputTokens ?? 0, current.outputTokens ?? 0)
+  const used = Number(current.totalTokens ?? 0)
+  const limit = Number(tokenUsage.modelContextWindow ?? 0)
+  const percent = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0
+  const formatTokens = (value: number) =>
+    value >= 1_000_000
+      ? `${(value / 1_000_000).toFixed(1)}m`
+      : value >= 1_000
+        ? `${Math.round(value / 1_000)}k`
+        : String(value)
+
   return (
-    <Context
-      variant="compact"
-      limit={tokenUsage.modelContextWindow ?? undefined}
-      segments={[
-        { label: "Input", value: Math.max(0, (current.inputTokens ?? 0) - cached) },
-        { label: "Cached", value: cached },
-        { label: "Output", value: Math.max(0, (current.outputTokens ?? 0) - reasoning) },
-        { label: "Reasoning", value: reasoning },
-      ]}
-    />
+    <div className="uc-context-meter" aria-label={`Context usage ${percent}%`}>
+      <div className="uc-context-meter-copy">
+        <span className="uc-context-meter-label">Context</span>
+        <span className="uc-context-meter-value">
+          {formatTokens(used)}{limit > 0 ? ` / ${formatTokens(limit)}` : ""}
+        </span>
+      </div>
+      <div className="uc-context-meter-rail" aria-hidden>
+        <span style={{ width: `${percent}%` }} />
+      </div>
+      <span className="uc-context-meter-percent">{percent}%</span>
+    </div>
   )
 }

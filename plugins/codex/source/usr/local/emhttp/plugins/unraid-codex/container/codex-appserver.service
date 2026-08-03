@@ -11,10 +11,32 @@ WorkingDirectory=/workspace
 Environment=HOME=/home/agent
 Environment=PATH=/home/agent/.local/bin:/home/agent/.local/share/mise/shims:/home/agent/.cargo/bin:/home/agent/.soldr/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 EnvironmentFile=-/home/agent/.config/unraid-codex/env
-ExecStartPre=/usr/bin/rm -f /run/unraid-codex/appserver.sock
-ExecStart=/home/agent/.local/bin/codex app-server --listen unix:///run/unraid-codex/appserver.sock --strict-config
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/agent/.codex /home/agent/.cache /home/agent/.local/share /workspace /mnt/unraid-codex
+InaccessiblePaths=/home/agent/.config/unraid-codex/env
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictSUIDSGID=true
+LockPersonality=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictRealtime=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+SystemCallArchitectures=native
+ExecStartPre=/usr/local/lib/unraid-codex/verify-codex-cli.sh
+ExecStartPre=/usr/bin/rm -f /mnt/unraid-codex/appserver.sock
+ExecStart=/home/agent/.local/bin/codex app-server --listen unix:///mnt/unraid-codex/appserver.sock --strict-config
 Restart=on-failure
 RestartSec=2
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=1000
 
 [Install]
 WantedBy=multi-user.target

@@ -1,3 +1,12 @@
+allow_login_shell = false
+
+[features]
+shell_snapshot = false
+
+[shell_environment_policy]
+inherit = "all"
+exclude = ["UNRAID_MCP_TOKEN"]
+
 [mcp_servers.unraid]
-url = "https://unraid.dinglebear.ai/mcp"
+url = "__UNRAID_MCP_URL__"
 bearer_token_env_var = "UNRAID_MCP_TOKEN"

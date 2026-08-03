@@ -86,12 +86,12 @@ function OptionCard({ option, selected, type, onToggle }: OptionCardProps) {
     : "var(--aurora-border-default)"
 
   const boxShadow = selected
-    ? "inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px color-mix(in srgb, var(--axon-orange) 24%, transparent), 0 2px 6px rgba(0,0,0,0.16)"
+    ? "var(--aurora-highlight-medium), 0 0 0 1px var(--axon-orange-border), 0 2px 6px color-mix(in srgb, var(--aurora-text-primary) 16%, transparent)"
     : focused
-    ? "inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 2px color-mix(in srgb, var(--axon-orange) 18%, transparent)"
+    ? "var(--aurora-highlight-medium), 0 0 0 2px color-mix(in srgb, var(--axon-orange) 18%, transparent)"
     : hovered
-    ? "inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px color-mix(in srgb, var(--axon-orange) 15%, transparent), 0 2px 6px rgba(0,0,0,0.16)"
-    : "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.18)"
+    ? "var(--aurora-highlight-medium), 0 0 0 1px color-mix(in srgb, var(--axon-orange) 15%, transparent), 0 2px 6px color-mix(in srgb, var(--aurora-text-primary) 16%, transparent)"
+    : "var(--aurora-highlight-medium), 0 1px 2px color-mix(in srgb, var(--aurora-text-primary) 18%, transparent)"
 
   // Top-lit panel gradient (CD parity): translucent light top stop over the
   // opaque panel tier, kept opaque→opaque to avoid the gradient-seam band.

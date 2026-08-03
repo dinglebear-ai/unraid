@@ -1,8 +1,7 @@
 name: codex-release
 
-# Triggered when release-please publishes a codex-v<version> release. Builds the
-# codex plugin .txz from tracked source and attaches it + the .plg to the release.
-# The .txz name tracks &version; (unraid-codex-<version>-x86_64-<build>.txz).
+# A codex-v<version> release is publishable only when the tagged manifest,
+# browser bundle, deterministic package, and both checksums agree.
 on:
   release:
     types: [published]
@@ -28,24 +27,43 @@ jobs:
       TAG: ${{ github.event.release.tag_name }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Install packaging tooling
-        run: sudo apt-get update && sudo apt-get install -y xz-utils
-
-      - name: Build codex plugin package
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: plugins/codex/web-src/package-lock.json
+      - name: Install validators and packaging tools
+        run: sudo apt-get update && sudo apt-get install -y file libxml2-utils shellcheck xz-utils
+      - name: Install web dependencies
+        run: npm ci --no-audit --no-fund --prefix web-src
+      - name: Install Chromium for the chathead smoke test
+        run: cd web-src && npx playwright install --with-deps chromium
+      - name: Verify release payload
+        run: ./scripts/verify-release.sh
+      - name: Run browser smoke
+        run: node tests/webwright-chathead/browser-smoke.cjs
+      - name: Resolve release asset names
         run: |
           set -euo pipefail
           version="${TAG#codex-v}"
           build="$(sed -n 's/.*<!ENTITY txz[[:space:]]*"unraid-codex-[^"]*-x86_64-\([0-9]*\)\.txz".*/\1/p' unraid-codex.plg)"
-          [ -n "$build" ] || { echo "::error::could not parse build number from unraid-codex.plg &txz; entity"; exit 1; }
-          echo "VERSION=${version}" >> "$GITHUB_ENV"
-          echo "BUILD=${build}" >> "$GITHUB_ENV"
-          ./scripts/build-package.sh "$version" "$build"
-
-      - name: Run codex contract on the tree
-        run: ./tests/contract.sh
-
-      - name: Attach package + manifest to the release
+          [ -n "$build" ] || { echo "::error::could not parse build number from manifest"; exit 1; }
+          package="dist/unraid-codex-${version}-x86_64-${build}.txz"
+          {
+            echo "VERSION=$version"
+            echo "BUILD=$build"
+            echo "PACKAGE=$package"
+          } >> "$GITHUB_ENV"
+          {
+            md5sum "$package"
+            sha256sum "$package"
+          } > "dist/unraid-codex-${version}-checksums.txt"
+      - name: Attach verified assets to the release
         run: |
           gh release upload "$TAG" \
-            "dist/unraid-codex-${VERSION}-x86_64-${BUILD}.txz" \
+            "$PACKAGE" \
+            "dist/unraid-codex-${VERSION}-checksums.txt" \
             unraid-codex.plg --clobber
+
+      - name: Keep the primary Unraid MCP release marked latest
+        run: gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${{ github.event.release.id }}" -f make_latest=false >/dev/null

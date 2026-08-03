@@ -8,6 +8,7 @@ MIGRATE="$ROOT/source/usr/local/emhttp/plugins/incus/scripts/migrate-config.sh"
 VALIDATE="$ROOT/source/usr/local/emhttp/plugins/incus/scripts/config-validation.sh"
 APPLY="$ROOT/source/usr/local/emhttp/plugins/incus/scripts/apply-settings.sh"
 PREPARE_IDMAP="$ROOT/source/usr/local/emhttp/plugins/incus/scripts/prepare-idmap.sh"
+START_INSTANCE="$ROOT/source/usr/local/emhttp/plugins/incus/scripts/start-instance.sh"
 API_REGISTRATION="$ROOT/source/usr/local/emhttp/plugins/incus/scripts/api-plugin-registration.sh"
 INSTALL_API="$ROOT/source/usr/local/emhttp/plugins/incus/scripts/install-api-plugin.sh"
 UNINSTALL_API="$ROOT/source/usr/local/emhttp/plugins/incus/scripts/uninstall-api-plugin.sh"
@@ -22,7 +23,9 @@ for unsafe_build in 48 49 50 51 52; do
     exit 1
   }
 done
+"$ROOT/tests/ca-metadata.sh"
 "$ROOT/tests/package-directory-modes.sh"
+"$ROOT/tests/start-instance.sh"
 
 grep -Eq 'ACL_BLOCK=.*100\.64\.0\.0/10' "$CFG"
 grep -Fq 'Block host bridge and peer containers' "$INIT"
@@ -45,6 +48,8 @@ tool_check_line="$(grep -n 'command -v unsquashfs' "$ROOT/source/usr/local/emhtt
 [ "$env_source_line" -lt "$tool_check_line" ]
 grep -Fq 'PLUGIN_BUILD="$(head -n 1 "$BUILD_ID_FILE"' "$ROOT/source/usr/local/emhttp/plugins/incus/scripts/rc.incus"
 grep -Fq 'PLUGIN_BUILD="$(head -n 1 "$BUILD_ID_FILE"' "$ROOT/source/usr/local/emhttp/plugins/incus/scripts/incus-watchdog.sh"
+grep -Fq 'flock -w "$LOCK_TIMEOUT" 9' "$START_INSTANCE"
+grep -Fq 'for target in /proc/fs/nfsd /proc/fs/nfs' "$START_INSTANCE"
 ! grep -Eq 'build=2026\.[0-9]{2}\.[0-9]{2}' "$ROOT/source/usr/local/emhttp/plugins/incus/scripts/"{rc.incus,incus-watchdog.sh}
 grep -Fq 'release="$(jq -er '\''.release'\'' "$ROOT/release-manifest.json")"' "$BUILD_CLASSIC"
 grep -Fq '>"$stage/usr/local/emhttp/plugins/incus/build-id"' "$BUILD_CLASSIC"

@@ -18,12 +18,17 @@ const html = `<!doctype html>
     <meta charset="utf-8">
     <title>Unraid Codex UI Harness</title>
     <style>
+      * { box-sizing: border-box; }
       body { margin: 0; background: #f2f2f2; color: #202020; font: 14px Arial, sans-serif; }
       header { padding: 22px 28px; background: #242c38; color: white; }
-      nav { display: flex; gap: 24px; margin-top: 18px; text-transform: uppercase; letter-spacing: .12em; }
+      nav { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 18px; text-transform: uppercase; letter-spacing: .12em; }
       main { padding: 28px; }
-      .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 18px; }
       .card { min-height: 150px; padding: 18px; border: 1px solid #d3d3d3; border-radius: 8px; background: white; }
+      @media (max-width: 480px) {
+        header, main { padding: 16px; }
+        nav { gap: 10px 16px; }
+      }
     </style>
   </head>
   <body>
@@ -96,6 +101,7 @@ const plugins = [
 ]
 
 webSocketServer.on("connection", (webSocket) => {
+  let accountReadCount = 0
   webSocket.on("message", (buffer) => {
     const message = JSON.parse(buffer.toString())
     if (!Object.hasOwn(message, "id")) return
@@ -120,12 +126,25 @@ webSocketServer.on("connection", (webSocket) => {
           platformOs: "linux",
           platformArch: "x86_64",
         })
+        setTimeout(() => {
+          send(webSocket, "configWarning", {
+            summary:
+              "Codex could not find bubblewrap on PATH. Install bubblewrap with your OS package manager. Codex will use the bundled bubblewrap in the meantime.",
+            details: null,
+          })
+        }, 10)
         break
       case "account/read":
+        accountReadCount += 1
         response(webSocket, message.id, {
           account: { type: "chatgpt", email: "agent@example.test", planType: "plus" },
           requiresOpenaiAuth: true,
         })
+        if (accountReadCount === 1) {
+          setTimeout(() => {
+            send(webSocket, "account/updated", { authMode: null, planType: null })
+          }, 25)
+        }
         break
       case "model/list":
         response(webSocket, message.id, {
@@ -323,6 +342,24 @@ webSocketServer.on("connection", (webSocket) => {
           item: reasoning,
           completedAtMs: Date.now() + 400,
         })
+        const emptyReasoning = {
+          type: "reasoning",
+          id: "reasoning-empty",
+          summary: [],
+          content: [],
+        }
+        send(webSocket, "item/started", {
+          threadId: "thread-mock",
+          turnId,
+          item: emptyReasoning,
+          startedAtMs: Date.now(),
+        })
+        send(webSocket, "item/completed", {
+          threadId: "thread-mock",
+          turnId,
+          item: emptyReasoning,
+          completedAtMs: Date.now() + 450,
+        })
         send(webSocket, "turn/plan/updated", {
           threadId: "thread-mock",
           turnId,
@@ -378,12 +415,12 @@ webSocketServer.on("connection", (webSocket) => {
         const tool = {
           type: "mcpToolCall",
           id: "tool-1",
-          server: "labby",
-          tool: "time.get_current_time",
-          arguments: { timezone: "UTC" },
+          server: "unraid",
+          tool: "unraid",
+          arguments: { action: "status" },
           status: "completed",
           result: {
-            content: [{ type: "text", text: "2026-07-23 05:20 UTC" }],
+            content: [{ type: "text", text: "Array started · 8 disks healthy" }],
             structuredContent: null,
           },
           error: null,

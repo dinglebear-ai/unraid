@@ -53,7 +53,7 @@ const Message = ({ ref, className, role = "assistant", time, actions, style, chi
         </div>
         {hasMeta && (
           <div
-            className="flex items-center gap-[6px] opacity-0 transition-opacity duration-150 ease-out group-hover/aurora-msg:opacity-100"
+            className="aurora-message-meta flex items-center gap-[6px] opacity-0 transition-opacity duration-150 ease-out group-hover/aurora-msg:opacity-100"
             style={{
               marginTop: 5,
               justifyContent: isUser ? "flex-end" : "flex-start",

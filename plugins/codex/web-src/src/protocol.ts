@@ -32,11 +32,22 @@ export interface DeviceLogin {
   userCode: string
 }
 
+export type McpDiagnosticStatus = "unknown" | "connecting" | "connected" | "error" | "disabled"
+
+export interface ConnectionDiagnostics {
+  appServerLastOkAtMs: number | null
+  mcpLastOkAtMs: number | null
+  mcpStatus: McpDiagnosticStatus
+  mcpMessage: string
+}
+
 export interface CodexState {
   status: "connecting" | "connected" | "working" | "disconnected" | "error"
   statusText: string
   initialized: boolean
   authenticated: boolean
+  requiresOpenaiAuth: boolean | null
+  diagnostics: ConnectionDiagnostics
   threadId: string | null
   activeTurnId: string | null
   items: TimelineItem[]
@@ -67,6 +78,13 @@ const INITIAL_STATE: CodexState = {
   statusText: "Connecting to Codex",
   initialized: false,
   authenticated: false,
+  requiresOpenaiAuth: null,
+  diagnostics: {
+    appServerLastOkAtMs: null,
+    mcpLastOkAtMs: null,
+    mcpStatus: "unknown",
+    mcpMessage: "Waiting for MCP inventory",
+  },
   threadId: localStorage.getItem(STORAGE_THREAD),
   activeTurnId: null,
   items: [],
@@ -90,6 +108,60 @@ const INITIAL_STATE: CodexState = {
   plugins: [],
   marketplaceErrors: [],
   events: [],
+}
+
+function accountState(result: JsonObject) {
+  const requiresOpenaiAuth =
+    typeof result.requiresOpenaiAuth === "boolean" ? result.requiresOpenaiAuth : true
+  const authenticated = Boolean(result.account) || !requiresOpenaiAuth
+  return {
+    authenticated,
+    requiresOpenaiAuth,
+    statusText: authenticated ? "Connected" : "Connected. Sign-in required.",
+  }
+}
+
+function unraidMcpDiagnostics(servers: JsonObject[], previous?: ConnectionDiagnostics) {
+  const server = servers.find((entry) => String(entry.name ?? entry.server ?? "").toLowerCase() === "unraid")
+  if (!server) {
+    return {
+      mcpStatus: "disabled" as const,
+      mcpMessage: "Unraid MCP is not configured",
+      mcpLastOkAtMs: previous?.mcpLastOkAtMs ?? null,
+    }
+  }
+  const status = String(server.startupStatus ?? server.status ?? server.state ?? "unknown").toLowerCase()
+  const error = server.startupError ?? server.error ?? server.message
+  if (error || /(failed|error|unavailable|disconnected)/.test(status)) {
+    return {
+      mcpStatus: "error" as const,
+      mcpMessage: String(error ?? status),
+      mcpLastOkAtMs: previous?.mcpLastOkAtMs ?? null,
+    }
+  }
+  if (/(ready|connected|running|started)/.test(status)) {
+    return {
+      mcpStatus: "connected" as const,
+      mcpMessage: "Authenticated and ready",
+      mcpLastOkAtMs: Date.now(),
+    }
+  }
+  return {
+    mcpStatus: "connecting" as const,
+    mcpMessage: status === "unknown" ? "Waiting for startup status" : status,
+    mcpLastOkAtMs: previous?.mcpLastOkAtMs ?? null,
+  }
+}
+
+function isBundledBubblewrapFallbackWarning(params: JsonObject) {
+  const text = [params.message, params.summary, params.details]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+  return (
+    text.includes("could not find bubblewrap on path") &&
+    text.includes("bundled bubblewrap")
+  )
 }
 
 function flattenTurns(thread: JsonObject): TimelineItem[] {
@@ -227,6 +299,14 @@ export function useCodexAppServer() {
       notices: [...current.notices.slice(-5), { ...notice, id: crypto.randomUUID() }],
     }))
   }, [])
+
+  const readAccount = React.useCallback(async () => {
+    let result = await rpc("account/read", { refreshToken: false })
+    if (!result.account && result.requiresOpenaiAuth === true) {
+      result = await rpc("account/read", { refreshToken: true }).catch(() => result)
+    }
+    return result
+  }, [rpc])
 
   const handleNotification = React.useCallback(
     (message: JsonObject) => {
@@ -429,10 +509,21 @@ export function useCodexAppServer() {
             setState((current) => ({
               ...current,
               authenticated: true,
+              requiresOpenaiAuth: true,
               deviceLogin: null,
               status: "connected",
               statusText: "Connected",
             }))
+            readAccount()
+              .then((result) => {
+                setState((current) => ({
+                  ...current,
+                  ...accountState(result),
+                  deviceLogin: null,
+                  status: "connected",
+                }))
+              })
+              .catch(() => undefined)
           } else {
             addNotice({ tone: "error", title: "Sign-in failed", description: params.error })
           }
@@ -448,6 +539,12 @@ export function useCodexAppServer() {
         case "guardianWarning":
         case "configWarning":
         case "deprecationNotice":
+          if (
+            message.method === "configWarning" &&
+            isBundledBubblewrapFallbackWarning(params)
+          ) {
+            break
+          }
           addNotice({
             tone: "warn",
             title: message.method === "deprecationNotice" ? "Deprecation notice" : "Codex warning",
@@ -471,14 +568,21 @@ export function useCodexAppServer() {
           })
           break
         case "mcpServer/startupStatus/updated":
-          setState((current) => ({
-            ...current,
-            mcpServers: current.mcpServers.map((server) =>
+          setState((current) => {
+            const mcpServers = current.mcpServers.map((server) =>
               server.name === (params.server ?? params.name)
                 ? { ...server, startupStatus: params.status, startupError: params.error }
                 : server,
-            ),
-          }))
+            )
+            return {
+              ...current,
+              mcpServers,
+              diagnostics: {
+                ...current.diagnostics,
+                ...unraidMcpDiagnostics(mcpServers, current.diagnostics),
+              },
+            }
+          })
           if (params.status === "failed" || params.error) {
             addNotice({
               tone: "warn",
@@ -522,11 +626,29 @@ export function useCodexAppServer() {
           setState((current) => ({ ...current, apps: params.data ?? [] }))
           break
         case "account/updated":
-          setState((current) => ({
-            ...current,
-            authenticated: Boolean(params.authMode),
-            statusText: params.authMode ? "Connected" : "Connected. Sign-in required.",
-          }))
+          if (params.authMode) {
+            setState((current) => ({
+              ...current,
+              authenticated: true,
+              requiresOpenaiAuth: true,
+              statusText: "Connected",
+            }))
+          } else {
+            // Confirm an apparent logout against account/read before changing the UI.
+            // This avoids stale or transient notifications masking persisted auth.
+            readAccount()
+              .then((result) => {
+                setState((current) => ({ ...current, ...accountState(result) }))
+              })
+              .catch(() => {
+                setState((current) => ({
+                  ...current,
+                  authenticated: false,
+                  requiresOpenaiAuth: true,
+                  statusText: "Connected. Sign-in required.",
+                }))
+              })
+          }
           break
         case "serverRequest/resolved":
           setState((current) => ({
@@ -569,7 +691,7 @@ export function useCodexAppServer() {
           break
       }
     },
-    [addNotice, rpc],
+    [addNotice, readAccount, rpc],
   )
 
   const handleMessage = React.useCallback(
@@ -585,6 +707,10 @@ export function useCodexAppServer() {
         const pending = pendingRef.current.get(String(message.id))
         if (!pending) return
         pendingRef.current.delete(String(message.id))
+        setState((current) => ({
+          ...current,
+          diagnostics: { ...current.diagnostics, appServerLastOkAtMs: Date.now() },
+        }))
         if (message.error) pending.reject(new Error(textFromError(message.error)))
         else pending.resolve(message.result)
         return
@@ -658,7 +784,7 @@ export function useCodexAppServer() {
       notify("initialized")
 
       const [account, models] = await Promise.all([
-        rpc("account/read", { refreshToken: false }),
+        readAccount(),
         rpc("model/list", {}).catch(() => ({ data: [] })),
       ])
 
@@ -730,9 +856,8 @@ export function useCodexAppServer() {
       setState((current) => ({
         ...current,
         status: "connected",
-        statusText: account.account ? "Connected" : "Connected. Sign-in required.",
+        ...accountState(account),
         initialized: true,
-        authenticated: Boolean(account.account),
         threadId,
         thread,
         items: thread ? flattenTurns(thread) : current.items,
@@ -742,6 +867,11 @@ export function useCodexAppServer() {
         hooks: (hooks.data ?? []).flatMap((entry: JsonObject) => entry.hooks ?? []),
         permissionProfiles: permissionProfiles.data ?? [],
         mcpServers: mcpServers.data ?? [],
+        diagnostics: {
+          ...current.diagnostics,
+          appServerLastOkAtMs: Date.now(),
+          ...unraidMcpDiagnostics(mcpServers.data ?? [], current.diagnostics),
+        },
         apps: apps.data ?? [],
         plugins: (plugins.marketplaces ?? []).flatMap(
           (marketplace: JsonObject) =>
@@ -809,7 +939,7 @@ export function useCodexAppServer() {
       if (reconnectRef.current) window.clearTimeout(reconnectRef.current)
       socketRef.current?.close()
     }
-  }, [handleMessage, notify, rpc])
+  }, [handleMessage, notify, readAccount, rpc])
 
   const send = React.useCallback(
     async (text: string, attachments: Array<{ type: string; url?: string }> = []) => {

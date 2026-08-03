@@ -46,7 +46,7 @@ function SheetContent({ ref, className, children, side = "right", style, hideClo
         style={{
           background: "var(--aurora-panel-strong)",
           borderColor: "var(--aurora-border-strong)",
-          boxShadow: "0 28px 72px rgba(0,0,0,0.42), var(--aurora-highlight-strong)",
+          boxShadow: "var(--aurora-shadow-strong), var(--aurora-highlight-strong)",
           color: "var(--aurora-text-primary)",
           ...style,
         }}

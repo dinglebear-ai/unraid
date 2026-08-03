@@ -1,22 +1,32 @@
 <?xml version="1.0" standalone="yes"?>
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "unraid-codex">
-  <!ENTITY author    "jmagar">
-  <!ENTITY version   "2026.7.24"> <!-- managed by .github/scripts/plugin_calver.py -->
-  <!ENTITY launch    "">
-  <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid-mcp/main/plugins/codex">
-  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid-mcp/releases/download/codex-v&version;/&txz;">
+  <!ENTITY author    "Dinglebear AI">
+  <!ENTITY version   "20260802.001"> <!-- managed by .github/scripts/plugin_calver.py -->
+  <!ENTITY launch    "Settings/CodexSettings">
+  <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/codex">
+  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/codex-v&version;/&txz;">
   <!ENTITY pluginURL "&gitURL;/unraid-codex.plg">
-  <!ENTITY txz       "unraid-codex-&version;-x86_64-15.txz">
-  <!ENTITY md5       "69784069fb5e4d285eaaf62d389a904d">
-  <!ENTITY sha256    "f8eebc8e00fd88c9d867ee6b4bb42d93dbb38e624cfd4c302731dcc2c3e620c2">
+  <!ENTITY txz       "unraid-codex-20260802.001-x86_64-34.txz">
+  <!ENTITY md5       "4839ae50c3aebd665f922e3cad75e027">
+  <!ENTITY sha256    "30599dbaff980e84714b0e5562a173850b950a8689f7a9d00a341912759ef970">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
 
-<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;">
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="7.0.0" support="https://github.com/dinglebear-ai/unraid/issues">
 
 <CHANGES>
+###2026.08.02
+- Build 34 is the first Community Applications release candidate. It adds a
+  clean-install provisioner that creates a dedicated, LAN-contained Incus
+  container and installs the verified Codex CLI without manual container setup.
+- Tracks the latest stable official Codex static x86-64 Linux release using
+  canonical URL and GitHub-published SHA-256 validation, atomic installation,
+  compatibility checks, app-server smoke testing, and automatic rollback.
+- Adds persistent state, encrypted scheduled backups, recovery diagnostics,
+  service hardening, configurable shortcuts, and complete install contracts.
+
 ###2026.07.23
 - Build 15 replaces Unraid's fallback puzzle piece with a packaged,
   high-contrast Codex/OpenAI mark sized for the Settings tile.
@@ -52,12 +62,40 @@
 <FILE Run="/bin/bash">
 <INLINE>
 echo "&sha256;  &plugin;/&txz;" | sha256sum -c - || exit 1
+if mountpoint -q /mnt/user 2>/dev/null; then
+  INCUS_ENV=/usr/local/emhttp/plugins/incus/scripts/incus-env.sh
+  INCUS_CONFIG=/boot/config/plugins/incus/incus.cfg
+  if [ ! -r "$INCUS_ENV" ]; then
+    echo "ERROR: Install and configure the Incus plugin before installing Unraid Codex." &gt;&amp;2
+    exit 1
+  fi
+  if [ -r "$INCUS_CONFIG" ]; then . "$INCUS_CONFIG"; fi
+  . "$INCUS_ENV"
+  export INCUS_DIR
+  if ! incus &lt;/dev/null query /1.0 >/dev/null 2&gt;&amp;1; then
+    echo "ERROR: Incus is not running. Enable and initialize it before installing Unraid Codex." &gt;&amp;2
+    exit 1
+  fi
+  CODEX_POOL="${STORAGE_POOL_NAME:-default}"
+  if ! incus &lt;/dev/null storage show "$CODEX_POOL" >/dev/null 2&gt;&amp;1; then
+    echo "ERROR: Incus storage pool '$CODEX_POOL' is not initialized." &gt;&amp;2
+    exit 1
+  fi
+  CODEX_PROFILE="${JAIL_PROFILE:-agent-jail}"
+  if ! incus &lt;/dev/null profile show "$CODEX_PROFILE" >/dev/null 2&gt;&amp;1; then
+    echo "ERROR: Incus profile '$CODEX_PROFILE' is not initialized." &gt;&amp;2
+    exit 1
+  fi
+fi
 upgradepkg --install-new &plugin;/&txz; || exit 1
-chmod +x &emhttp;/scripts/*.sh &emhttp;/event/* 2>/dev/null
+chmod +x &emhttp;/scripts/*.sh &emhttp;/event/* &emhttp;/container/install-codex-cli.sh 2>/dev/null
 mkdir -p &plugin;
 chmod 0700 &plugin;
 if mountpoint -q /mnt/user 2>/dev/null; then
-  &emhttp;/scripts/start-appserver.sh || logger -t unraid-codex "App-server is not ready yet"
+  if ! &emhttp;/scripts/start-appserver.sh; then
+    echo "ERROR: Unraid Codex installed, but its managed container did not become ready. Check the system log for 'unraid-codex'." &gt;&amp;2
+    exit 1
+  fi
 fi
 </INLINE>
 </FILE>
@@ -68,7 +106,7 @@ fi
 &emhttp;/scripts/configure-nginx.sh --remove 2>/dev/null || true
 removepkg &name; 2>/dev/null
 rm -rf &emhttp;
-echo "Unraid Codex removed. The Incus container and Codex data were left intact."
+echo "Unraid Codex removed. Its Incus container, persistent state, backups, and flash configuration were left intact."
 </INLINE>
 </FILE>
 

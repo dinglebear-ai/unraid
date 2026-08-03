@@ -2,7 +2,8 @@
 
 Packages the MCP server as a classic unRAID plugin (`.plg` + Slackware `.txz`)
 with a bundled relocatable Python, bearer-token auth, and a webGUI settings
-page. Personal-use distribution for now (no Community Apps).
+page. Community Applications metadata, release assets, source, documentation,
+and support are maintained in the public `dinglebear-ai/unraid` monorepo.
 
 ## Layout
 
@@ -19,9 +20,13 @@ page. Personal-use distribution for now (no Community Apps).
 - `web/` — Vite + Vue 3 settings app compiled to a light-DOM custom element.
   UI kit (components/ui, styles) is vendored from Unraid's `@unraid/ui` via
   incus-unraid — native webGUI look, all four Unraid themes supported.
-- `scripts/build-txz.sh <version> [wheel]` — builds web bundle, vendors
-  Python 3.12, installs the wheel, emits `packages/unraid-mcp-<v>-x86_64-1.txz`
-  plus the hash-filled `packages/unraid-mcp.plg`.
+- `runtime-requirements.in` and `runtime-requirements.txt` — version input and
+  hash-locked binary dependency closure for the bundled Python runtime.
+- `scripts/update-runtime-lock.sh` — regenerates that lock for Python 3.12 on
+  x86-64 Linux.
+- `scripts/build-txz.sh <version> <wheel>` — builds the web bundle, vendors
+  Python 3.12, installs hash-locked dependencies plus the explicit wheel, and
+  emits `packages/unraid-mcp-<v>-x86_64-2.txz` with its filled manifest.
 
 ## Runtime model (RAM rootfs rules)
 
@@ -50,10 +55,25 @@ managed by the form are preserved on save and listed read-only.
 ## Build
 
 ```bash
-./scripts/build-txz.sh 2.5.0            # pulls unraid-mcp==2.5.0 from PyPI
-./scripts/build-txz.sh 2.5.0 ../../unraid-py/dist/unraid_mcp-2.5.0-py3-none-any.whl
+./scripts/update-runtime-lock.sh
+./scripts/build-txz.sh 2.9.0 ../../unraid-py/dist/unraid_mcp-2.9.0-py3-none-any.whl
 ```
+
+The build fails closed when the input version and lock disagree, when a locked
+dependency hash does not match, or when the generated archive fails its package
+verifier. Release builds use the exact wheel attached to the matching `v*`
+release; the builder never resolves `unraid-mcp` itself from an unpinned index.
 
 Install on a test box: copy `packages/unraid-mcp.plg` URL (or file) into
 Plugins → Install Plugin, with the `.txz` uploaded to the matching GitHub
 release (or adjust `txzURL` for a local test).
+
+## Community Applications publication
+
+The repository profile is `/ca_profile.xml` and the Unraid MCP wrapper is
+`plugins/mcp/ca/unraid-mcp.xml`. The wrapper uses the stable repository-level
+latest-release URL for `unraid-mcp.plg`; component release workflows must not
+claim the repository-wide **Latest** designation, while each primary `v*` MCP
+release claims it only after the verified `.plg` and `.txz` assets are attached.
+Run Validate and Scan for `https://github.com/dinglebear-ai/unraid` before
+requesting manual plugin review.

@@ -23,6 +23,7 @@ jobs:
   build:
     if: startsWith(github.event.release.tag_name, 'incus-v')
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: write
     defaults:
@@ -33,8 +34,41 @@ jobs:
       TAG: ${{ github.event.release.tag_name }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
       - name: Install build + validation tooling
         run: sudo apt-get update && sudo apt-get install -y jq xz-utils libxml2-utils shellcheck
+
+      - name: Build and verify the API backend
+        working-directory: plugins/incus/unraid-api-plugin-incus
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-package-lock \
+            @nestjs/common@11.1.28 @nestjs/config@4.0.4 @nestjs/graphql@13.4.2 \
+            class-transformer@0.5.1 class-validator@0.15.1 \
+            @unraid/shared@file:.ci-stubs/unraid-shared
+          npm audit --omit=dev --audit-level=high
+          npx tsc --noEmit
+          npm test
+          npm run test:coverage
+          npx tsc
+
+      - name: Build and verify both frontend bundles
+        working-directory: plugins/incus/unraid-api-plugin-incus/web
+        run: |
+          set -euo pipefail
+          npm ci
+          npm audit --omit=dev --audit-level=high
+          npx vue-tsc --noEmit
+          npm test
+          npm run test:coverage
+          npm run build
+          for asset in ../../unraid-api-plugin-incus/dist-web/*; do
+            cmp "$asset" "../../source/usr/local/emhttp/plugins/incus/web/$(basename "$asset")"
+          done
+          cmp ../../unraid-api-plugin-incus/dist-web-dashboard/incus-dashboard.js \
+            ../../source/usr/local/emhttp/plugins/incus/web/incus-dashboard.js
 
       # SEED / IDEMPOTENCY GATE.
       # This job rebuilds the .txz by carrying the payload forward from the
@@ -118,9 +152,14 @@ jobs:
         if: steps.seeded.outputs.skip != 'true'
         run: ./scripts/verify-classic-package.sh
 
-      - name: Attach package + manifest to the release
+      - name: Attach package to the release
         if: steps.seeded.outputs.skip != 'true'
         run: |
           gh release upload "$TAG" \
-            "packages/incus-unraid-7.0.0-${BUILD}-x86_64-1.txz" \
-            incus.plg --clobber
+            "packages/incus-unraid-7.0.0-${BUILD}-x86_64-1.txz" --clobber
+
+      - name: Attach the publication manifest
+        run: gh release upload "$TAG" incus.plg --clobber
+
+      - name: Keep the primary Unraid MCP release marked latest
+        run: gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${{ github.event.release.id }}" -f make_latest=false >/dev/null
