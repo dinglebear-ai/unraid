@@ -171,7 +171,7 @@ jobs:
         id: state
         run: |
           version="${RELEASE_TAG#v}"
-          url="https://registry.modelcontextprotocol.io/v0/servers/tv.tootie%2Funraid-mcp/versions/${version}"
+          url="https://registry.modelcontextprotocol.io/v0/servers/ai.dinglebear%2Funraid-mcp/versions/${version}"
           if curl -fsS "$url" > registry-existing.json; then
             jq -e --arg version "$version" '.server.version == $version' registry-existing.json
             echo "published=true" >> "$GITHUB_OUTPUT"
@@ -195,8 +195,14 @@ jobs:
         run: |
           version="${RELEASE_TAG#v}"
           jq --arg version "$version" '
+            .name = "ai.dinglebear/unraid-mcp" |
             .version = $version |
-            .packages = [.packages[] | if .registryType == "pypi" then .version = $version else . end]
+            .packages = [.packages[] | if .registryType == "pypi" then .version = $version else . end] |
+            ._meta["io.modelcontextprotocol.registry/publisher-provided"] = {
+              "namespace": "ai.dinglebear",
+              "dnsDomain": "dinglebear.ai",
+              "distribution": {"pypi": "unraid-mcp"}
+            }
           ' server.json > server.release.json
           mv server.release.json server.json
       - name: Wait for release version to be visible on PyPI
@@ -272,7 +278,7 @@ jobs:
         run: |
           version="${RELEASE_TAG#v}"
           curl -fsS \
-            "https://registry.modelcontextprotocol.io/v0/servers/tv.tootie%2Funraid-mcp/versions/${version}" |
+            "https://registry.modelcontextprotocol.io/v0/servers/ai.dinglebear%2Funraid-mcp/versions/${version}" |
             jq -e --arg version "$version" '.server.version == $version and .server.packages[0].version == $version'
       - name: Wait for matching GHCR release and latest digests
         env:
