@@ -54,6 +54,26 @@ jobs:
         run: |
           package_version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' pyproject.toml | head -n1)"
           test "$package_version" = "${RELEASE_TAG#v}"
+      - name: Stamp canonical MCP package ownership proof
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          readme = Path("README.md")
+          lines = readme.read_text(encoding="utf-8").splitlines()
+          marker = "<!-- mcp-name: ai.dinglebear/unraid-mcp -->"
+          replaced = False
+          for index, line in enumerate(lines):
+              if line.startswith("<!-- mcp-name:"):
+                  lines[index] = marker
+                  replaced = True
+                  break
+          if not replaced:
+              lines.insert(1, "")
+              lines.insert(2, marker)
+          readme.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          assert marker in readme.read_text(encoding="utf-8")
+          PY
       - name: Build package once from clean sources
         run: uv build --no-sources
       - name: Validate metadata, wheel contents, and installed stdio server
@@ -62,6 +82,8 @@ jobs:
           unzip -l dist/*.whl | tee wheel-contents.txt
           grep -q 'unraid_mcp/server.py' wheel-contents.txt
           grep -q 'licenses/LICENSE' wheel-contents.txt
+          unzip -p dist/*.whl '*.dist-info/METADATA' |
+            grep -F 'mcp-name: ai.dinglebear/unraid-mcp'
           uv venv --python 3.12 .release-venv
           uv pip install --python .release-venv/bin/python dist/*.whl
           bash scripts/smoke-stdio.sh .release-venv/bin/unraid-mcp-server
@@ -171,7 +193,7 @@ jobs:
         id: state
         run: |
           version="${RELEASE_TAG#v}"
-          url="https://registry.modelcontextprotocol.io/v0/servers/tv.tootie%2Funraid-mcp/versions/${version}"
+          url="https://registry.modelcontextprotocol.io/v0/servers/ai.dinglebear%2Funraid-mcp/versions/${version}"
           if curl -fsS "$url" > registry-existing.json; then
             jq -e --arg version "$version" '.server.version == $version' registry-existing.json
             echo "published=true" >> "$GITHUB_OUTPUT"
@@ -195,8 +217,14 @@ jobs:
         run: |
           version="${RELEASE_TAG#v}"
           jq --arg version "$version" '
+            .name = "ai.dinglebear/unraid-mcp" |
             .version = $version |
-            .packages = [.packages[] | if .registryType == "pypi" then .version = $version else . end]
+            .packages = [.packages[] | if .registryType == "pypi" then .version = $version else . end] |
+            ._meta["io.modelcontextprotocol.registry/publisher-provided"] = {
+              "namespace": "ai.dinglebear",
+              "dnsDomain": "dinglebear.ai",
+              "distribution": {"pypi": "unraid-mcp"}
+            }
           ' server.json > server.release.json
           mv server.release.json server.json
       - name: Wait for release version to be visible on PyPI
@@ -217,7 +245,11 @@ jobs:
         if: steps.state.outputs.published != 'true'
         env:
           MCP_PRIVATE_KEY: ${{ secrets.MCP_PRIVATE_KEY }}
-        run: ./mcp-publisher login dns --domain tootie.tv --private-key "$MCP_PRIVATE_KEY"
+          MCP_REGISTRY_DOMAIN: ${{ vars.MCP_REGISTRY_DOMAIN }}
+        run: |
+          set -euo pipefail
+          test "$MCP_REGISTRY_DOMAIN" = dinglebear.ai
+          ./mcp-publisher login dns --domain "$MCP_REGISTRY_DOMAIN" --private-key "$MCP_PRIVATE_KEY"
       - name: Publish MCP Registry channel
         if: steps.state.outputs.published != 'true'
         run: |
@@ -268,7 +300,7 @@ jobs:
         run: |
           version="${RELEASE_TAG#v}"
           curl -fsS \
-            "https://registry.modelcontextprotocol.io/v0/servers/tv.tootie%2Funraid-mcp/versions/${version}" |
+            "https://registry.modelcontextprotocol.io/v0/servers/ai.dinglebear%2Funraid-mcp/versions/${version}" |
             jq -e --arg version "$version" '.server.version == $version and .server.packages[0].version == $version'
       - name: Wait for matching GHCR release and latest digests
         env:

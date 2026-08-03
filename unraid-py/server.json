@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "tv.tootie/unraid-mcp",
+  "name": "ai.dinglebear/unraid-mcp",
   "title": "Unraid MCP",
   "description": "MCP server for Unraid API — provides tools to interact with an Unraid server's GraphQL API.",
   "repository": {
@@ -33,5 +33,14 @@
         }
       ]
     }
-  ]
+  ],
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "namespace": "ai.dinglebear",
+      "dnsDomain": "dinglebear.ai",
+      "distribution": {
+        "pypi": "unraid-mcp"
+      }
+    }
+  }
 }
