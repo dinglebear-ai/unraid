@@ -14,4 +14,5 @@ if [[ -r "$INCUS_ENV" ]]; then
   incus </dev/null exec "$CONTAINER" -- systemctl stop codex-appserver.service 2>/dev/null || true
 fi
 
+/usr/local/emhttp/plugins/unraid-codex/scripts/configure-schedule.sh remove 2>/dev/null || true
 rm -f /var/run/unraid-codex-appserver.sock

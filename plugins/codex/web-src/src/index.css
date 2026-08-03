@@ -278,6 +278,83 @@
     outline-offset: 2px;
   }
 
+
+  .uc-connection-menu {
+    position: static;
+  }
+
+  .uc-connection {
+    appearance: none;
+    font: inherit;
+  }
+
+  .uc-connection:hover {
+    color: var(--aurora-text-primary);
+    border-color: var(--aurora-border-strong);
+    background: var(--aurora-hover-bg);
+  }
+
+  .uc-connection-popover {
+    width: min(390px, calc(100% - 24px));
+  }
+
+  .uc-diagnostics-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--uc-permission-border);
+  }
+
+  .uc-diagnostic-list {
+    display: grid;
+    min-width: 0;
+  }
+
+  .uc-diagnostic-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    min-width: 0;
+    gap: 10px;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--uc-permission-border);
+  }
+
+  .uc-diagnostic-row > svg {
+    color: var(--aurora-text-muted);
+  }
+
+  .uc-diagnostic-row > div {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+  }
+
+  .uc-diagnostic-row strong {
+    color: var(--uc-permission-text);
+    font-size: 12px;
+    font-weight: 720;
+  }
+
+  .uc-diagnostic-row span {
+    overflow-wrap: anywhere;
+    color: var(--uc-permission-muted);
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .uc-diagnostic-time {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .uc-diagnostic-timestamps {
+    display: grid;
+    gap: 3px;
+    padding: 10px 16px 13px;
+  }
+
   .uc-header-actions {
     position: static;
     display: flex;
@@ -1585,6 +1662,22 @@
     background: var(--aurora-panel-medium);
   }
 
+
+  .uc-shortcut-setting {
+    margin-bottom: 10px;
+  }
+
+  .uc-shortcut-setting-copy {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .uc-shortcut-select {
+    width: 100% !important;
+    min-width: 0;
+  }
+
   /* Aurora Light composition and activity hierarchy. */
   .uc-theme-aurora.uc-sheet {
     --uc-aurora-rail: color-mix(in srgb, var(--aurora-border-strong) 58%, transparent);
@@ -2529,8 +2622,10 @@
     }
 
     .uc-connection {
-      min-width: 40px;
-      min-height: 40px;
+      width: 44px !important;
+      height: 44px !important;
+      min-width: 44px;
+      min-height: 44px;
     }
 
     .uc-sheet > [aria-label="Close"] {

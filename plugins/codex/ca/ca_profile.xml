@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CommunityApplications>
+  <Profile>Unraid Codex adds a persistent, authenticated Codex chathead to the stock Unraid webGUI. It automatically provisions a dedicated non-root Incus container, verifies official Codex releases and safely rolls back failed updates, persists agent state, and creates encrypted scheduled backups. The Incus Dev Containers plugin must be installed and initialized first.</Profile>
+  <Icon>https://raw.githubusercontent.com/dinglebear-ai/unraid-codex/main/icon.svg</Icon>
+  <WebPage>https://github.com/dinglebear-ai/unraid-codex</WebPage>
+</CommunityApplications>

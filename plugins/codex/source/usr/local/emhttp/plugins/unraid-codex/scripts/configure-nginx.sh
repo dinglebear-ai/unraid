@@ -1,46 +1,44 @@
 #!/bin/bash
 set -euo pipefail
 
-LOCATIONS=/etc/nginx/conf.d/locations.conf
-BEGIN_MARKER='# BEGIN unraid-codex app-server route'
-END_MARKER='# END unraid-codex app-server route'
+LOCATIONS="${UNRAID_NGINX_LOCATIONS:-/etc/nginx/conf.d/locations.conf}"
+SNIPPET_DIR="${UNRAID_NGINX_LOCATION_DIR:-/etc/nginx/conf.d/locations}"
+SNIPPET="$SNIPPET_DIR/unraid-codex.conf"
+BEGIN_MARKER='# BEGIN unraid-codex location include'
+END_MARKER='# END unraid-codex location include'
+INCLUDE_LINE="include $SNIPPET;"
+LOCK_FILE="${UNRAID_CODEX_NGINX_LOCK:-/var/run/unraid-codex-nginx.lock}"
 MODE="${1:-install}"
 
-if [[ ! -f "$LOCATIONS" ]]; then
+case "$MODE" in
+  install|remove|--remove) ;;
+  *) echo "usage: $0 [install|remove]" >&2; exit 2 ;;
+esac
+[[ -f "$LOCATIONS" ]] || {
   logger -t unraid-codex "Unraid nginx locations file is unavailable"
   exit 1
-fi
-
-case "$MODE" in
-  install|--remove) ;;
-  *)
-    echo "usage: $0 [install|--remove]" >&2
-    exit 2
-    ;;
-esac
-
-candidate="$(mktemp /etc/nginx/conf.d/locations.conf.unraid-codex.XXXXXX)"
-backup="$(mktemp /etc/nginx/conf.d/locations.conf.unraid-codex-backup.XXXXXX)"
-
-cleanup() {
-  rm -f "$candidate" "$backup"
 }
-trap cleanup EXIT
 
+exec 9>"$LOCK_FILE"
+flock -w 60 9
+install -d -m 0755 "$SNIPPET_DIR"
+candidate="$(mktemp "$LOCATIONS.unraid-codex.XXXXXX")"
+backup="$(mktemp "$LOCATIONS.unraid-codex-backup.XXXXXX")"
+snippet_tmp="$(mktemp "$SNIPPET_DIR/.unraid-codex.XXXXXX")"
+old_snippet=""
+cleanup() { rm -f "$candidate" "$backup" "$snippet_tmp" "$old_snippet"; }
+trap cleanup EXIT
 cp -p "$LOCATIONS" "$backup"
+
 awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
   $0 == begin { skipping = 1; next }
   $0 == end { skipping = 0; next }
   !skipping { print }
 ' "$LOCATIONS" >"$candidate"
 
-if [[ "$MODE" == install ]]; then
-  cat >>"$candidate" <<'NGINX'
-# BEGIN unraid-codex app-server route
-#
-# Codex app-server currently closes browser handshakes that advertise
-# permessage-deflate. Keep this override exact and strip the extension only for
-# the plugin endpoint; every other Unraid websocket keeps the stock behavior.
+if [[ "$MODE" = install ]]; then
+  cat >"$snippet_tmp" <<'NGINX'
+# Managed by the Unraid Codex plugin.
 location = /webterminal/unraid-codex-appserver/ws {
     proxy_read_timeout 864000;
     proxy_pass http://unix:/var/run/unraid-codex-appserver.sock:/ws;
@@ -50,27 +48,36 @@ location = /webterminal/unraid-codex-appserver/ws {
     proxy_set_header Connection $connection_upgrade;
     proxy_set_header Sec-WebSocket-Extensions "";
 }
-# END unraid-codex app-server route
 NGINX
+  chmod 0644 "$snippet_tmp"
+  cat >>"$candidate" <<EOF
+$BEGIN_MARKER
+$INCLUDE_LINE
+$END_MARKER
+EOF
+else
+  : >"$snippet_tmp"
 fi
 
 chmod --reference="$LOCATIONS" "$candidate"
 chown --reference="$LOCATIONS" "$candidate"
-
-if cmp -s "$LOCATIONS" "$candidate"; then
-  exit 0
+if [[ -f "$SNIPPET" ]]; then
+  old_snippet="$(mktemp "$SNIPPET_DIR/.unraid-codex-backup.XXXXXX")"
+  cp -p "$SNIPPET" "$old_snippet"
 fi
 
+if [[ "$MODE" = install ]]; then
+  mv "$snippet_tmp" "$SNIPPET"
+else
+  rm -f "$SNIPPET"
+fi
 mv "$candidate" "$LOCATIONS"
 if ! nginx -t; then
   cp -p "$backup" "$LOCATIONS"
+  if [[ -n "$old_snippet" ]]; then mv "$old_snippet" "$SNIPPET"; else rm -f "$SNIPPET"; fi
   logger -t unraid-codex "Rejected invalid nginx route configuration"
   exit 1
 fi
-
+rm -f "$old_snippet"
 nginx -s reload
-if [[ "$MODE" == install ]]; then
-  logger -t unraid-codex "Installed Unraid nginx app-server route"
-else
-  logger -t unraid-codex "Removed Unraid nginx app-server route"
-fi
+logger -t unraid-codex "Configured dedicated Unraid Codex nginx location include ($MODE)"

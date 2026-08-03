@@ -2,6 +2,7 @@ import React from "react"
 import { createRoot } from "react-dom/client"
 import { App, readChatTheme } from "@/App"
 import { PortalContainerContext } from "@/lib/aurora/portal-container"
+import { isEditableShortcutTarget, matchesCodexShortcut } from "@/shortcut"
 import "./index.css"
 
 const DOCK_STYLE_ID = "unraid-codex-dock-style"
@@ -25,7 +26,7 @@ class UnraidCodexChathead extends HTMLElement {
     const shadow = this.attachShadow({ mode: "open" })
     const stylesheet = document.createElement("link")
     stylesheet.rel = "stylesheet"
-    stylesheet.href = "/plugins/unraid-codex/web/unraid-codex.css?v=32"
+    stylesheet.href = "/plugins/unraid-codex/web/unraid-codex.css?v=34"
     const mount = document.createElement("div")
     const theme = readChatTheme()
     mount.className = `uc-root light uc-theme-${theme}`
@@ -98,18 +99,9 @@ const openChathead = () => {
   if (!open()) window.setTimeout(open, 0)
 }
 
-const isEditableShortcutTarget = (target: EventTarget | null) => {
-  if (!(target instanceof Element)) return false
-  return Boolean(
-    target.closest(
-      'input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"]',
-    ),
-  )
-}
-
 const handleShortcut = (event: KeyboardEvent) => {
   if (event.repeat || event.isComposing || event.altKey) return
-  if (!(event.ctrlKey || event.metaKey) || !event.shiftKey || event.code !== "KeyU") return
+  if (!matchesCodexShortcut(event)) return
   if (isEditableShortcutTarget(event.target)) return
   event.preventDefault()
   event.stopPropagation()

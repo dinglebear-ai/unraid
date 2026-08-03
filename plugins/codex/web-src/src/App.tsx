@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { CodeBlock } from "@/components/aurora/code-block"
 import { Conversation } from "@/components/aurora/ai/conversation"
+import { ConnectionDiagnostics } from "@/components/aurora/connection-diagnostics"
 import {
   PermissionChip,
   type ToolPermission,
@@ -36,7 +37,6 @@ import {
 } from "@/components/ui/aurora/sheet"
 import { Banner } from "@/components/ui/aurora/banner"
 import { Button } from "@/components/ui/aurora/button"
-import { StatusIndicator } from "@/components/ui/aurora/status-indicator"
 import {
   Select,
   SelectContent,
@@ -51,6 +51,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/aurora/tooltip"
 import { useCodexAppServer } from "@/protocol"
+import {
+  CODEX_SHORTCUT_EVENT,
+  CODEX_SHORTCUT_OPTIONS,
+  codexShortcutAria,
+  codexShortcutLabel,
+  readCodexShortcut,
+  writeCodexShortcut,
+  type CodexShortcut,
+} from "@/shortcut"
 import {
   ContextRenderer,
   ExtensionsRenderer,
@@ -102,21 +111,6 @@ const QUICK_STARTS = [
   },
 ] as const
 
-function connectionTone(status: string) {
-  if (status === "connected" || status === "working") return "online" as const
-  if (status === "connecting") return "syncing" as const
-  if (status === "error") return "error" as const
-  return "offline" as const
-}
-
-function connectionLabel(status: string) {
-  if (status === "working") return "Working"
-  if (status === "connected") return "Ready"
-  if (status === "connecting") return "Connecting"
-  if (status === "error") return "Attention"
-  return "Offline"
-}
-
 export type ChatTheme = "aurora" | "unraid"
 type CodexSurface = "conversation" | "extensions" | "inspector"
 
@@ -158,6 +152,8 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
     isCodexSettingsRoute() ? "inspector" : "conversation",
   )
   const [permissionsOpen, setPermissionsOpen] = React.useState(false)
+  const [diagnosticsOpen, setDiagnosticsOpen] = React.useState(false)
+  const [shortcut, setShortcut] = React.useState<CodexShortcut>(readCodexShortcut)
   const [prompt, setPrompt] = React.useState("")
   const [attachments, setAttachments] = React.useState<Attachment[]>([])
   const [showJumpToLatest, setShowJumpToLatest] = React.useState(false)
@@ -171,6 +167,12 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
     }
     window.addEventListener("unraid-codex:open-settings", openSettings)
     return () => window.removeEventListener("unraid-codex:open-settings", openSettings)
+  }, [])
+
+  React.useEffect(() => {
+    const updateShortcut = () => setShortcut(readCodexShortcut())
+    window.addEventListener(CODEX_SHORTCUT_EVENT, updateShortcut)
+    return () => window.removeEventListener(CODEX_SHORTCUT_EVENT, updateShortcut)
   }, [])
 
   React.useEffect(() => {
@@ -382,6 +384,7 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
     if (!nextOpen && !isCodexSettingsRoute()) {
       setSurface("conversation")
       setPermissionsOpen(false)
+      setDiagnosticsOpen(false)
     }
   }, [])
 
@@ -397,13 +400,15 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                   size="icon"
                   className={`uc-launcher uc-theme-${theme}`}
                   aria-label="Open Codex"
-                  aria-keyshortcuts="Control+Shift+U Meta+Shift+U"
+                  aria-keyshortcuts={codexShortcutAria(shortcut)}
                 >
                   <Bot size={22} strokeWidth={1.65} aria-hidden />
                 </Button>
               </SheetTrigger>
             </TooltipTrigger>
-            <TooltipContent side="left">Open Codex · Ctrl/⌘+Shift+U</TooltipContent>
+            <TooltipContent side="left">
+              {shortcut === "disabled" ? "Open Codex" : "Open Codex · " + codexShortcutLabel(shortcut)}
+            </TooltipContent>
           </Tooltip>
         ) : null}
 
@@ -460,7 +465,10 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                       <PermissionChip
                         tools={permissionTools}
                         iconOnly
-                        onClick={() => setPermissionsOpen((current) => !current)}
+                        onClick={() => {
+                          setDiagnosticsOpen(false)
+                          setPermissionsOpen((current) => !current)
+                        }}
                         className="uc-header-shield"
                       />
                     </span>
@@ -604,24 +612,14 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                   {docked ? "Use as overlay" : "Dock to the right"}
                 </TooltipContent>
               </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span
-                    className="uc-connection"
-                    role="status"
-                    tabIndex={0}
-                    aria-label={`${connectionLabel(state.status)}. ${state.statusText}`}
-                  >
-                    <StatusIndicator
-                      tone={connectionTone(state.status)}
-                      label={state.statusText}
-                      showLabel={false}
-                      pulse={state.status === "connecting" || state.status === "working"}
-                    />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">{state.statusText}</TooltipContent>
-              </Tooltip>
+              <ConnectionDiagnostics
+                state={state}
+                open={diagnosticsOpen}
+                onOpenChange={(nextOpen) => {
+                  setPermissionsOpen(false)
+                  setDiagnosticsOpen(nextOpen)
+                }}
+              />
             </div>
           </SheetHeader>
 
@@ -645,6 +643,37 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
                     <SelectContent tone="neutral">
                       <SelectItem value="aurora">Aurora Light</SelectItem>
                       <SelectItem value="unraid">Unraid</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="uc-theme-setting uc-shortcut-setting">
+                  <div className="uc-shortcut-setting-copy">
+                    <div className="aurora-text-label">Global launcher shortcut</div>
+                    <div className="aurora-text-meta">
+                      Opens Codex and focuses the prompt. Editable fields always keep their keystrokes.
+                    </div>
+                  </div>
+                  <Select
+                    value={shortcut}
+                    onValueChange={(value) => {
+                      const next = value as CodexShortcut
+                      writeCodexShortcut(next)
+                      setShortcut(next)
+                    }}
+                  >
+                    <SelectTrigger
+                      tone="neutral"
+                      className="uc-shortcut-select"
+                      aria-label="Codex launcher shortcut"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent tone="neutral">
+                      {CODEX_SHORTCUT_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

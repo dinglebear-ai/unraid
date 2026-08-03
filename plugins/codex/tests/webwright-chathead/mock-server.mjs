@@ -18,12 +18,17 @@ const html = `<!doctype html>
     <meta charset="utf-8">
     <title>Unraid Codex UI Harness</title>
     <style>
+      * { box-sizing: border-box; }
       body { margin: 0; background: #f2f2f2; color: #202020; font: 14px Arial, sans-serif; }
       header { padding: 22px 28px; background: #242c38; color: white; }
-      nav { display: flex; gap: 24px; margin-top: 18px; text-transform: uppercase; letter-spacing: .12em; }
+      nav { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 18px; text-transform: uppercase; letter-spacing: .12em; }
       main { padding: 28px; }
-      .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 18px; }
       .card { min-height: 150px; padding: 18px; border: 1px solid #d3d3d3; border-radius: 8px; background: white; }
+      @media (max-width: 480px) {
+        header, main { padding: 16px; }
+        nav { gap: 10px 16px; }
+      }
     </style>
   </head>
   <body>

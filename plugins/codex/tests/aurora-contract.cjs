@@ -17,6 +17,7 @@ const fail = (message) => {
 }
 
 const indexCss = read("index.css")
+const auroraComponents = read("components/aurora-components.css")
 const app = read("App.tsx")
 const renderers = read("renderers.tsx")
 const main = read("main.tsx")
@@ -82,6 +83,9 @@ for (const [name, source] of [["App.tsx", app], ["renderers.tsx", renderers]]) {
 }
 
 const rawColor = /#[0-9a-f]{3,8}|\brgba?\(/i
+if (rawColor.test(auroraComponents)) {
+  fail("shared Aurora components must use canonical color tokens, not raw colors")
+}
 const selector = /\.uc-theme-aurora[^{}]*\{/g
 let match
 while ((match = selector.exec(indexCss))) {

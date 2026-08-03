@@ -32,12 +32,22 @@ export interface DeviceLogin {
   userCode: string
 }
 
+export type McpDiagnosticStatus = "unknown" | "connecting" | "connected" | "error" | "disabled"
+
+export interface ConnectionDiagnostics {
+  appServerLastOkAtMs: number | null
+  mcpLastOkAtMs: number | null
+  mcpStatus: McpDiagnosticStatus
+  mcpMessage: string
+}
+
 export interface CodexState {
   status: "connecting" | "connected" | "working" | "disconnected" | "error"
   statusText: string
   initialized: boolean
   authenticated: boolean
   requiresOpenaiAuth: boolean | null
+  diagnostics: ConnectionDiagnostics
   threadId: string | null
   activeTurnId: string | null
   items: TimelineItem[]
@@ -69,6 +79,12 @@ const INITIAL_STATE: CodexState = {
   initialized: false,
   authenticated: false,
   requiresOpenaiAuth: null,
+  diagnostics: {
+    appServerLastOkAtMs: null,
+    mcpLastOkAtMs: null,
+    mcpStatus: "unknown",
+    mcpMessage: "Waiting for MCP inventory",
+  },
   threadId: localStorage.getItem(STORAGE_THREAD),
   activeTurnId: null,
   items: [],
@@ -102,6 +118,38 @@ function accountState(result: JsonObject) {
     authenticated,
     requiresOpenaiAuth,
     statusText: authenticated ? "Connected" : "Connected. Sign-in required.",
+  }
+}
+
+function unraidMcpDiagnostics(servers: JsonObject[], previous?: ConnectionDiagnostics) {
+  const server = servers.find((entry) => String(entry.name ?? entry.server ?? "").toLowerCase() === "unraid")
+  if (!server) {
+    return {
+      mcpStatus: "disabled" as const,
+      mcpMessage: "Unraid MCP is not configured",
+      mcpLastOkAtMs: previous?.mcpLastOkAtMs ?? null,
+    }
+  }
+  const status = String(server.startupStatus ?? server.status ?? server.state ?? "unknown").toLowerCase()
+  const error = server.startupError ?? server.error ?? server.message
+  if (error || /(failed|error|unavailable|disconnected)/.test(status)) {
+    return {
+      mcpStatus: "error" as const,
+      mcpMessage: String(error ?? status),
+      mcpLastOkAtMs: previous?.mcpLastOkAtMs ?? null,
+    }
+  }
+  if (/(ready|connected|running|started)/.test(status)) {
+    return {
+      mcpStatus: "connected" as const,
+      mcpMessage: "Authenticated and ready",
+      mcpLastOkAtMs: Date.now(),
+    }
+  }
+  return {
+    mcpStatus: "connecting" as const,
+    mcpMessage: status === "unknown" ? "Waiting for startup status" : status,
+    mcpLastOkAtMs: previous?.mcpLastOkAtMs ?? null,
   }
 }
 
@@ -520,14 +568,21 @@ export function useCodexAppServer() {
           })
           break
         case "mcpServer/startupStatus/updated":
-          setState((current) => ({
-            ...current,
-            mcpServers: current.mcpServers.map((server) =>
+          setState((current) => {
+            const mcpServers = current.mcpServers.map((server) =>
               server.name === (params.server ?? params.name)
                 ? { ...server, startupStatus: params.status, startupError: params.error }
                 : server,
-            ),
-          }))
+            )
+            return {
+              ...current,
+              mcpServers,
+              diagnostics: {
+                ...current.diagnostics,
+                ...unraidMcpDiagnostics(mcpServers, current.diagnostics),
+              },
+            }
+          })
           if (params.status === "failed" || params.error) {
             addNotice({
               tone: "warn",
@@ -652,6 +707,10 @@ export function useCodexAppServer() {
         const pending = pendingRef.current.get(String(message.id))
         if (!pending) return
         pendingRef.current.delete(String(message.id))
+        setState((current) => ({
+          ...current,
+          diagnostics: { ...current.diagnostics, appServerLastOkAtMs: Date.now() },
+        }))
         if (message.error) pending.reject(new Error(textFromError(message.error)))
         else pending.resolve(message.result)
         return
@@ -808,6 +867,11 @@ export function useCodexAppServer() {
         hooks: (hooks.data ?? []).flatMap((entry: JsonObject) => entry.hooks ?? []),
         permissionProfiles: permissionProfiles.data ?? [],
         mcpServers: mcpServers.data ?? [],
+        diagnostics: {
+          ...current.diagnostics,
+          appServerLastOkAtMs: Date.now(),
+          ...unraidMcpDiagnostics(mcpServers.data ?? [], current.diagnostics),
+        },
         apps: apps.data ?? [],
         plugins: (plugins.marketplaces ?? []).flatMap(
           (marketplace: JsonObject) =>

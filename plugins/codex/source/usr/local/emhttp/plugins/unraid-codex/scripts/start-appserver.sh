@@ -9,26 +9,24 @@ CONTAINER_SOCKET_DIR=/mnt/unraid-codex
 SOCKET_PATH="$SOCKET_DIR/appserver.sock"
 WEBGUI_SOCKET=/var/run/unraid-codex-appserver.sock
 PLUGIN_CONFIG=/boot/config/plugins/unraid-codex
-NFS_RC=/etc/rc.d/rc.nfsd
-RESTORE_NFS=0
 MCP_SECRET="$PLUGIN_CONFIG/unraid-mcp.env"
 MCP_CONFIG_TEMPLATE=/usr/local/emhttp/plugins/unraid-codex/container/codex-config.toml
 MCP_CONFIG_TMP=""
+INCUS_START_HELPER=/usr/local/emhttp/plugins/incus/scripts/start-instance.sh
+ENSURE_STATE=/usr/local/emhttp/plugins/unraid-codex/scripts/ensure-state-volume.sh
+PROVISION_CONTAINER=/usr/local/emhttp/plugins/unraid-codex/scripts/provision-container.sh
 CONTAINER_CONFIG_DIR=/home/agent/.config/unraid-codex
+CONTAINER_RUNTIME_DIR=/usr/local/lib/unraid-codex
 CODEX_CONFIG_DIR=/home/agent/.codex
 WORKSPACE_INSTRUCTIONS=/workspace/CLAUDE.md
 WORKSPACE_TEMPLATE=/usr/local/emhttp/plugins/unraid-codex/container/workspace-CLAUDE.md
+MAINTENANCE_SOURCE=/usr/local/emhttp/plugins/unraid-codex/container/codex-maintenance.py
+VERIFY_SOURCE=/usr/local/emhttp/plugins/unraid-codex/scripts/verify-codex-cli.sh
+UPDATE_CLI=/usr/local/emhttp/plugins/unraid-codex/scripts/update-codex-cli.sh
+APPSERVER_SMOKE=/usr/local/emhttp/plugins/unraid-codex/scripts/appserver-smoke.py
 
 cleanup() {
   [[ -n "$MCP_CONFIG_TMP" ]] && rm -f "$MCP_CONFIG_TMP"
-  if [[ "$RESTORE_NFS" -eq 1 && -x "$NFS_RC" ]]; then
-    if "$NFS_RC" start >/dev/null 2>&1; then
-      RESTORE_NFS=0
-      logger -t unraid-codex "Restored NFS after interrupted Incus compatibility start"
-    else
-      logger -t unraid-codex "Failed to restore NFS after interrupted Incus compatibility start"
-    fi
-  fi
 }
 trap cleanup EXIT
 
@@ -45,61 +43,6 @@ read_env_value() {
   printf '%s' "$line"
 }
 
-nfs_running() {
-  [[ -x "$NFS_RC" ]] && "$NFS_RC" status 2>&1 | grep -q 'currently running'
-}
-
-start_container() {
-  local initial_rc retry_rc=0 restore_rc=0 nfs_was_running=0 target
-
-  incus </dev/null start "$CONTAINER" && return 0
-  initial_rc=$?
-
-  if ! mountpoint -q /proc/fs/nfs && ! mountpoint -q /proc/fs/nfsd; then
-    logger -t unraid-codex "Container $CONTAINER failed to start without an active nfsd proc mount"
-    return "$initial_rc"
-  fi
-
-  nfs_running && nfs_was_running=1
-  logger -t unraid-codex "Retrying $CONTAINER start inside an NFS procfs compatibility window"
-
-  if [[ "$nfs_was_running" -eq 1 ]]; then
-    if ! "$NFS_RC" stop >/dev/null 2>&1; then
-      logger -t unraid-codex "Could not pause NFS for the Incus compatibility start"
-      return "$initial_rc"
-    fi
-    RESTORE_NFS=1
-  fi
-
-  for target in /proc/fs/nfsd /proc/fs/nfs; do
-    if mountpoint -q "$target" && ! umount "$target"; then
-      logger -t unraid-codex "Could not unmount $target for the Incus compatibility start"
-      return 1
-    fi
-  done
-
-  incus </dev/null start "$CONTAINER" || retry_rc=$?
-
-  if [[ "$nfs_was_running" -eq 1 ]]; then
-    if "$NFS_RC" start >/dev/null 2>&1; then
-      RESTORE_NFS=0
-    else
-      restore_rc=$?
-      logger -t unraid-codex "Failed to restore NFS after starting $CONTAINER"
-    fi
-  fi
-
-  if [[ "$retry_rc" -ne 0 ]]; then
-    logger -t unraid-codex "Container $CONTAINER still failed to start after the NFS procfs compatibility retry"
-    return "$retry_rc"
-  fi
-  if [[ "$restore_rc" -ne 0 ]]; then
-    return "$restore_rc"
-  fi
-
-  logger -t unraid-codex "Started $CONTAINER and restored NFS after the procfs compatibility retry"
-}
-
 if [[ ! -r "$INCUS_ENV" ]]; then
   logger -t unraid-codex "Incus plugin environment is unavailable"
   exit 1
@@ -114,15 +57,26 @@ export INCUS_DIR
 mkdir -p "$SOCKET_DIR"
 chmod 0711 "$SOCKET_DIR"
 
-if ! incus </dev/null info "$CONTAINER" >/dev/null 2>&1; then
-  logger -t unraid-codex "Container $CONTAINER does not exist"
+[[ -x "$PROVISION_CONTAINER" ]] || {
+  logger -t unraid-codex "Codex container provisioner is unavailable: $PROVISION_CONTAINER"
   exit 1
-fi
+}
+"$PROVISION_CONTAINER"
 
 container_info="$(incus </dev/null info "$CONTAINER")"
 if ! grep -q '^Status: RUNNING$' <<<"$container_info"; then
-  start_container
+  [[ -x "$INCUS_START_HELPER" ]] || {
+    logger -t unraid-codex "Incus start helper is unavailable: $INCUS_START_HELPER"
+    exit 1
+  }
+  "$INCUS_START_HELPER" "$CONTAINER"
 fi
+
+[[ -x "$ENSURE_STATE" ]] || {
+  logger -t unraid-codex "Codex state-volume helper is unavailable: $ENSURE_STATE"
+  exit 1
+}
+"$ENSURE_STATE"
 
 device_config="$(incus </dev/null config device show "$CONTAINER")"
 if ! grep -q '^appserver-socket:' <<<"$device_config"; then
@@ -137,6 +91,13 @@ ln -sfn "$SOCKET_PATH" "$WEBGUI_SOCKET"
 
 incus </dev/null exec "$CONTAINER" -- install -d -o agent -g agent -m 0700 \
   "$CONTAINER_CONFIG_DIR" "$CODEX_CONFIG_DIR"
+incus </dev/null exec "$CONTAINER" -- install -d -o root -g root -m 0755 "$CONTAINER_RUNTIME_DIR"
+for runtime_source in "$MAINTENANCE_SOURCE" "$VERIFY_SOURCE"; do
+  runtime_name="$(basename "$runtime_source")"
+  incus </dev/null file push "$runtime_source" "$CONTAINER$CONTAINER_RUNTIME_DIR/$runtime_name"
+  incus </dev/null exec "$CONTAINER" -- chown root:root "$CONTAINER_RUNTIME_DIR/$runtime_name"
+  incus </dev/null exec "$CONTAINER" -- chmod 0755 "$CONTAINER_RUNTIME_DIR/$runtime_name"
+done
 
 MCP_URL="$(read_env_value UNRAID_MCP_URL)"
 MCP_PROXY_HOST="$(read_env_value UNRAID_MCP_PROXY_HOST)"
@@ -188,7 +149,7 @@ incus </dev/null exec "$CONTAINER" -- chown agent:agent "$CODEX_CONFIG_DIR/confi
 incus </dev/null exec "$CONTAINER" -- chmod 0600 "$CODEX_CONFIG_DIR/config.toml"
 if [[ -s "$MCP_SECRET" ]]; then
   incus </dev/null file push "$MCP_SECRET" "$CONTAINER$CONTAINER_CONFIG_DIR/env"
-  incus </dev/null exec "$CONTAINER" -- chown agent:agent "$CONTAINER_CONFIG_DIR/env"
+  incus </dev/null exec "$CONTAINER" -- chown root:root "$CONTAINER_CONFIG_DIR/env"
   incus </dev/null exec "$CONTAINER" -- chmod 0600 "$CONTAINER_CONFIG_DIR/env"
 else
   incus </dev/null exec "$CONTAINER" -- rm -f "$CONTAINER_CONFIG_DIR/env"
@@ -211,6 +172,8 @@ incus </dev/null file push \
   /usr/local/emhttp/plugins/unraid-codex/container/codex-appserver.service \
   "$CONTAINER/etc/systemd/system/codex-appserver.service"
 incus </dev/null exec "$CONTAINER" -- systemctl daemon-reload
+[[ -x "$UPDATE_CLI" ]] || { logger -t unraid-codex "Codex updater is unavailable: $UPDATE_CLI"; exit 1; }
+"$UPDATE_CLI"
 incus </dev/null exec "$CONTAINER" -- systemctl enable codex-appserver.service
 incus </dev/null exec "$CONTAINER" -- systemctl restart codex-appserver.service
 
@@ -226,5 +189,10 @@ if [[ "$socket_ready" -ne 1 ]]; then
   logger -t unraid-codex "App-server service started but $SOCKET_PATH did not become ready"
   exit 1
 fi
+python3 "$APPSERVER_SMOKE" "$SOCKET_PATH" || {
+  logger -t unraid-codex "App-server socket opened but protocol initialization failed"
+  exit 1
+}
 
+/usr/local/emhttp/plugins/unraid-codex/scripts/configure-schedule.sh install
 logger -t unraid-codex "Codex app-server restarted in $CONTAINER and the WebGUI socket is ready"
