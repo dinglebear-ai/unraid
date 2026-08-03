@@ -26,19 +26,21 @@ jobs:
       - name: Install XML validation tooling
         run: |
           sudo apt-get update
-          sudo apt-get install -y libxml2-utils
+          sudo apt-get install -y jq libxml2-utils
 
       - name: Verify the stable Unraid MCP plugin update pointer
         run: |
           set -euo pipefail
-          latest_tag="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)"
+          latest_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest")"
+          latest_tag="$(jq -er .tag_name <<<"$latest_json")"
           [[ "$latest_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
             echo "::error::repository latest release is $latest_tag, not a primary Unraid MCP vX.Y.Z release"
             exit 1
           }
+          manifest_asset_api="$(jq -er '.assets[] | select(.name == "unraid-mcp.plg") | .url' <<<"$latest_json")"
           tmp="$(mktemp -d)"
           trap 'rm -rf "$tmp"' EXIT
-          curl -fsSL "https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/unraid-mcp.plg" -o "$tmp/unraid-mcp.plg"
+          gh api -H "Accept: application/octet-stream" "$manifest_asset_api" > "$tmp/unraid-mcp.plg"
           xmllint --noout "$tmp/unraid-mcp.plg"
           if grep -q PLACEHOLDER "$tmp/unraid-mcp.plg"; then
             echo "::error::latest Unraid MCP manifest contains unresolved placeholders"
@@ -47,7 +49,7 @@ jobs:
           version="$(sed -n 's/.*<!ENTITY version[[:space:]]*"\([^"]*\)".*/\1/p' "$tmp/unraid-mcp.plg")"
           txz="$(sed -n 's/.*<!ENTITY txz[[:space:]]*"\([^"]*\)".*/\1/p' "$tmp/unraid-mcp.plg")"
           [[ "$latest_tag" == "v${version}" ]]
-          curl -fsSI "https://github.com/${GITHUB_REPOSITORY}/releases/download/${latest_tag}/${txz}" >/dev/null
+          jq -e --arg txz "$txz" '.assets[] | select(.name == $txz)' <<<"$latest_json" >/dev/null
 
       - name: Detect stale release automation
         # SCOPE: monitors only the primary Python component (unraid-py -> v*).
