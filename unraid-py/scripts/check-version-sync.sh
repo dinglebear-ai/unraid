@@ -40,6 +40,25 @@ if [ -f "gemini-extension.json" ]; then
   [ -n "$v" ] && versions+=("gemini-extension.json=$v") && files_checked+=("gemini-extension.json")
 fi
 
+# The official MCP Registry identity belongs to dinglebear.ai. Keep the
+# reverse-domain server namespace and DNS proof aligned with every other
+# DingleBear MCP package.
+if [ -f "server.json" ]; then
+  python3 - <<'PY'
+import json
+
+with open("server.json", encoding="utf-8") as handle:
+    manifest = json.load(handle)
+
+assert manifest.get("name") == "ai.dinglebear/unraid-mcp", manifest.get("name")
+publisher = manifest.get("_meta", {}).get(
+    "io.modelcontextprotocol.registry/publisher-provided", {}
+)
+assert publisher.get("namespace") == "ai.dinglebear", publisher
+assert publisher.get("dnsDomain") == "dinglebear.ai", publisher
+PY
+fi
+
 # Need at least one version source
 if [ ${#versions[@]} -eq 0 ]; then
   echo "[version-sync] No version-bearing files found — skipping"
