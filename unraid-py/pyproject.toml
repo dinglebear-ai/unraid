@@ -92,7 +92,8 @@ dependencies = [
     # transitively with fastmcp today, but the OAuth code uses them at the top level
     # (Fernet token encryption + FileTreeStore disk persistence), so pin them as
     # explicit deps rather than relying on a transitive resolution.
-    "cryptography>=44.0.0",
+    # Floor raised to 50.0.0 for CVE-2026-69247.
+    "cryptography>=50.0.0",
     "py-key-value-aio>=0.4.0",
 ]
 
