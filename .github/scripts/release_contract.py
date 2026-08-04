@@ -98,6 +98,17 @@ def validate_release_please(repo_root: Path, errors: list[str]) -> list[ReleaseU
         "unraid-rs must produce unraid-rs-vX.Y.Z tags",
         errors,
     )
+    python_extra_files = {
+        (entry.get("path"), entry.get("jsonpath"))
+        for entry in python_cfg.get("extra-files", [])
+        if isinstance(entry, dict)
+    }
+    assert_true(
+        ("server.json", "$.version") in python_extra_files
+        and ("server.json", "$.packages[0].version") in python_extra_files,
+        "release-please must update both Unraid Python Registry manifest versions",
+        errors,
+    )
     rust_extra_files = {
         (entry.get("path"), entry.get("jsonpath"))
         for entry in rust_cfg.get("extra-files", [])
@@ -123,11 +134,18 @@ def validate_release_please(repo_root: Path, errors: list[str]) -> list[ReleaseU
     npm_package = json.loads(
         (repo_root / "unraid-rs/packages/unraid-rmcp/package.json").read_text()
     )
+    python_server = json.loads((repo_root / "unraid-py/server.json").read_text())
     versions = {
         "unraid-py": pyproject["project"]["version"],
         "unraid-rs": cargo["package"]["version"],
     }
     tag_prefixes = {"unraid-py": "v", "unraid-rs": "unraid-rs-v"}
+    assert_true(
+        python_server.get("version") == versions["unraid-py"]
+        and python_server.get("packages", [{}])[0].get("version") == versions["unraid-py"],
+        "Unraid Python Registry manifest versions must match pyproject.toml",
+        errors,
+    )
     assert_true(
         npm_package.get("version") == versions["unraid-rs"],
         f"npm package version {npm_package.get('version')} != Rust {versions['unraid-rs']}",

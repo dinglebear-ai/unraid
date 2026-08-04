@@ -27,7 +27,7 @@ jobs:
     name: Build & Attest Release Artifact
     # Only the primary (Python) release tag `v*`. Component tags start with
     # incus-/codex-/unraid-rs-, so startsWith(tag,'v') already excludes them.
-    # Gating build cascades to pypi/github-release/mcp-registry/reconcile via needs.
+    # Gating build cascades to pypi/github-release/reconcile via needs.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       startsWith(github.event.release.tag_name, 'v')
@@ -171,103 +171,9 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: gh release upload "$RELEASE_TAG" dist/* --clobber
 
-  mcp-registry:
-    name: Publish MCP Registry Channel
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: release
-    permissions:
-      contents: read
-    # server.json (the MCP registry manifest) lives in unraid-py/; the publisher
-    # binary is downloaded into and run from there too.
-    defaults:
-      run:
-        working-directory: unraid-py
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: refs/tags/${{ env.RELEASE_TAG }}
-      - name: Reconcile existing MCP Registry state
-        id: state
-        run: |
-          version="${RELEASE_TAG#v}"
-          url="https://registry.modelcontextprotocol.io/v0/servers/ai.dinglebear%2Funraid-mcp/versions/${version}"
-          if curl -fsS "$url" > registry-existing.json; then
-            jq -e --arg version "$version" '.server.version == $version' registry-existing.json
-            echo "published=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "published=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Download checksum-pinned MCP publisher v1.8.0
-        if: steps.state.outputs.published != 'true'
-        run: |
-          archive=mcp-publisher_linux_amd64.tar.gz
-          curl --fail --silent --show-error --location \
-            "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.0/${archive}" \
-            --output "$archive"
-          printf '%s  %s\n' \
-            1370446bbe74d562608e8005a6ccce02d146a661fbd78674e11cc70b9618d6cf \
-            "$archive" | sha256sum --check --strict
-          tar --extract --gzip --file "$archive" mcp-publisher
-          test "$(./mcp-publisher --version 2>&1 | grep -o '1\.8\.0' | head -n1)" = "1.8.0"
-      - name: Stamp immutable release version into registry manifest
-        if: steps.state.outputs.published != 'true'
-        run: |
-          version="${RELEASE_TAG#v}"
-          jq --arg version "$version" '
-            .name = "ai.dinglebear/unraid-mcp" |
-            .version = $version |
-            .packages = [.packages[] | if .registryType == "pypi" then .version = $version else . end] |
-            ._meta["io.modelcontextprotocol.registry/publisher-provided"] = {
-              "namespace": "ai.dinglebear",
-              "dnsDomain": "dinglebear.ai",
-              "distribution": {"pypi": "unraid-mcp"}
-            }
-          ' server.json > server.release.json
-          mv server.release.json server.json
-      - name: Wait for release version to be visible on PyPI
-        if: steps.state.outputs.published != 'true'
-        run: |
-          version="${RELEASE_TAG#v}"
-          for attempt in {1..20}; do
-            if curl -fsS "https://pypi.org/pypi/unraid-mcp/${version}/json" > /dev/null; then
-              echo "PyPI reports unraid-mcp ${version} (attempt ${attempt})."
-              exit 0
-            fi
-            echo "unraid-mcp ${version} not visible on PyPI yet (attempt ${attempt}/20); retrying in 15s."
-            sleep 15
-          done
-          echo "::error::unraid-mcp ${version} never became visible on PyPI; registry validation would fail"
-          exit 1
-      - name: Authenticate to MCP Registry
-        if: steps.state.outputs.published != 'true'
-        env:
-          MCP_PRIVATE_KEY: ${{ secrets.MCP_PRIVATE_KEY }}
-          MCP_REGISTRY_DOMAIN: ${{ vars.MCP_REGISTRY_DOMAIN }}
-        run: |
-          set -euo pipefail
-          test "$MCP_REGISTRY_DOMAIN" = dinglebear.ai
-          ./mcp-publisher login dns --domain "$MCP_REGISTRY_DOMAIN" --private-key "$MCP_PRIVATE_KEY"
-      - name: Publish MCP Registry channel
-        if: steps.state.outputs.published != 'true'
-        run: |
-          for attempt in {1..3}; do
-            if ./mcp-publisher publish; then
-              exit 0
-            fi
-            if [ "$attempt" -lt 3 ]; then
-              echo "mcp-publisher publish failed (attempt ${attempt}/3); retrying in 30s."
-              sleep 30
-            fi
-          done
-          echo "::error::MCP Registry publish failed after 3 attempts"
-          exit 1
-
   reconcile:
     name: Release Reconciliation
-    needs: [build, pypi, github-release, mcp-registry]
+    needs: [build, pypi, github-release]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -296,12 +202,6 @@ jobs:
           gh release download "$RELEASE_TAG" --dir github-assets --pattern 'unraid_mcp-*' --pattern SHA256SUMS
           (cd github-assets && sha256sum --check SHA256SUMS)
           diff -rq dist github-assets
-      - name: Verify MCP Registry version
-        run: |
-          version="${RELEASE_TAG#v}"
-          curl -fsS \
-            "https://registry.modelcontextprotocol.io/v0/servers/ai.dinglebear%2Funraid-mcp/versions/${version}" |
-            jq -e --arg version "$version" '.server.version == $version and .server.packages[0].version == $version'
       - name: Wait for matching GHCR release and latest digests
         env:
           # Pinned, not derived from github.repository: the repo was renamed

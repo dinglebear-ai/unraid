@@ -5,8 +5,16 @@ on:
     types: [published]
   workflow_dispatch:
     inputs:
+      component:
+        description: Component whose canonical manifest should be reconciled
+        required: true
+        default: unraid-rs
+        type: choice
+        options:
+          - unraid-rs
+          - unraid-py
       ref:
-        description: Git ref containing the canonical Rust manifest
+        description: Git ref containing the canonical component manifest
         required: true
         default: main
         type: string
@@ -21,12 +29,23 @@ permissions:
 
 jobs:
   publish-unraid-rs:
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'unraid-rs-v')
+    if: (github.event_name == 'workflow_dispatch' && inputs.component == 'unraid-rs') || startsWith(github.event.release.tag_name, 'unraid-rs-v')
     uses: dinglebear-ai/workflows/.github/workflows/mcp-registry-publish.yml@befa67c7b7f976235bf3fbced6ede93293a7f405 # fleet-2026-08-04
     with:
       checkout-ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.event.release.tag_name }}
       expected-version: ${{ github.event_name == 'workflow_dispatch' && inputs.expected-version || github.event.release.tag_name }}
       manifest-path: unraid-rs/server.json
       version-prefix: unraid-rs-v
+    secrets:
+      MCP_PRIVATE_KEY: ${{ secrets.MCP_PRIVATE_KEY }}
+
+  publish-unraid-py:
+    if: (github.event_name == 'workflow_dispatch' && inputs.component == 'unraid-py') || startsWith(github.event.release.tag_name, 'v')
+    uses: dinglebear-ai/workflows/.github/workflows/mcp-registry-publish.yml@befa67c7b7f976235bf3fbced6ede93293a7f405 # fleet-2026-08-04
+    with:
+      checkout-ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.event.release.tag_name }}
+      expected-version: ${{ github.event_name == 'workflow_dispatch' && inputs.expected-version || github.event.release.tag_name }}
+      manifest-path: unraid-py/server.json
+      version-prefix: v
     secrets:
       MCP_PRIVATE_KEY: ${{ secrets.MCP_PRIVATE_KEY }}

@@ -44,6 +44,10 @@ fi
 # reverse-domain server namespace and DNS proof aligned with every other
 # DingleBear MCP package.
 if [ -f "server.json" ]; then
+  v=$(python3 -c "import json; print(json.load(open('server.json'))['version'])")
+  [ -n "$v" ] && versions+=("server.json=$v") && files_checked+=("server.json")
+  v=$(python3 -c "import json; print(json.load(open('server.json'))['packages'][0]['version'])")
+  [ -n "$v" ] && versions+=("server.json package=$v") && files_checked+=("server.json package")
   python3 - <<'PY'
 import json
 
