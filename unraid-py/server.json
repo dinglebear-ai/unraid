@@ -2,18 +2,18 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "ai.dinglebear/unraid-mcp",
   "title": "Unraid MCP",
-  "description": "MCP server for Unraid API — provides tools to interact with an Unraid server's GraphQL API.",
+  "description": "MCP server for Unraid API \u2014 provides tools to interact with an Unraid server's GraphQL API.",
   "repository": {
     "url": "https://github.com/dinglebear-ai/unraid",
     "source": "github"
   },
-  "version": "0.0.0",
+  "version": "2.10.0",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "unraid-mcp",
-      "version": "0.0.0",
+      "version": "2.10.0",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
