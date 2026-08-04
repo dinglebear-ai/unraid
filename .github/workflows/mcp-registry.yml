@@ -1,0 +1,33 @@
+name: MCP Registry
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref containing the canonical Rust manifest
+        required: true
+        default: main
+        type: string
+      expected-version:
+        description: Optional exact version or component release tag
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-unraid-rs:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'unraid-rs-v')
+    uses: dinglebear-ai/workflows/.github/workflows/mcp-registry-publish.yml@3302f853574ba0c669a647f66cfcacb81f529fff # fleet-2026-08-04
+    with:
+      checkout-ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.event.release.tag_name }}
+      expected-version: ${{ github.event_name == 'workflow_dispatch' && inputs.expected-version || github.event.release.tag_name }}
+      auth-method: dns
+      manifest-path: unraid-rs/server.json
+      version-prefix: unraid-rs-v
+    secrets:
+      MCP_PRIVATE_KEY: ${{ secrets.MCP_PRIVATE_KEY }}
