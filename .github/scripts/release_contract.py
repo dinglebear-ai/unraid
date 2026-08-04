@@ -79,13 +79,18 @@ def validate_release_please(repo_root: Path, errors: list[str]) -> list[ReleaseU
         f"release manifest packages must be exactly {sorted(RELEASE_PLEASE_PACKAGES)}",
         errors,
     )
+    assert_true(
+        config.get("separate-pull-requests") is True,
+        "release-please must create separate component release PRs",
+        errors,
+    )
 
     python_cfg = packages.get("unraid-py", {})
     rust_cfg = packages.get("unraid-rs", {})
     assert_true(
-        python_cfg.get("component") == ""
+        python_cfg.get("component") == "unraid-mcp"
         and python_cfg.get("include-component-in-tag") is False,
-        "unraid-py must explicitly produce unprefixed vX.Y.Z tags",
+        "unraid-py must preserve the unraid-mcp component identity while producing unprefixed vX.Y.Z tags",
         errors,
     )
     assert_true(
