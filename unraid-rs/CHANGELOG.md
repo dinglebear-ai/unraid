@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Bind the production MCP port only to DOOKIE's Tailscale and LAN addresses instead of every host interface.
+
 ## [0.3.0](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.2.5...unraid-rs-v0.3.0) (2026-08-02)
 
 
