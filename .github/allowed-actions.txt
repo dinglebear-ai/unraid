@@ -39,6 +39,7 @@ astral-sh/setup-uv@*
 docker/*@*
 dinglebear-ai/workflows/.github/workflows/fleet-contract.yml@*
 dinglebear-ai/workflows/.github/workflows/hosted-container-release.yml@*
+dinglebear-ai/workflows/.github/workflows/mcp-registry-publish.yml@*
 dtolnay/rust-toolchain@*
 gitleaks/gitleaks-action@*
 googleapis/release-please-action@*
