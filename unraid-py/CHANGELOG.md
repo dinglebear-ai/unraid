@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0](https://github.com/dinglebear-ai/unraid/compare/v2.9.0...v2.10.0) (2026-08-04)
+
+
+### Features
+
+* **release:** publish canonical MCP Registry metadata ([#335](https://github.com/dinglebear-ai/unraid/issues/335)) ([d5ed6d1](https://github.com/dinglebear-ai/unraid/commit/d5ed6d1f6303ed62e378f0b762fb9987ecd2593e))
+
+
+### Bug Fixes
+
+* **release:** canonicalize Unraid MCP Registry identity ([#327](https://github.com/dinglebear-ai/unraid/issues/327)) ([216475b](https://github.com/dinglebear-ai/unraid/commit/216475bff0e598f9bb6fdf7def52eefa56daa512))
+* **release:** embed canonical PyPI ownership proof ([#329](https://github.com/dinglebear-ai/unraid/issues/329)) ([2e45bdd](https://github.com/dinglebear-ai/unraid/commit/2e45bddc6cb1adda504d9e6449a6acc8f26a286b))
+
 ## [2.9.0](https://github.com/dinglebear-ai/unraid/compare/v2.8.0...v2.9.0) (2026-08-02)
 
 
