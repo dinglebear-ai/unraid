@@ -45,10 +45,7 @@ def test_release_executables_and_tools_are_pinned_and_verified() -> None:
     registry = _workflows()["mcp-registry.yml"]
     assert "mcp-publisher" not in release
     assert "registry.modelcontextprotocol.io" not in release
-    assert (
-        "mcp-registry-publish.yml@befa67c7b7f976235bf3fbced6ede93293a7f405"
-        in registry
-    )
+    assert "mcp-registry-publish.yml@befa67c7b7f976235bf3fbced6ede93293a7f405" in registry
     assert "publish-unraid-py:" in registry
     assert "manifest-path: unraid-py/server.json" in registry
     assert "MCP_PRIVATE_KEY" in registry
