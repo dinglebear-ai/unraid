@@ -138,8 +138,11 @@ jobs:
           FIRST: ${{ steps.package.outputs.first }}
         run: |
           set -euo pipefail
-          UNRAID_MCP_SKIP_WEB_BUILD=true SOURCE_DATE_EPOCH=0 \
-            ./scripts/build-txz.sh "$VERSION" "$BINARY"
+          # Deliberately no UNRAID_MCP_SKIP_WEB_BUILD here: reusing the first
+          # run's Vite output made this compare tar determinism only, leaving
+          # the web bundle — the likeliest source of nondeterminism — untested.
+          # Now that this step is main-only, the extra Vite build is cheap.
+          SOURCE_DATE_EPOCH=0 ./scripts/build-txz.sh "$VERSION" "$BINARY"
           second="$(sha256sum "$PACKAGE" | cut -d' ' -f1)"
           test "$FIRST" = "$second" || { echo "::error::package is not reproducible: $FIRST != $second"; exit 1; }
           echo "reproducible package sha256=$second"
