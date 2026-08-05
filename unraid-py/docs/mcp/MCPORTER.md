@@ -15,7 +15,7 @@ stdio; it does not require mcporter.
 ./tests/test_live.sh --mode docker
 ./tests/test_live.sh --mode stdio
 ./tests/test_live.sh --mode http --skip-auth
-./tests/test_live.sh --mode http --url https://unraid.tootie.tv/mcp --skip-auth
+./tests/test_live.sh --mode http --url https://unraid.example.internal/mcp --skip-auth
 ```
 
 The live tool phase covers read-only subactions across all domains. Schema-drift

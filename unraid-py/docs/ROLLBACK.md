@@ -112,7 +112,7 @@ jq --arg v "<prior-version>" '
   .packages = [.packages[] | if .registryType == "pypi" then .version = $v else . end]
 ' server.json > server.tmp && mv server.tmp server.json
 
-./mcp-publisher login dns --domain tootie.tv --private-key "$MCP_PRIVATE_KEY"
+./mcp-publisher login dns --domain example.internal --private-key "$MCP_PRIVATE_KEY"
 ./mcp-publisher publish
 ```
 
