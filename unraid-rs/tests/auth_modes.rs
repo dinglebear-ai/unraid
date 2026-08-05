@@ -387,6 +387,40 @@ async fn static_bearer_token_reaches_ordinary_write_dispatch() {
     );
 }
 
+/// Server policy is checked before scope: a bearer-authenticated caller (the
+/// static token carries unraid:admin, so every scope check would pass) hitting
+/// a policy-disabled action must get the "disabled by server policy" error —
+/// never a scope error, and never a dispatch attempt.
+#[tokio::test]
+async fn policy_disabled_action_rejects_authenticated_caller_with_policy_error() {
+    let mut state = testing::bearer_state("admin-token");
+    state.config.tools.disabled = vec!["vm_stop".into()];
+    let (status, value) = post_mcp(
+        router(state),
+        tool_call_body(serde_json::json!({
+            "action": "vm_stop",
+            "id": "vm-1"
+        })),
+        Some("admin-token"),
+    )
+    .await;
+
+    assert_eq!(status, StatusCode::OK);
+    let body = value.to_string();
+    assert!(
+        body.contains("disabled by server policy"),
+        "policy-disabled action must surface the policy error; got: {body}"
+    );
+    assert!(
+        !body.contains("requires scope"),
+        "policy must win over scope errors; got: {body}"
+    );
+    assert!(
+        !body.contains("upstream unreachable"),
+        "policy-disabled action must not reach dispatch; got: {body}"
+    );
+}
+
 /// Destructive writes still require MCP elicitation after bearer authorization.
 /// A raw HTTP caller that did not advertise form elicitation must fail closed
 /// before the GraphQL mutation is attempted.

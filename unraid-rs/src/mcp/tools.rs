@@ -89,6 +89,9 @@ pub(crate) async fn execute_tool(
     args: Value,
 ) -> Result<Value, ToolError> {
     let action = string_arg(&args, "action").unwrap_or_default();
+    // Deliberate double enforcement: rmcp_server's call_tool checks policy early
+    // (before elicitation); this check covers the test-support entry point
+    // (testing::execute_tool) that bypasses call_tool entirely.
     ensure_tool_call_enabled(&state.config.tools, name, &action)
         .map_err(ToolError::InvalidParams)?;
 

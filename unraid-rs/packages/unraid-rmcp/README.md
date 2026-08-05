@@ -362,6 +362,14 @@ a single action (`docker_logs` or `unraid.vm_reset`). The advertised action
 schema is filtered, and disabled calls are rejected even when a client uses a
 stale cached schema. Invalid selectors fail configuration loading.
 
+A set, non-empty `UNRAID_RMCP_ENABLED_TOOLS` / `UNRAID_RMCP_DISABLED_TOOLS`
+**replaces** the corresponding `[mcp.tools]` list from `config.toml` — env and
+toml are never merged, so the env var is the complete policy for that list.
+An env var set to the empty string is treated as unset, while a non-empty
+value that parses to zero selectors (for example `","`) fails startup.
+This policy governs the MCP surface only; the `runraid` CLI is not filtered
+by `[mcp.tools]`.
+
 ## Authentication
 
 Stdio MCP runs as a local trusted child process and does not use HTTP auth.

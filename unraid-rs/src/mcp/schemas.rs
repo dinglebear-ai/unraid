@@ -619,6 +619,13 @@ pub fn data_action_names() -> Vec<&'static str> {
         .collect()
 }
 
+/// Every canonical action name, in declaration order — the full unfiltered
+/// action enum. Re-exported so integration tests can pin the default
+/// (no-policy) MCP surface against the canonical list.
+pub fn all_action_names() -> Vec<&'static str> {
+    ACTIONS.iter().map(|a| a.name).collect()
+}
+
 /// The mutating (write-scoped) actions. Re-exported for the same reason as
 /// [`data_action_names`] — so the contract/scenario tests cover mutations too.
 pub fn write_action_names() -> Vec<&'static str> {

@@ -179,13 +179,13 @@ impl ServerHandler for UnraidRmcpServer {
                 None,
             ));
         }
-        let action_names = enabled_action_names(&self.state.config.tools);
-        if action_names.is_empty() {
+        if !tool_is_enabled(&self.state.config.tools) {
             return Err(ErrorData::invalid_request(
                 "unraid MCP tool is disabled by server policy",
                 None,
             ));
         }
+        let action_names = enabled_action_names(&self.state.config.tools);
         let schema = tool_definitions(&action_names);
         let text = serde_json::to_string_pretty(&schema)
             .map_err(|e| ErrorData::internal_error(format!("serialization error: {e}"), None))?;
@@ -203,6 +203,11 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<ListPromptsResult, ErrorData> {
         require_auth_context(&self.state, &context)?;
+        // Every prompt instructs the client to call the unraid tool, so a fully
+        // disabled tool must not advertise prompts that reference it.
+        if !tool_is_enabled(&self.state.config.tools) {
+            return Ok(ListPromptsResult::default());
+        }
         Ok(prompts::list_prompts())
     }
 
@@ -212,6 +217,12 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<GetPromptResponse, ErrorData> {
         require_auth_context(&self.state, &context)?;
+        if !tool_is_enabled(&self.state.config.tools) {
+            return Err(ErrorData::invalid_request(
+                "unraid MCP tool is disabled by server policy",
+                None,
+            ));
+        }
         prompts::get_prompt(request)
             .map(Into::into)
             .map_err(|e| ErrorData::invalid_params(e.to_string(), None))
