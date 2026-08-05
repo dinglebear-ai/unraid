@@ -136,12 +136,12 @@ export async function checkUpdate(): Promise<string> {
   return (await postJson<{ latest?: string }>({ action: "checkUpdate" })).latest ?? "";
 }
 
-/** Install a version (empty string = latest) into the array overlay venv. */
+/** Install a Rust release (empty string = latest) as the persistent binary overlay. */
 export async function updateServer(version: string): Promise<ConfigPayload> {
   return post({ action: "update", version });
 }
 
-/** Remove the overlay venv, reverting to the plugin-bundled version. */
+/** Remove the overlay binary, reverting to the plugin-bundled version. */
 export async function resetServer(): Promise<ConfigPayload> {
   return post({ action: "resetVersion" });
 }

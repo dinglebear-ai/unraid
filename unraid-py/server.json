@@ -7,13 +7,13 @@
     "url": "https://github.com/dinglebear-ai/unraid",
     "source": "github"
   },
-  "version": "0.0.0",
+  "version": "2.10.1",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "unraid-mcp",
-      "version": "0.0.0",
+      "version": "2.10.1",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"

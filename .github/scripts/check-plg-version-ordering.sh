@@ -84,8 +84,86 @@ EOF
   echo "ok: $name $last -> $current (sorts forward)"
 }
 
+# The mcp plugin version is not in its .plg template (VERSION_PLACEHOLDER); it
+# is derived at release time from the unraid-rs semver by
+# plugins/mcp/scripts/plugin-version.sh (0.3.1 -> 3.000.003.001). The candidate
+# must sort strictly after BOTH the highest legacy Python-lane v* release
+# (installed boxes may hold any of them) and every previously released epoch-3
+# version (one per unraid-rs-v* tag), all under LC_ALL=C byte order.
+check_mcp() {
+  local name="mcp"
+
+  local rust_version
+  rust_version="$(sed -n 's/^version = "\(.*\)"/\1/p' unraid-rs/Cargo.toml | head -1)"
+  if [ -z "$rust_version" ]; then
+    echo "error: $name: could not parse the package version from unraid-rs/Cargo.toml" >&2
+    status=1
+    return
+  fi
+
+  local current
+  if ! current="$(plugins/mcp/scripts/plugin-version.sh "$rust_version")"; then
+    echo "error: $name: plugin-version.sh rejected unraid-rs version '$rust_version'" >&2
+    status=1
+    return
+  fi
+
+  # Highest legacy Python-lane plugin version under C collation.
+  local legacy
+  legacy="$(git tag --list 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed 's/^v//' | LC_ALL=C sort | tail -1)"
+  if [ -n "$legacy" ] && { [ "$current" = "$legacy" ] || [ "$(greater "$legacy" "$current")" != "$current" ]; }; then
+    cat >&2 <<EOF
+error: $name version REGRESSES against the legacy Python plugin lane.
+       highest legacy release : $legacy
+       this build             : $current (from unraid-rs $rust_version)
+       Under LC_ALL=C byte order "$current" does not sort strictly after
+       "$legacy", so upgraded boxes on the old lane would silently refuse to
+       update. Fix plugins/mcp/scripts/plugin-version.sh's epoch mapping.
+EOF
+    status=1
+    return
+  fi
+
+  # Highest previously released epoch-3 version (mapped from unraid-rs-v* tags).
+  local last=""
+  local tag mapped
+  while IFS= read -r tag; do
+    mapped="$(plugins/mcp/scripts/plugin-version.sh "$tag" 2>/dev/null)" || continue
+    if [ -z "$last" ] || [ "$(greater "$last" "$mapped")" = "$mapped" ]; then
+      last="$mapped"
+    fi
+  done < <(git tag --list 'unraid-rs-v*')
+
+  if [ -z "$last" ]; then
+    echo "ok: $name $current (no prior unraid-rs-v* tag — first release)"
+    return
+  fi
+
+  if [ "$current" = "$last" ]; then
+    echo "ok: $name $current (unchanged since last release)"
+    return
+  fi
+
+  if [ "$(greater "$last" "$current")" != "$current" ]; then
+    cat >&2 <<EOF
+error: $name version REGRESSES under Unraid's string comparison.
+       last released : $last
+       this build    : $current (from unraid-rs $rust_version)
+       Under LC_ALL=C byte order "$current" sorts BEFORE "$last", so every
+       installed copy of this plugin would silently refuse to update.
+       Fix: bump unraid-rs/Cargo.toml so plugin-version.sh yields a version
+       that sorts after "$last".
+EOF
+    status=1
+    return
+  fi
+
+  echo "ok: $name $last -> $current (sorts forward)"
+}
+
 check_component "incus" "plugins/incus/incus.plg" "incus-v"
 check_component "codex" "plugins/codex/unraid-codex.plg" "codex-v"
+check_mcp
 
 if [ "$status" -ne 0 ]; then
   echo "plg version ordering check FAILED" >&2
