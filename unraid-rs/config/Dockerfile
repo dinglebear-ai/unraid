@@ -10,8 +10,13 @@ FROM rust:1.97-slim-bookworm AS builder
 WORKDIR /app
 RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
 
-# Cache deps layer — build a stub binary first so dependency compilation
-# is cached independently from source changes.
+# There is deliberately NO stub-binary "cache deps" layer here. Building a stub
+# first ran build.rs — which is what registers the cynic schema — and cargo then
+# considered build.rs fresh for the real build, so the schema module generated
+# against the stub was reused. Enum-typed fields (VmDomain.state,
+# UnraidArray.state, Registration.state) came out inaccessible and the lib failed
+# to compile. The cargo cache mounts below already cache dependency compilation
+# across builds, so the stub layer bought nothing. Do not reintroduce it.
 COPY Cargo.toml Cargo.lock ./
 # build.rs + the vendored SDL must be present before any `cargo build`: build.rs
 # calls cynic_codegen::register_schema(...).from_sdl_file("schema/unraid-schema.graphql"),
@@ -21,17 +26,17 @@ COPY build.rs ./
 COPY schema/ schema/
 # Strip xtask workspace member — not needed in Docker build context
 RUN sed -i 's/, \"xtask\"//g; s/\"xtask\", //g; s/\"xtask\"//g' Cargo.toml
-RUN --mount=type=cache,id=unraid-cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
-    --mount=type=cache,id=unraid-cargo-git,target=/usr/local/cargo/git,sharing=locked \
-    --mount=type=cache,id=unraid-cargo-target,target=/app/target,sharing=locked \
-    mkdir src && echo "fn main() {}" > src/main.rs && cargo build --release --locked -p unraid-rmcp && rm -rf src
 
-# Build real binary
+# crates/ must be copied: crates/lab-auth is a workspace member and a path
+# dependency of unraid-rmcp, so cargo refuses to load the workspace without it.
+# It was missing entirely, which is why the image build failed with
+# "failed to load manifest for workspace member /app/crates/lab-auth".
+COPY crates/ crates/
 COPY src/ src/
 RUN --mount=type=cache,id=unraid-cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
     --mount=type=cache,id=unraid-cargo-git,target=/usr/local/cargo/git,sharing=locked \
     --mount=type=cache,id=unraid-cargo-target,target=/app/target,sharing=locked \
-    touch src/main.rs && cargo build --release --locked -p unraid-rmcp && cp target/release/runraid /usr/local/bin/runraid
+    cargo build --release --locked -p unraid-rmcp && cp target/release/runraid /usr/local/bin/runraid
 
 # Runtime image — minimal Debian with TLS certs and curl for healthcheck
 # TODO: digest-pin (debian:bookworm-slim@sha256:...) for fully reproducible builds.
