@@ -302,6 +302,12 @@ jobs:
           file: ./unraid-rs/config/Dockerfile
           platforms: linux/amd64
           push: true
+          # This job recompiles the crate inside Docker moments after the `build`
+          # job compiled the same binary, with no layer cache at all. mode=min
+          # keeps only the final-stage layers, which is what the next release
+          # actually replays.
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
           tags: |
             ${{ env.RUST_IMAGE }}:${{ steps.tags.outputs.version }}
             ${{ env.RUST_IMAGE }}:latest

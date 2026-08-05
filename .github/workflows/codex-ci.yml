@@ -36,8 +36,38 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y file libxml2-utils shellcheck xz-utils
       - name: Install web dependencies
         run: npm ci --no-audit --no-fund --prefix web-src
+      # `playwright install --with-deps` re-downloads a ~150MB Chromium build on
+      # every run. Key the browser cache on the LOCKED playwright version (the
+      # browser revision is a property of that version) plus the runner OS, so a
+      # dependency bump misses the cache and everything else hits it.
+      - name: Resolve locked Playwright version
+        id: playwright
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./web-src/package-lock.json').packages['node_modules/playwright'].version")"
+          [ -n "$version" ] && [ "$version" != "undefined" ] \
+            || { echo "::error::could not resolve playwright version from web-src/package-lock.json"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright.outputs.version }}
+      # On a cache hit the browser binaries are already restored, but the apt
+      # libraries are not part of the cached path — install-deps only (fast, apt),
+      # skipping the browser download.
       - name: Install Chromium for the chathead smoke test
-        run: cd web-src && npx playwright install --with-deps chromium
+        env:
+          CACHE_HIT: ${{ steps.playwright-cache.outputs.cache-hit }}
+        run: |
+          set -euo pipefail
+          cd web-src
+          if [ "$CACHE_HIT" = "true" ]; then
+            npx playwright install-deps chromium
+          else
+            npx playwright install --with-deps chromium
+          fi
       - name: Verify publishable Codex release
         run: ./scripts/verify-release.sh
       - name: Run browser smoke

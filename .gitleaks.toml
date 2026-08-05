@@ -1,6 +1,12 @@
-# Gitleaks config for the Secret Scan CI job (.github/workflows/secret-scan.yml),
-# which runs `gitleaks git .` — GIT MODE, so it scans the whole commit history,
-# not just the working tree (build artifacts like unraid-rs/target/ are never seen).
+# Gitleaks config for MANUAL/local runs of `gitleaks git .` — GIT MODE, so it
+# scans the whole commit history, not just the working tree (build artifacts like
+# unraid-rs/target/ are never seen).
+#
+# There is no longer a CI job behind this file. .github/workflows/secret-scan.yml
+# was deleted in #266 because GitHub-native secret scanning and push protection
+# are both enabled on this public repo and cover every ref unfiltered. This config
+# stays because the allowlist below is still what makes an ad-hoc history scan
+# usable — see the tradeoff note next.
 #
 # ACCEPTED-RISK TRADEOFF (reviewed): the files listed below hold realistic-looking
 # PLACEHOLDER credentials — docs examples, generated openwiki, and test
