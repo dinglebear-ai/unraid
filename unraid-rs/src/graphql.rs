@@ -185,6 +185,15 @@ impl UnraidClient {
         Ok(data)
     }
 
+    /// Execute an already-assembled GraphQL body through the canonical transport.
+    ///
+    /// Dynamic schema discovery uses this crate-visible seam so it shares the
+    /// existing API-key header, TLS configuration, timeout, and sanitized error
+    /// classification rather than creating a second HTTP client.
+    pub(crate) async fn execute_graphql_body(&self, body: Value) -> Result<Value> {
+        self.send_graphql(body).await
+    }
+
     /// Expose the HTTP client and URL for the health probe.
     pub fn raw_client(&self) -> (&Client, &str, &str) {
         (&self.client, &self.url, &self.api_key)
@@ -1658,5 +1667,50 @@ impl UnraidClient {
         use cynic::QueryBuilder;
         self.run_typed(crate::gql_typed::ConnectReadQuery::build(()))
             .await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+    use wiremock::{
+        Mock, MockServer, ResponseTemplate,
+        matchers::{body_json, header, method},
+    };
+
+    use crate::config::UnraidConfig;
+
+    use super::UnraidClient;
+
+    #[tokio::test]
+    async fn dynamic_graphql_body_reuses_authenticated_transport() {
+        let server = MockServer::start().await;
+        let request_body = json!({
+            "query": "query DynamicTypes($n0: String!) { t0: __type(name: $n0) { name } }",
+            "variables": { "n0": "Query" }
+        });
+        Mock::given(method("POST"))
+            .and(header("x-api-key", "dynamic-test-key"))
+            .and(header("content-type", "application/json"))
+            .and(body_json(request_body.clone()))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "data": { "t0": { "name": "Query" } }
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let client = UnraidClient::new(&UnraidConfig {
+            api_url: server.uri(),
+            api_key: "dynamic-test-key".to_string(),
+            skip_tls_verify: false,
+        })
+        .expect("test client");
+
+        let data = client
+            .execute_graphql_body(request_body)
+            .await
+            .expect("dynamic body request");
+        assert_eq!(data, json!({ "t0": { "name": "Query" } }));
     }
 }

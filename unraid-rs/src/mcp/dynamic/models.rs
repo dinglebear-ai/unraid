@@ -1,10 +1,10 @@
-//! Immutable runtime models for dynamic MCP operations.
+//! Immutable runtime operation models.
 
 use super::types::{OperationPath, ToolName};
 
 /// Bootstrap executable metadata for one generated operation.
 ///
-/// Later compiler phases extend this model with arguments, schemas, selections,
+/// Catalog compilation extends this model with arguments, schemas, selections,
 /// authorization, risk, and availability metadata.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OperationSpec {

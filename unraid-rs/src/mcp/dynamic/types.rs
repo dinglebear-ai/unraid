@@ -94,6 +94,44 @@ graphql_name!(TypeName, "GraphQL type name");
 graphql_name!(FieldName, "GraphQL field name");
 graphql_name!(ToolName, "MCP tool name");
 
+/// Normalized GraphQL type reference.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub enum TypeRef {
+    /// Named scalar, enum, object, interface, union, or input-object type.
+    Named(TypeName),
+    /// GraphQL list wrapper.
+    List(Box<TypeRef>),
+    /// GraphQL non-null wrapper.
+    NonNull(Box<TypeRef>),
+}
+
+impl TypeRef {
+    /// Return the innermost named type.
+    pub fn named_type(&self) -> &TypeName {
+        match self {
+            Self::Named(name) => name,
+            Self::List(inner) | Self::NonNull(inner) => inner.named_type(),
+        }
+    }
+
+    /// Return the type with one outer non-null wrapper removed, if present.
+    pub fn nullable(&self) -> &TypeRef {
+        match self {
+            Self::NonNull(inner) => inner,
+            other => other,
+        }
+    }
+
+    /// Render canonical GraphQL type syntax.
+    pub fn to_graphql(&self) -> String {
+        match self {
+            Self::Named(name) => name.to_string(),
+            Self::List(inner) => format!("[{}]", inner.to_graphql()),
+            Self::NonNull(inner) => format!("{}!", inner.to_graphql()),
+        }
+    }
+}
+
 /// GraphQL operation category.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

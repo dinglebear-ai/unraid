@@ -45,6 +45,15 @@ Phase 00 baseline and inert module skeleton, followed by Phase 01 configuration 
 - Clippy first pass caught field_reassign_with_default in test setup only; test was refactored to a struct literal.
 - Phase 01 Clippy gate: cargo clippy --all-targets --all-features -- -D warnings passed.
 
+- RED: Phase 02 wire tests failed on missing introspection models, TypeRef conversion, and batch builder.
+- GREEN: targeted type query and wire-model tests passed 6 tests.
+- RED: transport tests failed on missing execute_graphql_body and fetch_type_batch.
+- GREEN: authenticated transport reuse and all-or-nothing batch validation joined the dynamic suite.
+- RED: normalization tests failed on missing normalized schema model and registry.
+- GREEN: normalization, immutable registry, bounded breadth-first crawl, and deterministic hashing passed in the 43-test dynamic suite.
+- Python full-schema capture now falls back to targeted type crawling; py_compile and --self-test pass.
+- Existing live_schema_contract snapshot test passed unchanged.
+
 ## TDD loop
 
 For each slice:
