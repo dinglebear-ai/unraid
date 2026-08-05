@@ -10,7 +10,7 @@ use rmcp::{
     ClientHandler, ErrorData,
     model::{
         CallToolRequestParams, ClientCapabilities, ClientInfo, ElicitRequestParams, ElicitResult,
-        ElicitationAction, Implementation, ReadResourceRequestParams,
+        ElicitationAction, GetPromptRequestParams, Implementation, ReadResourceRequestParams,
     },
     service::{RequestContext, RoleClient, RunningService, ServiceExt},
     transport::{ConfigureCommandExt, TokioChildProcess},
@@ -66,6 +66,7 @@ where
             .env("UNRAID_API_KEY", "test")
             .env("UNRAID_RMCP_NO_AUTH", "true")
             .env("RUST_LOG", "warn")
+            .env_remove("UNRAID_HOME")
             .env_remove("UNRAID_RMCP_TOKEN")
             .env_remove("UNRAID_RMCP_ENABLED_TOOLS")
             .env_remove("UNRAID_RMCP_DISABLED_TOOLS");
@@ -259,10 +260,44 @@ async fn stdio_filters_advertised_actions_and_rejects_disabled_calls() {
         )
         .await
         .unwrap();
-    assert_eq!(
-        text_content_json(&help)["enabled_actions"],
-        json!(["status", "help"])
+    let help = text_content_json(&help);
+    assert_eq!(help["enabled_actions"], json!(["status", "help"]));
+    let filtered_help = help["help"].as_str().unwrap_or_default();
+    assert!(filtered_help.contains("`status`") && filtered_help.contains("`help`"));
+    assert!(
+        !filtered_help.contains("`array`"),
+        "primary help must not advertise a disabled action: {filtered_help}"
     );
+    assert!(
+        help.get("full_reference").is_none(),
+        "disabled action catalog must not be exposed through help"
+    );
+
+    let prompts = service.list_prompts(Default::default()).await.unwrap();
+    assert!(
+        prompts.prompts.is_empty(),
+        "server_summary must not be advertised when none of its data actions are enabled"
+    );
+    let prompt_error = service
+        .get_prompt(GetPromptRequestParams::new("server_summary"))
+        .await
+        .unwrap_err();
+    assert!(
+        prompt_error.to_string().contains("prompt unavailable"),
+        "disabled prompt error was: {prompt_error}"
+    );
+
+    let counters = service
+        .call_tool(
+            CallToolRequestParams::new("unraid")
+                .with_arguments(json!({"action": "status"}).as_object().unwrap().clone()),
+        )
+        .await
+        .unwrap();
+    let counters = text_content_json(&counters);
+    assert_eq!(counters["counters"]["requests_total"], 4);
+    assert_eq!(counters["counters"]["errors_total"], 1);
+    assert_eq!(counters["counters"]["upstream_calls"], 0);
 
     cancel_and_drain(service, stderr).await;
 }
@@ -305,7 +340,10 @@ async fn stdio_can_disable_the_entire_mcp_tool() {
 /// full canonical action enum. Breaking this bricks default plugin installs.
 #[tokio::test]
 async fn stdio_empty_policy_env_vars_expose_the_full_action_enum() {
+    let temp = TempDir::new().unwrap();
+    let home = temp.path().to_string_lossy().into_owned();
     let (service, stderr) = stdio_client_with_env(&[
+        ("HOME", &home),
         ("UNRAID_RMCP_ENABLED_TOOLS", ""),
         ("UNRAID_RMCP_DISABLED_TOOLS", ""),
     ])
@@ -318,6 +356,103 @@ async fn stdio_empty_policy_env_vars_expose_the_full_action_enum() {
     assert_eq!(
         tool["inputSchema"]["properties"]["action"]["enum"],
         serde_json::to_value(unraid_rmcp::mcp::all_action_names()).unwrap()
+    );
+
+    cancel_and_drain(service, stderr).await;
+}
+
+#[tokio::test]
+async fn stdio_empty_plugin_values_inherit_dotenv_policy() {
+    let temp = TempDir::new().unwrap();
+    std::fs::write(
+        temp.path().join(".env"),
+        "UNRAID_RMCP_ENABLED_TOOLS=status,help\n",
+    )
+    .unwrap();
+    let unraid_home = temp.path().to_string_lossy().into_owned();
+    let (service, stderr) = stdio_client_with_env(&[
+        ("UNRAID_HOME", &unraid_home),
+        ("UNRAID_RMCP_ENABLED_TOOLS", ""),
+        ("UNRAID_RMCP_DISABLED_TOOLS", ""),
+    ])
+    .await
+    .unwrap();
+
+    let tools = service.list_tools(Default::default()).await.unwrap();
+    let tool = serde_json::to_value(&tools.tools[0]).unwrap();
+    assert_eq!(
+        tool["inputSchema"]["properties"]["action"]["enum"],
+        json!(["status", "help"])
+    );
+
+    cancel_and_drain(service, stderr).await;
+}
+
+#[tokio::test]
+async fn stdio_prompt_mentions_only_enabled_summary_actions() {
+    let (service, stderr) =
+        stdio_client_with_env(&[("UNRAID_RMCP_ENABLED_TOOLS", "info,array,help")])
+            .await
+            .unwrap();
+
+    let prompts = service.list_prompts(Default::default()).await.unwrap();
+    assert_eq!(prompts.prompts.len(), 1);
+    assert_eq!(prompts.prompts[0].name, "server_summary");
+
+    let prompt = service
+        .get_prompt(GetPromptRequestParams::new("server_summary"))
+        .await
+        .unwrap();
+    let prompt = serde_json::to_string(&prompt).unwrap();
+    for enabled in ["action=info", "action=array"] {
+        assert!(
+            prompt.contains(enabled),
+            "prompt omitted {enabled}: {prompt}"
+        );
+    }
+    for disabled in [
+        "action=disks",
+        "action=vms",
+        "action=docker",
+        "action=notifications",
+    ] {
+        assert!(
+            !prompt.contains(disabled),
+            "prompt referenced disabled {disabled}: {prompt}"
+        );
+    }
+
+    cancel_and_drain(service, stderr).await;
+}
+
+#[tokio::test]
+async fn stdio_validation_guidance_respects_enabled_actions() {
+    let (service, stderr) = stdio_client_with_env(&[("UNRAID_RMCP_ENABLED_TOOLS", "status")])
+        .await
+        .unwrap();
+
+    let tools = service.list_tools(Default::default()).await.unwrap();
+    let tool = serde_json::to_value(&tools.tools[0]).unwrap();
+    assert!(
+        !tool["description"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("action=help"),
+        "tool description must not recommend disabled help: {tool}"
+    );
+
+    let error = service
+        .call_tool(CallToolRequestParams::new("unraid"))
+        .await
+        .unwrap_err();
+    let error = error.to_string();
+    assert!(
+        error.contains("Example") && error.contains("status"),
+        "missing-action error must use an enabled example: {error}"
+    );
+    assert!(
+        !error.contains("action=help") && !error.contains("docker"),
+        "missing-action error referenced a disabled action: {error}"
     );
 
     cancel_and_drain(service, stderr).await;

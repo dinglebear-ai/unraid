@@ -124,6 +124,37 @@ fn binary_refuses_to_start_on_separator_only_tool_selector_value() {
     );
 }
 
+/// Unknown keys under `[mcp.tools]` are security-sensitive typos and must
+/// fail closed instead of silently leaving actions exposed.
+#[test]
+fn binary_refuses_unknown_mcp_tools_toml_keys() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::write(
+        dir.path().join("config.toml"),
+        "[mcp.tools]\ndisable = [\"vm_reset\"]\n",
+    )
+    .unwrap();
+
+    let out = Command::new(env!("CARGO_BIN_EXE_runraid"))
+        .arg("mcp")
+        .current_dir(dir.path())
+        .env("UNRAID_API_URL", "http://localhost:1/graphql")
+        .env("UNRAID_API_KEY", "test")
+        .env_remove("UNRAID_RMCP_ENABLED_TOOLS")
+        .env_remove("UNRAID_RMCP_DISABLED_TOOLS")
+        .output()
+        .expect("spawn runraid");
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        !out.status.success(),
+        "runraid must reject unknown [mcp.tools] keys; stderr: {stderr}"
+    );
+    assert!(
+        stderr.contains("unknown field") && stderr.contains("disable"),
+        "parse error must identify the typo; got: {stderr}"
+    );
+}
+
 #[tokio::test]
 async fn binary_passes_id_argument() {
     let server = mock_server("healthy").await;

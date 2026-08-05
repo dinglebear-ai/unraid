@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -53,7 +55,7 @@ impl McpConfig {
 /// bare action such as `docker_logs`, or a qualified action such as
 /// `unraid.docker_logs`.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub struct McpToolsConfig {
     pub enabled: Vec<String>,
     pub disabled: Vec<String>,
@@ -133,12 +135,13 @@ pub fn default_data_dir() -> std::path::PathBuf {
 /// `~/.unraid/.env` (or `/data/.env` in a container), into the process
 /// environment if present.
 ///
-/// Best-effort: a missing file is ignored, and existing env vars are NOT
-/// overridden — values injected by docker-compose/systemd or the plugin hook's
-/// `CLAUDE_PLUGIN_OPTION_*` mapping still take precedence. This lets the binary
-/// find its credentials directly from `~/.unraid/.env` without relying on a
-/// process manager. Call once at startup before `Config::load`. A symlinked
-/// `.env` is refused (the dir holds secrets; mirrors axon).
+/// Best-effort: a missing file is ignored, and existing NON-EMPTY env vars are
+/// not overridden — values injected by docker-compose/systemd or plugin config
+/// still take precedence. Empty process values are treated as placeholders and
+/// may be filled from `.env`; this prevents optional `${user_config.*}` entries
+/// from masking persisted credentials or tool policy. Call once at startup before
+/// `Config::load`. A symlinked `.env` is refused (the dir holds secrets; mirrors
+/// axon).
 pub fn load_dotenv() {
     let env_path = default_data_dir().join(".env");
     match std::fs::symlink_metadata(&env_path) {
@@ -149,10 +152,31 @@ pub fn load_dotenv() {
             );
             std::process::exit(1);
         }
-        Ok(_) => {
-            let _ = dotenvy::from_path(&env_path);
-        }
+        Ok(_) => load_dotenv_file(&env_path),
         Err(_) => {}
+    }
+}
+
+fn load_dotenv_file(path: &std::path::Path) {
+    let Ok(iter) = dotenvy::from_path_iter(path) else {
+        return;
+    };
+    let mut seen = HashSet::new();
+    for item in iter {
+        let Ok((key, value)) = item else {
+            break;
+        };
+        // Match dotenvy's normal first-declaration-wins behavior.
+        if !seen.insert(key.clone()) {
+            continue;
+        }
+        let should_set = std::env::var_os(&key).is_none_or(|existing| existing.is_empty());
+        if should_set {
+            // SAFETY: load_dotenv() runs once during process startup, before any
+            // worker threads or async tasks are created, so environment mutation
+            // cannot race another thread.
+            unsafe { std::env::set_var(key, value) };
+        }
     }
 }
 

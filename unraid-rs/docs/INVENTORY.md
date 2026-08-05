@@ -4,7 +4,7 @@ Complete listing of all MCP actions, CLI commands, env vars, HTTP endpoints, and
 
 ## MCP tool: `unraid`
 
-One tool is exposed. The required `action` argument selects the operation. All actions are read-only.
+One action-based tool is exposed when at least one action is enabled. The required `action` argument selects the operation; actions include read-only queries, local meta operations, and admin-scoped mutations.
 
 ### Core actions
 
@@ -70,7 +70,7 @@ One tool is exposed. The required `action` argument selects the operation. All a
 | Action | Description |
 |--------|-------------|
 | `status` | Server observability: version, PID, uptime, request counters (requires `unraid:read`; MCP-only) |
-| `help` | Markdown reference for all actions (no auth scope required) |
+| `help` | Markdown reference for actions enabled by server policy (no auth scope required) |
 
 ### Action parameters
 
@@ -99,7 +99,7 @@ List actions return a paginated envelope: `{items, total, limit, offset, has_mor
 
 | Name | Description |
 |------|-------------|
-| `server_summary` | Instructs the model to call `action=info` and summarise array, disks, VMs, containers, notifications |
+| `server_summary` | Advertised only when at least one summary-data action is enabled; instructs the model to call only the enabled subset of `info`, `array`, `disks`, `vms`, `docker`, and `notifications` |
 
 ## CLI commands
 
@@ -162,8 +162,11 @@ Server/transport commands:
 | `UNRAID_API_URL` | **yes** | — | Unraid GraphQL endpoint |
 | `UNRAID_API_KEY` | **yes** | — | API key sent as `x-api-key` header |
 | `UNRAID_API_SKIP_TLS_VERIFY` | no | `false` | Skip TLS certificate verification |
+| `UNRAID_HOME` | no | `/data` in containers, `~/.unraid` locally | Exact data directory for `.env`, auth DB, and JWT key |
 | `UNRAID_RMCP_HOST` | no | `0.0.0.0` | Bind host for the MCP HTTP server |
 | `UNRAID_RMCP_PORT` | no | `40010` | Bind port |
+| `UNRAID_RMCP_ENABLED_TOOLS` | no | — | Comma-separated MCP tool/action allowlist; empty inherits persisted `.env` policy |
+| `UNRAID_RMCP_DISABLED_TOOLS` | no | — | Comma-separated MCP tool/action denylist; deny rules win |
 | `UNRAID_RMCP_TOKEN` | no | — | Static bearer token for `/mcp` |
 | `UNRAID_RMCP_DISABLE_HTTP_AUTH` | no | `false` | Disable MCP auth (1/true/yes) |
 | `UNRAID_RMCP_NO_AUTH` | no | `false` | Alias for disabling auth |
@@ -179,7 +182,7 @@ Server/transport commands:
 |-------|---------|
 | `tokio` | Async runtime |
 | `axum` | HTTP framework |
-| `rmcp` 1.6 | MCP protocol and transports |
+| `rmcp` 3.1 | MCP protocol and transports |
 | `tower-http` | CORS, body limit, tracing middleware |
 | `reqwest` | GraphQL HTTP client (rustls, no OpenSSL) |
 | `serde` / `serde_json` | Serialization |

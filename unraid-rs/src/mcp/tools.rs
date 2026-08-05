@@ -10,7 +10,7 @@ use crate::token_limit::truncate_if_needed;
 use self::arg_helpers::{i64_arg, string_arg, string_array_arg, usize_arg};
 use self::paginate::paginate_array;
 use super::AppState;
-use super::tool_filter::{enabled_action_names, ensure_tool_call_enabled};
+use super::tool_filter::{action_is_enabled, enabled_action_names, ensure_tool_call_enabled};
 
 /// Typed outcome of a tool dispatch, used to *route* failures at the MCP protocol
 /// boundary without matching on message prose.
@@ -52,13 +52,18 @@ impl ToolError {
 /// Routing is by typed source: if the error chain contains an [`UpstreamError`]
 /// (produced by `graphql.rs`), classify by its variant and wrap the message with
 /// helpful, action-specific guidance. Anything else is an internal failure.
-fn classify_service_error(err: anyhow::Error, action: &str) -> ToolError {
+fn classify_service_error(err: anyhow::Error, action: &str, status_enabled: bool) -> ToolError {
+    let status_hint = if status_enabled {
+        "\nUse action=status to check server health."
+    } else {
+        ""
+    };
     match err.downcast_ref::<UpstreamError>() {
         Some(UpstreamError::Unreachable(msg)) => ToolError::UpstreamUnreachable(format!(
             "ERROR: {action} failed — upstream unreachable\n\
              Reason: {msg}\n\
-             Hint: check that UNRAID_API_URL is reachable and UNRAID_API_KEY is valid.\n\
-             Use action=status to check server health."
+             Hint: check that UNRAID_API_URL is reachable and UNRAID_API_KEY is valid.\
+             {status_hint}"
         )),
         Some(UpstreamError::Auth(msg)) => ToolError::UpstreamAuth(format!(
             "ERROR: {action} failed — API key rejected\n\
@@ -68,10 +73,17 @@ fn classify_service_error(err: anyhow::Error, action: &str) -> ToolError {
         Some(UpstreamError::Other(msg)) => ToolError::Upstream(format!(
             "ERROR: {action} failed\n\
              Reason: {msg}\n\
-             Hint: check UNRAID_API_URL and UNRAID_API_KEY. \
-             Use action=status to check server health."
+             Hint: check UNRAID_API_URL and UNRAID_API_KEY.{status_hint}"
         )),
         None => ToolError::Internal(err.context(format!("{action} failed"))),
+    }
+}
+
+fn enabled_action_hint<'a>(state: &AppState, action: &str, hint: &'a str) -> &'a str {
+    if action_is_enabled(&state.config.tools, action) {
+        hint
+    } else {
+        ""
     }
 }
 
@@ -97,11 +109,14 @@ pub(crate) async fn execute_tool(
 
     match name {
         "unraid" => dispatch(state, args).await,
-        _ => Err(ToolError::InvalidParams(format!(
-            "unknown tool: {name}\n\
-             Hint: the only supported tool is \"unraid\".\n\
-             Use action=help for documentation."
-        ))),
+        _ => {
+            let help_hint =
+                enabled_action_hint(state, "help", "\nUse action=help for documentation.");
+            Err(ToolError::InvalidParams(format!(
+                "unknown tool: {name}\n\
+                 Hint: the only supported tool is \"unraid\".{help_hint}"
+            )))
+        }
     }
 }
 
@@ -117,12 +132,20 @@ async fn dispatch(state: &AppState, args: Value) -> Result<Value, ToolError> {
     let action = match string_arg(&args, "action") {
         Some(a) => a,
         None => {
-            let valid = enabled_action_names(&state.config.tools).join(", ");
+            let enabled = enabled_action_names(&state.config.tools);
+            let valid = enabled.join(", ");
+            let example = enabled
+                .iter()
+                .copied()
+                .find(|action| *action != "help")
+                .or_else(|| enabled.first().copied())
+                .unwrap_or("help");
+            let help_hint =
+                enabled_action_hint(state, "help", "\nSee: action=help for full documentation.");
             return Err(ToolError::InvalidParams(format!(
                 "\"action\" is required.\n\
                  Valid actions: {valid}\n\
-                 Example: {{\"action\": \"docker\"}}\n\
-                 See: action=help for full documentation."
+                 Example: {{\"action\": \"{example}\"}}{help_hint}"
             )));
         }
     };
@@ -156,7 +179,7 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
             state.counters.inc_upstream();
             ($fut).await.map_err(|e| {
                 state.counters.inc_upstream_err();
-                classify_service_error(e, action)
+                classify_service_error(e, action, action_is_enabled(&state.config.tools, "status"))
             })
         }};
     }
@@ -181,12 +204,15 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
 
         "docker_logs" => {
             let id = string_arg(args, "id").ok_or_else(|| {
-                ToolError::InvalidParams(
-                    "\"id\" is required for action=docker_logs.\n\
-                     Hint: call action=docker first to list available container IDs.\n\
-                     Example: {\"action\": \"docker_logs\", \"id\": \"<container_id>\", \"tail\": 100}"
-                        .to_string(),
-                )
+                let lookup_hint = enabled_action_hint(
+                    state,
+                    "docker",
+                    "\nHint: call action=docker first to list available container IDs.",
+                );
+                ToolError::InvalidParams(format!(
+                    "\"id\" is required for action=docker_logs.{lookup_hint}\n\
+                     Example: {{\"action\": \"docker_logs\", \"id\": \"<container_id>\", \"tail\": 100}}"
+                ))
             })?;
             let tail = arg!(i64_arg(args, "tail"));
             svc!(state.service.docker_logs(&id, tail))
@@ -233,12 +259,15 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
 
         "log_file" => {
             let path = string_arg(args, "path").ok_or_else(|| {
-                ToolError::InvalidParams(
-                    "\"path\" is required for action=log_file.\n\
-                     Hint: call action=log_files first to list available log file paths.\n\
-                     Example: {\"action\": \"log_file\", \"path\": \"/var/log/syslog\", \"lines\": 100}"
-                        .to_string(),
-                )
+                let lookup_hint = enabled_action_hint(
+                    state,
+                    "log_files",
+                    "\nHint: call action=log_files first to list available log file paths.",
+                );
+                ToolError::InvalidParams(format!(
+                    "\"path\" is required for action=log_file.{lookup_hint}\n\
+                     Example: {{\"action\": \"log_file\", \"path\": \"/var/log/syslog\", \"lines\": 100}}"
+                ))
             })?;
             let lines = arg!(i64_arg(args, "lines"));
             let start_line = arg!(i64_arg(args, "start_line"));
@@ -1087,17 +1116,21 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
             }))
         }
 
-        "help" => Ok(json!({
-            "help": HELP_TEXT,
-            "enabled_actions": enabled_action_names(&state.config.tools),
-        })),
+        "help" => {
+            let enabled_actions = enabled_action_names(&state.config.tools);
+            Ok(json!({
+                "help": enabled_help_text(&enabled_actions),
+                "enabled_actions": enabled_actions,
+            }))
+        }
 
         other => {
             let valid = enabled_action_names(&state.config.tools).join(", ");
+            let help_hint =
+                enabled_action_hint(state, "help", "\nSee: action=help for full documentation.");
             Err(ToolError::InvalidParams(format!(
                 "unknown unraid action: \"{other}\"\n\
-                 Valid actions: {valid}\n\
-                 See: action=help for full documentation."
+                 Valid actions: {valid}{help_hint}"
             )))
         }
     }
@@ -1105,62 +1138,18 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
 
 // ── help text ─────────────────────────────────────────────────────────────────
 
-const HELP_TEXT: &str = r#"# unraid MCP Tool
-
-Read-only access to the Unraid server via its GraphQL API.
-Set the required `action` argument to select the operation.
-The response's `enabled_actions` list is authoritative when server policy filters actions.
-
-## Core
-- `array`          — Array state, disk health, parity, capacity
-- `disks`          — Physical disks with SMART status and temps
-- `docker`         — All Docker containers (supports limit, offset, state filter)
-- `docker_logs`    — Container logs (requires `id`, optional `tail`)
-                     Hint: call action=docker first to get a container id.
-- `vms`            — Virtual machines and state (supports limit, offset)
-- `server`         — Server identity, IPs, online status
-- `info`           — OS, CPU, memory, Unraid/kernel versions
-- `shares`         — User shares with sizes and cache settings (supports limit, offset, name filter)
-- `notifications`  — Active warnings/alerts and overview counts (supports limit, offset)
-
-## System
-- `services`       — Running system services and uptime (supports limit, offset)
-- `network`        — Network access URLs
-- `metrics`        — Live CPU, memory, and temperature readings
-- `vars`           — System configuration variables
-- `registration`   — License registration state and expiry
-- `flash`          — USB flash drive info
-
-## Logs
-- `log_files`      — List available log files with sizes (supports limit, offset)
-                     Hint: call this first to get valid paths for action=log_file.
-- `log_file`       — Read a log file (requires `path`, optional `lines`, `start_line`)
-
-## Storage
-- `parity_history` — All past parity check results (supports limit, offset)
-- `rclone`         — Backup remote configurations
-
-## UPS
-- `ups`            — UPS devices: battery, power, status (supports limit, offset)
-- `ups_config`     — UPS monitoring configuration
-
-## Remote access
-- `remote_access`  — WAN access type, port forwarding config
-- `connect`        — Unraid Connect dynamic remote access status
-
-## Plugins
-- `plugins`        — Installed community plugins with versions (supports limit, offset, name filter)
-
-## Observability
-- `status`         — Server runtime state, request counters, pid
-
-## Pagination (for list actions)
-Pass `limit` (default 50, max 200) and `offset` (default 0) to page through results.
-Response shape: {items, total, limit, offset, has_more, next_offset}
-
-## Meta
-- `help`           — This documentation
-"#;
+fn enabled_help_text(enabled_actions: &[&str]) -> String {
+    let actions = enabled_actions
+        .iter()
+        .map(|action| format!("- `{action}`"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!(
+        "# unraid MCP Tool\n\nEnabled actions on this server:\n{actions}\n\n\
+         Use the tools/list schema for action parameters. Disabled actions are omitted from \
+         discovery and help."
+    )
+}
 
 #[cfg(test)]
 mod tests {
@@ -1189,7 +1178,7 @@ mod tests {
     #[test]
     fn classify_maps_unreachable_upstream_error() {
         let err = anyhow::Error::from(UpstreamError::Unreachable("nope".into()));
-        let classified = classify_service_error(err, "array");
+        let classified = classify_service_error(err, "array", true);
         assert!(matches!(classified, ToolError::UpstreamUnreachable(_)));
         assert!(!classified.is_invalid_params());
         // Helpful, action-specific message text is preserved.
@@ -1197,9 +1186,19 @@ mod tests {
     }
 
     #[test]
+    fn classify_omits_status_hint_when_status_is_disabled() {
+        let err = anyhow::Error::from(UpstreamError::Unreachable("nope".into()));
+        let classified = classify_service_error(err, "array", false);
+        assert!(
+            !classified.to_string().contains("action=status"),
+            "disabled status action must not be recommended"
+        );
+    }
+
+    #[test]
     fn classify_maps_auth_upstream_error() {
         let err = anyhow::Error::from(UpstreamError::Auth("rejected".into()));
-        let classified = classify_service_error(err, "disks");
+        let classified = classify_service_error(err, "disks", true);
         assert!(matches!(classified, ToolError::UpstreamAuth(_)));
         assert!(!classified.is_invalid_params());
         assert!(classified.to_string().contains("API key rejected"));
@@ -1208,7 +1207,7 @@ mod tests {
     #[test]
     fn classify_maps_other_upstream_error() {
         let err = anyhow::Error::from(UpstreamError::Other("HTTP 500".into()));
-        let classified = classify_service_error(err, "metrics");
+        let classified = classify_service_error(err, "metrics", true);
         assert!(matches!(classified, ToolError::Upstream(_)));
         assert!(!classified.is_invalid_params());
     }
@@ -1218,7 +1217,7 @@ mod tests {
         // An error with no UpstreamError in its chain is an internal failure, and
         // routes in-band (not invalid_params).
         let err = anyhow::anyhow!("some non-upstream failure");
-        let classified = classify_service_error(err, "info");
+        let classified = classify_service_error(err, "info", false);
         assert!(matches!(classified, ToolError::Internal(_)));
         assert!(!classified.is_invalid_params());
     }
@@ -1229,7 +1228,7 @@ mod tests {
         // it does not match on the top-level message.
         let err = anyhow::Error::from(UpstreamError::Auth("401".into()))
             .context("while fetching docker containers");
-        let classified = classify_service_error(err, "docker");
+        let classified = classify_service_error(err, "docker", true);
         assert!(matches!(classified, ToolError::UpstreamAuth(_)));
     }
 }

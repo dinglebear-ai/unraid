@@ -170,6 +170,7 @@ async fn jwt_with_wrong_issuer_returns_401() {
 async fn jwt_with_empty_scope_is_denied_at_scope_check() {
     let dir = TempDir::new().unwrap();
     let (state, auth_state) = testing::oauth_state_with_auth_state(dir.path()).await;
+    let counters = state.counters.clone();
     let token = auth_state
         .signing_keys
         .issue_access_token(&make_claims(&auth_state, "", 60))
@@ -191,6 +192,10 @@ async fn jwt_with_empty_scope_is_denied_at_scope_check() {
         msg.contains("forbidden") || msg.contains("scope"),
         "error message should mention 'forbidden' or 'scope'; got: {msg}"
     );
+    let snapshot = counters.snapshot();
+    assert_eq!(snapshot.requests_total, 1);
+    assert_eq!(snapshot.errors_total, 1);
+    assert_eq!(snapshot.upstream_calls, 0);
 }
 
 /// `tools/list` with valid JWT -> 200 and unraid tool present.

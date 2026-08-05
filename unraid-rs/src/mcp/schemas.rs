@@ -637,9 +637,18 @@ pub fn write_action_names() -> Vec<&'static str> {
 }
 
 pub(super) fn tool_definitions(action_names: &[&str]) -> Vec<Value> {
+    let help_hint = if action_names.contains(&"help") {
+        " Use action=help for documentation."
+    } else {
+        ""
+    };
+    let description = format!(
+        "Query and manage the Unraid server via its GraphQL API. Read actions need scope \
+         unraid:read; mutating actions need unraid:admin.{help_hint}"
+    );
     vec![json!({
         "name": "unraid",
-        "description": "Query and manage the Unraid server via its GraphQL API. Read actions need scope unraid:read; mutating actions need unraid:admin. Use action=help for documentation.",
+        "description": description,
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -782,6 +791,25 @@ mod tests {
         assert_eq!(
             definitions[0]["inputSchema"]["properties"]["action"]["enum"],
             json!(derived)
+        );
+    }
+
+    #[test]
+    fn schema_description_only_recommends_enabled_help() {
+        let with_help = tool_definitions(&["status", "help"]);
+        assert!(
+            with_help[0]["description"]
+                .as_str()
+                .unwrap()
+                .contains("action=help")
+        );
+
+        let without_help = tool_definitions(&["status"]);
+        assert!(
+            !without_help[0]["description"]
+                .as_str()
+                .unwrap()
+                .contains("action=help")
         );
     }
 
