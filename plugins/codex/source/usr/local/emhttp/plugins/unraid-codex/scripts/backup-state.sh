@@ -8,10 +8,16 @@ POOL="${CODEX_STATE_POOL:-default}"
 VOLUME="${CODEX_STATE_VOLUME:-unraid-codex-state}"
 PLUGIN_CONFIG="${CODEX_PLUGIN_CONFIG:-/boot/config/plugins/unraid-codex}"
 BACKUP_DIR="${CODEX_BACKUP_DIR:-/mnt/cache_appdata/appdata/unraid-codex/backups}"
+BACKUP_TMP_DIR="${CODEX_BACKUP_TMP_DIR:-/run}"
 KEY_FILE="$PLUGIN_CONFIG/backup.key"
 LOCK_FILE="${CODEX_MAINTENANCE_LOCK:-/var/run/unraid-codex-maintenance.lock}"
 KEEP_SNAPSHOTS="${CODEX_KEEP_SNAPSHOTS:-14}"
 KEEP_EXPORT_DAYS="${CODEX_KEEP_EXPORT_DAYS:-30}"
+PBKDF2_ITERATIONS=200000
+if [[ "${CODEX_TEST_ALLOW_NON_ROOT:-0}" = "1" && -n "${CODEX_TEST_PBKDF2_ITERATIONS:-}" ]]; then
+  PBKDF2_ITERATIONS="$CODEX_TEST_PBKDF2_ITERATIONS"
+fi
+[[ "$PBKDF2_ITERATIONS" =~ ^[1-9][0-9]*$ ]] || { echo "invalid PBKDF2 iteration count" >&2; exit 2; }
 service_was_running=0
 plain=""
 
@@ -30,7 +36,7 @@ trap cleanup EXIT INT TERM
 source "$INCUS_ENV"
 export INCUS_DIR
 
-install -d -m 0700 "$PLUGIN_CONFIG" "$BACKUP_DIR"
+install -d -m 0700 "$PLUGIN_CONFIG" "$BACKUP_DIR" "$BACKUP_TMP_DIR"
 exec 9>"$LOCK_FILE"
 flock -w 300 9
 
@@ -59,21 +65,18 @@ if [[ "$service_was_running" -eq 1 ]]; then
   service_was_running=0
 fi
 
-plain="$(mktemp /run/unraid-codex-state.XXXXXX.tar.gz)"
+plain="$(mktemp "$BACKUP_TMP_DIR/unraid-codex-state.XXXXXX.tar.gz")"
 incus </dev/null storage volume export "$POOL" "$VOLUME/$snapshot" "$plain"   --force --volume-only --compression gzip
 
 final="$BACKUP_DIR/unraid-codex-state-$stamp.tar.gz.enc"
 tmp="$final.tmp"
 enc_pass="$(cut -c1-64 "$KEY_FILE")"
 hmac_key="$(cut -c65-128 "$KEY_FILE")"
-printf '%s' "$enc_pass" | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt   -in "$plain" -out "$tmp" -pass stdin
+printf '%s' "$enc_pass" | openssl enc -aes-256-cbc -pbkdf2 -iter "$PBKDF2_ITERATIONS" -salt \
+  -in "$plain" -out "$tmp" -pass stdin
 chmod 0600 "$tmp"
-python3 - "$tmp" "$hmac_key" >"$tmp.hmac" <<'PY'
-import hashlib, hmac, pathlib, sys
-path = pathlib.Path(sys.argv[1])
-key = bytes.fromhex(sys.argv[2])
-print(hmac.new(key, path.read_bytes(), hashlib.sha256).hexdigest())
-PY
+openssl dgst -sha256 -mac HMAC -macopt "hexkey:$hmac_key" "$tmp" \
+  | awk '{print $NF}' >"$tmp.hmac"
 sha256sum "$tmp" | awk '{print $1}' >"$tmp.sha256"
 chmod 0600 "$tmp.hmac" "$tmp.sha256"
 mv "$tmp" "$final"

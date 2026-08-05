@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+plugin_dir="$(cd "${script_dir}/.." && pwd)"
+
 if [[ $# -ne 3 ]]; then
   echo "usage: $0 <package.txz> <YYYYMMDD.NNN> <build>" >&2
   exit 2
@@ -33,6 +36,12 @@ if tar --numeric-owner -tvJf "$package" | awk '$2 != "0/0" { bad = 1 } END { exi
 fi
 
 tar -xJf "$package" -C "$stage"
+if ! diff -u \
+  <({ cd "$plugin_dir/source"; find . -type f -printf '%P\n'; printf 'install/slack-desc\n'; } | LC_ALL=C sort) \
+  <(cd "$stage" && find . -type f -printf '%P\n' | LC_ALL=C sort); then
+  echo "package file structure does not exactly match the tracked source payload" >&2
+  exit 1
+fi
 if find "$stage" -type l -print -quit | grep -q .; then
   echo "package must not contain symbolic links" >&2
   exit 1
@@ -60,6 +69,8 @@ required=(
   usr/local/emhttp/plugins/unraid-codex/web/unraid-codex.js
   usr/local/emhttp/plugins/unraid-codex/web/unraid-codex.css
   usr/local/emhttp/plugins/unraid-codex/scripts/start-appserver.sh
+  usr/local/emhttp/plugins/unraid-codex/scripts/backup-state.sh
+  usr/local/emhttp/plugins/unraid-codex/scripts/restore-state.sh
   usr/local/emhttp/plugins/unraid-codex/scripts/provision-container.sh
   usr/local/emhttp/plugins/unraid-codex/scripts/update-codex-cli.sh
   usr/local/emhttp/plugins/unraid-codex/scripts/verify-codex-cli.sh
