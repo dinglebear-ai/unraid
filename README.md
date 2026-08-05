@@ -19,7 +19,7 @@ OS plugins, plus the Claude/Codex agent integrations that surface them.
 |------|-----------|-----------|--------------|
 | [`unraid-py/`](unraid-py/) | **unraid-mcp** — Python MCP server (GraphQL), the flagship. Published to PyPI as `unraid-mcp`. | Python / uv / hatchling | `cd unraid-py && uv run pytest && uv build --wheel` |
 | [`unraid-rs/`](unraid-rs/) | **runraid** — Rust MCP server + CLI (single static binary). Crate `unraid-rmcp` on crates.io, plus a legacy npm wrapper of the same name. | Rust / cargo | `cd unraid-rs && cargo fmt --check && cargo clippy --all-targets --features test-support -- -D warnings && cargo test` |
-| [`plugins/mcp/`](plugins/mcp/) | Unraid OS plugin that ships the Python MCP server onto an Unraid box. | shell `.plg` + Python | `bash plugins/mcp/scripts/build-txz.sh <ver> <wheel>` |
+| [`plugins/mcp/`](plugins/mcp/) | Unraid OS plugin that ships the Rust `runraid` MCP server onto an Unraid box. | shell `.plg` + Rust + Vue | `bash plugins/mcp/scripts/build-txz.sh <ver> <runraid-binary>` |
 | [`plugins/incus/`](plugins/incus/) | Unraid OS plugin running Incus system containers ("dev containers") firewalled off the LAN. Includes a NestJS/GraphQL `unraid-api` backend. | shell `.plg` + NestJS/Vue | `cd plugins/incus && ./scripts/verify-classic-package.sh && ./tests/classic-contract.sh` |
 | [`plugins/codex/`](plugins/codex/) | Unraid OS plugin embedding a Codex chathead app-server. | shell `.plg` + React | `cd plugins/codex && ./tests/contract.sh` |
 | [`agents/unraid-py/`](agents/unraid-py/) | Claude Code / Codex plugin (`name: unraid-mcp`) for the Python server. | — | — |
@@ -103,7 +103,7 @@ do not use release-please**: they are versioned by
 `incus-v*` / `codex-v*` tags (Unraid compares plugin versions as raw strings, so the
 fixed width is mandatory).
 
-Plugin `.txz` payloads ship as GitHub **release assets**, never tracked in git.
+The native MCP plugin is built from the matching `unraid-rs-vX.Y.Z` tag, and Community Applications reads its rolling manifest from the `unraid-plugin-latest` release. Plugin `.txz` payloads ship as GitHub **release assets**, never tracked in git.
 
 ## License
 

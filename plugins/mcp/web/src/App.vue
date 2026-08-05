@@ -85,11 +85,11 @@ const dirty = computed(() => {
   });
 });
 
-const URL_KEYS = new Set(["UNRAID_API_URL", "UNRAID_MCP_GOOGLE_BASE_URL"]);
+const URL_KEYS = new Set(["UNRAID_API_URL", "UNRAID_RMCP_PUBLIC_URL"]);
 function fieldError(key: string): string {
   const v = form[key] ?? "";
   if (v === "") return "";
-  if (key === "UNRAID_MCP_PORT") {
+  if (key === "UNRAID_RMCP_PORT") {
     const n = Number(v);
     if (!Number.isInteger(n) || n < 1 || n > 65535) return "Port must be 1–65535";
   }
@@ -105,7 +105,10 @@ const hasErrors = computed(() =>
 
 // ── Google OAuth gate: keep the section compact until opted in ─────────────
 const oauthConfigured = computed(
-  () => Boolean(form.UNRAID_MCP_GOOGLE_CLIENT_ID) || secretConfigured("UNRAID_MCP_GOOGLE_CLIENT_SECRET"),
+  () =>
+    form.UNRAID_RMCP_AUTH_MODE === "oauth" ||
+    Boolean(form.UNRAID_RMCP_GOOGLE_CLIENT_ID) ||
+    secretConfigured("UNRAID_RMCP_GOOGLE_CLIENT_SECRET"),
 );
 function sectionShowsFields(section: Section): boolean {
   if (!section.gated) return true;
@@ -134,7 +137,7 @@ const tailscale = computed(
 const version = computed(() => payload.value?.version ?? { installed: "unknown", overlay: false });
 const proc = computed(() => payload.value?.process ?? { pid: 0, cpu: 0, memMB: 0, uptime: 0 });
 const updateAvailable = computed(() => {
-  const l = latestVersion.value.replace(/^v/, "");
+  const l = latestVersion.value.replace(/^unraid-rs-v/, "");
   return l !== "" && l !== version.value.installed;
 });
 
@@ -150,15 +153,14 @@ const uptimeText = computed(() => {
 });
 
 const endpoint = computed(() => {
-  if (form.UNRAID_MCP_TRANSPORT === "stdio") return "";
-  const port = form.UNRAID_MCP_PORT || "6970";
+  const port = form.UNRAID_RMCP_PORT || "40010";
   if (boolVal("UNRAID_MCP_TAILSCALE_SERVE") && tailscale.value.dnsName) {
     return `https://${tailscale.value.dnsName}:${port}/mcp`;
   }
   const host =
-    !form.UNRAID_MCP_HOST || form.UNRAID_MCP_HOST === "0.0.0.0"
+    !form.UNRAID_RMCP_HOST || form.UNRAID_RMCP_HOST === "0.0.0.0"
       ? window.location.hostname
-      : form.UNRAID_MCP_HOST;
+      : form.UNRAID_RMCP_HOST;
   return `http://${host}:${port}/mcp`;
 });
 
@@ -179,12 +181,12 @@ async function copyConfig() {
   let token = "<your bearer token>";
   // Prefer an unsaved edit so the copied config matches what's in the field,
   // not the last-persisted value.
-  const edit = secretEdits.UNRAID_MCP_BEARER_TOKEN;
+  const edit = secretEdits.UNRAID_RMCP_TOKEN;
   if (edit?.value && !edit.clear) {
     token = edit.value;
-  } else if (!edit?.clear && secretConfigured("UNRAID_MCP_BEARER_TOKEN")) {
+  } else if (!edit?.clear && secretConfigured("UNRAID_RMCP_TOKEN")) {
     try {
-      token = await revealSecret("UNRAID_MCP_BEARER_TOKEN");
+      token = await revealSecret("UNRAID_RMCP_TOKEN");
     } catch {
       /* fall back to the placeholder */
     }
@@ -280,7 +282,7 @@ async function doCheckUpdate() {
 }
 async function doUpdate() {
   updating.value = true;
-  await run(() => updateServer(latestVersion.value.replace(/^v/, "")));
+  await run(() => updateServer(latestVersion.value));
   updating.value = false;
 }
 async function doReset() {
@@ -426,7 +428,6 @@ onBeforeUnmount(() => {
               <span class="truncate flex-1 text-start">{{ endpoint }}</span>
               <span class="text-xs uppercase tracking-wide shrink-0" :class="copied ? 'text-unraid-green-500' : 'text-primary'">{{ copied ? "copied" : "copy" }}</span>
             </button>
-            <span v-else class="text-sm text-muted-foreground">stdio transport — no network endpoint</span>
             <div v-if="endpoint" class="flex items-center gap-2">
               <Button size="sm" variant="outline" @click="copyConfig">
                 {{ copiedConfig ? "Config copied" : "Copy MCP client config" }}
@@ -434,7 +435,7 @@ onBeforeUnmount(() => {
               <span class="text-xs text-muted-foreground">mcpServers block with your bearer token, ready to paste</span>
             </div>
             <p class="text-xs text-muted-foreground">
-              Transport <span class="font-mono text-foreground">{{ form.UNRAID_MCP_TRANSPORT }}</span>
+              Runtime <span class="font-mono text-foreground">runraid (Rust)</span>
             </p>
           </section>
 
@@ -474,14 +475,14 @@ onBeforeUnmount(() => {
               <Badge v-if="updateAvailable" variant="orange" size="sm">update available</Badge>
             </div>
             <p v-if="latestVersion" class="text-xs text-muted-foreground">
-              latest release <span class="font-mono text-foreground">{{ latestVersion.replace(/^v/, "") }}</span>
+              latest release <span class="font-mono text-foreground">{{ latestVersion.replace(/^unraid-rs-v/, "") }}</span>
             </p>
             <div class="flex items-center gap-2">
               <Button size="sm" variant="ghost" class="px-2" :disabled="checkingUpdate || updating" @click="doCheckUpdate">
                 {{ checkingUpdate ? "Checking…" : "Check" }}
               </Button>
               <Button v-if="updateAvailable" size="sm" :disabled="updating" @click="doUpdate">
-                {{ updating ? "Updating…" : `Update to ${latestVersion.replace(/^v/, "")}` }}
+                {{ updating ? "Updating…" : `Update to ${latestVersion.replace(/^unraid-rs-v/, "")}` }}
               </Button>
               <Button v-if="version.overlay" size="sm" variant="outline" :disabled="updating" @click="doReset">Revert to bundled</Button>
             </div>
