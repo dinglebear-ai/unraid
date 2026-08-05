@@ -42,6 +42,12 @@ export const SECTIONS: Section[] = [
         help: "Disable certificate verification for the Unraid API. Use only with a trusted private endpoint.",
         kind: "toggle",
       },
+      {
+        key: "UNRAID_API_CA_BUNDLE",
+        label: "CA bundle path",
+        help: "Path to a PEM bundle to trust for the Unraid API, e.g. /boot/config/ssl/certs/ca.pem. Prefer this over skipping verification for a private CA.",
+        kind: "text",
+      },
     ],
   },
   {

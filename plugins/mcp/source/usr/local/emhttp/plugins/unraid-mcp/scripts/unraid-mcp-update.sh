@@ -24,9 +24,72 @@ PREVIOUS_BIN="${OVERLAY_DIR}/runraid.previous"
 PREVIOUS_ABSENT="${OVERLAY_DIR}/runraid.previous.absent"
 REPO="dinglebear-ai/unraid"
 ASSET="runraid-linux-x86_64"
+RELEASE_WORKFLOW=".github/workflows/rust-release.yml"
+# Set UNRAID_MCP_SKIP_ATTESTATION=true only to install from a release predating
+# build provenance, and only when you have verified the binary another way.
+SKIP_ATTESTATION="${UNRAID_MCP_SKIP_ATTESTATION:-false}"
 
 array_mounted() {
     grep -qsE '[[:space:]]/mnt/user[[:space:]]' /proc/mounts
+}
+
+# Confirm GitHub holds a build-provenance attestation binding this exact digest
+# to this repo's release workflow.
+#
+# Why this is worth doing on top of the .sha256 check: the binary and its
+# checksum sidecar are uploaded by the same job to the same release, so anyone
+# able to overwrite one can overwrite both and the checksum still "passes". It
+# only ever proved the download was not corrupted in transit. Attestations live
+# in a separate GitHub-controlled store, are keyed by digest, and are minted by
+# the OIDC-authenticated workflow run — so replacing release assets cannot
+# produce a matching record.
+#
+# Scope, stated plainly: this checks that a provenance record EXISTS for the
+# digest and names the expected repo and workflow. It does not verify the
+# Sigstore signature chain — that needs cosign or gh, neither of which exists on
+# Unraid. It closes the "swapped release asset" hole, not a compromise of
+# GitHub's own attestation store.
+verify_attestation() {
+    local digest="$1" response payload decoded
+    response="$(curl -fsS -S \
+        -H 'Accept: application/vnd.github+json' \
+        "https://api.github.com/repos/${REPO}/attestations/sha256:${digest}" 2>&1)" || {
+        echo "error: no build provenance found for ${ASSET} (sha256:${digest})" >&2
+        echo "GitHub returned: ${response}" >&2
+        echo "A tampered or unattested binary looks exactly like this. Refusing to install." >&2
+        return 1
+    }
+
+    # Each attestation carries a base64 DSSE payload; decode and inspect the
+    # in-toto statement. sed/grep/base64 only — the plugin ships no jq or python.
+    payload="$(printf '%s' "${response}" | tr -d ' \n' \
+        | grep -o '"payload":"[A-Za-z0-9+/=]*"' \
+        | sed 's/.*"payload":"//; s/"$//' | head -n1)"
+    if [ -z "${payload}" ]; then
+        echo "error: provenance response for sha256:${digest} contained no attestation payload" >&2
+        return 1
+    fi
+
+    decoded="$(printf '%s' "${payload}" | base64 -d 2>/dev/null | tr -d ' \n')" || {
+        echo "error: could not decode the provenance payload for sha256:${digest}" >&2
+        return 1
+    }
+
+    # The statement must bind THIS digest, and name our repo and release
+    # workflow as the builder.
+    if ! printf '%s' "${decoded}" | grep -q "\"sha256\":\"${digest}\""; then
+        echo "error: provenance does not cover sha256:${digest}" >&2
+        return 1
+    fi
+    if ! printf '%s' "${decoded}" | grep -q "\"repository\":\"https://github.com/${REPO}\""; then
+        echo "error: provenance for sha256:${digest} was not produced by ${REPO}" >&2
+        return 1
+    fi
+    if ! printf '%s' "${decoded}" | grep -qF "\"path\":\"${RELEASE_WORKFLOW}\""; then
+        echo "error: provenance for sha256:${digest} did not come from ${RELEASE_WORKFLOW}" >&2
+        return 1
+    fi
+    echo "provenance verified: ${REPO} ${RELEASE_WORKFLOW} built sha256:${digest}" >&2
 }
 
 prepare_overlay_dir() {
@@ -171,6 +234,13 @@ do_update() {
         echo "expected: ${expected:-<missing>}" >&2
         echo "actual:   ${actual}" >&2
         exit 1
+    fi
+
+    # Independent of the co-uploaded checksum above; see verify_attestation.
+    if [ "${SKIP_ATTESTATION}" = "true" ]; then
+        echo "warning: UNRAID_MCP_SKIP_ATTESTATION=true — installing ${tag} without provenance verification" >&2
+    else
+        verify_attestation "${actual}" || exit 1
     fi
 
     chmod 755 "${candidate}"

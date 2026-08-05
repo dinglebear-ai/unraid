@@ -343,6 +343,7 @@ inherit persisted `.env` values instead of clearing them. A present but malforme
 | `UNRAID_API_URL` | unset | Full Unraid GraphQL endpoint URL. |
 | `UNRAID_API_KEY` | unset | API key for the `x-api-key` header. |
 | `UNRAID_API_SKIP_TLS_VERIFY` | `false` | Skip TLS certificate verification for self-signed endpoints. |
+| `UNRAID_API_CA_BUNDLE` | _(unset)_ | Path to a PEM CA bundle to trust. Prefer this over skipping verification for a private CA; startup fails if the file is unreadable or not a PEM bundle. |
 | `UNRAID_HOME` | platform default | Exact data directory for `.env`, auth DB, and JWT key; overrides `/data` or `~/.unraid`. |
 | `UNRAID_RMCP_HOST` | `0.0.0.0` | HTTP bind host. |
 | `UNRAID_RMCP_PORT` | `40010` | HTTP bind port. |
@@ -499,7 +500,7 @@ gateway.
 | Symptom | Check |
 |---|---|
 | `UNRAID_API_URL` or `UNRAID_API_KEY` is missing | Set it in env or `~/.unraid/.env`. |
-| TLS errors against Unraid | Set `UNRAID_API_SKIP_TLS_VERIFY=true` only for self-signed endpoints. |
+| TLS errors against Unraid | Point `UNRAID_API_CA_BUNDLE` at your CA's PEM bundle to keep verification on. Use `UNRAID_API_SKIP_TLS_VERIFY=true` only when you have no bundle. |
 | HTTP `/mcp` returns unauthorized | Set `UNRAID_RMCP_TOKEN` and send `Authorization: Bearer <token>`. |
 | Stdio client hangs or logs JSON errors | Ensure client config runs `unraid-rmcp mcp`, not the default HTTP server mode. |
 | Large list response is truncated | Use `limit`, `offset`, `name`, or `state` filters on MCP list actions. |

@@ -19,6 +19,13 @@ pub struct UnraidConfig {
     pub api_key: String,
     /// Skip TLS certificate verification (UNRAID_API_SKIP_TLS_VERIFY)
     pub skip_tls_verify: bool,
+    /// Path to an extra PEM CA bundle to trust (UNRAID_API_CA_BUNDLE).
+    ///
+    /// This is the verifying counterpart to `skip_tls_verify`: it lets a
+    /// self-signed or private-CA endpoint be trusted *without* disabling
+    /// verification. The Python server accepted a bundle path in
+    /// `UNRAID_VERIFY_SSL`, so upgraded plugin installs migrate onto this key.
+    pub ca_bundle: Option<String>,
 }
 
 /// MCP HTTP server configuration
@@ -317,6 +324,7 @@ impl Config {
             "UNRAID_API_SKIP_TLS_VERIFY",
             &mut config.unraid.skip_tls_verify,
         )?;
+        env_opt_str("UNRAID_API_CA_BUNDLE", &mut config.unraid.ca_bundle);
 
         // Honour UNRAID_RMCP_DISABLE_HTTP_AUTH from the existing .env
         if std::env::var("UNRAID_RMCP_DISABLE_HTTP_AUTH")

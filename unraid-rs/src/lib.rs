@@ -35,6 +35,7 @@ pub mod testing {
             api_url: "http://localhost:1/graphql".into(),
             api_key: "test".into(),
             skip_tls_verify: true,
+            ca_bundle: None,
         })
         .expect("stub client should build");
         UnraidService::new(client)
@@ -139,6 +140,7 @@ pub mod testing {
             api_url: url.to_string(),
             api_key: "test".into(),
             skip_tls_verify: true,
+            ca_bundle: None,
         })
         .expect("stub client should build");
         AppState {

@@ -7,6 +7,9 @@
 # Override with UNRAID_API_SKIP_TLS_VERIFY=true in .env if the server
 # uses a self-signed certificate.
 skip_tls_verify = false
+# For a private CA, prefer trusting its bundle over disabling verification:
+# set UNRAID_API_CA_BUNDLE=/path/to/ca.pem (or ca_bundle here).
+# ca_bundle = "/boot/config/ssl/certs/ca.pem"
 
 [mcp]
 host = "0.0.0.0"
