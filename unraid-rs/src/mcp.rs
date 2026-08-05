@@ -4,6 +4,7 @@ use lab_auth::AuthLayer;
 
 use crate::{app::UnraidService, config::McpConfig, observability::Counters};
 
+pub(crate) mod dynamic;
 mod elicitation;
 pub(crate) mod host_filter;
 mod prompts;
