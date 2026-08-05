@@ -77,7 +77,7 @@ jobs:
             grep -qE "<!ENTITY[[:space:]]+${entity}[[:space:]]" unraid-mcp.plg \
               || { echo "::error::unraid-mcp.plg is missing the &${entity}; entity"; exit 1; }
           done
-          for placeholder in VERSION_PLACEHOLDER MD5_PLACEHOLDER SHA256_PLACEHOLDER; do
+          for placeholder in VERSION_PLACEHOLDER RUST_VERSION_PLACEHOLDER MD5_PLACEHOLDER SHA256_PLACEHOLDER; do
             grep -q "$placeholder" unraid-mcp.plg \
               || { echo "::error::unraid-mcp.plg lost its ${placeholder}"; exit 1; }
           done
@@ -95,11 +95,12 @@ jobs:
         run: |
           set -euo pipefail
           version="$(python3 -c 'import tomllib; print(tomllib.load(open("../../unraid-rs/Cargo.toml", "rb"))["package"]["version"])')"
+          plugin_version="$(./scripts/plugin-version.sh "$version")"
           (cd ../../unraid-rs && cargo build --locked --bin runraid)
           binary="../../unraid-rs/target/debug/runraid"
           test -x "$binary"
           SOURCE_DATE_EPOCH=0 ./scripts/build-txz.sh "$version" "$binary"
-          package="packages/unraid-mcp-${version}-x86_64-2.txz"
+          package="packages/unraid-mcp-${plugin_version}-x86_64-2.txz"
           first="$(sha256sum "$package" | cut -d' ' -f1)"
           UNRAID_MCP_SKIP_WEB_BUILD=true SOURCE_DATE_EPOCH=0 \
             ./scripts/build-txz.sh "$version" "$binary"

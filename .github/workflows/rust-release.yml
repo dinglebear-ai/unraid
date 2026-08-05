@@ -115,10 +115,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # The .txz is named by the fixed-width epoch-3 plugin version, not the
+          # rust semver (see plugins/mcp/scripts/plugin-version.sh).
+          plugin_version="$(bash ../plugins/mcp/scripts/plugin-version.sh "${TAG#unraid-rs-v}")"
           gh release upload "$TAG" \
             runraid-linux-x86_64 runraid-linux-x86_64.sha256 \
             runraid-x86_64.tar.gz runraid-x86_64.tar.gz.sha256 \
-            "../plugins/mcp/packages/unraid-mcp-${TAG#unraid-rs-v}-x86_64-2.txz" \
+            "../plugins/mcp/packages/unraid-mcp-${plugin_version}-x86_64-2.txz" \
             ../plugins/mcp/packages/unraid-mcp.plg --clobber
           if [ "${{ github.event_name }}" = "release" ]; then
             release_id="${{ github.event.release.id }}"
@@ -133,6 +136,11 @@ jobs:
         run: |
           set -euo pipefail
           rolling=unraid-plugin-latest
+          plg=../plugins/mcp/packages/unraid-mcp.plg
+          plg_version() {
+            sed -n 's/.*<!ENTITY[[:space:]]*version[[:space:]]*"\([^"]*\)".*/\1/p' "$1" | head -1
+          }
+          new_version="$(plg_version "$plg")"
           if ! gh release view "$rolling" >/dev/null 2>&1; then
             gh release create "$rolling" \
               --target "$(git rev-parse HEAD)" \
@@ -140,7 +148,45 @@ jobs:
               --notes "Rolling manifest consumed by Unraid Community Applications." \
               --prerelease
           fi
-          gh release upload "$rolling" ../plugins/mcp/packages/unraid-mcp.plg --clobber
+          # Rollback guard: installed plugins poll this rolling asset, and
+          # Unraid compares plugin versions as raw strings. If a
+          # workflow_dispatch republishes an older tag, uploading its .plg here
+          # would silently roll the fleet back — refuse unless the new version
+          # sorts at or after the currently published one under LC_ALL=C.
+          # (Equal is allowed so re-running the same tag stays idempotent.)
+          published_dir="$(mktemp -d)"
+          if gh release download "$rolling" --pattern unraid-mcp.plg --dir "$published_dir" 2>/dev/null; then
+            published_version="$(plg_version "$published_dir/unraid-mcp.plg")"
+            if [ -n "$published_version" ] && [ "$new_version" != "$published_version" ] && \
+               [ "$(printf '%s\n%s\n' "$published_version" "$new_version" | LC_ALL=C sort | tail -1)" != "$new_version" ]; then
+              echo "::error::refusing to publish plugin ${new_version} over already-published ${published_version} — it sorts BEFORE it under LC_ALL=C and would roll every installed plugin back"
+              exit 1
+            fi
+          fi
+          gh release upload "$rolling" "$plg" --clobber
+
+      # One-time-per-release bridge for legacy installs: Python-era plugins poll
+      # https://github.com/dinglebear-ai/unraid/releases/latest/download/unraid-mcp.plg
+      # (their baked-in pluginURL). Rust releases are marked make_latest=false
+      # and the .plg otherwise lives only on the rolling prerelease, so that
+      # legacy URL would keep 404ing forever. Attaching the new .plg to
+      # whatever release GitHub currently calls "latest" makes the legacy URL
+      # serve it; once a box upgrades, its stored pluginURL becomes the fixed
+      # unraid-plugin-latest URL and this bridge is no longer needed for it.
+      - name: Bridge legacy releases/latest pluginURL
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          latest_tag="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq .tag_name || true)"
+          if [ -z "$latest_tag" ]; then
+            echo "::warning::could not resolve the repository's latest release — legacy pluginURL bridge skipped"
+            exit 0
+          fi
+          # If "latest" is this rust release itself, the upload is a harmless
+          # re-clobber of the asset attached earlier.
+          echo "bridging legacy pluginURL: uploading unraid-mcp.plg to latest release ${latest_tag}"
+          gh release upload "$latest_tag" ../plugins/mcp/packages/unraid-mcp.plg --clobber
 
   npm:
     needs: build

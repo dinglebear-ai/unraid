@@ -7,7 +7,10 @@ automatic credential bootstrap, service controls, and log rotation.
 ## Package layout
 
 - `unraid-mcp.plg` is the manifest template. The package build substitutes the
-  version and checksums.
+  version and checksums. The plugin version is a fixed-width epoch-3 string
+  derived from the runraid semver by `scripts/plugin-version.sh`
+  (`0.3.1` → `3.000.003.001`) so it sorts after every legacy Python-lane
+  `2.x` release under Unraid's raw-string version comparison.
 - `source/usr/local/emhttp/plugins/unraid-mcp/` contains the webGUI, service
   scripts, updater, and array lifecycle hooks.
 - `usr/local/unraid-mcp/bin/runraid` is staged at build time from the matching
@@ -29,6 +32,20 @@ overlay. Reset removes the overlay and returns to the plugin-bundled binary.
 
 Existing Python-era `UNRAID_MCP_*` settings are translated at launch and surfaced
 through the new Rust settings UI. Saving a migrated field removes its old key.
+
+## Upgrading from the Python plugin
+
+- **Port**: upgraded boxes keep their existing port (the Python default was
+  6970); only fresh installs get the Rust default 40010. Check firewall rules
+  and MCP client URLs against whichever port your `.env` actually carries.
+- **OAuth**: the Python server auto-enabled Google OAuth when client
+  credentials were present. runraid does not — after upgrading, set
+  `UNRAID_RMCP_AUTH_MODE=oauth` **and** `UNRAID_RMCP_AUTH_ADMIN_EMAIL` in
+  Settings, or the server stays on bearer auth (a warning is logged).
+- **Rollback**: the old Python server does not understand the `UNRAID_RMCP_*`
+  keys this plugin writes. To roll back to the old Python `.plg`, delete
+  `/boot/config/plugins/unraid-mcp/.env` first and let the Python plugin
+  re-bootstrap its config.
 
 ## Build
 

@@ -21,13 +21,21 @@ version="$(entity version)"
 txz="$(entity txz)"
 md5="$(entity md5)"
 sha256="$(entity sha256)"
-for value in "$version" "$txz" "$md5" "$sha256"; do
+txz_url="$(entity txzURL)"
+for value in "$version" "$txz" "$md5" "$sha256" "$txz_url"; do
   [[ -n "$value" && "$value" != *PLACEHOLDER* ]] || { echo "generated manifest contains an unresolved value" >&2; exit 1; }
 done
+# The plugin version is the fixed-width epoch-3 mapping of the rust semver
+# embedded in the txzURL release tag (see scripts/plugin-version.sh).
+[[ "$version" =~ ^3\.[0-9]{3}\.[0-9]{3}\.[0-9]{3}$ ]] || { echo "manifest version '$version' is not a fixed-width epoch-3 plugin version" >&2; exit 1; }
+rust_version="$(sed -n 's|.*/releases/download/unraid-rs-v\([0-9][0-9.]*\)/.*|\1|p' <<<"$txz_url")"
+[[ -n "$rust_version" ]] || { echo "could not parse the unraid-rs-v release tag from txzURL: $txz_url" >&2; exit 1; }
+expected_plugin_version="$("$(dirname "${BASH_SOURCE[0]}")/plugin-version.sh" "$rust_version")"
+[[ "$version" == "$expected_plugin_version" ]] || { echo "manifest version $version does not match plugin-version.sh mapping of runraid $rust_version ($expected_plugin_version)" >&2; exit 1; }
 [[ "$(basename "$archive")" == "$txz" ]] || { echo "package filename does not match manifest: $(basename "$archive") != $txz" >&2; exit 1; }
 [[ "$md5" =~ ^[0-9a-f]{32}$ ]] || { echo "invalid manifest MD5" >&2; exit 1; }
 [[ "$sha256" =~ ^[0-9a-f]{64}$ ]] || { echo "invalid manifest SHA-256" >&2; exit 1; }
-grep -Fq "https://github.com/dinglebear-ai/unraid/releases/download/unraid-rs-v${version}/" "$manifest"
+grep -Fq "https://github.com/dinglebear-ai/unraid/releases/download/unraid-rs-v${rust_version}/" "$manifest"
 grep -Fq 'pluginURL="https://github.com/dinglebear-ai/unraid/releases/download/unraid-plugin-latest/unraid-mcp.plg"' "$manifest"
 grep -Fq 'support="https://github.com/dinglebear-ai/unraid/issues"' "$manifest"
 printf '%s  %s\n' "$md5" "$archive" | md5sum -c -
@@ -82,10 +90,11 @@ fi
 binary="$tree/usr/local/unraid-mcp/bin/runraid"
 file "$binary" | grep -Eq 'ELF 64-bit.*x86-64' || { echo "runraid is not an x86-64 ELF binary" >&2; exit 1; }
 actual_version="$("$binary" --version)"
-[[ "$actual_version" == "unraid-rmcp $version" ]] || { echo "bundled runraid version differs: $actual_version != unraid-rmcp $version" >&2; exit 1; }
+[[ "$actual_version" == "unraid-rmcp $rust_version" ]] || { echo "bundled runraid version differs: $actual_version != unraid-rmcp $rust_version" >&2; exit 1; }
 
 echo "Unraid MCP package verification passed"
 echo "version=$version"
+echo "runraid=$rust_version"
 echo "package=$archive"
 echo "md5=$md5"
 echo "sha256=$sha256"

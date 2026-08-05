@@ -24,7 +24,9 @@ log() {
 pid_matches() {
     local pid="$1"
     [ -n "$pid" ] && [ -d "/proc/${pid}" ] || return 1
-    tr '\0' ' ' <"/proc/${pid}/cmdline" 2>/dev/null | grep -qE '(^|[ /])runraid([[:space:]]|$)'
+    # Require the `serve` subcommand: a bare `runraid` match would also hit an
+    # admin's interactive CLI session on a recycled PID and kill -9 it.
+    tr '\0' ' ' <"/proc/${pid}/cmdline" 2>/dev/null | grep -qE '(^|[ /])runraid +serve( |$)'
 }
 
 server_binary() {
@@ -36,7 +38,9 @@ server_binary() {
 }
 
 plugin_port() {
-    echo "${UNRAID_RMCP_PORT:-${UNRAID_MCP_PORT:-40010}}"
+    # unraid-mcp-env.sh (sourced above) guarantees UNRAID_RMCP_PORT is set,
+    # including the legacy UNRAID_MCP_PORT fallback.
+    echo "${UNRAID_RMCP_PORT}"
 }
 
 TAILSCALE_BIN="/usr/local/sbin/tailscale"

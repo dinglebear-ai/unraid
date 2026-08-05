@@ -1,11 +1,16 @@
 <?xml version='1.0' standalone='yes'?>
 <!DOCTYPE PLUGIN [
+  <!-- &version; is the fixed-width epoch-3 plugin version (3.MMM.mmm.ppp),
+       derived from the unraid-rs semver by scripts/plugin-version.sh. Unraid
+       compares plugin versions as raw strings, so it must sort after every
+       legacy Python-lane "2.*" release. &txzURL; points at the versioned
+       unraid-rs-vX.Y.Z release the package was built from. -->
   <!ENTITY name      "unraid-mcp">
   <!ENTITY author    "Dinglebear AI">
   <!ENTITY version   "VERSION_PLACEHOLDER">
   <!ENTITY launch    "Settings/UnraidMCP">
   <!ENTITY txz       "unraid-mcp-VERSION_PLACEHOLDER-x86_64-2.txz">
-  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/unraid-rs-vVERSION_PLACEHOLDER/&txz;">
+  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/unraid-rs-vRUST_VERSION_PLACEHOLDER/&txz;">
   <!ENTITY md5       "MD5_PLACEHOLDER">
   <!ENTITY sha256    "SHA256_PLACEHOLDER">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
@@ -16,6 +21,7 @@
 
 <CHANGES>
 ###VERSION_PLACEHOLDER
+- Ships runraid RUST_VERSION_PLACEHOLDER.
 - Native Unraid MCP plugin with the Rust runraid binary, authenticated
   streamable HTTP transport, automatic token and API-key bootstrap, webGUI
   settings, dashboard status, and log rotation.

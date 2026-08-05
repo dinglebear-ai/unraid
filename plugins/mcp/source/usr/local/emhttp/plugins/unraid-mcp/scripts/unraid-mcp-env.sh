@@ -33,6 +33,21 @@ fi
 export UNRAID_RMCP_HOST UNRAID_RMCP_PORT UNRAID_RMCP_TOKEN UNRAID_RMCP_DISABLE_HTTP_AUTH
 export UNRAID_RMCP_PUBLIC_URL UNRAID_RMCP_GOOGLE_CLIENT_ID UNRAID_RMCP_GOOGLE_CLIENT_SECRET
 
+# A legacy Python-era install with Google OAuth credentials auto-enabled OAuth;
+# runraid needs an explicit UNRAID_RMCP_AUTH_MODE=oauth plus an admin email
+# (which has no legacy source), so we can only warn loudly — never auto-switch,
+# since a missing admin email would crash startup.
+if [ -z "${UNRAID_RMCP_AUTH_MODE:-}" ] \
+    && [ -n "${UNRAID_MCP_GOOGLE_CLIENT_ID:-}" ] \
+    && [ -n "${UNRAID_MCP_GOOGLE_CLIENT_SECRET:-}" ]; then
+    unraid_mcp_oauth_warn="unraid-mcp: WARNING: OAuth credentials detected but auth mode defaulting to bearer; set UNRAID_RMCP_AUTH_MODE=oauth and UNRAID_RMCP_AUTH_ADMIN_EMAIL to restore OAuth"
+    echo "${unraid_mcp_oauth_warn}" >&2
+    mkdir -p /var/log/unraid-mcp 2>/dev/null || true
+    # stderr first so a failed append-open is silenced too (best effort only).
+    echo "$(date '+%Y-%m-%d %H:%M:%S') ${unraid_mcp_oauth_warn}" 2>/dev/null >>/var/log/unraid-mcp/server.log || true
+    unset unraid_mcp_oauth_warn
+fi
+
 : "${UNRAID_RMCP_AUTH_MODE:=bearer}"
 export UNRAID_RMCP_AUTH_MODE
 
@@ -52,5 +67,10 @@ if [ "${UNRAID_RMCP_DISABLE_HTTP_AUTH}" = "true" ] \
 fi
 
 if [ -z "${RUST_LOG:-}" ] && [ -n "${UNRAID_MCP_LOG_LEVEL:-}" ]; then
-    export RUST_LOG="${UNRAID_MCP_LOG_LEVEL,,}"
+    unraid_mcp_log_level="${UNRAID_MCP_LOG_LEVEL,,}"
+    # Python's WARNING is not a tracing level — it would silently fall back to
+    # info. tracing spells it "warn".
+    [ "${unraid_mcp_log_level}" = "warning" ] && unraid_mcp_log_level="warn"
+    export RUST_LOG="${unraid_mcp_log_level}"
+    unset unraid_mcp_log_level
 fi

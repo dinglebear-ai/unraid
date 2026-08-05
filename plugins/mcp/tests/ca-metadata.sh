@@ -19,7 +19,10 @@ grep -Fq '<Name>Unraid MCP</Name>' "$wrapper"
 grep -Fq '<PluginURL>https://github.com/dinglebear-ai/unraid/releases/download/unraid-plugin-latest/unraid-mcp.plg</PluginURL>' "$wrapper"
 grep -Fq '<Category>Tools:Utilities</Category>' "$wrapper"
 grep -Fq '<Support>https://github.com/dinglebear-ai/unraid/issues</Support>' "$wrapper"
-grep -Fq 'https://github.com/dinglebear-ai/unraid/releases/download/unraid-rs-vVERSION_PLACEHOLDER/' "$manifest"
+# The plugin version entity (fixed-width epoch-3 string) and the unraid-rs
+# release tag are distinct placeholders — build-txz.sh fills both.
+grep -Eq '<!ENTITY[[:space:]]+version[[:space:]]+"VERSION_PLACEHOLDER"' "$manifest"
+grep -Fq 'https://github.com/dinglebear-ai/unraid/releases/download/unraid-rs-vRUST_VERSION_PLACEHOLDER/' "$manifest"
 grep -Fq 'pluginURL="https://github.com/dinglebear-ai/unraid/releases/download/unraid-plugin-latest/unraid-mcp.plg"' "$manifest"
 grep -Fq 'support="https://github.com/dinglebear-ai/unraid/issues"' "$manifest"
 grep -Fq 'REPO="dinglebear-ai/unraid"' "$updater"

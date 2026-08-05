@@ -37,7 +37,9 @@ installed_version() {
 }
 
 latest_tag() {
-    curl -fsSL "https://api.github.com/repos/${REPO}/releases?per_page=100" 2>/dev/null \
+    # -S surfaces curl's own error on stderr even in silent mode so a failed
+    # lookup is diagnosable instead of vanishing into an empty result.
+    curl -fsSL -S "https://api.github.com/repos/${REPO}/releases?per_page=100" \
         | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' \
         | awk '/^unraid-rs-v[0-9]+\.[0-9]+\.[0-9]+$/' \
         | sort -V \
@@ -65,8 +67,14 @@ do_update() {
     local requested="${1:-}"
     local tag
     if [ -z "$requested" ]; then
-        tag="$(latest_tag)"
-        [ -n "$tag" ] || { echo "error: could not resolve latest Rust release" >&2; exit 1; }
+        # `|| true` keeps set -e from killing the script inside the command
+        # substitution before the guard below can print an actionable error.
+        tag="$(latest_tag)" || true
+        if [ -z "$tag" ]; then
+            echo "error: could not resolve the latest unraid-rs release from the GitHub API" >&2
+            echo "       likely causes: no network/DNS on this box, a GitHub API outage, or API rate limiting" >&2
+            exit 1
+        fi
     elif [[ "$requested" == unraid-rs-v* ]]; then
         tag="$requested"
     else

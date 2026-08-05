@@ -8,19 +8,26 @@
 #   3. Assemble a deterministic root-owned .txz and verify the manifest,
 #      archive, executable, and embedded server version.
 #
-# Usage: build-txz.sh <plugin-version> <runraid-binary>
-#   <plugin-version>  e.g. 0.3.0 — must match `runraid --version`.
+# Usage: build-txz.sh <rust-version> <runraid-binary>
+#   <rust-version>    e.g. 0.3.0 — must match `runraid --version`.
 #   <runraid-binary>  release binary to embed in the package.
+#
+# The plugin version written into the manifest is NOT the rust semver: Unraid
+# compares plugin versions as raw strings, so scripts/plugin-version.sh maps
+# the rust semver to a fixed-width epoch-3 version (0.3.1 -> 3.000.003.001)
+# that sorts after every legacy Python-lane 2.x release.
 
 set -euo pipefail
 
-VERSION="${1:?usage: build-txz.sh <version> <runraid-binary>}"
-RUNRAID="${2:?usage: build-txz.sh <version> <runraid-binary>}"
+VERSION="${1:?usage: build-txz.sh <rust-version> <runraid-binary>}"
+RUNRAID="${2:?usage: build-txz.sh <rust-version> <runraid-binary>}"
 
 if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo "ERROR: invalid plugin version '${VERSION}'" >&2
+    echo "ERROR: invalid rust version '${VERSION}'" >&2
     exit 1
 fi
+
+PLUGIN_VERSION="$("$(dirname "${BASH_SOURCE[0]}")/plugin-version.sh" "${VERSION}")"
 
 RUNRAID="$(realpath "${RUNRAID}")"
 if [ ! -x "${RUNRAID}" ]; then
@@ -40,7 +47,7 @@ fi
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STAGE="$(mktemp -d)"
 OUT_DIR="${ROOT}/packages"
-PKG_NAME="unraid-mcp-${VERSION}-x86_64-2.txz"
+PKG_NAME="unraid-mcp-${PLUGIN_VERSION}-x86_64-2.txz"
 
 trap 'rm -rf "${STAGE}"' EXIT
 mkdir -p "${OUT_DIR}"
@@ -95,8 +102,11 @@ echo "size:    ${SIZE} bytes"
 echo "md5:     ${MD5}"
 echo "sha256:  ${SHA256}"
 echo ""
-echo "==> writing ${OUT_DIR}/unraid-mcp.plg"
-sed -e "s/VERSION_PLACEHOLDER/${VERSION}/g" \
+echo "==> writing ${OUT_DIR}/unraid-mcp.plg (plugin ${PLUGIN_VERSION}, runraid ${VERSION})"
+# RUST_VERSION_PLACEHOLDER must be substituted before VERSION_PLACEHOLDER —
+# the latter is a substring of the former.
+sed -e "s/RUST_VERSION_PLACEHOLDER/${VERSION}/g" \
+    -e "s/VERSION_PLACEHOLDER/${PLUGIN_VERSION}/g" \
     -e "s/MD5_PLACEHOLDER/${MD5}/g" \
     -e "s/SHA256_PLACEHOLDER/${SHA256}/g" \
     "${ROOT}/unraid-mcp.plg" > "${OUT_DIR}/unraid-mcp.plg"

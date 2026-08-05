@@ -23,11 +23,16 @@ const RC = '/etc/rc.d/rc.unraid-mcp';
 const UPDATE_SH = '/usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-update.sh';
 const PID_FILE = '/var/run/unraid-mcp.pid';
 
-/** Env keys whose values must never be sent back to the browser. */
+/** Env keys whose values must never be sent back to the browser. The two
+ *  Python-era Google keys have no UNRAID_RMCP_* successor, so they are not in
+ *  LEGACY_KEYS — listing them here keeps them out of the `extra` map on
+ *  upgraded boxes. */
 const SECRET_KEYS = [
     'UNRAID_API_KEY',
     'UNRAID_RMCP_TOKEN',
     'UNRAID_RMCP_GOOGLE_CLIENT_SECRET',
+    'UNRAID_MCP_GOOGLE_JWT_SIGNING_KEY',
+    'UNRAID_MCP_GOOGLE_ENCRYPTION_KEY',
 ];
 
 /** Keys the Rust settings UI may persist. Must match web/src/fields.ts. */
@@ -63,6 +68,14 @@ const LEGACY_KEYS = [
     'UNRAID_RMCP_GOOGLE_CLIENT_ID' => 'UNRAID_MCP_GOOGLE_CLIENT_ID',
     'UNRAID_RMCP_GOOGLE_CLIENT_SECRET' => 'UNRAID_MCP_GOOGLE_CLIENT_SECRET',
 ];
+
+/** Resolve a key from the env map: new key, else its legacy Python-era key
+ *  from LEGACY_KEYS, else ''. */
+function resolve_value(array $env, string $key): string
+{
+    $legacy = LEGACY_KEYS[$key] ?? '';
+    return (string) ($env[$key] ?? ($legacy !== '' ? ($env[$legacy] ?? '') : ''));
+}
 
 function fail(int $code, string $msg): void
 {
@@ -140,7 +153,7 @@ function tailscale_info(): array
         $dns = rtrim((string) ($status['Self']['DNSName'] ?? ''), '.');
     }
     $env = read_env(ENV_FILE);
-    $port = (int) ($env['UNRAID_RMCP_PORT'] ?? $env['UNRAID_MCP_PORT'] ?? 40010);
+    $port = (int) (resolve_value($env, 'UNRAID_RMCP_PORT') ?: 40010);
     exec($bin . ' serve status 2>/dev/null', $serveOut, $serveCode);
     $serveActive = $serveCode === 0 && str_contains(implode("\n", $serveOut), ':' . $port);
     // serveActive is a heuristic; the rc script owns the authoritative state.
@@ -189,8 +202,14 @@ function current_payload(): array
     $cfg = @parse_ini_file(CFG_FILE) ?: [];
     $config = [];
     foreach (ALLOWED_KEYS as $key) {
-        $legacy = LEGACY_KEYS[$key] ?? '';
-        $value = $env[$key] ?? ($legacy !== '' ? ($env[$legacy] ?? '') : '');
+        $value = resolve_value($env, $key);
+        if ($key === 'UNRAID_NOAUTH' && !array_key_exists('UNRAID_NOAUTH', $env)) {
+            // Mirror unraid-mcp-env.sh: legacy TRUST_PROXY only implies no-auth
+            // when the legacy disable-http-auth switch is actually on.
+            if (resolve_value($env, 'UNRAID_RMCP_DISABLE_HTTP_AUTH') !== 'true') {
+                $value = '';
+            }
+        }
         if ($key === 'UNRAID_API_SKIP_TLS_VERIFY' && $value === '') {
             $value = (($env['UNRAID_VERIFY_SSL'] ?? 'true') === 'false'
                 && ($env['UNRAID_ALLOW_INSECURE_TLS'] ?? 'false') === 'true') ? 'true' : 'false';
@@ -200,6 +219,11 @@ function current_payload(): array
         }
         if ($key === 'RUST_LOG') {
             $value = strtolower($value);
+            // Python's WARNING is not a tracing level; tracing spells it "warn"
+            // (an invalid level silently falls back to info).
+            if ($value === 'warning') {
+                $value = 'warn';
+            }
         }
         if (in_array($key, SECRET_KEYS, true)) {
             $config[$key . '_configured'] = $value !== '';
@@ -258,9 +282,7 @@ if ($action === 'reveal') {
         fail(400, 'not a secret key');
     }
     $env = read_env(ENV_FILE);
-    $legacy = LEGACY_KEYS[$key] ?? '';
-    $value = $env[$key] ?? ($legacy !== '' ? ($env[$legacy] ?? '') : '');
-    echo json_encode(['key' => $key, 'value' => $value]);
+    echo json_encode(['key' => $key, 'value' => resolve_value($env, $key)]);
     exit;
 }
 
