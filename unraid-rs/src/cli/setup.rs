@@ -79,6 +79,14 @@ pub fn apply_plugin_options() {
     let map = [
         ("CLAUDE_PLUGIN_OPTION_API_TOKEN", "UNRAID_RMCP_TOKEN"),
         ("CLAUDE_PLUGIN_OPTION_MCP_PORT", "UNRAID_RMCP_PORT"),
+        (
+            "CLAUDE_PLUGIN_OPTION_ENABLED_TOOLS",
+            "UNRAID_RMCP_ENABLED_TOOLS",
+        ),
+        (
+            "CLAUDE_PLUGIN_OPTION_DISABLED_TOOLS",
+            "UNRAID_RMCP_DISABLED_TOOLS",
+        ),
         ("CLAUDE_PLUGIN_OPTION_UNRAID_API_URL", "UNRAID_API_URL"),
         ("CLAUDE_PLUGIN_OPTION_UNRAID_API_KEY", "UNRAID_API_KEY"),
         (
@@ -323,6 +331,19 @@ fn write_env_file(data_dir: &Path, config: &Config) -> Result<()> {
         format!("UNRAID_RMCP_PORT={}", config.mcp.port),
         format!("UNRAID_RMCP_NO_AUTH={}", config.mcp.no_auth),
     ];
+
+    if !config.mcp.tools.enabled.is_empty() {
+        lines.push(format!(
+            "UNRAID_RMCP_ENABLED_TOOLS={}",
+            config.mcp.tools.enabled.join(",")
+        ));
+    }
+    if !config.mcp.tools.disabled.is_empty() {
+        lines.push(format!(
+            "UNRAID_RMCP_DISABLED_TOOLS={}",
+            config.mcp.tools.disabled.join(",")
+        ));
+    }
 
     if let Some(token) = config
         .mcp

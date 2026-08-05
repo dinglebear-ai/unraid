@@ -1,21 +1,23 @@
 name: mcp-ci
 
-# PR-time gate for the plugins/mcp Unraid plugin.
-#
-# WHY: before this existed, nothing under plugins/mcp/** matched ANY workflow's
-# paths filter. build-txz.sh and unraid-mcp.plg were first executed by
-# build-unraid-plugin.yml, which only runs on `release: published` — i.e. AFTER
-# the v* tag was cut, concurrently with the PyPI publish. A break in the packaging
-# script was discovered mid-release instead of on the PR.
+# PR-time gate for the native Unraid plugin and its Rust runtime contract.
 on:
   push:
     paths:
       - "plugins/mcp/**"
+      - "unraid-rs/Cargo.toml"
+      - "unraid-rs/Cargo.lock"
+      - "unraid-rs/src/**"
       - ".github/workflows/mcp-ci.yml"
+      - ".github/workflows/rust-release.yml"
   pull_request:
     paths:
       - "plugins/mcp/**"
+      - "unraid-rs/Cargo.toml"
+      - "unraid-rs/Cargo.lock"
+      - "unraid-rs/src/**"
       - ".github/workflows/mcp-ci.yml"
+      - ".github/workflows/rust-release.yml"
   workflow_dispatch:
 
 permissions:
@@ -28,7 +30,7 @@ concurrency:
 jobs:
   mcp:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: plugins/mcp
@@ -37,14 +39,16 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
-      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
-          version: "0.9.25"
-          enable-cache: false
-      - name: Install static validators
+          toolchain: stable
+          targets: x86_64-unknown-linux-gnu
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        with:
+          workspaces: unraid-rs
+      - name: Install package validators
         run: sudo apt-get update && sudo apt-get install -y file libxml2-utils shellcheck xz-utils
 
-      # These run as root on Unraid (Slackware). A syntax error ships to users.
       - name: Shellcheck packaging and on-box scripts
         run: |
           set -euo pipefail
@@ -65,7 +69,6 @@ jobs:
           done < <(find scripts source tests -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' \))
           exit "$status"
 
-      # Unraid parses the .plg as XML; a malformed entity block bricks the install.
       - name: Validate .plg XML and required entities
         run: |
           set -euo pipefail
@@ -74,19 +77,13 @@ jobs:
             grep -qE "<!ENTITY[[:space:]]+${entity}[[:space:]]" unraid-mcp.plg \
               || { echo "::error::unraid-mcp.plg is missing the &${entity}; entity"; exit 1; }
           done
-          # The version/checksum entities are substituted by build-txz.sh at package
-          # time; the tracked file must still carry the placeholders, not a stale
-          # real value that would ship a mismatched payload.
-          for placeholder in VERSION_PLACEHOLDER MD5_PLACEHOLDER SHA256_PLACEHOLDER; do
+          for placeholder in VERSION_PLACEHOLDER RUST_VERSION_PLACEHOLDER MD5_PLACEHOLDER SHA256_PLACEHOLDER; do
             grep -q "$placeholder" unraid-mcp.plg \
-              || { echo "::error::unraid-mcp.plg lost its ${placeholder} — build-txz.sh substitutes these at package time"; exit 1; }
+              || { echo "::error::unraid-mcp.plg lost its ${placeholder}"; exit 1; }
           done
 
       - name: Validate Community Applications metadata
         run: ./tests/ca-metadata.sh
-
-      - name: Audit the bundled Python runtime lock
-        run: uvx --from pip-audit pip-audit -r runtime-requirements.txt --disable-pip
 
       - name: Build and audit the web bundle
         run: |
@@ -94,31 +91,19 @@ jobs:
           npm audit --omit=dev --audit-level=high --prefix web
           npm run build --prefix web
 
-      # Catches a stale pinned interpreter hash before release day.
-      - name: Pinned CPython hash must match upstream SHA256SUMS
+      - name: Build, verify, and reproduce the Rust plugin package
         run: |
           set -euo pipefail
-          eval "$(grep -E '^(PYTHON_VERSION|PBS_RELEASE|PBS_SHA256)=' scripts/build-txz.sh)"
-          tarball="cpython-${PYTHON_VERSION}+${PBS_RELEASE}-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
-          expected="$(curl -fsSL "https://github.com/astral-sh/python-build-standalone/releases/download/${PBS_RELEASE}/SHA256SUMS" | awk -v t="$tarball" '$2 == t {print $1}')"
-          [ -n "$expected" ] || { echo "::error::${tarball} not listed in upstream SHA256SUMS for release ${PBS_RELEASE}"; exit 1; }
-          if [ "$expected" != "$PBS_SHA256" ]; then
-            echo "::error::PBS_SHA256 in build-txz.sh (${PBS_SHA256}) does not match upstream (${expected})"
-            exit 1
-          fi
-          echo "pinned CPython hash matches upstream SHA256SUMS"
-
-      - name: Build, verify, and reproduce the full plugin package
-        run: |
-          set -euo pipefail
-          version="$(python3 -c 'import tomllib; print(tomllib.load(open("../../unraid-py/pyproject.toml", "rb"))["project"]["version"])')"
-          (cd ../../unraid-py && uv build --wheel --out-dir dist)
-          wheel="../../unraid-py/dist/unraid_mcp-${version}-py3-none-any.whl"
-          test -s "$wheel"
-          SOURCE_DATE_EPOCH=0 ./scripts/build-txz.sh "$version" "$wheel"
-          package="packages/unraid-mcp-${version}-x86_64-2.txz"
+          version="$(python3 -c 'import tomllib; print(tomllib.load(open("../../unraid-rs/Cargo.toml", "rb"))["package"]["version"])')"
+          plugin_version="$(./scripts/plugin-version.sh "$version")"
+          (cd ../../unraid-rs && cargo build --locked --bin runraid)
+          binary="../../unraid-rs/target/debug/runraid"
+          test -x "$binary"
+          SOURCE_DATE_EPOCH=0 ./scripts/build-txz.sh "$version" "$binary"
+          package="packages/unraid-mcp-${plugin_version}-x86_64-2.txz"
           first="$(sha256sum "$package" | cut -d' ' -f1)"
-          SOURCE_DATE_EPOCH=0 ./scripts/build-txz.sh "$version" "$wheel"
+          UNRAID_MCP_SKIP_WEB_BUILD=true SOURCE_DATE_EPOCH=0 \
+            ./scripts/build-txz.sh "$version" "$binary"
           second="$(sha256sum "$package" | cut -d' ' -f1)"
-          test "$first" = "$second" || { echo "::error::Unraid MCP package is not reproducible: $first != $second"; exit 1; }
+          test "$first" = "$second" || { echo "::error::package is not reproducible: $first != $second"; exit 1; }
           echo "reproducible package sha256=$second"
