@@ -177,7 +177,7 @@ fn collect_output_references(fields: &[OutputField], names: &mut BTreeSet<TypeNa
 }
 
 /// Immutable navigation over a complete normalized schema graph.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct TypeRegistry {
     types: Arc<BTreeMap<TypeName, TypeDefinition>>,
 }

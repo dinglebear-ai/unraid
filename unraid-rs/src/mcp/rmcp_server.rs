@@ -21,7 +21,13 @@ use crate::config::McpConfig;
 
 use super::{
     AppState, AuthPolicy,
-    elicitation::require_destructive_elicitation,
+    dynamic::{
+        config::DynamicSurface,
+        execute::{ExecutionError, execute_dynamic_operation_after_authorization},
+        models::RequiredScope,
+        surface::render_tools,
+    },
+    elicitation::{require_destructive_elicitation, require_dynamic_mutation_elicitation},
     host_filter::{allowed_hosts, allowed_origins},
     prompts,
     schemas::{ACTIONS, tool_definitions},
@@ -47,15 +53,35 @@ impl ServerHandler for UnraidRmcpServer {
 
     async fn list_tools(
         &self,
-        _request: Option<PaginatedRequestParams>,
+        request: Option<PaginatedRequestParams>,
         context: RequestContext<RoleServer>,
     ) -> Result<ListToolsResult, ErrorData> {
         require_auth_context(&self.state, &context)?;
-        let action_names = enabled_action_names(&self.state.config.tools);
-        let tools = rmcp_tool_definitions(&action_names)?;
+        if let Some(runtime) = &self.state.dynamic {
+            runtime.register_peer(context.peer.clone()).await;
+        }
+
+        let surface = self
+            .state
+            .dynamic
+            .as_ref()
+            .map(|runtime| runtime.config.surface)
+            .unwrap_or(DynamicSurface::Legacy);
+        let mut tools = Vec::new();
+        if matches!(surface, DynamicSurface::Legacy | DynamicSurface::Hybrid) {
+            let action_names = enabled_action_names(&self.state.config.tools);
+            tools.extend(rmcp_tool_definitions(&action_names)?);
+        }
+        if matches!(surface, DynamicSurface::Expanded | DynamicSurface::Hybrid)
+            && let Some(runtime) = &self.state.dynamic
+        {
+            tools.extend(render_tools(&runtime.catalogs.load()));
+        }
+        let (tools, next_cursor) = paginate_tools(tools, request)?;
         tracing::info!(tool_count = tools.len(), "MCP tools listed");
         Ok(ListToolsResult {
             tools,
+            next_cursor,
             ..Default::default()
         })
     }
@@ -66,16 +92,106 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<CallToolResponse, ErrorData> {
         let tool_name = request.name.to_string();
+        if let Some(runtime) = &self.state.dynamic {
+            runtime.register_peer(context.peer.clone()).await;
+        }
+        let auth = require_auth_context(&self.state, &context)?;
+
+        if let Some(runtime) = &self.state.dynamic
+            && matches!(
+                runtime.config.surface,
+                DynamicSurface::Expanded | DynamicSurface::Hybrid
+            )
+        {
+            let catalog = runtime.catalogs.load();
+            let generated_name = super::dynamic::types::ToolName::new(&tool_name).ok();
+            if let Some(operation) = generated_name
+                .as_ref()
+                .and_then(|name| catalog.by_tool_name.get(name))
+                .cloned()
+            {
+                if let Some(auth) = auth {
+                    let required_scope = match operation.scope {
+                        RequiredScope::Read => READ_SCOPE,
+                        RequiredScope::Admin => WRITE_SCOPE,
+                    };
+                    check_scope(auth, required_scope, &operation.path.to_string())?;
+                }
+                let arguments = request.arguments.unwrap_or_default();
+                let arguments_value = Value::Object(arguments.clone());
+                let started = Instant::now();
+                self.state.counters.inc_requests();
+                tracing::info!(
+                    tool = %tool_name,
+                    operation = %operation.path,
+                    "generated MCP tool execution started"
+                );
+
+                if let Err(message) = require_dynamic_mutation_elicitation(
+                    &context.peer,
+                    &operation,
+                    &arguments_value,
+                )
+                .await
+                {
+                    self.state.counters.inc_errors();
+                    tracing::warn!(
+                        tool = %tool_name,
+                        operation = %operation.path,
+                        elapsed_ms = started.elapsed().as_millis(),
+                        reason = %message,
+                        "generated mutation stopped by elicitation"
+                    );
+                    return Ok(CallToolResult::error(vec![ContentBlock::text(message)]).into());
+                }
+
+                return match execute_dynamic_operation_after_authorization(
+                    &self.state.service,
+                    &catalog,
+                    &operation,
+                    arguments,
+                    &runtime.config,
+                )
+                .await
+                {
+                    Ok(result) => {
+                        tracing::info!(
+                            tool = %tool_name,
+                            operation = %operation.path,
+                            elapsed_ms = started.elapsed().as_millis(),
+                            "generated MCP tool execution completed"
+                        );
+                        Ok(CallToolResult::structured(result).into())
+                    }
+                    Err(error @ (ExecutionError::Validation(_) | ExecutionError::Document(_))) => {
+                        self.state.counters.inc_errors();
+                        Err(ErrorData::invalid_params(error.to_string(), None))
+                    }
+                    Err(error @ ExecutionError::Upstream(_)) => {
+                        self.state.counters.inc_errors();
+                        tracing::error!(
+                            tool = %tool_name,
+                            operation = %operation.path,
+                            elapsed_ms = started.elapsed().as_millis(),
+                            error = %error,
+                            "generated MCP tool execution failed"
+                        );
+                        Ok(
+                            CallToolResult::error(vec![ContentBlock::text(error.to_string())])
+                                .into(),
+                        )
+                    }
+                };
+            }
+        }
 
         let action: String = request
             .arguments
             .as_ref()
-            .and_then(|m| m.get("action"))
+            .and_then(|arguments| arguments.get("action"))
             .and_then(Value::as_str)
             .unwrap_or("")
             .to_owned();
-
-        let auth = require_auth_context(&self.state, &context)?;
         if let Err(message) =
             ensure_tool_call_enabled(&self.state.config.tools, &tool_name, &action)
         {
@@ -91,58 +207,50 @@ impl ServerHandler for UnraidRmcpServer {
             .map(Value::Object)
             .unwrap_or_else(|| Value::Object(Map::new()));
         let started = Instant::now();
-        // Count every tool call exactly once at the MCP boundary (see the note in
-        // `tools::dispatch`). Covers pre-dispatch validation and serialization errors.
         self.state.counters.inc_requests();
         tracing::info!(tool = %tool_name, action = %action, "MCP tool execution started");
 
         if let Err(message) =
             require_destructive_elicitation(&context.peer, &action, &arguments).await
         {
-            let elapsed = started.elapsed().as_millis();
             self.state.counters.inc_errors();
             tracing::warn!(
                 tool = %tool_name,
                 action = %action,
-                elapsed_ms = elapsed,
+                elapsed_ms = started.elapsed().as_millis(),
                 reason = %message,
                 "MCP destructive action stopped by elicitation"
             );
             return Ok(CallToolResult::error(vec![ContentBlock::text(message)]).into());
         }
 
-        // All errors become agent-readable CallToolResult::error — never Err(ErrorData).
-        // This keeps the MCP session alive even when the upstream Unraid API is down.
         match execute_tool(&self.state, &tool_name, arguments).await {
             Ok(result) => {
-                let elapsed = started.elapsed().as_millis();
-                tracing::info!(tool = %tool_name, elapsed_ms = elapsed, "MCP tool execution completed");
+                tracing::info!(
+                    tool = %tool_name,
+                    elapsed_ms = started.elapsed().as_millis(),
+                    "MCP tool execution completed"
+                );
                 match serialize_response(result) {
                     Ok(text) => Ok(CallToolResult::success(vec![ContentBlock::text(text)]).into()),
-                    Err(e) => {
+                    Err(error) => {
                         self.state.counters.inc_errors();
                         Ok(CallToolResult::error(vec![ContentBlock::text(format!(
-                            "ERROR: serialization failed\nReason: {e}"
+                            "ERROR: serialization failed\nReason: {error}"
                         ))])
                         .into())
                     }
                 }
             }
             Err(error) => {
-                let elapsed = started.elapsed().as_millis();
                 self.state.counters.inc_errors();
-                // Route on the typed variant, never on message prose: an
-                // agent-correctable input mistake becomes a protocol-level
-                // `invalid_params` error; every other failure (upstream
-                // unreachable/auth/other, internal) stays an in-band tool error so
-                // the MCP session survives upstream outages.
-                let msg = error.to_string();
+                let message = error.to_string();
                 if error.is_invalid_params() {
-                    tracing::warn!(tool = %tool_name, elapsed_ms = elapsed, "MCP tool rejected invalid params");
-                    Err(ErrorData::invalid_params(msg, None))
+                    tracing::warn!(tool = %tool_name, elapsed_ms = started.elapsed().as_millis(), "MCP tool rejected invalid params");
+                    Err(ErrorData::invalid_params(message, None))
                 } else {
-                    tracing::error!(tool = %tool_name, elapsed_ms = elapsed, error = %msg, "MCP tool execution failed");
-                    Ok(CallToolResult::error(vec![ContentBlock::text(msg)]).into())
+                    tracing::error!(tool = %tool_name, elapsed_ms = started.elapsed().as_millis(), error = %message, "MCP tool execution failed");
+                    Ok(CallToolResult::error(vec![ContentBlock::text(message)]).into())
                 }
             }
         }
@@ -234,6 +342,7 @@ impl ServerHandler for UnraidRmcpServer {
         ServerInfo::new(
             ServerCapabilities::builder()
                 .enable_tools()
+                .enable_tool_list_changed()
                 .enable_resources()
                 .enable_prompts()
                 .build(),
@@ -243,6 +352,32 @@ impl ServerHandler for UnraidRmcpServer {
             env!("CARGO_PKG_VERSION"),
         ))
     }
+}
+
+const TOOL_PAGE_SIZE: usize = 100;
+
+fn paginate_tools(
+    tools: Vec<Tool>,
+    request: Option<PaginatedRequestParams>,
+) -> Result<(Vec<Tool>, Option<String>), ErrorData> {
+    let start = request
+        .and_then(|request| request.cursor)
+        .map(|cursor| {
+            cursor.parse::<usize>().map_err(|_| {
+                ErrorData::invalid_params(format!("invalid tools cursor: {cursor}"), None)
+            })
+        })
+        .transpose()?
+        .unwrap_or(0);
+    if start > tools.len() {
+        return Err(ErrorData::invalid_params(
+            format!("tools cursor {start} is beyond the catalog"),
+            None,
+        ));
+    }
+    let end = start.saturating_add(TOOL_PAGE_SIZE).min(tools.len());
+    let next_cursor = (end < tools.len()).then(|| end.to_string());
+    Ok((tools[start..end].to_vec(), next_cursor))
 }
 
 // ── transport helpers ─────────────────────────────────────────────────────────
@@ -414,6 +549,64 @@ mod tests {
         assert_eq!(
             required_scope_for("definitely_not_an_action"),
             Some(DENY_SCOPE)
+        );
+    }
+
+    #[test]
+    fn dynamic_tool_pagination_is_stable_and_cursor_based() {
+        let tools = (0..205)
+            .map(|index| {
+                Tool::new_with_raw(
+                    format!("tool_{index:03}"),
+                    None::<Cow<'static, str>>,
+                    Arc::new(Map::new()),
+                )
+            })
+            .collect::<Vec<_>>();
+        let (first, first_cursor) = paginate_tools(tools.clone(), None).unwrap();
+        assert_eq!(first.len(), 100);
+        assert_eq!(first[0].name, "tool_000");
+        assert_eq!(first_cursor.as_deref(), Some("100"));
+
+        let (second, second_cursor) = paginate_tools(
+            tools.clone(),
+            Some(PaginatedRequestParams::default().with_cursor(first_cursor)),
+        )
+        .unwrap();
+        assert_eq!(second.len(), 100);
+        assert_eq!(second[0].name, "tool_100");
+        assert_eq!(second_cursor.as_deref(), Some("200"));
+
+        let (third, third_cursor) = paginate_tools(
+            tools,
+            Some(PaginatedRequestParams::default().with_cursor(second_cursor)),
+        )
+        .unwrap();
+        assert_eq!(third.len(), 5);
+        assert_eq!(third[0].name, "tool_200");
+        assert!(third_cursor.is_none());
+    }
+
+    #[test]
+    fn dynamic_tool_pagination_rejects_invalid_cursors() {
+        let tools = vec![Tool::new_with_raw(
+            "tool",
+            None::<Cow<'static, str>>,
+            Arc::new(Map::new()),
+        )];
+        assert!(
+            paginate_tools(
+                tools.clone(),
+                Some(PaginatedRequestParams::default().with_cursor(Some("wat".to_string()))),
+            )
+            .is_err()
+        );
+        assert!(
+            paginate_tools(
+                tools,
+                Some(PaginatedRequestParams::default().with_cursor(Some("2".to_string()))),
+            )
+            .is_err()
         );
     }
 }

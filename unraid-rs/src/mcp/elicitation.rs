@@ -44,6 +44,14 @@ struct DestructiveConfirmation {
 
 rmcp::elicit_safe!(DestructiveConfirmation);
 
+#[derive(Debug, Deserialize, JsonSchema)]
+struct DynamicMutationApproval {
+    /// Approve this one concrete generated Unraid mutation.
+    approved: bool,
+}
+
+rmcp::elicit_safe!(DynamicMutationApproval);
+
 fn string_arg<'a>(args: &'a Value, key: &str) -> Option<&'a str> {
     args.get(key).and_then(Value::as_str)
 }
@@ -215,6 +223,90 @@ pub(super) async fn require_destructive_elicitation(
         )),
         Err(error) => Err(format!(
             "Action '{action}' could not obtain MCP elicitation approval: {error}"
+        )),
+    }
+}
+
+/// Build the native MCP elicitation prompt for one generated mutation.
+pub(super) fn dynamic_mutation_description(
+    operation: &crate::mcp::dynamic::models::OperationSpec,
+    args: &Value,
+) -> String {
+    let mut arguments = serde_json::Map::new();
+    if let Some(object) = args.as_object() {
+        for (key, value) in object {
+            if key == "select" {
+                continue;
+            }
+            let lower = key.to_ascii_lowercase();
+            let redacted = ["key", "token", "secret", "password", "credential"]
+                .iter()
+                .any(|needle| lower.contains(needle));
+            arguments.insert(
+                key.clone(),
+                if redacted {
+                    Value::String("[redacted]".to_string())
+                } else {
+                    value.clone()
+                },
+            );
+        }
+    }
+    let arguments = serde_json::to_string_pretty(&arguments)
+        .unwrap_or_else(|_| "{unable to render arguments}".to_string());
+    let risk = if operation.risk.destructive {
+        "
+This operation is marked destructive and may be difficult to reverse."
+    } else {
+        ""
+    };
+    format!(
+        "Approve generated Unraid mutation: {}
+
+{}{}
+
+Arguments:
+{}
+
+Check the approval box to execute this one mutation.",
+        operation.path, operation.description, risk, arguments
+    )
+}
+
+/// Require native MCP form elicitation for every generated mutation.
+///
+/// Query operations return immediately. Mutation approval is structural and has
+/// no configuration or tool-argument bypass. Every non-approval outcome fails
+/// before the generic executor can send an upstream request.
+pub(super) async fn require_dynamic_mutation_elicitation(
+    peer: &Peer<RoleServer>,
+    operation: &crate::mcp::dynamic::models::OperationSpec,
+    args: &Value,
+) -> Result<(), String> {
+    if !operation.requires_elicitation() {
+        return Ok(());
+    }
+    let action = operation.path.to_string();
+    let message = dynamic_mutation_description(operation, args);
+    match peer.elicit::<DynamicMutationApproval>(message).await {
+        Ok(Some(response)) if response.approved => {
+            tracing::info!(operation = %operation.path, "generated mutation approved via MCP elicitation");
+            Ok(())
+        }
+        Ok(Some(_)) | Ok(None) => Err(format!(
+            "Generated mutation '{action}' was not approved through MCP elicitation."
+        )),
+        Err(ElicitationError::UserDeclined) => Err(format!(
+            "Generated mutation '{action}' was declined by the user."
+        )),
+        Err(ElicitationError::UserCancelled) => Err(format!(
+            "Generated mutation '{action}' was cancelled by the user."
+        )),
+        Err(ElicitationError::CapabilityNotSupported) => Err(format!(
+            "Generated mutation '{action}' requires MCP form elicitation, but the connected client did not advertise elicitation support."
+        )),
+        Err(error) => Err(format!(
+            "Generated mutation '{action}' could not obtain MCP elicitation approval: {error}"
         )),
     }
 }

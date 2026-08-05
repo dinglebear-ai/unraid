@@ -133,6 +133,7 @@ async fn serve_mcp() -> Result<()> {
     let config = Config::load()?;
     validate_bind_security(&config)?;
     let state = build_state(config).await?;
+    let _dynamic_refresh = initialize_dynamic_runtime(&state).await?;
 
     info!(
         bind = %state.config.bind_addr(),
@@ -167,8 +168,13 @@ async fn serve_stdio_mcp() -> Result<()> {
         service,
         Counters::new(),
     );
+    let dynamic_refresh = initialize_dynamic_runtime(&state).await?;
     let svc = mcp::rmcp_server(state).serve(stdio()).await?;
-    svc.waiting().await?;
+    let result = svc.waiting().await;
+    if let Some(task) = dynamic_refresh {
+        task.abort();
+    }
+    result?;
     Ok(())
 }
 
@@ -204,6 +210,23 @@ async fn build_state(config: Config) -> Result<AppState> {
         service,
         Counters::new(),
     ))
+}
+
+async fn initialize_dynamic_runtime(
+    state: &AppState,
+) -> Result<Option<tokio::task::JoinHandle<()>>> {
+    let Some(runtime) = &state.dynamic else {
+        return Ok(None);
+    };
+    let outcome = runtime.initialize(&state.service).await?;
+    info!(
+        changed = outcome.changed,
+        source = ?outcome.source,
+        catalog_hash = ?outcome.new_catalog_hash,
+        notified_peers = outcome.notified_peers,
+        "dynamic MCP runtime initialized"
+    );
+    Ok(Some(runtime.spawn_refresh_loop(state.service.clone())))
 }
 
 async fn build_auth_policy(config: &Config) -> Result<AuthPolicy> {

@@ -28,6 +28,7 @@ struct FetchedBatch {
 }
 
 /// Fetch and validate one deterministic targeted introspection batch.
+#[cfg(test)]
 pub(crate) async fn fetch_type_batch(
     client: &UnraidClient,
     names: &[TypeName],

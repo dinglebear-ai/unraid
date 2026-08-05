@@ -23,6 +23,16 @@ impl UnraidService {
         Self { client }
     }
 
+    /// Execute a precompiled GraphQL body through the canonical authenticated transport.
+    pub(crate) async fn execute_graphql_body(&self, body: Value) -> Result<Value> {
+        self.client.execute_graphql_body(body).await
+    }
+
+    /// Borrow the canonical upstream client for schema discovery.
+    pub(crate) fn graphql_client(&self) -> &UnraidClient {
+        &self.client
+    }
+
     /// Expose raw HTTP client fields for health probing (url, api_key).
     pub fn raw_client_parts(&self) -> (&reqwest::Client, &str, &str) {
         self.client.raw_client()
