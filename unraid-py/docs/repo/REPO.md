@@ -22,7 +22,7 @@ unraid-mcp/
 +-- Dockerfile                         # Multi-stage Docker build
 +-- docker-compose.yaml                # Container orchestration
 +-- entrypoint.sh                      # Docker entrypoint with env validation
-+-- server.json                        # MCP Registry manifest (tv.tootie/unraid-mcp)
++-- server.json                        # MCP Registry manifest (tv.nashost/unraid-mcp)
 +-- gemini-extension.json              # Gemini CLI manifest
 +-- .env.example                       # Environment variable template
 |

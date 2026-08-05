@@ -356,7 +356,7 @@ class TestInfoToolRequests:
                         {
                             "id": "net:eth0",
                             "name": "eth0",
-                            "ipv4Addresses": [{"address": "10.1.0.2", "netmask": "255.255.255.0"}],
+                            "ipv4Addresses": [{"address": "192.0.2.2", "netmask": "255.255.255.0"}],
                             "ipv6Addresses": [],
                         }
                     ]

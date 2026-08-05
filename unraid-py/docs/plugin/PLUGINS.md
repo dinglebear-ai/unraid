@@ -74,7 +74,7 @@
 
 ```json
 {
-  "name": "tv.tootie/unraid-mcp",
+  "name": "tv.nashost/unraid-mcp",
   "packages": [{
     "registryType": "pypi",
     "identifier": "unraid-mcp",

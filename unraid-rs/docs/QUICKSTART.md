@@ -83,7 +83,7 @@ Expected response (truncated):
   "server": {
     "name": "Tower",
     "status": "online",
-    "lanip": "10.1.0.2",
+    "lanip": "192.0.2.2",
     "localurl": "http://tower/"
   }
 }

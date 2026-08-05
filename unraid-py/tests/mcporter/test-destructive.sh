@@ -208,7 +208,7 @@ fi
 # notifications: delete_archived — bulk wipe; skip (hard to isolate)
 # ---------------------------------------------------------------------------
 section "notifications: delete_archived"
-skip_test "notifications: delete_archived" "bulk wipe of ALL archived notifications; run manually on shart if needed"
+skip_test "notifications: delete_archived" "bulk wipe of ALL archived notifications; run manually on backuphost if needed"
 
 # ---------------------------------------------------------------------------
 # rclone: delete_remote — create local:/tmp remote → delete via MCP
@@ -303,10 +303,10 @@ section "settings: setup_remote_access"
 skip_test "settings: setup_remote_access" "misconfiguration can lock out remote access; safety audit only"
 
 # ---------------------------------------------------------------------------
-# settings: enable_dynamic_remote_access — shart only, toggle false → restore
+# settings: enable_dynamic_remote_access — backuphost only, toggle false → restore
 # ---------------------------------------------------------------------------
 section "settings: enable_dynamic_remote_access"
-skip_test "settings: enable_dynamic_remote_access" "run manually on shart (10.1.0.3) only — see docs/DESTRUCTIVE_ACTIONS.md"
+skip_test "settings: enable_dynamic_remote_access" "run manually on backuphost (192.0.2.3) only — see docs/DESTRUCTIVE_ACTIONS.md"
 
 # ---------------------------------------------------------------------------
 # info: update_ssh — read current values, re-apply same (no-op)

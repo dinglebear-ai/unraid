@@ -62,7 +62,7 @@ EXPOSE 40010/tcp
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -sf http://localhost:40010/health || exit 1
 
-LABEL io.modelcontextprotocol.server.name="tv.tootie/unraid-rmcp"
+LABEL io.modelcontextprotocol.server.name="tv.nashost/unraid-rmcp"
 
 # entrypoint validates env, sets up /data, then drops to 1000:1000
 ENTRYPOINT ["/entrypoint.sh"]
