@@ -51,8 +51,11 @@
 UNRAID_API_URL                Unraid GraphQL endpoint (required)
 UNRAID_API_KEY                API key for x-api-key header (required)
 UNRAID_API_SKIP_TLS_VERIFY    Skip TLS cert check (default false)
+UNRAID_HOME                   Exact data directory; overrides /data or ~/.unraid
 UNRAID_RMCP_HOST               Bind host (default 0.0.0.0)
 UNRAID_RMCP_PORT               Bind port (default 40010)
+UNRAID_RMCP_ENABLED_TOOLS      Comma-separated MCP tool/action allowlist
+UNRAID_RMCP_DISABLED_TOOLS     Comma-separated MCP tool/action denylist
 UNRAID_RMCP_TOKEN              Static bearer token for /mcp
 UNRAID_RMCP_DISABLE_HTTP_AUTH  Disable MCP auth entirely (1/true/yes)
 UNRAID_RMCP_NO_AUTH            Alias that disables MCP auth entirely (1/true/yes)
@@ -70,9 +73,12 @@ UNRAID_NOAUTH                 Permits a NON-loopback bind without auth being mou
 RUST_LOG                      Log filter
 ```
 
-The binary also loads `~/.unraid/.env` (or `/data/.env` in a container) at startup
-via `dotenvy` before `Config::load` — see `load_dotenv()` in `config.rs`. A symlinked
-`.env` is refused (symlink-attack guard); already-set env vars are not overridden.
+The binary loads `<UNRAID_HOME>/.env` when the override is set, otherwise
+`~/.unraid/.env` (or `/data/.env` in a container), before `Config::load` — see
+`load_dotenv()` in `config.rs`. A symlinked `.env` is refused (symlink-attack guard).
+Non-empty process values win; empty plugin placeholders are filled from `.env` when
+a persisted value exists. A malformed persisted `.env` fails startup instead of
+silently skipping later policy or credential entries.
 
 ## How to add a new action
 
@@ -80,8 +86,10 @@ The set of valid actions lives in ONE place: the `ACTIONS: &[ActionSpec]` slice 
 `src/mcp/schemas.rs`. From there, `enabled_action_names()` in `tool_filter.rs`
 filters `ACTIONS` through the configured `[mcp.tools]` enable/disable policy
 (`UNRAID_RMCP_ENABLED_TOOLS` / `UNRAID_RMCP_DISABLED_TOOLS`), and that filtered
-list feeds both the JSON Schema enum — via `tool_definitions(action_names)` in
-`schemas.rs` — and the error-message action list in `tools.rs`. The MCP scope
+list feeds the JSON Schema enum and filters the visible parameter set through
+`action_params.rs` before `tool_definitions(action_names)` returns discovery. A
+unit tripwire scans `dispatch_action` so argument/catalog drift fails tests. The
+MCP scope
 gating (`required_scope_for` in `rmcp_server.rs`) is still derived directly from
 `ACTIONS`. Do not hand-maintain any of these lists.
 

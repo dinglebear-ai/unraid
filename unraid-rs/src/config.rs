@@ -1,7 +1,9 @@
+use std::collections::HashSet;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub struct Config {
     pub mcp: McpConfig,
     pub unraid: UnraidConfig,
@@ -9,7 +11,7 @@ pub struct Config {
 
 /// Unraid GraphQL API connection config
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub struct UnraidConfig {
     /// Full GraphQL endpoint URL (UNRAID_API_URL)
     pub api_url: String,
@@ -21,7 +23,7 @@ pub struct UnraidConfig {
 
 /// MCP HTTP server configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub struct McpConfig {
     #[serde(default = "default_mcp_host")]
     pub host: String,
@@ -53,7 +55,7 @@ impl McpConfig {
 /// bare action such as `docker_logs`, or a qualified action such as
 /// `unraid.docker_logs`.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub struct McpToolsConfig {
     pub enabled: Vec<String>,
     pub disabled: Vec<String>,
@@ -61,7 +63,7 @@ pub struct McpToolsConfig {
 
 /// OAuth / auth sub-config (nested under `[mcp.auth]` in config.toml)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub struct AuthConfig {
     pub mode: AuthMode,
     pub public_url: Option<String>,
@@ -133,12 +135,14 @@ pub fn default_data_dir() -> std::path::PathBuf {
 /// `~/.unraid/.env` (or `/data/.env` in a container), into the process
 /// environment if present.
 ///
-/// Best-effort: a missing file is ignored, and existing env vars are NOT
-/// overridden — values injected by docker-compose/systemd or the plugin hook's
-/// `CLAUDE_PLUGIN_OPTION_*` mapping still take precedence. This lets the binary
-/// find its credentials directly from `~/.unraid/.env` without relying on a
-/// process manager. Call once at startup before `Config::load`. A symlinked
-/// `.env` is refused (the dir holds secrets; mirrors axon).
+/// A missing file is ignored, and existing NON-EMPTY env vars are not
+/// overridden — values injected by docker-compose/systemd or plugin config still
+/// take precedence. Empty process values are treated as placeholders and may be
+/// filled from `.env`, preventing optional plugin entries from masking persisted
+/// credentials or tool policy. A present but malformed file is fatal so a parse
+/// error cannot silently skip a later deny rule or credential. Call once at
+/// startup before `Config::load`. A symlinked `.env` is refused (the dir holds
+/// secrets; mirrors axon).
 pub fn load_dotenv() {
     let env_path = default_data_dir().join(".env");
     match std::fs::symlink_metadata(&env_path) {
@@ -150,10 +154,36 @@ pub fn load_dotenv() {
             std::process::exit(1);
         }
         Ok(_) => {
-            let _ = dotenvy::from_path(&env_path);
+            if let Err(error) = load_dotenv_file(&env_path) {
+                eprintln!(
+                    "error: failed to parse .env at {}: {error}",
+                    env_path.display()
+                );
+                std::process::exit(1);
+            }
         }
         Err(_) => {}
     }
+}
+
+fn load_dotenv_file(path: &std::path::Path) -> Result<(), dotenvy::Error> {
+    let iter = dotenvy::from_path_iter(path)?;
+    let mut seen = HashSet::new();
+    for item in iter {
+        let (key, value) = item?;
+        // Match dotenvy's normal first-declaration-wins behavior.
+        if !seen.insert(key.clone()) {
+            continue;
+        }
+        let should_set = std::env::var_os(&key).is_none_or(|existing| existing.is_empty());
+        if should_set {
+            // SAFETY: load_dotenv() runs once during process startup, before any
+            // worker threads or async tasks are created, so environment mutation
+            // cannot race another thread.
+            unsafe { std::env::set_var(key, value) };
+        }
+    }
+    Ok(())
 }
 
 fn default_mcp_host() -> String {

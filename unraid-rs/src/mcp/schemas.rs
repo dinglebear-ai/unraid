@@ -1,5 +1,7 @@
 use serde_json::{Value, json};
 
+use super::action_params::{enabled_actions_for_parameter, visible_parameter_names};
+
 /// Canonical specification for one `unraid` tool action.
 ///
 /// This is the SINGLE source of truth for the set of valid actions and their
@@ -637,12 +639,17 @@ pub fn write_action_names() -> Vec<&'static str> {
 }
 
 pub(super) fn tool_definitions(action_names: &[&str]) -> Vec<Value> {
-    vec![json!({
-        "name": "unraid",
-        "description": "Query and manage the Unraid server via its GraphQL API. Read actions need scope unraid:read; mutating actions need unraid:admin. Use action=help for documentation.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
+    let help_hint = if action_names.contains(&"help") {
+        " Use action=help for documentation."
+    } else {
+        ""
+    };
+    let description = format!(
+        "Query and manage the Unraid server via its GraphQL API. Read actions need scope \
+         unraid:read; mutating actions need unraid:admin.{help_hint}"
+    );
+    let visible_parameters = visible_parameter_names(action_names);
+    let mut properties = json!({
                 "action": {
                     "type": "string",
                     "description": "Operation to perform.",
@@ -747,7 +754,37 @@ pub(super) fn tool_definitions(action_names: &[&str]) -> Vec<Value> {
                 "boot_size_mib": { "type": "integer", "description": "Boot partition size in MiB (onboarding_create_internal_boot_pool)." },
                 "update_bios": { "type": "boolean", "description": "Whether to update BIOS boot order (onboarding_create_internal_boot_pool)." },
                 "reboot": { "type": "boolean", "description": "Whether to reboot after creating the pool (onboarding_create_internal_boot_pool)." }
-            },
+    })
+    .as_object()
+    .expect("tool properties must be a JSON object")
+    .clone();
+    properties.retain(|name, _| name == "action" || visible_parameters.contains(name.as_str()));
+    for (name, schema) in &mut properties {
+        if name == "action" {
+            continue;
+        }
+        let actions = enabled_actions_for_parameter(action_names, name);
+        debug_assert!(
+            !actions.is_empty(),
+            "visible parameter without an enabled action: {name}"
+        );
+        if let Some(schema) = schema.as_object_mut() {
+            schema.insert(
+                "description".to_string(),
+                Value::String(format!(
+                    "Parameter for enabled action(s): {}.",
+                    actions.join(", ")
+                )),
+            );
+        }
+    }
+
+    vec![json!({
+        "name": "unraid",
+        "description": description,
+        "inputSchema": {
+            "type": "object",
+            "properties": properties,
             "required": ["action"]
         }
     })]
@@ -755,7 +792,19 @@ pub(super) fn tool_definitions(action_names: &[&str]) -> Vec<Value> {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use super::*;
+    use crate::mcp::action_params::ACTION_PARAMETERS;
+
+    fn schema_property_names(action_names: &[&str]) -> HashSet<String> {
+        tool_definitions(action_names)[0]["inputSchema"]["properties"]
+            .as_object()
+            .expect("schema properties must be an object")
+            .keys()
+            .cloned()
+            .collect()
+    }
 
     /// `help` is the only unscoped action; query actions are read-scoped and
     /// mutating actions are write-scoped. Guards against silently flipping scope.
@@ -782,6 +831,92 @@ mod tests {
         assert_eq!(
             definitions[0]["inputSchema"]["properties"]["action"]["enum"],
             json!(derived)
+        );
+    }
+
+    #[test]
+    fn restricted_schema_exposes_only_enabled_action_parameters() {
+        assert_eq!(
+            schema_property_names(&["status", "help"]),
+            HashSet::from(["action".to_string()])
+        );
+        assert_eq!(
+            schema_property_names(&["docker_logs", "status"]),
+            HashSet::from(["action".to_string(), "id".to_string(), "tail".to_string()])
+        );
+
+        let schema = tool_definitions(&["vm_reset"]);
+        let description = schema[0]["inputSchema"]["properties"]["id"]["description"]
+            .as_str()
+            .unwrap();
+        assert!(description.contains("vm_reset"));
+        assert!(!description.contains("docker_logs"));
+        assert!(!description.contains("ups_device"));
+    }
+
+    #[test]
+    fn every_single_action_schema_is_minimal_and_action_specific() {
+        for spec in ACTIONS {
+            let schema = tool_definitions(&[spec.name]);
+            let properties = schema[0]["inputSchema"]["properties"].as_object().unwrap();
+            let mut expected = HashSet::from(["action".to_string()]);
+            if let Some((_, parameters)) = ACTION_PARAMETERS
+                .iter()
+                .find(|(action, _)| *action == spec.name)
+            {
+                expected.extend(parameters.iter().map(|parameter| (*parameter).to_string()));
+            }
+            assert_eq!(
+                properties.keys().cloned().collect::<HashSet<_>>(),
+                expected,
+                "schema property leak for action {}",
+                spec.name
+            );
+            for (name, property) in properties {
+                if name == "action" {
+                    continue;
+                }
+                let expected_description =
+                    format!("Parameter for enabled action(s): {}.", spec.name);
+                assert_eq!(
+                    property["description"].as_str(),
+                    Some(expected_description.as_str()),
+                    "description leak for {}.{name}",
+                    spec.name
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn parameter_catalog_matches_full_schema_property_catalog() {
+        let action_names: Vec<&str> = ACTIONS.iter().map(|spec| spec.name).collect();
+        let mut schema_parameters = schema_property_names(&action_names);
+        schema_parameters.remove("action");
+        let catalog_parameters: HashSet<String> = ACTION_PARAMETERS
+            .iter()
+            .flat_map(|(_, parameters)| parameters.iter().copied())
+            .map(str::to_string)
+            .collect();
+        assert_eq!(schema_parameters, catalog_parameters);
+    }
+
+    #[test]
+    fn schema_description_only_recommends_enabled_help() {
+        let with_help = tool_definitions(&["status", "help"]);
+        assert!(
+            with_help[0]["description"]
+                .as_str()
+                .unwrap()
+                .contains("action=help")
+        );
+
+        let without_help = tool_definitions(&["status"]);
+        assert!(
+            !without_help[0]["description"]
+                .as_str()
+                .unwrap()
+                .contains("action=help")
         );
     }
 

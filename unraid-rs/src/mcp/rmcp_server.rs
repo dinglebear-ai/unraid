@@ -76,24 +76,37 @@ impl ServerHandler for UnraidRmcpServer {
             .to_owned();
 
         let auth = require_auth_context(&self.state, &context)?;
+        let started = Instant::now();
+        // Count every authenticated tools/call exactly once at the MCP boundary,
+        // including policy/scope denials, pre-dispatch validation, and serialization
+        // errors. Requests rejected by HTTP auth middleware never reach this handler.
+        self.state.counters.inc_requests();
+
         if let Err(message) =
             ensure_tool_call_enabled(&self.state.config.tools, &tool_name, &action)
         {
-            tracing::warn!(tool = %tool_name, action = %action, reason = %message, "MCP tool denied by server policy");
+            let elapsed = started.elapsed().as_millis();
+            self.state.counters.inc_errors();
+            tracing::warn!(
+                tool = %tool_name,
+                action = %action,
+                elapsed_ms = elapsed,
+                reason = %message,
+                "MCP tool denied by server policy"
+            );
             return Err(ErrorData::invalid_request(message, None));
         }
-        if let (Some(auth), Some(required_scope)) = (auth, required_scope_for(&action)) {
-            check_scope(auth, required_scope, &action)?;
+        if let (Some(auth), Some(required_scope)) = (auth, required_scope_for(&action))
+            && let Err(error) = check_scope(auth, required_scope, &action)
+        {
+            self.state.counters.inc_errors();
+            return Err(error);
         }
 
         let arguments = request
             .arguments
             .map(Value::Object)
             .unwrap_or_else(|| Value::Object(Map::new()));
-        let started = Instant::now();
-        // Count every tool call exactly once at the MCP boundary (see the note in
-        // `tools::dispatch`). Covers pre-dispatch validation and serialization errors.
-        self.state.counters.inc_requests();
         tracing::info!(tool = %tool_name, action = %action, "MCP tool execution started");
 
         if let Err(message) =
@@ -203,12 +216,8 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<ListPromptsResult, ErrorData> {
         require_auth_context(&self.state, &context)?;
-        // Every prompt instructs the client to call the unraid tool, so a fully
-        // disabled tool must not advertise prompts that reference it.
-        if !tool_is_enabled(&self.state.config.tools) {
-            return Ok(ListPromptsResult::default());
-        }
-        Ok(prompts::list_prompts())
+        let action_names = enabled_action_names(&self.state.config.tools);
+        Ok(prompts::list_prompts(&action_names))
     }
 
     async fn get_prompt(
@@ -223,7 +232,8 @@ impl ServerHandler for UnraidRmcpServer {
                 None,
             ));
         }
-        prompts::get_prompt(request)
+        let action_names = enabled_action_names(&self.state.config.tools);
+        prompts::get_prompt(request, &action_names)
             .map(Into::into)
             .map_err(|e| ErrorData::invalid_params(e.to_string(), None))
     }

@@ -152,6 +152,35 @@ mod tests {
     }
 
     #[test]
+    fn every_action_supports_bare_and_qualified_selectors() {
+        for spec in ACTIONS {
+            let qualified = format!("unraid.{}", spec.name);
+            for selector in [spec.name, qualified.as_str()] {
+                let policy = config(&[selector], &[]);
+                assert_eq!(
+                    enabled_action_names(&policy),
+                    vec![spec.name],
+                    "allow selector {selector:?}"
+                );
+
+                let policy = config(&[], &[selector]);
+                assert!(
+                    !action_is_enabled(&policy, spec.name),
+                    "deny selector {selector:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn whole_tool_aliases_have_identical_effect() {
+        for selector in ["*", "unraid", "unraid.*"] {
+            assert!(enabled_action_names(&config(&[selector], &[])).len() == ACTIONS.len());
+            assert!(enabled_action_names(&config(&[], &[selector])).is_empty());
+        }
+    }
+
+    #[test]
     fn deny_rules_override_allow_rules() {
         let config = config(&["unraid"], &["docker", "unraid.vm_reset"]);
         assert!(action_is_enabled(&config, "array"));

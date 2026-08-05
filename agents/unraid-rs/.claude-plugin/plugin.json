@@ -39,13 +39,13 @@
     "enabled_tools": {
       "type": "string",
       "title": "Enabled MCP tools/actions",
-      "description": "Optional comma-separated allowlist. Empty means all actions. Use action names such as array,docker,status,help or qualified selectors such as unraid.array.",
+      "description": "Optional comma-separated allowlist. Empty inherits the server's persisted .env/config policy; when none exists, all actions are enabled. Use action names such as array,docker,status,help or qualified selectors such as unraid.array.",
       "default": ""
     },
     "disabled_tools": {
       "type": "string",
       "title": "Disabled MCP tools/actions",
-      "description": "Optional comma-separated denylist. Deny rules override enabled rules. Use * or unraid to disable the whole tool, or selectors such as vm_reset or unraid.docker_remove_container.",
+      "description": "Optional comma-separated denylist. Empty inherits the server's persisted .env/config policy. Deny rules override enabled rules. Use * or unraid to disable the whole tool, or selectors such as vm_reset or unraid.docker_remove_container.",
       "default": ""
     },
     "auth_mode": {
