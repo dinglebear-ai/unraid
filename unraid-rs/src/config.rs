@@ -35,6 +35,8 @@ pub struct McpConfig {
     pub api_token: Option<String>,
     pub allowed_hosts: Vec<String>,
     pub allowed_origins: Vec<String>,
+    /// Granular MCP tool/action exposure policy.
+    pub tools: McpToolsConfig,
     pub auth: AuthConfig,
 }
 
@@ -42,6 +44,19 @@ impl McpConfig {
     pub fn bind_addr(&self) -> String {
         format!("{}:{}", self.host, self.port)
     }
+}
+
+/// Granular MCP tool/action filtering (nested under `[mcp.tools]`).
+///
+/// An empty `enabled` list means all tools/actions are eligible. Entries in
+/// `disabled` always win. Selectors may be `*`, `unraid`, `unraid.*`, a
+/// bare action such as `docker_logs`, or a qualified action such as
+/// `unraid.docker_logs`.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default)]
+pub struct McpToolsConfig {
+    pub enabled: Vec<String>,
+    pub disabled: Vec<String>,
 }
 
 /// OAuth / auth sub-config (nested under `[mcp.auth]` in config.toml)
@@ -170,6 +185,7 @@ impl Default for McpConfig {
             api_token: None,
             allowed_hosts: Vec::new(),
             allowed_origins: Vec::new(),
+            tools: McpToolsConfig::default(),
             auth: AuthConfig::default(),
         }
     }
@@ -222,6 +238,8 @@ impl Config {
             "UNRAID_RMCP_ALLOWED_ORIGINS",
             &mut config.mcp.allowed_origins,
         );
+        env_tool_selector_list("UNRAID_RMCP_ENABLED_TOOLS", &mut config.mcp.tools.enabled)?;
+        env_tool_selector_list("UNRAID_RMCP_DISABLED_TOOLS", &mut config.mcp.tools.disabled)?;
         env_opt_str("UNRAID_RMCP_PUBLIC_URL", &mut config.mcp.auth.public_url);
         env_str(
             "UNRAID_RMCP_AUTH_ADMIN_EMAIL",
@@ -265,6 +283,9 @@ impl Config {
         // It does NOT set no_auth itself — it merely permits it.
         // (auth gating is handled in build_auth_policy; this flag is read in main.rs)
 
+        crate::mcp::validate_tool_config(&config.mcp.tools)
+            .map_err(|error| anyhow::anyhow!("Invalid MCP tool configuration: {error}"))?;
+
         Ok(config)
     }
 }
@@ -306,6 +327,40 @@ fn env_bool(key: &str, target: &mut bool) -> anyhow::Result<()> {
             other => anyhow::bail!("{key}: expected bool, got {other:?}"),
         }
     }
+    Ok(())
+}
+
+/// Env override for the two `[mcp.tools]` selector lists ONLY — the generic
+/// `env_list` semantics are deliberately not reused here:
+///
+/// - Set to the empty string `""` → treated as unset (the toml value stays).
+///   The agent plugin's `.mcp.json` passes `""` for both vars by default, so
+///   empty MUST NOT be an error or default plugin installs would fail to start.
+/// - Set, non-empty, but parsing to ZERO selectors (whitespace/commas only,
+///   e.g. `","`) → fail config load. The operator visibly set a policy and it
+///   would otherwise silently do nothing.
+/// - Otherwise the parsed selectors REPLACE the `[mcp.tools]` toml list — env
+///   and toml are never merged. A set env var is the complete policy for that
+///   list (documented in README.md, .env.example, and config.toml).
+fn env_tool_selector_list(key: &str, target: &mut Vec<String>) -> anyhow::Result<()> {
+    let Ok(v) = std::env::var(key) else {
+        return Ok(());
+    };
+    if v.is_empty() {
+        return Ok(());
+    }
+    let items: Vec<String> = v
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+    if items.is_empty() {
+        anyhow::bail!(
+            "{key}: value {v:?} contains no selectors; \
+             unset the variable or provide comma-separated selectors"
+        );
+    }
+    *target = items;
     Ok(())
 }
 

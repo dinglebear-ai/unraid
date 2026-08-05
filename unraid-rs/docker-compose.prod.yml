@@ -28,7 +28,8 @@ services:
       - path: .env
         required: false
     ports:
-      - "${UNRAID_RMCP_HOST_PORT:-40010}:40010/tcp"
+      - "100.88.16.79:${UNRAID_RMCP_HOST_PORT:-40010}:40010/tcp"
+      - "10.1.0.6:${UNRAID_RMCP_HOST_PORT:-40010}:40010/tcp"
     volumes:
       - ${UNRAID_RMCP_DATA_VOLUME:-${HOME}/.unraid}:/data
     healthcheck:

@@ -42,10 +42,14 @@ def test_release_executables_and_tools_are_pinned_and_verified() -> None:
     assert "/releases/latest/download/" not in combined
     assert not re.search(r"curl[^\n|]*\|\s*(?:sh|bash|tar)\b", combined)
     release = _workflows()["publish-pypi.yml"]
-    assert "/releases/download/v1.8.0/" in release
-    assert "1370446bbe74d562608e8005a6ccce02d146a661fbd78674e11cc70b9618d6cf" in release
-    assert "sha256sum --check --strict" in release
-    assert "./mcp-publisher --version 2>&1" in release
+    registry = _workflows()["mcp-registry.yml"]
+    assert "mcp-publisher" not in release
+    assert "registry.modelcontextprotocol.io" not in release
+    assert "mcp-registry-publish.yml@befa67c7b7f976235bf3fbced6ede93293a7f405" in registry
+    assert "publish-unraid-py:" in registry
+    assert "manifest-path: unraid-py/server.json" in registry
+    assert "MCP_PRIVATE_KEY" in registry
+    assert "auth-method:" not in registry
 
 
 def test_release_sensitive_uv_is_pinned_and_cacheless() -> None:
@@ -65,8 +69,9 @@ def test_release_sensitive_uv_is_pinned_and_cacheless() -> None:
 
 def test_artifact_channels_are_independent_and_reconciled() -> None:
     workflow = _workflows()["publish-pypi.yml"]
-    for job in ("build", "pypi", "github-release", "mcp-registry", "reconcile"):
+    for job in ("build", "pypi", "github-release", "reconcile"):
         assert re.search(rf"^  {re.escape(job)}:\s*$", workflow, re.MULTILINE)
+    assert not re.search(r"^  mcp-registry:\s*$", workflow, re.MULTILINE)
     assert "SHA256SUMS" in workflow
     assert "actions/attest-build-provenance@" in workflow
     assert "skip-existing: true" in workflow
@@ -80,7 +85,7 @@ def test_manual_release_reconciliation_targets_requested_release_tag() -> None:
     assert 'default: ""' in workflow
     assert "RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}" in workflow
     assert "group: release-${{ github.event.release.tag_name || inputs.release_tag }}" in workflow
-    assert workflow.count("ref: refs/tags/${{ env.RELEASE_TAG }}") == 2
+    assert workflow.count("ref: refs/tags/${{ env.RELEASE_TAG }}") == 1
     assert "GITHUB_REF_NAME" not in workflow
 
 

@@ -25,6 +25,7 @@ use super::{
     host_filter::{allowed_hosts, allowed_origins},
     prompts,
     schemas::{ACTIONS, tool_definitions},
+    tool_filter::{enabled_action_names, ensure_tool_call_enabled, tool_is_enabled},
     tools::{execute_tool, serialize_response},
 };
 
@@ -50,7 +51,8 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<ListToolsResult, ErrorData> {
         require_auth_context(&self.state, &context)?;
-        let tools = rmcp_tool_definitions()?;
+        let action_names = enabled_action_names(&self.state.config.tools);
+        let tools = rmcp_tool_definitions(&action_names)?;
         tracing::info!(tool_count = tools.len(), "MCP tools listed");
         Ok(ListToolsResult {
             tools,
@@ -74,6 +76,12 @@ impl ServerHandler for UnraidRmcpServer {
             .to_owned();
 
         let auth = require_auth_context(&self.state, &context)?;
+        if let Err(message) =
+            ensure_tool_call_enabled(&self.state.config.tools, &tool_name, &action)
+        {
+            tracing::warn!(tool = %tool_name, action = %action, reason = %message, "MCP tool denied by server policy");
+            return Err(ErrorData::invalid_request(message, None));
+        }
         if let (Some(auth), Some(required_scope)) = (auth, required_scope_for(&action)) {
             check_scope(auth, required_scope, &action)?;
         }
@@ -148,8 +156,13 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<ListResourcesResult, ErrorData> {
         require_auth_context(&self.state, &context)?;
+        let resources = if tool_is_enabled(&self.state.config.tools) {
+            vec![schema_resource()]
+        } else {
+            Vec::new()
+        };
         Ok(ListResourcesResult {
-            resources: vec![schema_resource()],
+            resources,
             ..Default::default()
         })
     }
@@ -166,7 +179,14 @@ impl ServerHandler for UnraidRmcpServer {
                 None,
             ));
         }
-        let schema = tool_definitions();
+        if !tool_is_enabled(&self.state.config.tools) {
+            return Err(ErrorData::invalid_request(
+                "unraid MCP tool is disabled by server policy",
+                None,
+            ));
+        }
+        let action_names = enabled_action_names(&self.state.config.tools);
+        let schema = tool_definitions(&action_names);
         let text = serde_json::to_string_pretty(&schema)
             .map_err(|e| ErrorData::internal_error(format!("serialization error: {e}"), None))?;
         Ok(ReadResourceResult::new(vec![
@@ -183,6 +203,11 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<ListPromptsResult, ErrorData> {
         require_auth_context(&self.state, &context)?;
+        // Every prompt instructs the client to call the unraid tool, so a fully
+        // disabled tool must not advertise prompts that reference it.
+        if !tool_is_enabled(&self.state.config.tools) {
+            return Ok(ListPromptsResult::default());
+        }
         Ok(prompts::list_prompts())
     }
 
@@ -192,6 +217,12 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<GetPromptResponse, ErrorData> {
         require_auth_context(&self.state, &context)?;
+        if !tool_is_enabled(&self.state.config.tools) {
+            return Err(ErrorData::invalid_request(
+                "unraid MCP tool is disabled by server policy",
+                None,
+            ));
+        }
         prompts::get_prompt(request)
             .map(Into::into)
             .map_err(|e| ErrorData::invalid_params(e.to_string(), None))
@@ -251,8 +282,11 @@ fn schema_resource() -> Resource {
 
 // ── tool definition conversion ────────────────────────────────────────────────
 
-fn rmcp_tool_definitions() -> Result<Vec<Tool>, ErrorData> {
-    tool_definitions()
+fn rmcp_tool_definitions(action_names: &[&str]) -> Result<Vec<Tool>, ErrorData> {
+    if action_names.is_empty() {
+        return Ok(Vec::new());
+    }
+    tool_definitions(action_names)
         .into_iter()
         .map(rmcp_tool_from_json)
         .collect()
@@ -363,6 +397,11 @@ mod tests {
             };
             assert_eq!(got, want, "{} scope mapping", spec.name);
         }
+    }
+
+    #[test]
+    fn empty_action_set_hides_the_tool() {
+        assert!(rmcp_tool_definitions(&[]).unwrap().is_empty());
     }
 
     #[test]
