@@ -30,6 +30,10 @@ on:
   push:
     branches: ["main"]
 
+concurrency:
+  group: release-please-main
+  cancel-in-progress: false
+
 permissions:
   contents: write
   pull-requests: write

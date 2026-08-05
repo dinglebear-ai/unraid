@@ -9,6 +9,7 @@ name: mcp-ci
 # script was discovered mid-release instead of on the PR.
 on:
   push:
+    branches: ["main"]
     paths:
       - "plugins/mcp/**"
       - ".github/workflows/mcp-ci.yml"

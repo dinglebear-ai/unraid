@@ -2,6 +2,7 @@ name: codex-ci
 
 on:
   push:
+    branches: ["main"]
     paths:
       - "plugins/codex/**"
       - ".github/workflows/codex-ci.yml"
@@ -10,6 +11,10 @@ on:
       - "plugins/codex/**"
       - ".github/workflows/codex-ci.yml"
   workflow_dispatch:
+
+concurrency:
+  group: codex-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
