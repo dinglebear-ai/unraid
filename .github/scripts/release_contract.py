@@ -142,7 +142,8 @@ def validate_release_please(repo_root: Path, errors: list[str]) -> list[ReleaseU
     tag_prefixes = {"unraid-py": "v", "unraid-rs": "unraid-rs-v"}
     assert_true(
         python_server.get("version") == versions["unraid-py"]
-        and python_server.get("packages", [{}])[0].get("version") == versions["unraid-py"],
+        and python_server.get("packages", [{}])[0].get("version")
+        == versions["unraid-py"],
         "Unraid Python Registry manifest versions must match pyproject.toml",
         errors,
     )
@@ -173,7 +174,10 @@ def validate_release_please(repo_root: Path, errors: list[str]) -> list[ReleaseU
         errors,
     )
     assert_true(
-        all(not (isinstance(spec, dict) and "git" in spec) for spec in rust_dependencies.values()),
+        all(
+            not (isinstance(spec, dict) and "git" in spec)
+            for spec in rust_dependencies.values()
+        ),
         "unraid-rmcp dependencies must not use Git sources",
         errors,
     )
@@ -228,7 +232,7 @@ def validate_release_please(repo_root: Path, errors: list[str]) -> list[ReleaseU
         and 'curl -A "$CRATES_IO_USER_AGENT"' in workflow_text
         and "cargo publish --package lab-auth" in workflow_text
         and "cargo publish --package unraid-rmcp" in workflow_text
-        and "crgx \"unraid-rmcp@${VERSION}\" -- --version" in workflow_text,
+        and 'crgx "unraid-rmcp@${VERSION}" -- --version' in workflow_text,
         "crates.io workflow must publish both crates, identify API polling, and smoke CRGX",
         errors,
     )
@@ -337,10 +341,49 @@ def validate_plugins(repo_root: Path, errors: list[str]) -> list[ReleaseUnit]:
     return units
 
 
+def validate_primary_latest_workflows(repo_root: Path, errors: list[str]) -> None:
+    helper = repo_root / ".github/scripts/ensure_primary_latest.py"
+    assert_true(
+        helper.is_file(),
+        "component release workflows require ensure_primary_latest.py",
+        errors,
+    )
+
+    expected_invocations = {
+        "codex-release.yml": 'python3 ../../.github/scripts/ensure_primary_latest.py "$TAG"',
+        "incus-release.yml": 'python3 ../../.github/scripts/ensure_primary_latest.py "$TAG"',
+        "rust-release.yml": 'python3 ../.github/scripts/ensure_primary_latest.py "$TAG"',
+    }
+    for workflow_name, invocation in expected_invocations.items():
+        workflow = repo_root / ".github/workflows" / workflow_name
+        text = workflow.read_text(encoding="utf-8") if workflow.exists() else ""
+        assert_true(
+            invocation in text,
+            f"{workflow_name} must restore the primary Unraid MCP Latest release",
+            errors,
+        )
+        assert_true(
+            "-f make_latest=false" not in text,
+            f"{workflow_name} must not rely on demoting only the component release",
+            errors,
+        )
+
+    rust_workflow = (repo_root / ".github/workflows/rust-release.yml").read_text(
+        encoding="utf-8"
+    )
+    assert_true(
+        "steps.primary-release.outputs.tag" in rust_workflow
+        and 'gh release upload "$PRIMARY_TAG"' in rust_workflow,
+        "rust-release.yml must bridge the plugin manifest to the verified primary tag",
+        errors,
+    )
+
+
 def validate(repo_root: Path) -> tuple[list[str], list[ReleaseUnit]]:
     errors: list[str] = []
     units = validate_release_please(repo_root, errors)
     units.extend(validate_plugins(repo_root, errors))
+    validate_primary_latest_workflows(repo_root, errors)
     return errors, units
 
 

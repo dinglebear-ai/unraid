@@ -6,10 +6,12 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
 
+import ensure_primary_latest  # noqa: E402
 import plugin_calver  # noqa: E402
 import release_contract  # noqa: E402
 import release_pr_fixup  # noqa: E402
@@ -47,7 +49,7 @@ class PluginCalverTests(unittest.TestCase):
             path.write_text(
                 '<!ENTITY name "demo">\n'
                 '<!ENTITY version "2026.7.24"> '
-                '<!-- x-release-please-version -->\n',
+                "<!-- x-release-please-version -->\n",
                 encoding="utf-8",
             )
             plugin_calver.update_plugin_version(path, "20260726.001")
@@ -79,6 +81,102 @@ class ReleaseContractTests(unittest.TestCase):
         )
 
 
+class PrimaryLatestTests(unittest.TestCase):
+    def test_selects_highest_numeric_primary_semver(self):
+        selected = ensure_primary_latest.select_primary_release(
+            [
+                {
+                    "id": 1,
+                    "tag_name": "unraid-rs-v9.0.0",
+                    "draft": False,
+                    "prerelease": False,
+                },
+                {
+                    "id": 2,
+                    "tag_name": "v2.9.9",
+                    "draft": False,
+                    "prerelease": False,
+                },
+                {
+                    "id": 3,
+                    "tag_name": "v2.10.1",
+                    "draft": False,
+                    "prerelease": False,
+                },
+                {
+                    "id": 4,
+                    "tag_name": "v9.0.0",
+                    "draft": True,
+                    "prerelease": False,
+                },
+                {
+                    "id": 5,
+                    "tag_name": "v3.0.0",
+                    "draft": False,
+                    "prerelease": True,
+                },
+            ]
+        )
+        self.assertEqual(selected["id"], 3)
+        self.assertEqual(selected["tag_name"], "v2.10.1")
+
+    def test_rejects_missing_primary_release(self):
+        with self.assertRaisesRegex(
+            ensure_primary_latest.LatestReleaseError,
+            "no published primary",
+        ):
+            ensure_primary_latest.select_primary_release(
+                [
+                    {
+                        "id": 1,
+                        "tag_name": "codex-v20260805.001",
+                        "draft": False,
+                        "prerelease": False,
+                    }
+                ]
+            )
+
+    def test_promotes_primary_before_demoting_component(self):
+        primary = {
+            "id": 20,
+            "tag_name": "v2.10.1",
+            "draft": False,
+            "prerelease": False,
+        }
+        with (
+            mock.patch.object(
+                ensure_primary_latest,
+                "gh_json",
+                side_effect=[{"id": 10}, {"tag_name": "v2.10.1"}],
+            ),
+            mock.patch.object(
+                ensure_primary_latest,
+                "list_releases",
+                return_value=[primary],
+            ),
+            mock.patch.object(
+                ensure_primary_latest,
+                "patch_make_latest",
+            ) as patch_latest,
+            mock.patch.object(ensure_primary_latest, "write_github_output"),
+            mock.patch("builtins.print"),
+        ):
+            selected = ensure_primary_latest.restore_primary_latest(
+                "dinglebear-ai/unraid",
+                "codex-v20260805.001",
+                delay_seconds=0,
+            )
+
+        self.assertEqual(selected, primary)
+        self.assertEqual(
+            patch_latest.call_args_list,
+            [
+                mock.call("dinglebear-ai/unraid", 20, True),
+                mock.call("dinglebear-ai/unraid", 10, False),
+            ],
+        )
+
+
 class ReleasePrFixupTests(unittest.TestCase):
     def test_restores_compatibility_crate_and_npm_distribution(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -89,25 +187,19 @@ class ReleasePrFixupTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (root / "unraid-rs/Cargo.toml").write_text(
-                '[package]\n'
+                "[package]\n"
                 'name = "unraid-rmcp"\n'
                 'version = "0.3.0"\n'
-                '[dependencies]\n'
+                "[dependencies]\n"
                 'lab-auth = { version = "0.3.0", path = "crates/lab-auth" }\n',
                 encoding="utf-8",
             )
             (root / "unraid-rs/crates/lab-auth/Cargo.toml").write_text(
-                '[package]\n'
-                'name = "lab-auth"\n'
-                'version = "0.3.0"\n'
-                'license = "MIT"\n',
+                '[package]\nname = "lab-auth"\nversion = "0.3.0"\nlicense = "MIT"\n',
                 encoding="utf-8",
             )
             (root / "unraid-rs/Cargo.lock").write_text(
-                'version = 4\n\n'
-                '[[package]]\n'
-                'name = "lab-auth"\n'
-                'version = "0.3.0"\n',
+                'version = 4\n\n[[package]]\nname = "lab-auth"\nversion = "0.3.0"\n',
                 encoding="utf-8",
             )
             (root / "unraid-rs/server.json").write_text(
@@ -115,9 +207,7 @@ class ReleasePrFixupTests(unittest.TestCase):
                     {
                         "_meta": {
                             "io.modelcontextprotocol.registry/publisher-provided": {
-                                "distribution": {
-                                    "npm": "@dinglebear/unraid@0.2.5"
-                                }
+                                "distribution": {"npm": "@dinglebear/unraid@0.2.5"}
                             }
                         }
                     }
@@ -149,9 +239,9 @@ class ReleasePrFixupTests(unittest.TestCase):
             )
             server = json.loads((root / "unraid-rs/server.json").read_text())
             self.assertEqual(
-                server["_meta"][
-                    "io.modelcontextprotocol.registry/publisher-provided"
-                ]["distribution"]["npm"],
+                server["_meta"]["io.modelcontextprotocol.registry/publisher-provided"][
+                    "distribution"
+                ]["npm"],
                 "@dinglebear/unraid@0.3.0",
             )
             self.assertEqual(release_pr_fixup.apply(root), [])
