@@ -166,8 +166,8 @@ jobs:
           gh release upload "$rolling" "$plg" --clobber
 
       # One-time-per-release bridge for legacy installs: Python-era plugins poll
-      # https://github.com/dinglebear-ai/unraid/releases/latest/download/unraid-mcp.plg
-      # (their baked-in pluginURL). Rust releases are marked make_latest=false
+      # the "latest release" asset-download URL for unraid-mcp.plg (their
+      # baked-in pluginURL). Rust releases are marked make_latest=false
       # and the .plg otherwise lives only on the rolling prerelease, so that
       # legacy URL would keep 404ing forever. Attaching the new .plg to
       # whatever release GitHub currently calls "latest" makes the legacy URL
