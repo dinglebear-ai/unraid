@@ -16,15 +16,19 @@ done
 xmllint --noout "$profile" "$wrapper" "$manifest"
 grep -Fq '<Profile>' "$profile"
 grep -Fq '<Name>Unraid MCP</Name>' "$wrapper"
-grep -Fq '<PluginURL>https://github.com/dinglebear-ai/unraid/releases/latest/download/unraid-mcp.plg</PluginURL>' "$wrapper"
+grep -Fq '<PluginURL>https://github.com/dinglebear-ai/unraid/releases/download/unraid-plugin-latest/unraid-mcp.plg</PluginURL>' "$wrapper"
 grep -Fq '<Category>Tools:Utilities</Category>' "$wrapper"
 grep -Fq '<Support>https://github.com/dinglebear-ai/unraid/issues</Support>' "$wrapper"
-grep -Fq 'https://github.com/dinglebear-ai/unraid/releases/download/vVERSION_PLACEHOLDER/' "$manifest"
-grep -Fq 'pluginURL="https://github.com/dinglebear-ai/unraid/releases/latest/download/unraid-mcp.plg"' "$manifest"
+# The plugin version entity (fixed-width epoch-3 string) and the unraid-rs
+# release tag are distinct placeholders — build-txz.sh fills both.
+grep -Eq '<!ENTITY[[:space:]]+version[[:space:]]+"VERSION_PLACEHOLDER"' "$manifest"
+grep -Fq 'https://github.com/dinglebear-ai/unraid/releases/download/unraid-rs-vRUST_VERSION_PLACEHOLDER/' "$manifest"
+grep -Fq 'pluginURL="https://github.com/dinglebear-ai/unraid/releases/download/unraid-plugin-latest/unraid-mcp.plg"' "$manifest"
 grep -Fq 'support="https://github.com/dinglebear-ai/unraid/issues"' "$manifest"
 grep -Fq 'REPO="dinglebear-ai/unraid"' "$updater"
+grep -Fq 'ASSET="runraid-linux-x86_64"' "$updater"
 grep -Fq '/releases?per_page=100' "$updater"
-grep -Fq "grep -E '^v[0-9]+\\.[0-9]+\\.[0-9]+$'" "$updater"
+grep -Fq "awk '/^unraid-rs-v[0-9]+\\.[0-9]+\\.[0-9]+$/'" "$updater"
 
 if grep -R -Fq 'dinglebear-ai/unraid-mcp' "$wrapper" "$manifest" "$plugin_dir/README.md" "$updater"; then
   echo 'stale standalone Unraid MCP repository reference remains' >&2

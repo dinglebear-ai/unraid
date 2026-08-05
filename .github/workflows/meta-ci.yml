@@ -76,6 +76,20 @@ jobs:
           # agents/*/plugin.json are release-please version-bump targets — a malformed one would fail at release time; catch it here
           python3 -c "import glob,json;[json.load(open(f)) for f in glob.glob('agents/*/.claude-plugin/plugin.json')+glob.glob('agents/*/.codex-plugin/plugin.json')]"
 
+      - name: Release Please must preserve component identity
+        run: |
+          python3 - <<'PY'
+          import json
+
+          config = json.load(open("release-please-config.json"))
+          assert config.get("separate-pull-requests") is True
+          packages = config["packages"]
+          assert packages["unraid-py"]["component"] == "unraid-mcp"
+          assert packages["unraid-py"]["include-component-in-tag"] is False
+          assert packages["unraid-rs"]["component"] == "unraid-rs"
+          print("release-please component identities are explicit and separate")
+          PY
+
       - name: Both marketplaces must expose the same plugin set
         run: |
           python3 - <<'PY'
