@@ -3,6 +3,7 @@ name: mcp-ci
 # PR-time gate for the native Unraid plugin and its Rust runtime contract.
 on:
   push:
+    branches: ["main"]
     paths:
       - "plugins/mcp/**"
       - "unraid-rs/Cargo.toml"

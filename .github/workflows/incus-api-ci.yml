@@ -2,6 +2,7 @@ name: incus-api-ci
 
 on:
   push:
+    branches: ["main"]
     paths:
       - "plugins/incus/unraid-api-plugin-incus/**"
       - "plugins/incus/packages/**"
@@ -21,6 +22,10 @@ on:
 
 # This covers the NestJS/GraphQL backend and Vue frontend. Classic package
 # verification is handled by incus-classic-ci.yml.
+
+concurrency:
+  group: incus-api-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
