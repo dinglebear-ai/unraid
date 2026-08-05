@@ -36,6 +36,14 @@ Phase 00 baseline and inert module skeleton, followed by Phase 01 configuration 
 - RED: config integration tests failed only on missing apply_dynamic_env_with (exit 101).
 - GREEN: config::tests passed 12 tests with compiler wrapper disabled, including env precedence and strict rejection of confirmation.
 - Build note: kache repeatedly restarted the test link stage under heavy host load; the stalled worktree-only process was stopped and the same tests passed with RUSTC_WRAPPER disabled.
+- RED: dynamic runtime batch failed on missing identifier, catalog, runtime, and status models (exit 101).
+- GREEN: cargo test dynamic_ --lib passed 21 tests after adding validated operation paths, ArcSwap catalog storage, bootstrap runtime, and status diagnostics.
+- RED: AppState integration failed on missing AppState::new (exit 101).
+- GREEN: dynamic_app_state_runtime_follows_configuration passed; all AppState construction sites now use the centralized constructor.
+- Phase 01 focused gate: cargo test dynamic_ --lib passed 22 tests.
+- Phase 01 workspace gate: cargo check --workspace passed.
+- Clippy first pass caught field_reassign_with_default in test setup only; test was refactored to a struct literal.
+- Phase 01 Clippy gate: cargo clippy --all-targets --all-features -- -D warnings passed.
 
 ## TDD loop
 

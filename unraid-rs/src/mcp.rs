@@ -4,6 +4,8 @@ use lab_auth::AuthLayer;
 
 use crate::{app::UnraidService, config::McpConfig, observability::Counters};
 
+use self::dynamic::refresh::DynamicRuntime;
+
 pub mod dynamic;
 mod elicitation;
 pub(crate) mod host_filter;
@@ -60,6 +62,27 @@ pub struct AppState {
     pub service: UnraidService,
     /// Shared atomic counters (all clones share the same Arc).
     pub counters: Arc<Counters>,
+    /// Runtime-generated MCP state, absent when dynamic mode is disabled.
+    pub dynamic: Option<DynamicRuntime>,
+}
+
+impl AppState {
+    /// Construct application state and derive optional dynamic runtime from config.
+    pub fn new(
+        config: McpConfig,
+        auth_policy: AuthPolicy,
+        service: UnraidService,
+        counters: Arc<Counters>,
+    ) -> Self {
+        let dynamic = DynamicRuntime::from_config(&config.dynamic);
+        Self {
+            config,
+            auth_policy,
+            service,
+            counters,
+            dynamic,
+        }
+    }
 }
 
 /// Build an [`AuthLayer`] from an [`AuthPolicy`], or `None` for
@@ -79,5 +102,49 @@ pub fn build_auth_layer(
                 .with_resource_url(resource_url)
                 .with_allow_session_cookie(false),
         ),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        app::UnraidService,
+        config::{McpConfig, UnraidConfig},
+        graphql::UnraidClient,
+        observability::Counters,
+    };
+
+    use super::{AppState, AuthPolicy};
+
+    fn service() -> UnraidService {
+        let client = UnraidClient::new(&UnraidConfig {
+            api_url: "http://localhost:1/graphql".to_string(),
+            api_key: "test".to_string(),
+            skip_tls_verify: true,
+        })
+        .expect("test client");
+        UnraidService::new(client)
+    }
+
+    #[test]
+    fn dynamic_app_state_runtime_follows_configuration() {
+        let disabled = AppState::new(
+            McpConfig::default(),
+            AuthPolicy::LoopbackDev,
+            service(),
+            Counters::new(),
+        );
+        assert!(disabled.dynamic.is_none());
+
+        let mut enabled_config = McpConfig::default();
+        enabled_config.dynamic.enabled = true;
+        let enabled = AppState::new(
+            enabled_config,
+            AuthPolicy::LoopbackDev,
+            service(),
+            Counters::new(),
+        );
+        assert!(enabled.dynamic.is_some());
+        assert!(enabled.dynamic.unwrap().catalogs.load().by_path.is_empty());
     }
 }

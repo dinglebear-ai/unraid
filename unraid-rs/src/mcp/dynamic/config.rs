@@ -304,7 +304,7 @@ mod tests {
     use crate::config::default_data_dir;
 
     use super::{
-        DynamicMcpConfig, DynamicSurface, OperationOverride, StartupFailureMode,
+        DynamicMcpConfig, DynamicSurface, OperationOverride, RootTypeNames, StartupFailureMode,
         validate_dynamic_config,
     };
 
@@ -387,16 +387,21 @@ mod tests {
 
     #[test]
     fn dynamic_config_validation_reports_all_problems() {
-        let mut config = DynamicMcpConfig::default();
-        config.refresh_interval = Duration::ZERO;
-        config.introspection_timeout = Duration::ZERO;
-        config.default_selection_depth = 6;
-        config.max_selection_depth = 5;
-        config.refresh_jitter_percent = 101;
-        config.max_selected_fields = 0;
-        config.root_types.query.clear();
-        config.namespace_suffixes.push(String::new());
-        config.allowed_operations.push(String::new());
+        let config = DynamicMcpConfig {
+            refresh_interval: Duration::ZERO,
+            introspection_timeout: Duration::ZERO,
+            default_selection_depth: 6,
+            max_selection_depth: 5,
+            refresh_jitter_percent: 101,
+            max_selected_fields: 0,
+            root_types: RootTypeNames {
+                query: String::new(),
+                ..RootTypeNames::default()
+            },
+            namespace_suffixes: vec![String::new()],
+            allowed_operations: vec![String::new()],
+            ..DynamicMcpConfig::default()
+        };
 
         let error = validate_dynamic_config(&config).expect_err("invalid config must fail");
         for expected in [

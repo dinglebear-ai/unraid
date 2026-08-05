@@ -41,24 +41,24 @@ pub mod testing {
     }
 
     pub fn loopback_state() -> AppState {
-        AppState {
-            config: McpConfig::default(),
-            auth_policy: AuthPolicy::LoopbackDev,
-            service: stub_service(),
-            counters: Counters::new(),
-        }
+        AppState::new(
+            McpConfig::default(),
+            AuthPolicy::LoopbackDev,
+            stub_service(),
+            Counters::new(),
+        )
     }
 
     pub fn bearer_state(token: &str) -> AppState {
-        AppState {
-            config: McpConfig {
+        AppState::new(
+            McpConfig {
                 api_token: Some(token.to_string()),
                 ..McpConfig::default()
             },
-            auth_policy: AuthPolicy::Mounted { auth_state: None },
-            service: stub_service(),
-            counters: Counters::new(),
-        }
+            AuthPolicy::Mounted { auth_state: None },
+            stub_service(),
+            Counters::new(),
+        )
     }
 
     pub async fn oauth_state(data_dir: &std::path::Path) -> AppState {
@@ -70,20 +70,20 @@ pub mod testing {
         data_dir: &std::path::Path,
     ) -> (AppState, Arc<lab_auth::state::AuthState>) {
         let auth_state = Arc::new(build_auth_state(data_dir).await);
-        let state = AppState {
-            config: McpConfig {
+        let state = AppState::new(
+            McpConfig {
                 auth: crate::config::AuthConfig {
                     public_url: Some("https://unraid.example.com".to_string()),
                     ..Default::default()
                 },
                 ..McpConfig::default()
             },
-            auth_policy: AuthPolicy::Mounted {
+            AuthPolicy::Mounted {
                 auth_state: Some(auth_state.clone()),
             },
-            service: stub_service(),
-            counters: Counters::new(),
-        };
+            stub_service(),
+            Counters::new(),
+        );
         (state, auth_state)
     }
 
@@ -141,12 +141,12 @@ pub mod testing {
             skip_tls_verify: true,
         })
         .expect("stub client should build");
-        AppState {
-            config: McpConfig::default(),
-            auth_policy: AuthPolicy::LoopbackDev,
-            service: UnraidService::new(client),
-            counters: Counters::new(),
-        }
+        AppState::new(
+            McpConfig::default(),
+            AuthPolicy::LoopbackDev,
+            UnraidService::new(client),
+            Counters::new(),
+        )
     }
 
     /// Drive the `unraid` tool dispatch by name + args without the transport layer.

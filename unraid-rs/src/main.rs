@@ -161,12 +161,12 @@ async fn serve_stdio_mcp() -> Result<()> {
     // sibling servers (runifi, rgotify, rarcane), which hardcode this too.
     let config = Config::load()?;
     let service = UnraidService::new(UnraidClient::new(&config.unraid)?);
-    let state = AppState {
-        config: config.mcp,
-        auth_policy: AuthPolicy::LoopbackDev,
+    let state = AppState::new(
+        config.mcp,
+        AuthPolicy::LoopbackDev,
         service,
-        counters: Counters::new(),
-    };
+        Counters::new(),
+    );
     let svc = mcp::rmcp_server(state).serve(stdio()).await?;
     svc.waiting().await?;
     Ok(())
@@ -198,12 +198,12 @@ async fn run_cli(args: Vec<String>) -> Result<()> {
 async fn build_state(config: Config) -> Result<AppState> {
     let auth_policy = build_auth_policy(&config).await?;
     let service = UnraidService::new(UnraidClient::new(&config.unraid)?);
-    Ok(AppState {
-        config: config.mcp,
+    Ok(AppState::new(
+        config.mcp,
         auth_policy,
         service,
-        counters: Counters::new(),
-    })
+        Counters::new(),
+    ))
 }
 
 async fn build_auth_policy(config: &Config) -> Result<AuthPolicy> {
