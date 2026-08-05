@@ -130,7 +130,7 @@ There is no `confirmed` tool argument, approval token, environment bypass, or we
 
 ### No raw GraphQL
 
-Models never provide a GraphQL document. They call a generated tool and provide JSON arguments. Optional response selection uses schema-validated field paths under a reserved `__mcp` object.
+Models never provide a GraphQL document. They call a generated tool and provide JSON arguments. Optional response selection uses schema-validated dotted field paths in the generated tool's reserved `select` property.
 
 ### Last-known-good behavior
 
@@ -164,7 +164,7 @@ destructive = true
 
 There is intentionally no `confirmation` or `elicitation` setting. Dynamic mutations always elicit.
 
-## Proposed module layout
+## Implemented module layout
 
 ```text
 src/mcp/dynamic/
@@ -173,6 +173,8 @@ src/mcp/dynamic/
   introspection.rs
   crawler.rs
   types.rs
+  schema.rs
+  snapshot.rs
   models.rs
   catalog.rs
   policy.rs
@@ -185,7 +187,7 @@ src/mcp/dynamic/
   cache.rs
   refresh.rs
   peers.rs
-  redact.rs
+  surface.rs
 ```
 
 Existing modules gain narrow integration seams:
@@ -194,8 +196,8 @@ Existing modules gain narrow integration seams:
 - `src/mcp.rs`: shared dynamic runtime state in `AppState`
 - `src/graphql.rs`: safe generic execution and targeted type discovery
 - `src/mcp/rmcp_server.rs`: dynamic listing, resolution, structured output, and list-change notifications
-- `src/mcp/tool_filter.rs`: catalog-aware selectors while preserving legacy rules
-- `src/mcp/elicitation.rs`: operation-driven mutation elicitation with no tool-argument bypass
+- `src/mcp/dynamic/policy.rs`: generated-operation selectors and availability policy while preserving legacy rules
+- `src/mcp/elicitation.rs`: operation-driven mutation elicitation and prompt redaction with no tool-argument bypass
 
 ## Security gates
 

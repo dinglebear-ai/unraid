@@ -19,7 +19,7 @@ Starting commit: a89dd2d9def6bd115faddde099b76850db7a7b41
 
 ## Current task
 
-Phase 00 baseline and inert module skeleton, followed by Phase 01 configuration using red-green-refactor TDD.
+Complete runtime-generated MCP tools from targeted live GraphQL discovery through catalog compilation, execution, elicitation, cache refresh, notification, rollout, and rollback verification.
 
 ## Commands and outcomes
 
@@ -53,6 +53,25 @@ Phase 00 baseline and inert module skeleton, followed by Phase 01 configuration 
 - GREEN: normalization, immutable registry, bounded breadth-first crawl, and deterministic hashing passed in the 43-test dynamic suite.
 - Python full-schema capture now falls back to targeted type crawling; py_compile and --self-test pass.
 - Existing live_schema_contract snapshot test passed unchanged.
+- GREEN: catalog compiler, naming, JSON Schema, validation, bounded selection, and nested mutation discovery passed 56 focused tests.
+- GREEN: safe GraphQL document compilation and generic execution passed 60 focused tests, including zero upstream requests for invalid arguments.
+- GREEN: cache, refresh, MCP surface rendering, pagination, and peer notification support passed 64 focused tests.
+- GREEN: final dynamic library suite passed 68 tests.
+- GREEN: generated mutation stdio tests proved accept reaches GraphQL exactly once; decline, cancellation, missing capability, false approval, and malformed approval each produce zero mutation requests.
+- GREEN: a changing live schema emitted notifications/tools/list_changed and exposed unraid_query_ready on the next tools/list.
+- GREEN: hybrid rollout preserved the legacy unraid tool while adding generated query tools.
+- GREEN: surface=legacy provided a configuration-only rollback to exactly the legacy unraid tool.
+- GREEN: last-known-good cache loaded when the same exclusive endpoint was offline and retained the compiled catalog.
+- cargo fmt -- --check: PASS.
+- python3 -m py_compile scripts/live-schema-contract.py: PASS.
+- python3 scripts/live-schema-contract.py --self-test: PASS.
+- git diff --check: PASS.
+- cargo clippy --all-targets --features test-support -- -D warnings: PASS.
+- cargo nextest run --profile ci: PASS, 216/216 tests, 0 skipped.
+- cargo build --release: PASS; optimized build completed in 11m00s.
+- ./target/release/runraid --version: PASS, unraid-rmcp 0.4.1.
+- Optimized runraid artifact: 42 MiB on Linux x86_64.
+- cargo tree -d and Cargo.lock baseline comparison: audited 41 duplicate-version families. The baseline and final sets are identical, including reqwest 0.12/0.13 and sha2 0.10/0.11; the dynamic feature added or changed no duplicate family.
 
 ## TDD loop
 
