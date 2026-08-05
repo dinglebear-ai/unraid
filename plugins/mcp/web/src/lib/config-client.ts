@@ -57,7 +57,7 @@ async function csrfToken(): Promise<string> {
     if (window.csrf_token) return window.csrf_token;
     await new Promise((r) => setTimeout(r, 100));
   }
-  return window.csrf_token ?? "";
+  throw new Error("Unraid CSRF token is unavailable; reload the webGUI and try again");
 }
 
 async function request(init?: RequestInit): Promise<ConfigPayload> {

@@ -90,29 +90,47 @@ pub enum AuthMode {
 
 // ── defaults ──────────────────────────────────────────────────────────────────
 
-/// Returns the data directory: `/data` in containers, `~/.unraid/` locally.
-/// Container detection: checks for `/.dockerenv` or `RUNNING_IN_CONTAINER` env.
-pub fn default_data_dir() -> std::path::PathBuf {
-    if std::path::Path::new("/.dockerenv").exists()
-        || std::env::var("RUNNING_IN_CONTAINER")
-            .map(|v| matches!(v.to_lowercase().as_str(), "1" | "true" | "yes"))
-            .unwrap_or(false)
-    {
-        std::path::PathBuf::from("/data")
-    } else {
-        let home = std::env::var("HOME").unwrap_or_else(|_| {
-            tracing::warn!(
-                "HOME is not set; falling back to /tmp for the data directory — secrets \
-                 (.env, auth.db, JWT key) will be world-readable and non-persistent. \
-                 Set HOME (or run in a container, which uses /data) to fix this."
-            );
-            "/tmp".to_string()
-        });
-        std::path::PathBuf::from(home).join(".unraid")
+fn data_dir_from_sources(
+    unraid_home: Option<std::ffi::OsString>,
+    is_container: bool,
+    home: Option<std::ffi::OsString>,
+) -> std::path::PathBuf {
+    if let Some(path) = unraid_home.filter(|value| !value.is_empty()) {
+        return std::path::PathBuf::from(path);
     }
+    if is_container {
+        return std::path::PathBuf::from("/data");
+    }
+    std::path::PathBuf::from(home.unwrap_or_else(|| std::ffi::OsString::from("/tmp")))
+        .join(".unraid")
 }
 
-/// Load `~/.unraid/.env` (or `/data/.env` in a container) into the process
+/// Returns the data directory. `UNRAID_HOME` is an explicit override used by
+/// native service integrations such as the Unraid plugin; otherwise containers
+/// use `/data` and local installs use `~/.unraid/`.
+/// Container detection checks for `/.dockerenv` or `RUNNING_IN_CONTAINER`.
+pub fn default_data_dir() -> std::path::PathBuf {
+    let unraid_home = std::env::var_os("UNRAID_HOME");
+    let is_container = std::path::Path::new("/.dockerenv").exists()
+        || std::env::var("RUNNING_IN_CONTAINER")
+            .map(|v| matches!(v.to_lowercase().as_str(), "1" | "true" | "yes"))
+            .unwrap_or(false);
+    let home = std::env::var_os("HOME");
+
+    if unraid_home.as_ref().is_none_or(|value| value.is_empty()) && !is_container && home.is_none()
+    {
+        tracing::warn!(
+            "HOME is not set; falling back to /tmp for the data directory — secrets \
+             (.env, auth.db, JWT key) will be world-readable and non-persistent. \
+             Set HOME (or run in a container, which uses /data) to fix this."
+        );
+    }
+
+    data_dir_from_sources(unraid_home, is_container, home)
+}
+
+/// Load `<UNRAID_HOME>/.env` when explicitly configured, otherwise
+/// `~/.unraid/.env` (or `/data/.env` in a container), into the process
 /// environment if present.
 ///
 /// Best-effort: a missing file is ignored, and existing env vars are NOT
@@ -374,5 +392,55 @@ fn env_list(key: &str, target: &mut Vec<String>) {
         if !items.is_empty() {
             *target = items;
         }
+    }
+}
+
+#[cfg(test)]
+mod data_dir_tests {
+    use super::data_dir_from_sources;
+    use std::{ffi::OsString, path::PathBuf};
+
+    #[test]
+    fn explicit_unraid_home_wins_over_all_other_sources() {
+        assert_eq!(
+            data_dir_from_sources(
+                Some(OsString::from("/mnt/user/appdata/unraid-mcp")),
+                true,
+                Some(OsString::from("/home/ignored")),
+            ),
+            PathBuf::from("/mnt/user/appdata/unraid-mcp")
+        );
+    }
+
+    #[test]
+    fn empty_unraid_home_is_ignored() {
+        assert_eq!(
+            data_dir_from_sources(
+                Some(OsString::new()),
+                false,
+                Some(OsString::from("/home/jake")),
+            ),
+            PathBuf::from("/home/jake/.unraid")
+        );
+    }
+
+    #[test]
+    fn container_uses_data_when_no_override_exists() {
+        assert_eq!(
+            data_dir_from_sources(None, true, Some(OsString::from("/home/ignored"))),
+            PathBuf::from("/data")
+        );
+    }
+
+    #[test]
+    fn local_install_uses_home_and_has_a_tmp_fallback() {
+        assert_eq!(
+            data_dir_from_sources(None, false, Some(OsString::from("/home/jake"))),
+            PathBuf::from("/home/jake/.unraid")
+        );
+        assert_eq!(
+            data_dir_from_sources(None, false, None),
+            PathBuf::from("/tmp/.unraid")
+        );
     }
 }

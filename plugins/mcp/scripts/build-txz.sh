@@ -82,6 +82,7 @@ EOF
 find "${STAGE}" -type d -exec chmod 755 {} +
 chmod +x "${STAGE}/usr/local/emhttp/plugins/unraid-mcp/scripts/"* \
          "${STAGE}/usr/local/emhttp/plugins/unraid-mcp/event/"* \
+         "${STAGE}/usr/local/emhttp/plugins/unraid-mcp/nchan/"* \
          "${STAGE}/usr/local/unraid-mcp/bin/runraid"
 
 echo "==> [3/3] assembling ${PKG_NAME}"

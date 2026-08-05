@@ -1,39 +1,57 @@
 #!/bin/bash
 # nchan publisher for the Unraid MCP dashboard widget.
 #
-# monitor_nchan discovers and runs this (it manages every
-# /usr/local/emhttp/*/nchan/* process) ONLY while the dashboard has a live
-# subscriber, pausing it otherwise. It publishes the server's status as JSON to
-# the "unraid_mcp" channel over nginx's local pub socket; buffer_length=1 means
-# a freshly-opened dashboard immediately receives the last status.
+# monitor_nchan runs this only while the dashboard has a subscriber. It publishes
+# the service status to nginx's local Nchan socket every three seconds.
 
 socket="/var/run/nginx.socket"
 chan="http://localhost/pub/unraid_mcp?buffer_length=1"
 pidfile="/var/run/unraid-mcp.pid"
 interval=3
+export LC_ALL=C
 
-# Escape for a JSON string: backslash, quote, and — per RFC 8259 §7 — strip any
-# control characters (a malformed version string must degrade to plain text, not
-# an invalid frame that wedges the widget).
-json_escape() { printf '%s' "$1" | tr -d '\000-\037' | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+json_escape() {
+    printf '%s' "$1" | tr -d '\000-\037' | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+pid_matches() {
+    local pid="$1"
+    [[ "${pid}" =~ ^[0-9]+$ ]] && [ -d "/proc/${pid}" ] || return 1
+    tr '\0' ' ' <"/proc/${pid}/cmdline" 2>/dev/null | grep -qE '(^|[ /])runraid +serve( |$)'
+}
+
+numeric_or_zero() {
+    if [[ "$1" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+        printf '%s' "$1"
+    else
+        printf '0'
+    fi
+}
 
 status_json() {
-    local pid running=false cpu=0 mem=0 uptime=0 version
-    pid="$(cat "$pidfile" 2>/dev/null)"
-    if [[ -n "$pid" && -d "/proc/$pid" ]]; then
+    local pid running=false cpu=0 rss=0 mem=0 uptime=0 version
+    pid="$(tr -dc '0-9' <"${pidfile}" 2>/dev/null)"
+    if pid_matches "${pid}"; then
         running=true
-        # %cpu, rss(KiB), elapsed seconds for the server process.
-        read -r cpu rss uptime < <(ps -o %cpu=,rss=,etimes= -p "$pid" 2>/dev/null | awk '{print $1, $2, $3}')
-        cpu="${cpu:-0}"
-        mem=$(( ${rss:-0} / 1024 ))
-        uptime="${uptime:-0}"
+        read -r cpu rss uptime < <(ps -o %cpu=,rss=,etimes= -p "${pid}" 2>/dev/null | awk 'NR == 1 {print $1, $2, $3}')
+        cpu="$(numeric_or_zero "${cpu:-0}")"
+        rss="$(numeric_or_zero "${rss:-0}")"
+        uptime="$(numeric_or_zero "${uptime:-0}")"
+        # RSS and elapsed time are integer fields; reject any unexpected decimal.
+        [[ "${rss}" =~ ^[0-9]+$ ]] || rss=0
+        [[ "${uptime}" =~ ^[0-9]+$ ]] || uptime=0
+        mem=$((rss / 1024))
+    else
+        pid=0
     fi
-    version="$(timeout 5 /usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-update.sh installed 2>/dev/null)"
+
+    version="$(timeout 5 /usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-update.sh installed 2>/dev/null || true)"
     printf '{"running":%s,"pid":%s,"cpu":%s,"memMB":%s,"uptime":%s,"version":"%s"}' \
-        "$running" "${pid:-0}" "${cpu:-0}" "${mem:-0}" "${uptime:-0}" "$(json_escape "${version:-unknown}")"
+        "${running}" "${pid}" "${cpu}" "${mem}" "${uptime}" \
+        "$(json_escape "${version:-unknown}")"
 }
 
 while :; do
-    curl -s --max-time 2 --unix-socket "$socket" --data-raw "$(status_json)" "$chan" >/dev/null 2>&1
-    sleep "$interval"
+    curl -s --max-time 2 --unix-socket "${socket}" --data-raw "$(status_json)" "${chan}" >/dev/null 2>&1
+    sleep "${interval}"
 done

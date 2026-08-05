@@ -6,17 +6,13 @@ on:
     branches: ["main"]
     paths:
       - "plugins/mcp/**"
-      - "unraid-rs/Cargo.toml"
-      - "unraid-rs/Cargo.lock"
-      - "unraid-rs/src/**"
+      - "unraid-rs/**"
       - ".github/workflows/mcp-ci.yml"
       - ".github/workflows/rust-release.yml"
   pull_request:
     paths:
       - "plugins/mcp/**"
-      - "unraid-rs/Cargo.toml"
-      - "unraid-rs/Cargo.lock"
-      - "unraid-rs/src/**"
+      - "unraid-rs/**"
       - ".github/workflows/mcp-ci.yml"
       - ".github/workflows/rust-release.yml"
   workflow_dispatch:
@@ -42,19 +38,19 @@ jobs:
           node-version: "22"
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
-          toolchain: stable
+          toolchain: "1.97.1"
           targets: x86_64-unknown-linux-gnu
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
         with:
           workspaces: unraid-rs
       - name: Install package validators
-        run: sudo apt-get update && sudo apt-get install -y file libxml2-utils shellcheck xz-utils
+        run: sudo apt-get update && sudo apt-get install -y binutils file libxml2-utils php-cli shellcheck xz-utils
 
       - name: Shellcheck packaging and on-box scripts
         run: |
           set -euo pipefail
           mapfile -t scripts < <(
-            find scripts source tests -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' \) | sort
+            find scripts source tests -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' -o -path '*/nchan/*' \) | sort
           )
           printf 'checking %d scripts\n' "${#scripts[@]}"
           printf '%s\n' "${scripts[@]}"
@@ -67,7 +63,7 @@ jobs:
           while IFS= read -r f; do
             [ -x "$f" ] || { echo "not executable: $f"; status=1; }
             if grep -qU $'\r' "$f"; then echo "CRLF line endings: $f"; status=1; fi
-          done < <(find scripts source tests -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' \))
+          done < <(find scripts source tests -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' -o -path '*/nchan/*' \))
           exit "$status"
 
       - name: Validate .plg XML and required entities
@@ -83,13 +79,25 @@ jobs:
               || { echo "::error::unraid-mcp.plg lost its ${placeholder}"; exit 1; }
           done
 
+      - name: Lint PHP endpoint and Unraid pages
+        run: |
+          php -l source/usr/local/emhttp/plugins/unraid-mcp/include/config.php
+          php -l source/usr/local/emhttp/plugins/unraid-mcp/UnraidMCP.page
+          php -l source/usr/local/emhttp/plugins/unraid-mcp/UnraidMCPDashboard.page
+          php -l tests/config-endpoint.php
+
       - name: Validate Community Applications metadata
         run: ./tests/ca-metadata.sh
+
+      - name: Validate runtime and settings contracts
+        run: ./tests/runtime-contract.sh
 
       - name: Build and audit the web bundle
         run: |
           npm ci --no-audit --no-fund --prefix web
-          npm audit --omit=dev --audit-level=high --prefix web
+          npm audit --audit-level=moderate --prefix web
+          npm run typecheck --prefix web
+          npm test --prefix web
           npm run build --prefix web
 
       - name: Build, verify, and reproduce the Rust plugin package

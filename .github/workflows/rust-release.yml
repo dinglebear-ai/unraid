@@ -73,7 +73,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
-          toolchain: stable
+          toolchain: "1.97.1"
           targets: x86_64-unknown-linux-gnu
 
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
@@ -85,7 +85,7 @@ jobs:
           node-version: "22"
 
       - name: Install plugin package validators
-        run: sudo apt-get update && sudo apt-get install -y file libxml2-utils xz-utils
+        run: sudo apt-get update && sudo apt-get install -y binutils file libxml2-utils xz-utils
 
       - name: Build linux/amd64 binary
         run: cargo build --release --locked --target x86_64-unknown-linux-gnu --bin runraid
@@ -109,12 +109,19 @@ jobs:
       - name: Attest build provenance
         uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4
         with:
-          subject-path: unraid-rs/runraid-linux-x86_64
+          subject-path: |
+            unraid-rs/runraid-linux-x86_64
+            unraid-rs/runraid-linux-x86_64.sha256
+            unraid-rs/runraid-x86_64.tar.gz
+            unraid-rs/runraid-x86_64.tar.gz.sha256
+            plugins/mcp/packages/*.txz
+            plugins/mcp/packages/unraid-mcp.plg
 
       - name: Attach binary + checksums to the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           # The .txz is named by the fixed-width epoch-3 plugin version, not the
           # rust semver (see plugins/mcp/scripts/plugin-version.sh).
           plugin_version="$(bash ../plugins/mcp/scripts/plugin-version.sh "${TAG#unraid-rs-v}")"

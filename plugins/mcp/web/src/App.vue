@@ -4,6 +4,15 @@ import { Badge, Button, HelpText, Input, Label, Select, Switch } from "./compone
 import { SECTIONS, type FieldDef, type Section } from "./fields";
 import LogView from "./LogView.vue";
 import {
+  buildEndpoint,
+  buildMcpClientConfig,
+  isLoopbackHost,
+  isValidBindHost,
+  isValidHttpUrl,
+  rustVersion,
+  updateIsNewer,
+} from "./lib/client-config";
+import {
   checkUpdate,
   fetchStats,
   loadConfig,
@@ -85,22 +94,64 @@ const dirty = computed(() => {
   });
 });
 
-const URL_KEYS = new Set(["UNRAID_API_URL", "UNRAID_RMCP_PUBLIC_URL"]);
 function fieldError(key: string): string {
   const v = form[key] ?? "";
-  if (v === "") return "";
+  if (v === "") return key === "UNRAID_API_URL" ? "GraphQL URL is required" : "";
   if (key === "UNRAID_RMCP_PORT") {
     const n = Number(v);
     if (!Number.isInteger(n) || n < 1 || n > 65535) return "Port must be 1–65535";
   }
-  if (URL_KEYS.has(key) && !/^https?:\/\/.+/i.test(v)) return "Must start with http:// or https://";
+  if (key === "UNRAID_RMCP_HOST" && !isValidBindHost(v)) return "Enter a valid IP address or hostname";
+  if (key === "UNRAID_API_URL" && !isValidHttpUrl(v)) {
+    return "Enter a complete http:// or https:// URL without embedded credentials";
+  }
+  const activeOAuth = !boolVal("UNRAID_RMCP_DISABLE_HTTP_AUTH") && form.UNRAID_RMCP_AUTH_MODE === "oauth";
+  if (key === "UNRAID_RMCP_PUBLIC_URL" && activeOAuth && !isValidHttpUrl(v, true)) {
+    return "OAuth public URL must use https:// without a query or fragment";
+  }
+  if (key === "UNRAID_RMCP_AUTH_ADMIN_EMAIL" && activeOAuth && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) {
+    return "Enter a valid email address";
+  }
+  if ((key === "UNRAID_RMCP_ENABLED_TOOLS" || key === "UNRAID_RMCP_DISABLED_TOOLS") && !v.split(",").some((item) => item.trim())) {
+    return "Enter at least one comma-separated selector";
+  }
   return "";
 }
+
+function secretAvailable(key: string): boolean {
+  const edit = secretEdits[key];
+  if (edit?.clear) return false;
+  if (edit?.value) return true;
+  return secretConfigured(key);
+}
+
+const configurationError = computed(() => {
+  const authDisabled = boolVal("UNRAID_RMCP_DISABLE_HTTP_AUTH");
+  const host = form.UNRAID_RMCP_HOST || "0.0.0.0";
+  if (authDisabled && !isLoopbackHost(host) && !boolVal("UNRAID_NOAUTH")) {
+    return "Disabling HTTP auth on a network bind requires the explicit unauthenticated-network acknowledgement.";
+  }
+  if (!authDisabled && form.UNRAID_RMCP_AUTH_MODE === "bearer" && !secretAvailable("UNRAID_RMCP_TOKEN")) {
+    return "Bearer mode requires a bearer token.";
+  }
+  if (!authDisabled && form.UNRAID_RMCP_AUTH_MODE === "oauth") {
+    if (!form.UNRAID_RMCP_PUBLIC_URL || !form.UNRAID_RMCP_GOOGLE_CLIENT_ID || !form.UNRAID_RMCP_AUTH_ADMIN_EMAIL) {
+      return "OAuth mode requires the public URL, Google client ID, client secret, and admin email.";
+    }
+    if (!secretAvailable("UNRAID_RMCP_GOOGLE_CLIENT_SECRET")) {
+      return "OAuth mode requires a Google client secret.";
+    }
+  }
+  return "";
+});
+
 // Only validate sections whose fields are actually visible — otherwise an
 // invalid value inside a collapsed/gated section could disable Apply globally
 // with no error text on screen to explain why.
-const hasErrors = computed(() =>
-  SECTIONS.some((s) => sectionShowsFields(s) && s.fields.some((f) => fieldError(f.key) !== "")),
+const hasErrors = computed(
+  () =>
+    configurationError.value !== "" ||
+    SECTIONS.some((s) => sectionShowsFields(s) && s.fields.some((f) => fieldError(f.key) !== "")),
 );
 
 // ── Google OAuth gate: keep the section compact until opted in ─────────────
@@ -126,9 +177,23 @@ function sparkPoints(hist: number[]): string {
 const apiKeyMissing = computed(() => {
   if (!payload.value) return false;
   const edit = secretEdits.UNRAID_API_KEY;
-  if (edit?.value && !edit.clear) return false; // a key was typed but not yet saved
+  if (edit?.clear) return true;
+  if (edit?.value) return false; // a key was typed but not yet saved
   return !secretConfigured("UNRAID_API_KEY");
 });
+
+const runtimeStartError = computed(() => {
+  if (configurationError.value) return configurationError.value;
+  for (const section of SECTIONS) {
+    for (const field of section.fields) {
+      const issue = fieldError(field.key);
+      if (issue) return `${field.label}: ${issue}`;
+    }
+  }
+  if (apiKeyMissing.value) return "An Unraid API key is required before the service can start.";
+  return "";
+});
+const runtimeReady = computed(() => runtimeStartError.value === "");
 
 const service = computed(() => payload.value?.service ?? { enabled: false, running: false });
 const tailscale = computed(
@@ -136,10 +201,7 @@ const tailscale = computed(
 );
 const version = computed(() => payload.value?.version ?? { installed: "unknown", overlay: false });
 const proc = computed(() => payload.value?.process ?? { pid: 0, cpu: 0, memMB: 0, uptime: 0 });
-const updateAvailable = computed(() => {
-  const l = latestVersion.value.replace(/^unraid-rs-v/, "");
-  return l !== "" && l !== version.value.installed;
-});
+const updateAvailable = computed(() => updateIsNewer(version.value.installed, latestVersion.value));
 
 const uptimeText = computed(() => {
   const s = proc.value.uptime;
@@ -152,17 +214,17 @@ const uptimeText = computed(() => {
   return `${m}m`;
 });
 
-const endpoint = computed(() => {
-  const port = form.UNRAID_RMCP_PORT || "40010";
-  if (boolVal("UNRAID_MCP_TAILSCALE_SERVE") && tailscale.value.dnsName) {
-    return `https://${tailscale.value.dnsName}:${port}/mcp`;
-  }
-  const host =
-    !form.UNRAID_RMCP_HOST || form.UNRAID_RMCP_HOST === "0.0.0.0"
-      ? window.location.hostname
-      : form.UNRAID_RMCP_HOST;
-  return `http://${host}:${port}/mcp`;
-});
+const endpoint = computed(() =>
+  buildEndpoint({
+    host: form.UNRAID_RMCP_HOST ?? "",
+    port: form.UNRAID_RMCP_PORT || "40010",
+    pageHostname: window.location.hostname,
+    tailscaleEnabled: boolVal("UNRAID_MCP_TAILSCALE_SERVE"),
+    tailscaleDnsName: tailscale.value.dnsName,
+    authMode: form.UNRAID_RMCP_AUTH_MODE === "oauth" ? "oauth" : "bearer",
+    publicUrl: form.UNRAID_RMCP_PUBLIC_URL ?? "",
+  }),
+);
 
 async function copyEndpoint() {
   if (!endpoint.value) return;
@@ -175,27 +237,38 @@ async function copyEndpoint() {
   }
 }
 
-/** Copy a ready-to-paste MCP client config (mcpServers block) with the token. */
+const clientConfigHint = computed(() => {
+  if (boolVal("UNRAID_RMCP_DISABLE_HTTP_AUTH")) return "URL-only config for an intentionally unauthenticated endpoint";
+  if (form.UNRAID_RMCP_AUTH_MODE === "oauth") return "URL-only config; compatible clients discover OAuth automatically";
+  return "mcpServers block with your bearer token, ready to paste";
+});
+
+/** Copy a ready-to-paste MCP client config for the selected auth mode. */
 async function copyConfig() {
   if (!endpoint.value) return;
+  const authMode = form.UNRAID_RMCP_AUTH_MODE === "oauth" ? "oauth" : "bearer";
+  const authDisabled = boolVal("UNRAID_RMCP_DISABLE_HTTP_AUTH");
   let token = "<your bearer token>";
-  // Prefer an unsaved edit so the copied config matches what's in the field,
-  // not the last-persisted value.
-  const edit = secretEdits.UNRAID_RMCP_TOKEN;
-  if (edit?.value && !edit.clear) {
-    token = edit.value;
-  } else if (!edit?.clear && secretConfigured("UNRAID_RMCP_TOKEN")) {
-    try {
-      token = await revealSecret("UNRAID_RMCP_TOKEN");
-    } catch {
-      /* fall back to the placeholder */
+  if (!authDisabled && authMode === "bearer") {
+    // Prefer an unsaved edit so the copied config matches what's in the field,
+    // not the last-persisted value.
+    const edit = secretEdits.UNRAID_RMCP_TOKEN;
+    if (edit?.value && !edit.clear) {
+      token = edit.value;
+    } else if (!edit?.clear && secretConfigured("UNRAID_RMCP_TOKEN")) {
+      try {
+        token = await revealSecret("UNRAID_RMCP_TOKEN");
+      } catch {
+        /* fall back to the placeholder */
+      }
     }
   }
-  const cfg = {
-    mcpServers: {
-      unraid: { url: endpoint.value, headers: { Authorization: `Bearer ${token}` } },
-    },
-  };
+  const cfg = buildMcpClientConfig({
+    url: endpoint.value,
+    authMode,
+    authDisabled,
+    token,
+  });
   try {
     await navigator.clipboard.writeText(JSON.stringify(cfg, null, 2));
     copiedConfig.value = true;
@@ -212,7 +285,9 @@ function setBool(key: string, v: boolean) {
   form[key] = v ? "true" : "false";
 }
 function fieldDisabled(field: FieldDef): boolean {
-  return field.key === "UNRAID_MCP_TAILSCALE_SERVE" && !tailscale.value.available;
+  return field.key === "UNRAID_MCP_TAILSCALE_SERVE"
+    && !tailscale.value.available
+    && !boolVal("UNRAID_MCP_TAILSCALE_SERVE");
 }
 
 async function run(fn: () => Promise<ConfigPayload>) {
@@ -352,7 +427,6 @@ function onTabKey(e: KeyboardEvent, current: Tab) {
 onMounted(async () => {
   await run(() => loadConfig());
   loading.value = false;
-  void doCheckUpdate();
   setStatsPolling(true);
 });
 onBeforeUnmount(() => {
@@ -385,6 +459,9 @@ onBeforeUnmount(() => {
     <div v-if="error" role="alert" class="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
       {{ error }}
     </div>
+    <div v-if="!loading && tab === 'settings' && configurationError" role="alert" class="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+      {{ configurationError }}
+    </div>
 
     <div v-if="loading" class="text-sm text-muted-foreground">Loading…</div>
 
@@ -405,15 +482,28 @@ onBeforeUnmount(() => {
               <Badge v-if="boolVal('UNRAID_MCP_TAILSCALE_SERVE') && tailscale.available" variant="orange" size="sm">tailnet</Badge>
             </div>
             <div class="flex items-center gap-2">
-              <Button size="sm" variant="outline" :disabled="busy" @click="svc(service.running ? 'stop' : 'start')">
+              <Button
+                size="sm"
+                variant="outline"
+                :disabled="busy || (!service.running && !runtimeReady)"
+                :title="!service.running && runtimeStartError ? runtimeStartError : undefined"
+                @click="svc(service.running ? 'stop' : 'start')"
+              >
                 {{ service.running ? "Stop" : "Start" }}
               </Button>
               <Button size="sm" variant="outline" :disabled="busy || !service.running" @click="svc('restart')">Restart</Button>
               <div class="ms-auto flex items-center gap-1.5" :title="service.enabled ? 'Starts with the array' : 'Does not start with the array'">
-                <Switch :model-value="service.enabled" :disabled="busy" @update:model-value="svc($event ? 'enable' : 'disable')" />
+                <Switch
+                  :model-value="service.enabled"
+                  :disabled="busy || (!service.enabled && !runtimeReady)"
+                  @update:model-value="svc($event ? 'enable' : 'disable')"
+                />
                 <span class="text-sm text-muted-foreground">Autostart</span>
               </div>
             </div>
+            <p v-if="!service.running && runtimeStartError" class="text-xs text-destructive">
+              {{ runtimeStartError }}
+            </p>
           </section>
 
           <section class="rounded-lg border border-border bg-card p-4 flex flex-col gap-2">
@@ -432,7 +522,7 @@ onBeforeUnmount(() => {
               <Button size="sm" variant="outline" @click="copyConfig">
                 {{ copiedConfig ? "Config copied" : "Copy MCP client config" }}
               </Button>
-              <span class="text-xs text-muted-foreground">mcpServers block with your bearer token, ready to paste</span>
+              <span class="text-xs text-muted-foreground">{{ clientConfigHint }}</span>
             </div>
             <p class="text-xs text-muted-foreground">
               Runtime <span class="font-mono text-foreground">runraid (Rust)</span>
@@ -475,14 +565,14 @@ onBeforeUnmount(() => {
               <Badge v-if="updateAvailable" variant="orange" size="sm">update available</Badge>
             </div>
             <p v-if="latestVersion" class="text-xs text-muted-foreground">
-              latest release <span class="font-mono text-foreground">{{ latestVersion.replace(/^unraid-rs-v/, "") }}</span>
+              latest release <span class="font-mono text-foreground">{{ rustVersion(latestVersion) }}</span>
             </p>
             <div class="flex items-center gap-2">
               <Button size="sm" variant="ghost" class="px-2" :disabled="checkingUpdate || updating" @click="doCheckUpdate">
                 {{ checkingUpdate ? "Checking…" : "Check" }}
               </Button>
               <Button v-if="updateAvailable" size="sm" :disabled="updating" @click="doUpdate">
-                {{ updating ? "Updating…" : `Update to ${latestVersion.replace(/^unraid-rs-v/, "")}` }}
+                {{ updating ? "Updating…" : `Update to ${rustVersion(latestVersion)}` }}
               </Button>
               <Button v-if="version.overlay" size="sm" variant="outline" :disabled="updating" @click="doReset">Revert to bundled</Button>
             </div>
