@@ -3506,7 +3506,7 @@ checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
 
 [[package]]
 name = "unraid-rmcp"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "apollo-compiler",
@@ -4039,7 +4039,7 @@ checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
 
 [[package]]
 name = "xtask"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
 ]
