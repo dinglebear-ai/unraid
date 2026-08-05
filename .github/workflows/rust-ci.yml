@@ -167,3 +167,24 @@ jobs:
           grep -qx 'src/main.rs' <<<"$files"
           grep -qx 'schema/unraid-schema.graphql' <<<"$files"
           test "$(wc -l <<<"$files")" -lt 90
+
+  docker-image:
+    name: Container Image
+    # The release image build is only exercised by rust-release.yml on a
+    # published release, so a broken Dockerfile stayed invisible for three
+    # consecutive releases (v0.3.0 through v0.4.0 all failed the docker job).
+    # Building it here fails the PR instead of the release.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Plain `docker build` on the runner's preinstalled Docker: no new
+      # third-party action, so nothing to add to .github/allowed-actions.txt.
+      - name: Build the Rust server image
+        working-directory: ${{ github.workspace }}
+        run: docker build -f unraid-rs/config/Dockerfile -t unraid-rmcp:ci ./unraid-rs
+      - name: The built binary must run
+        working-directory: ${{ github.workspace }}
+        run: docker run --rm --entrypoint /usr/local/bin/runraid unraid-rmcp:ci --version
