@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.4.0...unraid-rs-v0.4.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* **docker:** repair the Rust image build (broken since [#262](https://github.com/dinglebear-ai/unraid/issues/262)) ([#350](https://github.com/dinglebear-ai/unraid/issues/350)) ([c077cf3](https://github.com/dinglebear-ai/unraid/commit/c077cf3a47b1896654017c0a110d574abc89407e))
+
 ## [0.4.0](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.3.1...unraid-rs-v0.4.0) (2026-08-05)
 
 

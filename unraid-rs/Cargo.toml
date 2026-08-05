@@ -31,7 +31,7 @@ missing_safety_doc = "deny"
 
 [package]
 name = "unraid-rmcp"
-version = "0.4.0"
+version = "0.4.1"
 edition.workspace = true
 rust-version.workspace = true
 categories = ["command-line-utilities", "development-tools"]
