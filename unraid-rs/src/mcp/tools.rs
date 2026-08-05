@@ -1,8 +1,6 @@
 pub(crate) mod arg_helpers;
 pub(crate) mod paginate;
 
-use std::sync::LazyLock;
-
 use serde_json::{Value, json};
 use thiserror::Error;
 
@@ -12,7 +10,7 @@ use crate::token_limit::truncate_if_needed;
 use self::arg_helpers::{i64_arg, string_arg, string_array_arg, usize_arg};
 use self::paginate::paginate_array;
 use super::AppState;
-use super::schemas::ACTIONS;
+use super::tool_filter::{enabled_action_names, ensure_tool_call_enabled};
 
 /// Typed outcome of a tool dispatch, used to *route* failures at the MCP protocol
 /// boundary without matching on message prose.
@@ -77,16 +75,6 @@ fn classify_service_error(err: anyhow::Error, action: &str) -> ToolError {
     }
 }
 
-/// All valid action names — used in error messages. Derived from the canonical
-/// [`ACTIONS`] list so it can never drift from the schema enum or scope source.
-static VALID_ACTIONS: LazyLock<String> = LazyLock::new(|| {
-    ACTIONS
-        .iter()
-        .map(|a| a.name)
-        .collect::<Vec<_>>()
-        .join(", ")
-});
-
 // ── public entry point ────────────────────────────────────────────────────────
 
 /// Dispatch a named MCP tool. Returns `Ok(Value)` always; errors are encoded in
@@ -100,6 +88,10 @@ pub(crate) async fn execute_tool(
     name: &str,
     args: Value,
 ) -> Result<Value, ToolError> {
+    let action = string_arg(&args, "action").unwrap_or_default();
+    ensure_tool_call_enabled(&state.config.tools, name, &action)
+        .map_err(ToolError::InvalidParams)?;
+
     match name {
         "unraid" => dispatch(state, args).await,
         _ => Err(ToolError::InvalidParams(format!(
@@ -122,7 +114,7 @@ async fn dispatch(state: &AppState, args: Value) -> Result<Value, ToolError> {
     let action = match string_arg(&args, "action") {
         Some(a) => a,
         None => {
-            let valid = &*VALID_ACTIONS;
+            let valid = enabled_action_names(&state.config.tools).join(", ");
             return Err(ToolError::InvalidParams(format!(
                 "\"action\" is required.\n\
                  Valid actions: {valid}\n\
@@ -1092,10 +1084,13 @@ async fn dispatch_action(state: &AppState, action: &str, args: &Value) -> Result
             }))
         }
 
-        "help" => Ok(json!({ "help": HELP_TEXT })),
+        "help" => Ok(json!({
+            "help": HELP_TEXT,
+            "enabled_actions": enabled_action_names(&state.config.tools),
+        })),
 
         other => {
-            let valid = &*VALID_ACTIONS;
+            let valid = enabled_action_names(&state.config.tools).join(", ");
             Err(ToolError::InvalidParams(format!(
                 "unknown unraid action: \"{other}\"\n\
                  Valid actions: {valid}\n\
@@ -1111,6 +1106,7 @@ const HELP_TEXT: &str = r#"# unraid MCP Tool
 
 Read-only access to the Unraid server via its GraphQL API.
 Set the required `action` argument to select the operation.
+The response's `enabled_actions` list is authoritative when server policy filters actions.
 
 ## Core
 - `array`          — Array state, disk health, parity, capacity

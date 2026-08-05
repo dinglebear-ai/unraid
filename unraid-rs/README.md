@@ -342,6 +342,8 @@ Host installs read `~/.unraid/.env` before loading config. Containers read
 | `UNRAID_API_SKIP_TLS_VERIFY` | `false` | Skip TLS certificate verification for self-signed endpoints. |
 | `UNRAID_RMCP_HOST` | `0.0.0.0` | HTTP bind host. |
 | `UNRAID_RMCP_PORT` | `40010` | HTTP bind port. |
+| `UNRAID_RMCP_ENABLED_TOOLS` | unset | Comma-separated MCP tool/action allowlist; empty means all. |
+| `UNRAID_RMCP_DISABLED_TOOLS` | unset | Comma-separated MCP tool/action denylist; deny rules win. |
 | `UNRAID_RMCP_SERVER_NAME` | `unraid-rmcp` | Advertised MCP server name. |
 | `UNRAID_RMCP_TOKEN` | unset | Static bearer token for HTTP MCP. |
 | `UNRAID_RMCP_NO_AUTH` | `false` | Disable auth only for loopback development. |
@@ -354,6 +356,11 @@ Host installs read `~/.unraid/.env` before loading config. Containers read
 | `UNRAID_RMCP_GOOGLE_CLIENT_ID` | unset | Google OAuth client ID. |
 | `UNRAID_RMCP_GOOGLE_CLIENT_SECRET` | unset | Google OAuth client secret. |
 | `UNRAID_RMCP_AUTH_ADMIN_EMAIL` | unset | Admin email for OAuth bootstrap. |
+
+Tool selectors may target the entire tool (`*`, `unraid`, or `unraid.*`) or
+a single action (`docker_logs` or `unraid.vm_reset`). The advertised action
+schema is filtered, and disabled calls are rejected even when a client uses a
+stale cached schema. Invalid selectors fail configuration loading.
 
 ## Authentication
 

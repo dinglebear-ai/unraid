@@ -25,11 +25,33 @@ async fn stdio_client(
     RunningService<RoleClient, ()>,
     Option<tokio::process::ChildStderr>,
 )> {
-    stdio_client_with_handler(()).await
+    stdio_client_with_handler_and_env((), &[]).await
+}
+
+async fn stdio_client_with_env(
+    env: &[(&str, &str)],
+) -> anyhow::Result<(
+    RunningService<RoleClient, ()>,
+    Option<tokio::process::ChildStderr>,
+)> {
+    stdio_client_with_handler_and_env((), env).await
 }
 
 async fn stdio_client_with_handler<H>(
     handler: H,
+) -> anyhow::Result<(
+    RunningService<RoleClient, H>,
+    Option<tokio::process::ChildStderr>,
+)>
+where
+    H: ClientHandler,
+{
+    stdio_client_with_handler_and_env(handler, &[]).await
+}
+
+async fn stdio_client_with_handler_and_env<H>(
+    handler: H,
+    env: &[(&str, &str)],
 ) -> anyhow::Result<(
     RunningService<RoleClient, H>,
     Option<tokio::process::ChildStderr>,
@@ -45,6 +67,9 @@ where
             .env("UNRAID_RMCP_NO_AUTH", "true")
             .env("RUST_LOG", "warn")
             .env_remove("UNRAID_RMCP_TOKEN");
+        for (key, value) in env {
+            cmd.env(key, value);
+        }
     }))
     .stderr(Stdio::piped())
     .spawn()?;
@@ -164,6 +189,59 @@ async fn stdio_child_process_lists_tools_and_calls_queries() {
         .unwrap();
     let help = text_content_json(&help);
     assert!(help["help"].as_str().unwrap_or("").contains("unraid"));
+
+    cancel_and_drain(service, stderr).await;
+}
+
+#[tokio::test]
+async fn stdio_filters_advertised_actions_and_rejects_disabled_calls() {
+    let (service, stderr) = stdio_client_with_env(&[
+        ("UNRAID_RMCP_ENABLED_TOOLS", "array,status,help"),
+        ("UNRAID_RMCP_DISABLED_TOOLS", "array"),
+    ])
+    .await
+    .unwrap();
+
+    let tools = service.list_tools(Default::default()).await.unwrap();
+    assert_eq!(tools.tools.len(), 1);
+    let tool = serde_json::to_value(&tools.tools[0]).unwrap();
+    assert_eq!(
+        tool["inputSchema"]["properties"]["action"]["enum"],
+        json!(["status", "help"])
+    );
+
+    let status = service
+        .call_tool(
+            CallToolRequestParams::new("unraid")
+                .with_arguments(json!({"action": "status"}).as_object().unwrap().clone()),
+        )
+        .await
+        .unwrap();
+    assert_eq!(text_content_json(&status)["status"], "ok");
+
+    let error = service
+        .call_tool(
+            CallToolRequestParams::new("unraid")
+                .with_arguments(json!({"action": "array"}).as_object().unwrap().clone()),
+        )
+        .await
+        .unwrap_err();
+    assert!(
+        error.to_string().contains("disabled by server policy"),
+        "disabled action error was: {error}"
+    );
+
+    cancel_and_drain(service, stderr).await;
+}
+
+#[tokio::test]
+async fn stdio_can_disable_the_entire_mcp_tool() {
+    let (service, stderr) = stdio_client_with_env(&[("UNRAID_RMCP_DISABLED_TOOLS", "*")])
+        .await
+        .unwrap();
+
+    let tools = service.list_tools(Default::default()).await.unwrap();
+    assert!(tools.tools.is_empty());
 
     cancel_and_drain(service, stderr).await;
 }

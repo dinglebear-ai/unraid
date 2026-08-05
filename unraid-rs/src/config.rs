@@ -35,6 +35,8 @@ pub struct McpConfig {
     pub api_token: Option<String>,
     pub allowed_hosts: Vec<String>,
     pub allowed_origins: Vec<String>,
+    /// Granular MCP tool/action exposure policy.
+    pub tools: McpToolsConfig,
     pub auth: AuthConfig,
 }
 
@@ -42,6 +44,19 @@ impl McpConfig {
     pub fn bind_addr(&self) -> String {
         format!("{}:{}", self.host, self.port)
     }
+}
+
+/// Granular MCP tool/action filtering (nested under `[mcp.tools]`).
+///
+/// An empty `enabled` list means all tools/actions are eligible. Entries in
+/// `disabled` always win. Selectors may be `*`, `unraid`, `unraid.*`, a
+/// bare action such as `docker_logs`, or a qualified action such as
+/// `unraid.docker_logs`.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(default)]
+pub struct McpToolsConfig {
+    pub enabled: Vec<String>,
+    pub disabled: Vec<String>,
 }
 
 /// OAuth / auth sub-config (nested under `[mcp.auth]` in config.toml)
@@ -170,6 +185,7 @@ impl Default for McpConfig {
             api_token: None,
             allowed_hosts: Vec::new(),
             allowed_origins: Vec::new(),
+            tools: McpToolsConfig::default(),
             auth: AuthConfig::default(),
         }
     }
@@ -222,6 +238,8 @@ impl Config {
             "UNRAID_RMCP_ALLOWED_ORIGINS",
             &mut config.mcp.allowed_origins,
         );
+        env_list("UNRAID_RMCP_ENABLED_TOOLS", &mut config.mcp.tools.enabled);
+        env_list("UNRAID_RMCP_DISABLED_TOOLS", &mut config.mcp.tools.disabled);
         env_opt_str("UNRAID_RMCP_PUBLIC_URL", &mut config.mcp.auth.public_url);
         env_str(
             "UNRAID_RMCP_AUTH_ADMIN_EMAIL",
@@ -264,6 +282,9 @@ impl Config {
         // that bypasses the non-loopback bind safety check in main.rs.
         // It does NOT set no_auth itself — it merely permits it.
         // (auth gating is handled in build_auth_policy; this flag is read in main.rs)
+
+        crate::mcp::validate_tool_config(&config.mcp.tools)
+            .map_err(|error| anyhow::anyhow!("Invalid MCP tool configuration: {error}"))?;
 
         Ok(config)
     }

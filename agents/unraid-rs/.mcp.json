@@ -9,6 +9,8 @@
         "UNRAID_API_SKIP_TLS_VERIFY": "${user_config.unraid_skip_tls}",
         "UNRAID_RMCP_TOKEN": "${user_config.api_token}",
         "UNRAID_RMCP_NO_AUTH": "${user_config.no_auth}",
+        "UNRAID_RMCP_ENABLED_TOOLS": "${user_config.enabled_tools}",
+        "UNRAID_RMCP_DISABLED_TOOLS": "${user_config.disabled_tools}",
         "UNRAID_RMCP_AUTH_MODE": "${user_config.auth_mode}",
         "UNRAID_RMCP_PUBLIC_URL": "${user_config.public_url}",
         "UNRAID_RMCP_GOOGLE_CLIENT_ID": "${user_config.google_client_id}",

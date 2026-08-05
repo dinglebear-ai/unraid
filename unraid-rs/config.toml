@@ -16,6 +16,12 @@ server_name = "unraid-rmcp"
 # allowed_hosts = ["unraid.example.com"]
 # allowed_origins = ["https://unraid.example.com"]
 
+[mcp.tools]
+# Empty enabled means all actions. Disabled selectors always win.
+# Selectors: "*", "unraid", "unraid.*", "docker_logs", "unraid.vm_reset".
+enabled = []
+disabled = []
+
 [mcp.auth]
 mode = "bearer"
 # public_url = "https://unraid.example.com"  # required when mode = "oauth"
