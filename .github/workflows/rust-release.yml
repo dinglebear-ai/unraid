@@ -130,12 +130,12 @@ jobs:
             runraid-x86_64.tar.gz runraid-x86_64.tar.gz.sha256 \
             "../plugins/mcp/packages/unraid-mcp-${plugin_version}-x86_64-2.txz" \
             ../plugins/mcp/packages/unraid-mcp.plg --clobber
-          if [ "${{ github.event_name }}" = "release" ]; then
-            release_id="${{ github.event.release.id }}"
-          else
-            release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq .id)"
-          fi
-          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" -f make_latest=false >/dev/null
+
+      - name: Restore the primary Unraid MCP release as Latest
+        id: primary-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 ../.github/scripts/ensure_primary_latest.py "$TAG"
 
       - name: Publish rolling Community Applications manifest
         env:
@@ -173,27 +173,19 @@ jobs:
           gh release upload "$rolling" "$plg" --clobber
 
       # One-time-per-release bridge for legacy installs: Python-era plugins poll
-      # the "latest release" asset-download URL for unraid-mcp.plg (their
-      # baked-in pluginURL). Rust releases are marked make_latest=false
-      # and the .plg otherwise lives only on the rolling prerelease, so that
-      # legacy URL would keep 404ing forever. Attaching the new .plg to
-      # whatever release GitHub currently calls "latest" makes the legacy URL
-      # serve it; once a box upgrades, its stored pluginURL becomes the fixed
-      # unraid-plugin-latest URL and this bridge is no longer needed for it.
+      # the repository Latest asset URL for unraid-mcp.plg (their baked-in
+      # pluginURL). The step above explicitly restores the newest primary vX.Y.Z
+      # release as Latest; attach the rolling manifest to that exact release
+      # rather than resolving a potentially stale or component-owned pointer.
       - name: Bridge legacy releases/latest pluginURL
         env:
           GH_TOKEN: ${{ github.token }}
+          PRIMARY_TAG: ${{ steps.primary-release.outputs.tag }}
         run: |
           set -euo pipefail
-          latest_tag="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq .tag_name || true)"
-          if [ -z "$latest_tag" ]; then
-            echo "::warning::could not resolve the repository's latest release — legacy pluginURL bridge skipped"
-            exit 0
-          fi
-          # If "latest" is this rust release itself, the upload is a harmless
-          # re-clobber of the asset attached earlier.
-          echo "bridging legacy pluginURL: uploading unraid-mcp.plg to latest release ${latest_tag}"
-          gh release upload "$latest_tag" ../plugins/mcp/packages/unraid-mcp.plg --clobber
+          [ -n "$PRIMARY_TAG" ] || { echo "::error::primary release tag output is empty"; exit 1; }
+          echo "bridging legacy pluginURL: uploading unraid-mcp.plg to primary release ${PRIMARY_TAG}"
+          gh release upload "$PRIMARY_TAG" ../plugins/mcp/packages/unraid-mcp.plg --clobber
 
   npm:
     needs: build
