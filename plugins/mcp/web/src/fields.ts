@@ -124,6 +124,28 @@ export const SECTIONS: Section[] = [
     ],
   },
   {
+    title: "Tool exposure",
+    col: "b",
+    fields: [
+      {
+        key: "UNRAID_RMCP_ENABLED_TOOLS",
+        label: "Enabled tools",
+        help: "Optional comma-separated allowlist of action names (for example array,docker) or *, unraid, or unraid.*. Empty exposes all actions not denied below.",
+        kind: "text",
+        mono: true,
+        placeholder: "array,docker,status",
+      },
+      {
+        key: "UNRAID_RMCP_DISABLED_TOOLS",
+        label: "Disabled tools",
+        help: "Optional comma-separated denylist. Deny selectors win when an action appears in both lists.",
+        kind: "text",
+        mono: true,
+        placeholder: "vm_reset,array_stop",
+      },
+    ],
+  },
+  {
     title: "Google OAuth",
     col: "c",
     gated: true,

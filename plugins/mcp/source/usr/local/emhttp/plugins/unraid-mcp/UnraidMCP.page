@@ -24,7 +24,7 @@ if ($mcp_csrf === '') {
 $mcp_web = '/usr/local/emhttp/plugins/unraid-mcp/web';
 $mcp_v = @filemtime("$mcp_web/unraid-mcp-settings.js") ?: '0';
 ?>
-<script>window.csrf_token = "<?= htmlspecialchars($mcp_csrf, ENT_QUOTES) ?>";</script>
+<script>window.csrf_token = <?= json_encode((string) $mcp_csrf, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;</script>
 <link rel="stylesheet" href="/plugins/unraid-mcp/web/unraid-mcp-settings.css?v=<?= $mcp_v ?>">
 <unraid-mcp-settings-app></unraid-mcp-settings-app>
 <script type="module" src="/plugins/unraid-mcp/web/unraid-mcp-settings.js?v=<?= $mcp_v ?>"></script>
