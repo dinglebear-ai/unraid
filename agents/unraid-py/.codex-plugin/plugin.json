@@ -1,6 +1,6 @@
 {
   "name": "unraid-mcp",
-  "version": "2.10.0",
+  "version": "2.10.1",
   "description": "Unraid server management via MCP.",
   "homepage": "https://github.com/dinglebear-ai/unraid",
   "repository": "https://github.com/dinglebear-ai/unraid",
