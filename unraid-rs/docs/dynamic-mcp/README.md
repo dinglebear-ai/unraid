@@ -236,3 +236,8 @@ The first implementation does not:
 - enable the Unraid developer sandbox
 - generate or compile Rust source at runtime
 - treat schema metadata as the final authorization authority
+
+
+## Existing schema tooling to reuse
+
+The repo already contains `scripts/live-schema-contract.py`, `tests/live_schema_contract.rs`, `schema/live-introspection.json`, and `just schema-live-capture` / `just schema-live-diff`. Dynamic MCP will evolve this pipeline rather than create a duplicate. The current script uses full `__schema` introspection; the new shared discovery behavior adds the production-safe targeted `__type` path while preserving the existing compatibility contract and plugin-extension visibility.

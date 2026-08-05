@@ -501,3 +501,17 @@ Phase 3 enables selected mutations, each with mandatory elicitation.
 Phase 4 validates LABBY discovery, tool payload size, client notification behavior, and live scalar wire formats.
 
 Phase 5 may make `hybrid` the recommended mode. Removing the legacy action dispatcher is a separate future decision after compatibility data exists.
+
+
+## 19. Reuse of the existing live-schema pipeline
+
+The repository already owns a normalized live structural snapshot and compatibility test. Dynamic discovery must reuse that investment:
+
+1. Refactor `scripts/live-schema-contract.py` so its fetch layer uses targeted batched `__type` crawling when full introspection is blocked.
+2. Preserve the existing format-1 structural projection used by `tests/live_schema_contract.rs`, or version it explicitly if additional fields are added.
+3. Add a richer runtime snapshot projection for descriptions, defaults, deprecations, and scalar metadata.
+4. Use shared JSON fixtures to prove the Python capture and Rust normalizer agree on the same type graph.
+5. Keep `just schema-live-capture` and `just schema-live-diff` as the operator-facing commands.
+6. Allow live-only plugin operations to enter the dynamic catalog subject to the same policy, scalar, selection, scope, and elicitation rules as built-in operations.
+
+The existing full-`__schema` script remains a useful optional fast path when the sandbox permits it, but targeted crawling is the production-safe path.

@@ -287,3 +287,25 @@ GraphQL-specific addition: selection planning and recursive type crawling are re
 ## Existing documentation drift
 
 Some older stack and inventory files contain historical claims about RMCP versions, read-only behavior, or the absence of typed GraphQL responses. This package follows current code and manifests. Updating those files is an explicit implementation-plan task rather than an unrelated edit in the design commit.
+
+
+## Existing live-schema contract machinery
+
+Additional files reviewed after the initial pass:
+
+- `unraid-rs/scripts/live-schema-contract.py`
+- `unraid-rs/tests/live_schema_contract.rs`
+- `unraid-rs/schema/live-introspection.json`
+- `unraid-rs/schema/live-introspection-diff.md`
+- `unraid-rs/Justfile`
+
+Verified:
+
+- The repo already captures a normalized live structural contract and compares the vendored SDL against it.
+- The Rust contract test allows live-only plugin extensions while requiring every vendored type, field, argument, input, enum value, interface, union member, and root to remain compatible.
+- The committed July 2026 snapshot contains plugin-provided Incus fields and 17 additional types.
+- The current Python capture script uses a standard named `IntrospectionQuery` with root `__schema`.
+- That request conflicts with the upstream production policy when the developer sandbox is disabled.
+- The current normalized format intentionally omits descriptions, defaults, and applied directive locations.
+
+Implementation consequence: reuse the existing normalized contract and tests, but refactor the capture script and Rust runtime to share equivalent targeted-`__type` discovery semantics. Extend the dynamic runtime snapshot beyond the current structural contract to include descriptions, defaults, deprecations, and scalar metadata required for tool generation. Do not create an unrelated second live-schema fixture.
