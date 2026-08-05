@@ -285,6 +285,8 @@ Environment:
   UNRAID_API_SKIP_TLS_VERIFY      Skip TLS cert check
   UNRAID_RMCP_HOST                 Bind host (default 0.0.0.0)
   UNRAID_RMCP_PORT                 Bind port (default 40010)
+  UNRAID_RMCP_ENABLED_TOOLS        Comma-separated MCP tool/action allowlist
+  UNRAID_RMCP_DISABLED_TOOLS       Comma-separated MCP tool/action denylist
   UNRAID_RMCP_DISABLE_HTTP_AUTH    Disable MCP auth
   RUST_LOG                        Log filter"
     );

@@ -1,8 +1,8 @@
 name: rust-release
 
 # Triggered when release-please publishes an unraid-rs-v<version> release. Builds
-# the linux/amd64 runraid binary, publishes the @dinglebear/unraid npm launcher, and
-# builds+pushes the Rust server container image (folds in runraid's former
+# the linux/amd64 runraid binary, packages the native Unraid plugin, publishes
+# the @dinglebear/unraid npm launcher, and builds+pushes the Rust server image (folds in runraid's former
 # standalone docker-publish workflow). All run: steps execute in unraid-rs/.
 #
 # NOTE (verified post-merge): the windows cross-build and trivy scan from the
@@ -54,7 +54,9 @@ defaults:
 
 jobs:
   build:
-    if: github.event_name == 'release' && startsWith(github.event.release.tag_name, 'unraid-rs-v')
+    if: >-
+      (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'unraid-rs-v')) ||
+      (github.event_name == 'workflow_dispatch' && startsWith(inputs.tag, 'unraid-rs-v'))
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
@@ -62,11 +64,12 @@ jobs:
       id-token: write
       attestations: write
     env:
-      TAG: ${{ github.event.release.tag_name }}
+      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
+      SOURCE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || github.event.release.tag_name }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.SOURCE_REF }}
 
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
@@ -76,6 +79,13 @@ jobs:
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
         with:
           workspaces: unraid-rs
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: Install plugin package validators
+        run: sudo apt-get update && sudo apt-get install -y file libxml2-utils xz-utils
 
       - name: Build linux/amd64 binary
         run: cargo build --release --locked --target x86_64-unknown-linux-gnu --bin runraid
@@ -88,6 +98,14 @@ jobs:
           tar -czf runraid-x86_64.tar.gz runraid-linux-x86_64
           sha256sum runraid-x86_64.tar.gz > runraid-x86_64.tar.gz.sha256
 
+      - name: Build and verify native Unraid plugin
+        run: |
+          set -euo pipefail
+          version="${TAG#unraid-rs-v}"
+          bash ../plugins/mcp/scripts/build-txz.sh \
+            "$version" \
+            "$PWD/target/x86_64-unknown-linux-gnu/release/runraid"
+
       - name: Attest build provenance
         uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4
         with:
@@ -97,10 +115,78 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # The .txz is named by the fixed-width epoch-3 plugin version, not the
+          # rust semver (see plugins/mcp/scripts/plugin-version.sh).
+          plugin_version="$(bash ../plugins/mcp/scripts/plugin-version.sh "${TAG#unraid-rs-v}")"
           gh release upload "$TAG" \
             runraid-linux-x86_64 runraid-linux-x86_64.sha256 \
-            runraid-x86_64.tar.gz runraid-x86_64.tar.gz.sha256 --clobber
-          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${{ github.event.release.id }}" -f make_latest=false >/dev/null
+            runraid-x86_64.tar.gz runraid-x86_64.tar.gz.sha256 \
+            "../plugins/mcp/packages/unraid-mcp-${plugin_version}-x86_64-2.txz" \
+            ../plugins/mcp/packages/unraid-mcp.plg --clobber
+          if [ "${{ github.event_name }}" = "release" ]; then
+            release_id="${{ github.event.release.id }}"
+          else
+            release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq .id)"
+          fi
+          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" -f make_latest=false >/dev/null
+
+      - name: Publish rolling Community Applications manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          rolling=unraid-plugin-latest
+          plg=../plugins/mcp/packages/unraid-mcp.plg
+          plg_version() {
+            sed -n 's/.*<!ENTITY[[:space:]]*version[[:space:]]*"\([^"]*\)".*/\1/p' "$1" | head -1
+          }
+          new_version="$(plg_version "$plg")"
+          if ! gh release view "$rolling" >/dev/null 2>&1; then
+            gh release create "$rolling" \
+              --target "$(git rev-parse HEAD)" \
+              --title "Unraid MCP Plugin" \
+              --notes "Rolling manifest consumed by Unraid Community Applications." \
+              --prerelease
+          fi
+          # Rollback guard: installed plugins poll this rolling asset, and
+          # Unraid compares plugin versions as raw strings. If a
+          # workflow_dispatch republishes an older tag, uploading its .plg here
+          # would silently roll the fleet back — refuse unless the new version
+          # sorts at or after the currently published one under LC_ALL=C.
+          # (Equal is allowed so re-running the same tag stays idempotent.)
+          published_dir="$(mktemp -d)"
+          if gh release download "$rolling" --pattern unraid-mcp.plg --dir "$published_dir" 2>/dev/null; then
+            published_version="$(plg_version "$published_dir/unraid-mcp.plg")"
+            if [ -n "$published_version" ] && [ "$new_version" != "$published_version" ] && \
+               [ "$(printf '%s\n%s\n' "$published_version" "$new_version" | LC_ALL=C sort | tail -1)" != "$new_version" ]; then
+              echo "::error::refusing to publish plugin ${new_version} over already-published ${published_version} — it sorts BEFORE it under LC_ALL=C and would roll every installed plugin back"
+              exit 1
+            fi
+          fi
+          gh release upload "$rolling" "$plg" --clobber
+
+      # One-time-per-release bridge for legacy installs: Python-era plugins poll
+      # the "latest release" asset-download URL for unraid-mcp.plg (their
+      # baked-in pluginURL). Rust releases are marked make_latest=false
+      # and the .plg otherwise lives only on the rolling prerelease, so that
+      # legacy URL would keep 404ing forever. Attaching the new .plg to
+      # whatever release GitHub currently calls "latest" makes the legacy URL
+      # serve it; once a box upgrades, its stored pluginURL becomes the fixed
+      # unraid-plugin-latest URL and this bridge is no longer needed for it.
+      - name: Bridge legacy releases/latest pluginURL
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          latest_tag="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq .tag_name || true)"
+          if [ -z "$latest_tag" ]; then
+            echo "::warning::could not resolve the repository's latest release — legacy pluginURL bridge skipped"
+            exit 0
+          fi
+          # If "latest" is this rust release itself, the upload is a harmless
+          # re-clobber of the asset attached earlier.
+          echo "bridging legacy pluginURL: uploading unraid-mcp.plg to latest release ${latest_tag}"
+          gh release upload "$latest_tag" ../plugins/mcp/packages/unraid-mcp.plg --clobber
 
   npm:
     needs: build
