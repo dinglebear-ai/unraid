@@ -6,8 +6,8 @@
 PLUGIN_NAME="unraid-mcp"
 EMHTTP_DIR="/usr/local/emhttp/plugins/${PLUGIN_NAME}"
 PREFIX="/usr/local/${PLUGIN_NAME}"
-# Service-enable flag lives in /boot/config/plugins/unraid-mcp/unraid-mcp.cfg
-# (read by the event scripts, not here).
+BUNDLED_BIN="${PREFIX}/bin/runraid"
+OVERLAY_BIN="/mnt/user/appdata/unraid-mcp/bin/runraid"
 PID_FILE="/var/run/${PLUGIN_NAME}.pid"
 LOG_DIR="/var/log/${PLUGIN_NAME}"
 LOG_FILE="${LOG_DIR}/server.log"
@@ -21,37 +21,31 @@ log() {
     echo "rc.${PLUGIN_NAME}: $*"
 }
 
-# Only kill a PID if /proc/<pid>/cmdline is actually our server — guards
-# against PID recycling between boots/restarts.
 pid_matches() {
     local pid="$1"
     [ -n "$pid" ] && [ -d "/proc/${pid}" ] || return 1
-    tr '\0' ' ' <"/proc/${pid}/cmdline" 2>/dev/null | grep -q "unraid_mcp"
+    tr '\0' ' ' <"/proc/${pid}/cmdline" 2>/dev/null | grep -qE '(^|[ /])runraid([[:space:]]|$)'
 }
 
-# Read one value from the plugin env file (our writer single-quotes values).
-env_get() {
-    sed -n "s/^$1='\(.*\)'\$/\1/p" "/boot/config/plugins/unraid-mcp/.env" 2>/dev/null | head -n1
+server_binary() {
+    if [ -x "${OVERLAY_BIN}" ]; then
+        echo "${OVERLAY_BIN}"
+    else
+        echo "${BUNDLED_BIN}"
+    fi
+}
+
+plugin_port() {
+    echo "${UNRAID_RMCP_PORT:-${UNRAID_MCP_PORT:-40010}}"
 }
 
 TAILSCALE_BIN="/usr/local/sbin/tailscale"
 
-# Prefer a self-updated overlay venv on the array over the bundled interpreter,
-# so `Update` in the settings page survives reboots without a plugin rebuild.
-OVERLAY_PY="/mnt/user/appdata/unraid-mcp/venv/bin/python3"
-server_python() {
-    if [ -x "$OVERLAY_PY" ]; then echo "$OVERLAY_PY"; else echo "${PREFIX}/python/bin/python3"; fi
-}
-
-# Tailscale Serve integration (rides the official Tailscale Unraid plugin's
-# daemon). Serves the MCP port as HTTPS on the tailnet under a dedicated
-# port so existing serve config on 443 is never touched.
 serve_start() {
-    [ "$(env_get UNRAID_MCP_TAILSCALE_SERVE)" = "true" ] || return 0
+    [ "${UNRAID_MCP_TAILSCALE_SERVE:-false}" = "true" ] || return 0
     [ -x "$TAILSCALE_BIN" ] || { log "tailscale serve requested but tailscale CLI not found"; return 0; }
     local port
-    port="$(env_get UNRAID_MCP_PORT)"
-    port="${port:-6970}"
+    port="$(plugin_port)"
     if "$TAILSCALE_BIN" serve --bg --https="$port" "http://127.0.0.1:${port}" >/dev/null 2>&1; then
         log "tailscale serve enabled: https :${port} -> 127.0.0.1:${port}"
     else
@@ -62,8 +56,7 @@ serve_start() {
 serve_stop() {
     [ -x "$TAILSCALE_BIN" ] || return 0
     local port
-    port="$(env_get UNRAID_MCP_PORT)"
-    port="${port:-6970}"
+    port="$(plugin_port)"
     "$TAILSCALE_BIN" serve --https="$port" off >/dev/null 2>&1 || true
 }
 
@@ -85,19 +78,17 @@ start() {
         log "already running (pid $(cat "${PID_FILE}"))"
         return 0
     fi
-    local py
-    py="$(server_python)"
-    if [ ! -x "$py" ]; then
-        log "FATAL: server python missing at ${py}"
+    local bin
+    bin="$(server_binary)"
+    if [ ! -x "$bin" ]; then
+        log "FATAL: runraid binary missing at ${bin}"
         return 1
     fi
     rotate_log
-    log "starting unraid-mcp server"
-    setsid "$py" -m unraid_mcp.main >>"${LOG_FILE}" 2>&1 &
+    log "starting $("$bin" --version 2>/dev/null || echo runraid)"
+    setsid "$bin" serve >>"${LOG_FILE}" 2>&1 &
     local pid=$!
     echo "$pid" >"${PID_FILE}"
-
-    # Give it a moment to fail fast on config errors and report honestly.
     for _ in $(seq 1 10); do
         sleep 1
         if ! pid_matches "$pid"; then
@@ -108,7 +99,6 @@ start() {
     done
     log "started (pid ${pid})"
     serve_start
-    return 0
 }
 
 stop() {
@@ -132,7 +122,6 @@ stop() {
     rm -f "${PID_FILE}"
     serve_stop
     log "stopped"
-    return 0
 }
 
 status() {
@@ -144,17 +133,10 @@ status() {
     return 1
 }
 
-case "$1" in
+case "${1:-}" in
     start) start ;;
     stop) stop ;;
-    restart)
-        stop
-        sleep 1
-        start
-        ;;
+    restart) stop; sleep 1; start ;;
     status) status ;;
-    *)
-        echo "usage: $0 start|stop|restart|status"
-        exit 1
-        ;;
+    *) echo "usage: $0 start|stop|restart|status"; exit 1 ;;
 esac

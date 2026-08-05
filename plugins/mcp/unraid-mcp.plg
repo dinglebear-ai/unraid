@@ -5,18 +5,18 @@
   <!ENTITY version   "VERSION_PLACEHOLDER">
   <!ENTITY launch    "Settings/UnraidMCP">
   <!ENTITY txz       "unraid-mcp-VERSION_PLACEHOLDER-x86_64-2.txz">
-  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/vVERSION_PLACEHOLDER/&txz;">
+  <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/unraid-rs-vVERSION_PLACEHOLDER/&txz;">
   <!ENTITY md5       "MD5_PLACEHOLDER">
   <!ENTITY sha256    "SHA256_PLACEHOLDER">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
 
-<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="https://github.com/dinglebear-ai/unraid/releases/latest/download/unraid-mcp.plg" min="7.0.0" support="https://github.com/dinglebear-ai/unraid/issues">
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="https://github.com/dinglebear-ai/unraid/releases/download/unraid-plugin-latest/unraid-mcp.plg" min="7.0.0" support="https://github.com/dinglebear-ai/unraid/issues">
 
 <CHANGES>
 ###VERSION_PLACEHOLDER
-- Native Unraid MCP plugin with a bundled Python runtime, authenticated
+- Native Unraid MCP plugin with the Rust runraid binary, authenticated
   streamable HTTP transport, automatic token and API-key bootstrap, webGUI
   settings, dashboard status, and log rotation.
 </CHANGES>
@@ -81,10 +81,11 @@ if [ ! -f "&plugin;/.env" ]; then
     echo "# unraid-mcp configuration — managed by the plugin settings page."
     echo "UNRAID_API_URL='http://127.0.0.1:${gui_port}/graphql'"
     echo "UNRAID_API_KEY='${api_key}'"
-    echo "UNRAID_MCP_TRANSPORT='streamable-http'"
-    echo "UNRAID_MCP_HOST='0.0.0.0'"
-    echo "UNRAID_MCP_PORT='6970'"
-    echo "UNRAID_MCP_BEARER_TOKEN='${bearer_token}'"
+    echo "UNRAID_API_SKIP_TLS_VERIFY='false'"
+    echo "UNRAID_RMCP_HOST='0.0.0.0'"
+    echo "UNRAID_RMCP_PORT='40010'"
+    echo "UNRAID_RMCP_AUTH_MODE='bearer'"
+    echo "UNRAID_RMCP_TOKEN='${bearer_token}'"
   } > "&plugin;/.env"
   chmod 600 "&plugin;/.env" 2>/dev/null || true
 fi

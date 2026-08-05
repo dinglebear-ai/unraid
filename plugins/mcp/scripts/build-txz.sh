@@ -3,153 +3,71 @@
 #
 # Stages:
 #   1. Build the settings web bundle (vite) into source/.../web/.
-#   2. Vendor a relocatable CPython (python-build-standalone — the same
-#      distribution uv uses) under usr/local/unraid-mcp/python/.
-#   3. Install the unraid-mcp wheel + deps into that interpreter's
-#      site-packages so `python3 -m unraid_mcp.main` just works.
-#   4. Assemble a deterministic root-owned .txz and print its hashes.
+#   2. Stage the release-matched runraid binary under
+#      usr/local/unraid-mcp/bin/runraid.
+#   3. Assemble a deterministic root-owned .txz and verify the manifest,
+#      archive, executable, and embedded server version.
 #
-# Usage: build-txz.sh <plugin-version> <wheel-path>
-#   <plugin-version>  e.g. 2.9.0 — used in the package filename.
-#   <wheel-path>      exact release wheel to install without resolving deps.
+# Usage: build-txz.sh <plugin-version> <runraid-binary>
+#   <plugin-version>  e.g. 0.3.0 — must match `runraid --version`.
+#   <runraid-binary>  release binary to embed in the package.
 
 set -euo pipefail
 
-VERSION="${1:?usage: build-txz.sh <version> <wheel-path>}"
-WHEEL="${2:?usage: build-txz.sh <version> <wheel-path>}"
+VERSION="${1:?usage: build-txz.sh <version> <runraid-binary>}"
+RUNRAID="${2:?usage: build-txz.sh <version> <runraid-binary>}"
 
-PYTHON_VERSION="3.12.13"
-PBS_RELEASE="20260718"
-PBS_TARBALL="cpython-${PYTHON_VERSION}+${PBS_RELEASE}-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
-PBS_URL="https://github.com/astral-sh/python-build-standalone/releases/download/${PBS_RELEASE}/${PBS_TARBALL}"
-# Pinned sha256 of PBS_TARBALL, taken from that release's SHA256SUMS manifest.
-# This interpreter is embedded in the .txz shipped to every install, so it is
-# verified UNCONDITIONALLY and the build fails closed if it does not match.
-# Update whenever PYTHON_VERSION or PBS_RELEASE changes:
-#   curl -fsSL ".../${PBS_RELEASE}/SHA256SUMS" | grep "${PBS_TARBALL}"
-# NOTE: python-build-standalone publishes ONE SHA256SUMS manifest per release —
-# it does NOT publish per-file "<tarball>.sha256" sidecars. An earlier version of
-# this script fetched that nonexistent sidecar inside an `if`, so the 404 made the
-# check silently no-op and the interpreter installed unverified on every build.
-PBS_SHA256="5854aa6ec71cad00334d5065633c210b2e7feb40956767a59a91791cadcf0b79"
+if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "ERROR: invalid plugin version '${VERSION}'" >&2
+    exit 1
+fi
+
+RUNRAID="$(realpath "${RUNRAID}")"
+if [ ! -x "${RUNRAID}" ]; then
+    echo "ERROR: runraid binary is missing or not executable: ${RUNRAID}" >&2
+    exit 1
+fi
+
+EXPECTED_VERSION="unraid-rmcp ${VERSION}"
+ACTUAL_VERSION="$("${RUNRAID}" --version 2>/dev/null || true)"
+if [ "${ACTUAL_VERSION}" != "${EXPECTED_VERSION}" ]; then
+    echo "ERROR: runraid version mismatch" >&2
+    echo "       expected: ${EXPECTED_VERSION}" >&2
+    echo "       actual:   ${ACTUAL_VERSION:-<no output>}" >&2
+    exit 1
+fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STAGE="$(mktemp -d)"
-CACHE="${ROOT}/.cache"
 OUT_DIR="${ROOT}/packages"
 PKG_NAME="unraid-mcp-${VERSION}-x86_64-2.txz"
 
 trap 'rm -rf "${STAGE}"' EXIT
-mkdir -p "${CACHE}" "${OUT_DIR}"
+mkdir -p "${OUT_DIR}"
 
-echo "==> [1/4] building web bundle"
-(cd "${ROOT}/web" && npm ci --no-audit --no-fund && npm run build)
-
-echo "==> [2/4] vendoring python ${PYTHON_VERSION} (${PBS_RELEASE})"
-if [ ! -f "${CACHE}/${PBS_TARBALL}" ]; then
-    tmp="$(mktemp)"
-    curl -fsSL -o "${tmp}" "${PBS_URL}"
-    # Verify against the PINNED hash before trusting the interpreter. Mandatory,
-    # not best-effort: no conditional, no fallback, no silent skip.
-    echo "    verifying ${PBS_TARBALL} against pinned sha256"
-    if ! printf '%s  %s\n' "${PBS_SHA256}" "${tmp}" | sha256sum -c - >/dev/null 2>&1; then
-        actual="$(sha256sum "${tmp}" | cut -d' ' -f1)"
-        echo "ERROR: sha256 mismatch for ${PBS_TARBALL}" >&2
-        echo "       expected ${PBS_SHA256}" >&2
-        echo "       actual   ${actual}" >&2
-        echo "       If PYTHON_VERSION/PBS_RELEASE changed, update PBS_SHA256 from that release's SHA256SUMS." >&2
-        rm -f "${tmp}"
-        exit 1
-    fi
-    # Move into the cache atomically so an aborted download can't poison the next run.
-    mv -f "${tmp}" "${CACHE}/${PBS_TARBALL}"
+if [ "${UNRAID_MCP_SKIP_WEB_BUILD:-false}" = "true" ]; then
+    echo "==> [1/3] reusing previously built web bundle"
+    test -s "${ROOT}/source/usr/local/emhttp/plugins/unraid-mcp/web/unraid-mcp-settings.js"
+    test -s "${ROOT}/source/usr/local/emhttp/plugins/unraid-mcp/web/unraid-mcp-settings.css"
+    test -s "${ROOT}/source/usr/local/emhttp/plugins/unraid-mcp/web/unraid-mcp-widget.js"
 else
-    # A cached tarball is re-verified too — the cache may outlive a PBS_SHA256 bump
-    # or have been written by an older build of this script.
-    if ! printf '%s  %s\n' "${PBS_SHA256}" "${CACHE}/${PBS_TARBALL}" | sha256sum -c - >/dev/null 2>&1; then
-        echo "ERROR: cached ${PBS_TARBALL} does not match pinned sha256; removing it — re-run to re-download" >&2
-        rm -f "${CACHE}/${PBS_TARBALL}"
-        exit 1
-    fi
+    echo "==> [1/3] building web bundle"
+    (cd "${ROOT}/web" && npm ci --no-audit --no-fund && npm run build)
 fi
-mkdir -p "${STAGE}/usr/local/unraid-mcp/python"
-tar -xzf "${CACHE}/${PBS_TARBALL}" --strip-components=1 \
-    -C "${STAGE}/usr/local/unraid-mcp/python"
 
-echo "==> [3/4] installing unraid-mcp into the bundled interpreter"
-PY="${STAGE}/usr/local/unraid-mcp/python/bin/python3"
-"${PY}" -m pip install --quiet --no-cache-dir --upgrade pip
-grep -Fxq "unraid-mcp==${VERSION}" "${ROOT}/runtime-requirements.in" || {
-    echo "ERROR: runtime-requirements.in is not pinned to unraid-mcp==${VERSION}" >&2
-    exit 1
-}
-"${PY}" -m pip install --quiet --no-cache-dir --only-binary=:all: \
-    --require-hashes --index-url https://pypi.org/simple \
-    -r "${ROOT}/runtime-requirements.txt"
-"${PY}" -m pip install --quiet --no-cache-dir --no-deps "${WHEEL}"
-"${PY}" -m pip uninstall --quiet -y pip setuptools 2>/dev/null || true
-# Sanity: the module must import with the bundled interpreter alone.
-"${PY}" -c "import unraid_mcp; import importlib.metadata as m; print('unraid-mcp', m.version('unraid-mcp'))"
-
-# Normalize pip's staging-path launchers and wheel metadata, then remove every
-# generated bytecode file from the whole interpreter. This prevents temporary
-# build paths and timestamp-sensitive pyc headers from changing the archive.
-"${PY}" - <<'PY'
-from pathlib import Path
-import base64
-import csv
-import hashlib
-import shutil
-import sys
-
-prefix = Path(sys.prefix)
-site = next(prefix.glob("lib/python*/site-packages"))
-final_python = b"#!/usr/local/unraid-mcp/python/bin/python3"
-
-for direct in site.glob("*.dist-info/direct_url.json"):
-    direct.unlink()
-for cache in sorted(prefix.rglob("__pycache__"), reverse=True):
-    shutil.rmtree(cache)
-for compiled in prefix.rglob("*.py[co]"):
-    compiled.unlink()
-
-for script in (prefix / "bin").iterdir():
-    if script.is_symlink() or not script.is_file():
-        continue
-    data = script.read_bytes()
-    first, separator, rest = data.partition(b"\n")
-    if first.startswith(b"#!") and b"/usr/local/unraid-mcp/python/bin/python" in first:
-        script.write_bytes(final_python + (b"\n" + rest if separator else b"\n"))
-
-for record in sorted(site.glob("*.dist-info/RECORD")):
-    record_path = record.relative_to(site).as_posix()
-    rows = {}
-    with record.open(newline="") as handle:
-        for row in csv.reader(handle):
-            if not row:
-                continue
-            path = row[0]
-            target = (site / path).resolve()
-            if path == record_path:
-                rows[path] = [path, "", ""]
-            elif target.is_file():
-                data = target.read_bytes()
-                digest = base64.urlsafe_b64encode(hashlib.sha256(data).digest()).rstrip(b"=").decode()
-                rows[path] = [path, f"sha256={digest}", str(len(data))]
-    with record.open("w", newline="") as handle:
-        writer = csv.writer(handle, lineterminator="\n")
-        writer.writerows(rows[path] for path in sorted(rows))
-PY
-
-echo "==> [4/4] assembling ${PKG_NAME}"
+echo "==> [2/3] staging runraid ${VERSION}"
 cp -a "${ROOT}/source/." "${STAGE}/"
+mkdir -p "${STAGE}/usr/local/unraid-mcp/bin"
+install -m 0755 "${RUNRAID}" "${STAGE}/usr/local/unraid-mcp/bin/runraid"
+"${STAGE}/usr/local/unraid-mcp/bin/runraid" --version
+
 # Slackware package description (install/slack-desc is conventional).
 mkdir -p "${STAGE}/install"
 cat > "${STAGE}/install/slack-desc" <<EOF
-unraid-mcp: unraid-mcp (MCP server for the Unraid GraphQL API)
+unraid-mcp: unraid-mcp (Rust MCP server for the Unraid GraphQL API)
 unraid-mcp:
 unraid-mcp: Exposes Unraid system control to MCP clients (Claude et al.)
-unraid-mcp: with bearer-token auth and a webGUI settings page.
+unraid-mcp: with the native runraid binary, bearer auth, and a webGUI.
 unraid-mcp:
 unraid-mcp: https://github.com/dinglebear-ai/unraid
 EOF
@@ -157,12 +75,11 @@ EOF
 find "${STAGE}" -type d -exec chmod 755 {} +
 chmod +x "${STAGE}/usr/local/emhttp/plugins/unraid-mcp/scripts/"* \
          "${STAGE}/usr/local/emhttp/plugins/unraid-mcp/event/"* \
-         "${STAGE}/usr/local/unraid-mcp/python/bin/"*
+         "${STAGE}/usr/local/unraid-mcp/bin/runraid"
 
+echo "==> [3/3] assembling ${PKG_NAME}"
 # Deterministic archive: stable entry order and a fixed mtime, so rebuilding the
-# same sources yields the same sha256. Without --sort/--mtime this was the only
-# one of the three plugin build scripts producing a non-reproducible package,
-# which makes the .plg checksum unverifiable by a third party.
+# same source and binary yields the same sha256.
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -C "${ROOT}" log -1 --format=%ct 2>/dev/null || echo 0)}"
 tar -C "${STAGE}" --owner=0 --group=0 --numeric-owner \
     --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
@@ -184,4 +101,4 @@ sed -e "s/VERSION_PLACEHOLDER/${VERSION}/g" \
     -e "s/SHA256_PLACEHOLDER/${SHA256}/g" \
     "${ROOT}/unraid-mcp.plg" > "${OUT_DIR}/unraid-mcp.plg"
 "${ROOT}/scripts/verify-package.sh" "${OUT_DIR}/unraid-mcp.plg" "${OUT_DIR}/${PKG_NAME}"
-echo "done — upload both files to the GitHub release for v${VERSION}"
+echo "done — upload both files to the GitHub release for unraid-rs-v${VERSION}"

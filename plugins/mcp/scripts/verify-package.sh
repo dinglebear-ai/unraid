@@ -27,8 +27,8 @@ done
 [[ "$(basename "$archive")" == "$txz" ]] || { echo "package filename does not match manifest: $(basename "$archive") != $txz" >&2; exit 1; }
 [[ "$md5" =~ ^[0-9a-f]{32}$ ]] || { echo "invalid manifest MD5" >&2; exit 1; }
 [[ "$sha256" =~ ^[0-9a-f]{64}$ ]] || { echo "invalid manifest SHA-256" >&2; exit 1; }
-grep -Fq "https://github.com/dinglebear-ai/unraid/releases/download/v${version}/" "$manifest"
-grep -Fq 'pluginURL="https://github.com/dinglebear-ai/unraid/releases/latest/download/unraid-mcp.plg"' "$manifest"
+grep -Fq "https://github.com/dinglebear-ai/unraid/releases/download/unraid-rs-v${version}/" "$manifest"
+grep -Fq 'pluginURL="https://github.com/dinglebear-ai/unraid/releases/download/unraid-plugin-latest/unraid-mcp.plg"' "$manifest"
 grep -Fq 'support="https://github.com/dinglebear-ai/unraid/issues"' "$manifest"
 printf '%s  %s\n' "$md5" "$archive" | md5sum -c -
 printf '%s  %s\n' "$sha256" "$archive" | sha256sum -c -
@@ -61,12 +61,12 @@ required=(
   usr/local/emhttp/plugins/unraid-mcp/web/unraid-mcp-settings.js
   usr/local/emhttp/plugins/unraid-mcp/web/unraid-mcp-settings.css
   usr/local/emhttp/plugins/unraid-mcp/unraid-mcp.png
-  usr/local/unraid-mcp/python/bin/python3
+  usr/local/unraid-mcp/bin/runraid
 )
 for path in "${required[@]}"; do
   grep -Fxq "$path" "$list" || { echo "package missing required member: $path" >&2; exit 1; }
 done
-for path in usr/local/emhttp/plugins/unraid-mcp/scripts/rc.unraid-mcp usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-env.sh usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-update.sh usr/local/emhttp/plugins/unraid-mcp/event/disks_mounted usr/local/emhttp/plugins/unraid-mcp/event/unmounting_disks usr/local/unraid-mcp/python/bin/python3; do
+for path in usr/local/emhttp/plugins/unraid-mcp/scripts/rc.unraid-mcp usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-env.sh usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-update.sh usr/local/emhttp/plugins/unraid-mcp/event/disks_mounted usr/local/emhttp/plugins/unraid-mcp/event/unmounting_disks usr/local/unraid-mcp/bin/runraid; do
   [[ -x "$tree/$path" ]] || { echo "required package executable lacks execute mode: $path" >&2; exit 1; }
 done
 
@@ -74,36 +74,15 @@ if find "$tree" -type f \( -name .env -o -name unraid-mcp.cfg \) -print -quit | 
   echo "package must not contain persisted Unraid MCP configuration or secrets" >&2
   exit 1
 fi
-if find "$tree" -path '*/__pycache__/*' -o -name '*.py[co]' | grep -q .; then
-  echo "package contains generated Python bytecode" >&2
+if [[ -e "$tree/usr/local/unraid-mcp/python" ]]; then
+  echo "package unexpectedly contains the retired Python runtime" >&2
   exit 1
 fi
-if find "$tree" -path '*.dist-info/direct_url.json' -print -quit | grep -q .; then
-  echo "package contains build-host direct_url provenance" >&2
-  exit 1
-fi
-python3 - "$tree/usr/local/unraid-mcp/python" <<'PY'
-from pathlib import Path
-import sys
 
-prefix = Path(sys.argv[1])
-expected = b"#!/usr/local/unraid-mcp/python/bin/python3"
-for script in (prefix / "bin").iterdir():
-    if script.is_symlink() or not script.is_file():
-        continue
-    first = script.read_bytes().splitlines()[:1]
-    if first and first[0].startswith(b"#!") and b"python" in first[0] and first[0] != expected:
-        raise SystemExit(f"noncanonical Python launcher shebang: {script.name}: {first[0].decode(errors='replace')}")
-for record in prefix.glob("lib/python*/site-packages/*.dist-info/RECORD"):
-    text = record.read_text(errors="replace")
-    if "/tmp/" in text or "/home/runner/" in text or "/workspace/" in text:
-        raise SystemExit(f"build-host path remains in wheel RECORD: {record}")
-PY
-
-python="$tree/usr/local/unraid-mcp/python/bin/python3"
-actual_version="$(SOURCE_DATE_EPOCH=0 "$python" -c 'import importlib.metadata as m; print(m.version("unraid-mcp"))')"
-[[ "$actual_version" == "$version" ]] || { echo "bundled unraid-mcp version differs: $actual_version != $version" >&2; exit 1; }
-SOURCE_DATE_EPOCH=0 "$python" -c 'import unraid_mcp'
+binary="$tree/usr/local/unraid-mcp/bin/runraid"
+file "$binary" | grep -Eq 'ELF 64-bit.*x86-64' || { echo "runraid is not an x86-64 ELF binary" >&2; exit 1; }
+actual_version="$("$binary" --version)"
+[[ "$actual_version" == "unraid-rmcp $version" ]] || { echo "bundled runraid version differs: $actual_version != unraid-rmcp $version" >&2; exit 1; }
 
 echo "Unraid MCP package verification passed"
 echo "version=$version"

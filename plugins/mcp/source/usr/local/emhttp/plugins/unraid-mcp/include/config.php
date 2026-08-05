@@ -26,52 +26,42 @@ const PID_FILE = '/var/run/unraid-mcp.pid';
 /** Env keys whose values must never be sent back to the browser. */
 const SECRET_KEYS = [
     'UNRAID_API_KEY',
-    'UNRAID_MCP_BEARER_TOKEN',
-    'UNRAID_MCP_GOOGLE_CLIENT_SECRET',
-    'UNRAID_MCP_GOOGLE_JWT_SIGNING_KEY',
-    'UNRAID_MCP_GOOGLE_ENCRYPTION_KEY',
+    'UNRAID_RMCP_TOKEN',
+    'UNRAID_RMCP_GOOGLE_CLIENT_SECRET',
 ];
 
-/**
- * The exhaustive set of keys the settings UI may write. Writes are gated on
- * this list (NOT a broad UNRAID_* prefix) so a value crossing the endpoint
- * cannot persist unmanaged keys like UNRAID_CREDENTIALS_DIR that alter runtime
- * behavior the page never exposes. Must stay in sync with web/src/fields.ts.
- */
+/** Keys the Rust settings UI may persist. Must match web/src/fields.ts. */
 const ALLOWED_KEYS = [
     'UNRAID_API_URL',
     'UNRAID_API_KEY',
-    'UNRAID_VERIFY_SSL',
-    'UNRAID_ALLOW_INSECURE_TLS',
-    'UNRAID_MCP_TRANSPORT',
-    'UNRAID_MCP_HOST',
-    'UNRAID_MCP_PORT',
+    'UNRAID_API_SKIP_TLS_VERIFY',
+    'UNRAID_RMCP_HOST',
+    'UNRAID_RMCP_PORT',
     'UNRAID_MCP_TAILSCALE_SERVE',
-    'UNRAID_MCP_LOG_LEVEL',
-    'UNRAID_MCP_LOG_FILE',
-    'UNRAID_MCP_BEARER_TOKEN',
-    'UNRAID_MCP_DISABLE_HTTP_AUTH',
-    'UNRAID_MCP_TRUST_PROXY',
-    'UNRAID_MCP_MAX_RESPONSE_BYTES',
-    'UNRAID_AUTO_START_SUBSCRIPTIONS',
-    'UNRAID_MAX_RECONNECT_ATTEMPTS',
-    'UNRAID_SUBSCRIPTION_COLLECT_MAX_EVENTS',
-    'UNRAID_SUBSCRIPTION_COLLECT_MAX_BYTES',
-    'UNRAID_SUBSCRIPTION_COLLECT_MAX_SECONDS',
-    'UNRAID_SUBSCRIPTION_CACHE_MAX_AGE_SECONDS',
-    'UNRAID_SUBSCRIPTION_TIMEOUT_MAX_SECONDS',
-    'UNRAID_MCP_ENABLE_RAW_SUBSCRIPTION_PROBE',
-    'UNRAID_MCP_GOOGLE_CLIENT_ID',
-    'UNRAID_MCP_GOOGLE_CLIENT_SECRET',
-    'UNRAID_MCP_GOOGLE_BASE_URL',
-    'UNRAID_MCP_GOOGLE_ALLOWED_EMAILS',
-    'UNRAID_MCP_GOOGLE_ALLOWED_DOMAINS',
-    'UNRAID_MCP_GOOGLE_ALLOW_ANY_USER',
-    'UNRAID_MCP_GOOGLE_REQUIRED_SCOPES',
-    'UNRAID_MCP_GOOGLE_REDIRECT_PATH',
-    'UNRAID_MCP_GOOGLE_JWT_SIGNING_KEY',
-    'UNRAID_MCP_GOOGLE_ENCRYPTION_KEY',
-    'UNRAID_MCP_GOOGLE_STORAGE_DIR',
+    'RUST_LOG',
+    'UNRAID_RMCP_TOKEN',
+    'UNRAID_RMCP_DISABLE_HTTP_AUTH',
+    'UNRAID_NOAUTH',
+    'UNRAID_RMCP_ALLOWED_HOSTS',
+    'UNRAID_RMCP_ALLOWED_ORIGINS',
+    'UNRAID_RMCP_AUTH_MODE',
+    'UNRAID_RMCP_PUBLIC_URL',
+    'UNRAID_RMCP_GOOGLE_CLIENT_ID',
+    'UNRAID_RMCP_GOOGLE_CLIENT_SECRET',
+    'UNRAID_RMCP_AUTH_ADMIN_EMAIL',
+];
+
+/** Old Python-server keys accepted while installed configurations migrate. */
+const LEGACY_KEYS = [
+    'UNRAID_RMCP_HOST' => 'UNRAID_MCP_HOST',
+    'UNRAID_RMCP_PORT' => 'UNRAID_MCP_PORT',
+    'RUST_LOG' => 'UNRAID_MCP_LOG_LEVEL',
+    'UNRAID_RMCP_TOKEN' => 'UNRAID_MCP_BEARER_TOKEN',
+    'UNRAID_RMCP_DISABLE_HTTP_AUTH' => 'UNRAID_MCP_DISABLE_HTTP_AUTH',
+    'UNRAID_NOAUTH' => 'UNRAID_MCP_TRUST_PROXY',
+    'UNRAID_RMCP_PUBLIC_URL' => 'UNRAID_MCP_GOOGLE_BASE_URL',
+    'UNRAID_RMCP_GOOGLE_CLIENT_ID' => 'UNRAID_MCP_GOOGLE_CLIENT_ID',
+    'UNRAID_RMCP_GOOGLE_CLIENT_SECRET' => 'UNRAID_MCP_GOOGLE_CLIENT_SECRET',
 ];
 
 function fail(int $code, string $msg): void
@@ -149,9 +139,11 @@ function tailscale_info(): array
         $status = json_decode(implode('', $out), true);
         $dns = rtrim((string) ($status['Self']['DNSName'] ?? ''), '.');
     }
+    $env = read_env(ENV_FILE);
+    $port = (int) ($env['UNRAID_RMCP_PORT'] ?? $env['UNRAID_MCP_PORT'] ?? 40010);
     exec($bin . ' serve status 2>/dev/null', $serveOut, $serveCode);
-    $serveActive = $serveCode === 0 && str_contains(implode("\n", $serveOut), ':6970');
-    // serveActive is a heuristic on the default port; the rc script owns truth.
+    $serveActive = $serveCode === 0 && str_contains(implode("\n", $serveOut), ':' . $port);
+    // serveActive is a heuristic; the rc script owns the authoritative state.
     return ['available' => $dns !== '', 'dnsName' => $dns, 'serveActive' => $serveActive];
 }
 
@@ -197,16 +189,32 @@ function current_payload(): array
     $cfg = @parse_ini_file(CFG_FILE) ?: [];
     $config = [];
     foreach (ALLOWED_KEYS as $key) {
+        $legacy = LEGACY_KEYS[$key] ?? '';
+        $value = $env[$key] ?? ($legacy !== '' ? ($env[$legacy] ?? '') : '');
+        if ($key === 'UNRAID_API_SKIP_TLS_VERIFY' && $value === '') {
+            $value = (($env['UNRAID_VERIFY_SSL'] ?? 'true') === 'false'
+                && ($env['UNRAID_ALLOW_INSECURE_TLS'] ?? 'false') === 'true') ? 'true' : 'false';
+        }
+        if ($key === 'UNRAID_RMCP_AUTH_MODE' && $value === '') {
+            $value = 'bearer';
+        }
+        if ($key === 'RUST_LOG') {
+            $value = strtolower($value);
+        }
         if (in_array($key, SECRET_KEYS, true)) {
-            $config[$key . '_configured'] = isset($env[$key]) && $env[$key] !== '';
+            $config[$key . '_configured'] = $value !== '';
         } else {
-            $config[$key] = $env[$key] ?? '';
+            $config[$key] = $value;
         }
     }
     // Anything in the file the UI doesn't manage, shown read-only (non-secret).
     $extra = [];
+    $legacyKeys = array_values(LEGACY_KEYS);
     foreach ($env as $k => $v) {
-        if (!in_array($k, ALLOWED_KEYS, true) && !in_array($k, SECRET_KEYS, true)) {
+        if (!in_array($k, ALLOWED_KEYS, true)
+            && !in_array($k, SECRET_KEYS, true)
+            && !in_array($k, $legacyKeys, true)
+            && !in_array($k, ['UNRAID_VERIFY_SSL', 'UNRAID_ALLOW_INSECURE_TLS'], true)) {
             $extra[$k] = $v;
         }
     }
@@ -250,7 +258,9 @@ if ($action === 'reveal') {
         fail(400, 'not a secret key');
     }
     $env = read_env(ENV_FILE);
-    echo json_encode(['key' => $key, 'value' => $env[$key] ?? '']);
+    $legacy = LEGACY_KEYS[$key] ?? '';
+    $value = $env[$key] ?? ($legacy !== '' ? ($env[$legacy] ?? '') : '');
+    echo json_encode(['key' => $key, 'value' => $value]);
     exit;
 }
 
@@ -277,15 +287,14 @@ if ($action === 'checkUpdate') {
 if ($action === 'update' || $action === 'resetVersion') {
     if ($action === 'update') {
         $ver = (string) ($body['version'] ?? '');
-        if ($ver !== '' && !preg_match('/^v?\\d+\\.\\d+\\.\\d+$/', $ver)) {
+        if ($ver !== '' && !preg_match('/^(?:unraid-rs-v|v)?\\d+\\.\\d+\\.\\d+$/', $ver)) {
             fail(400, 'invalid version');
         }
         $cmd = escapeshellarg(UPDATE_SH) . ' update ' . escapeshellarg($ver);
     } else {
         $cmd = escapeshellarg(UPDATE_SH) . ' reset';
     }
-    // Stop first so the interpreter being replaced isn't in use (an overlay
-    // venv can't be deleted while the running server holds files open in it).
+    // Stop first so the active overlay binary is not replaced mid-process.
     $wasRunning = service_running();
     if ($wasRunning) {
         exec(RC . ' stop >/dev/null 2>&1');
@@ -363,6 +372,13 @@ foreach ($changes as $key => $value) {
     }
     if (preg_match('/[\r\n]/', $value)) {
         fail(400, "value for $key must not contain newlines");
+    }
+    $legacy = LEGACY_KEYS[$key] ?? '';
+    if ($legacy !== '') {
+        unset($env[$legacy]);
+    }
+    if ($key === 'UNRAID_API_SKIP_TLS_VERIFY') {
+        unset($env['UNRAID_VERIFY_SSL'], $env['UNRAID_ALLOW_INSECURE_TLS']);
     }
     if ($value === '') {
         unset($env[$key]); // empty value removes the line
