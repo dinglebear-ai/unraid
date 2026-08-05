@@ -62,6 +62,43 @@ selectors win.
   keys this plugin writes. To roll back to the old Python `.plg`, delete
   `/boot/config/plugins/unraid-mcp/.env` first and let the Python plugin
   re-bootstrap its config.
+- **Private CA / TLS**: the Python server overloaded `UNRAID_VERIFY_SSL` as
+  either a boolean *or* a path to a CA bundle. runraid splits those: booleans map
+  to `UNRAID_API_SKIP_TLS_VERIFY`, and a readable bundle path migrates to
+  `UNRAID_API_CA_BUNDLE` ("CA bundle path" in Settings), which keeps verification
+  **on** while trusting your CA. If the old value is neither a boolean nor a
+  readable file it cannot be migrated, and the service log says so at startup —
+  set the bundle path yourself rather than disabling verification.
+
+## Update integrity
+
+`Update` in Settings downloads the release binary and checks it three ways
+before installing:
+
+1. the co-uploaded `.sha256` (catches a corrupted or truncated download),
+2. **GitHub build provenance** — the binary's digest must have an attestation in
+   GitHub's attestation store naming this repo and `rust-release.yml` as its
+   builder, and
+3. the binary's own `--version` must match the tag.
+
+Step 2 matters because step 1 alone proves nothing about authenticity: the
+binary and its checksum are uploaded by the same job to the same release, so
+anyone able to replace one can replace both. Attestations live in a separate,
+GitHub-controlled store, are keyed by digest, and are minted by the
+OIDC-authenticated workflow run, so swapped release assets cannot produce a
+matching record.
+
+What this is **not**: the check confirms a provenance record exists and names
+the expected builder — it does not verify the Sigstore signature chain, which
+would require `cosign` or `gh` (neither ships with Unraid). It closes the
+swapped-asset hole, not a compromise of GitHub's attestation store itself.
+
+Releases published before provenance existed have no attestation and will be
+refused. Install one only if you have verified it another way:
+
+```bash
+UNRAID_MCP_SKIP_ATTESTATION=true unraid-mcp-update.sh update <version>
+```
 
 ## Build
 

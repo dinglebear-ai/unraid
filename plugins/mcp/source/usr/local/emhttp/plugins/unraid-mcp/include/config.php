@@ -51,6 +51,7 @@ const ALLOWED_KEYS = [
     'UNRAID_API_URL',
     'UNRAID_API_KEY',
     'UNRAID_API_SKIP_TLS_VERIFY',
+    'UNRAID_API_CA_BUNDLE',
     'UNRAID_RMCP_HOST',
     'UNRAID_RMCP_PORT',
     'UNRAID_MCP_TAILSCALE_SERVE',
@@ -226,6 +227,13 @@ function is_true_value(string $value): bool
     return in_array(strtolower($value), ['1', 'true', 'yes'], true);
 }
 
+/** Whether a value is boolean-shaped at all. UNRAID_VERIFY_SSL was overloaded:
+ *  a boolean OR a CA bundle path, so the two cases must be told apart. */
+function is_bool_value(string $value): bool
+{
+    return in_array(strtolower($value), ['1', '0', 'true', 'false', 'yes', 'no'], true);
+}
+
 function validate_bool_value(array $env, string $key): void
 {
     $value = resolve_value($env, $key);
@@ -310,6 +318,18 @@ function validate_env(array $env): void
 
     foreach (['UNRAID_API_SKIP_TLS_VERIFY', 'UNRAID_MCP_TAILSCALE_SERVE', 'UNRAID_RMCP_DISABLE_HTTP_AUTH', 'UNRAID_NOAUTH'] as $key) {
         validate_bool_value($env, $key);
+    }
+
+    // runraid refuses to start on an unreadable bundle, so reject it here where
+    // the operator still sees a message instead of a service that won't come up.
+    $caBundle = resolve_value($env, 'UNRAID_API_CA_BUNDLE');
+    if ($caBundle !== '') {
+        if ($caBundle[0] !== '/') {
+            fail(400, 'UNRAID_API_CA_BUNDLE must be an absolute path to a PEM bundle');
+        }
+        if (!is_readable($caBundle)) {
+            fail(400, 'UNRAID_API_CA_BUNDLE is not readable: ' . $caBundle);
+        }
     }
 
     $logLevel = strtolower(resolve_value($env, 'RUST_LOG'));
@@ -442,6 +462,15 @@ function current_payload(): array
         if ($key === 'UNRAID_API_SKIP_TLS_VERIFY' && $value === '') {
             $value = (!is_true_value($env['UNRAID_VERIFY_SSL'] ?? 'true')
                 && is_true_value($env['UNRAID_ALLOW_INSECURE_TLS'] ?? 'false')) ? 'true' : 'false';
+        }
+        if ($key === 'UNRAID_API_CA_BUNDLE' && $value === '') {
+            // Mirror unraid-mcp-env.sh: the Python-era UNRAID_VERIFY_SSL doubled
+            // as a CA bundle path. Surface the migrated value so the field shows
+            // what the server is actually using, not a misleading blank.
+            $legacy = $env['UNRAID_VERIFY_SSL'] ?? '';
+            if ($legacy !== '' && !is_bool_value($legacy) && is_readable($legacy)) {
+                $value = $legacy;
+            }
         }
         if (in_array($key, ['UNRAID_API_SKIP_TLS_VERIFY', 'UNRAID_MCP_TAILSCALE_SERVE', 'UNRAID_RMCP_DISABLE_HTTP_AUTH', 'UNRAID_NOAUTH'], true)) {
             $value = is_true_value($value) ? 'true' : 'false';

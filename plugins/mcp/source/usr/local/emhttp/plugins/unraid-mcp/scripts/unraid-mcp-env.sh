@@ -97,6 +97,23 @@ if [ -z "${UNRAID_API_SKIP_TLS_VERIFY:-}" ] \
     export UNRAID_API_SKIP_TLS_VERIFY="true"
 fi
 
+# The Python server also accepted a CA *bundle path* in UNRAID_VERIFY_SSL, which
+# is neither true nor false. Such an install has TLS working via a private CA;
+# dropping the value would have broken every GraphQL call with a bare
+# certificate error and no hint that a setting had been silently discarded.
+# runraid expresses the same intent as UNRAID_API_CA_BUNDLE.
+if [ -z "${UNRAID_API_CA_BUNDLE:-}" ] \
+    && [ -n "${UNRAID_VERIFY_SSL:-}" ] \
+    && ! unraid_mcp_is_true "${UNRAID_VERIFY_SSL}" \
+    && ! unraid_mcp_is_false "${UNRAID_VERIFY_SSL}"; then
+    # Only adopt a bundle that actually exists; an unreadable path is reported by
+    # rc.unraid-mcp at service start (this file is also sourced by config.php,
+    # which must stay quiet).
+    if [ -r "${UNRAID_VERIFY_SSL}" ]; then
+        export UNRAID_API_CA_BUNDLE="${UNRAID_VERIFY_SSL}"
+    fi
+fi
+
 # A legacy trusted-proxy opt-in is the equivalent explicit acknowledgement
 # required by runraid before allowing no-auth on a non-loopback bind.
 if unraid_mcp_is_true "${UNRAID_RMCP_DISABLE_HTTP_AUTH}" \

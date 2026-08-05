@@ -172,6 +172,23 @@ warn_legacy_oauth() {
     fi
 }
 
+# The Python server accepted a CA bundle PATH in UNRAID_VERIFY_SSL. env.sh
+# migrates a readable one onto UNRAID_API_CA_BUNDLE; anything else would leave
+# the server verifying against the system store only, which fails every request
+# against a private CA with no clue that a setting was dropped.
+warn_legacy_ca_bundle() {
+    local value="${UNRAID_VERIFY_SSL:-}"
+    [ -n "${value}" ] || return 0
+    case "${value}" in
+        true | True | TRUE | 1 | yes | false | False | FALSE | 0 | no) return 0 ;;
+    esac
+    if [ -r "${value}" ]; then
+        log "migrated legacy UNRAID_VERIFY_SSL CA bundle to UNRAID_API_CA_BUNDLE: ${value}"
+    else
+        log "WARNING: UNRAID_VERIFY_SSL is '${value}', which is neither a boolean nor a readable CA bundle; TLS will use the system trust store only. Set UNRAID_API_CA_BUNDLE to a readable PEM bundle if this server uses a private CA."
+    fi
+}
+
 start() {
     if is_running; then
         log "already running (pid $(cat "${PID_FILE}"))"
@@ -180,6 +197,7 @@ start() {
     validate_required_config || return 1
     prepare_appdata || return 1
     warn_legacy_oauth
+    warn_legacy_ca_bundle
 
     if [ -e "${OVERLAY_BIN}" ] && ! overlay_valid; then
         log "WARNING: ignoring unsafe overlay binary (must be a root-owned regular executable): ${OVERLAY_BIN}"

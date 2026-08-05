@@ -75,6 +75,42 @@ if ! grep -qsE '[[:space:]]/mnt/user[[:space:]]' /proc/mounts; then
     rm -f /tmp/unraid-mcp-reset.out /tmp/unraid-mcp-reset.err
 fi
 
+# The Python server overloaded UNRAID_VERIFY_SSL as boolean OR CA bundle path.
+# A readable path must migrate onto runraid's UNRAID_API_CA_BUNDLE; a boolean must
+# not, and an unreadable path must not invent a bundle.
+ca_tmp="$(mktemp -d)"
+mkdir -p "${ca_tmp}/appdata"
+printf '%s\n' '-----BEGIN CERTIFICATE-----' > "${ca_tmp}/ca.pem"
+run_env_case() {
+    # $1 = UNRAID_VERIFY_SSL value; echoes the resulting UNRAID_API_CA_BUNDLE
+    printf "UNRAID_VERIFY_SSL='%s'\n" "$1" >"${ca_tmp}/.env"
+    (
+        unset UNRAID_API_CA_BUNDLE UNRAID_VERIFY_SSL UNRAID_MCP_ENV_FILE
+        unset UNRAID_MCP_CONFIG_DIR UNRAID_MCP_APPDATA_DIR
+        export UNRAID_MCP_CONFIG_DIR="${ca_tmp}"
+        export UNRAID_MCP_APPDATA_DIR="${ca_tmp}/appdata"
+        # shellcheck source=/dev/null
+        source "$env_script" >/dev/null 2>&1
+        printf '%s' "${UNRAID_API_CA_BUNDLE:-}"
+    )
+}
+test "$(run_env_case "${ca_tmp}/ca.pem")" = "${ca_tmp}/ca.pem"
+test -z "$(run_env_case true)"
+test -z "$(run_env_case false)"
+test -z "$(run_env_case /nonexistent/ca.pem)"
+rm -rf "$ca_tmp"
+
+# An unmappable legacy value must be reported, not silently dropped.
+grep -Fq 'warn_legacy_ca_bundle' "$rc_script"
+grep -Fq 'UNRAID_API_CA_BUNDLE' "$plugin_dir/source/usr/local/emhttp/plugins/unraid-mcp/include/config.php"
+grep -Fq 'UNRAID_API_CA_BUNDLE' "$plugin_dir/web/src/fields.ts"
+
+# The co-uploaded .sha256 only proves transit integrity; provenance must be
+# checked against GitHub's attestation store before a binary is installed.
+grep -Fq 'verify_attestation' "$update_script"
+grep -Fq 'attestations/sha256:' "$update_script"
+grep -Fq 'verify_attestation "${actual}" || exit 1' "$update_script"
+
 grep -Fq "curl -fsS --noproxy '*' --max-time 2" "$rc_script"
 grep -Fq 'TAILSCALE_PORT_FILE=' "$rc_script"
 grep -Fq 'validate_required_config || return 1' "$rc_script"

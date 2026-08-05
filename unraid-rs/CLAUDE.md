@@ -51,6 +51,7 @@
 UNRAID_API_URL                Unraid GraphQL endpoint (required)
 UNRAID_API_KEY                API key for x-api-key header (required)
 UNRAID_API_SKIP_TLS_VERIFY    Skip TLS cert check (default false)
+UNRAID_API_CA_BUNDLE          PEM CA bundle to trust; verifies instead of skipping
 UNRAID_HOME                   Exact data directory; overrides /data or ~/.unraid
 UNRAID_RMCP_HOST               Bind host (default 0.0.0.0)
 UNRAID_RMCP_PORT               Bind port (default 40010)
