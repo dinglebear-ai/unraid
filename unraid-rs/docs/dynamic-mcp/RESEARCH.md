@@ -105,7 +105,7 @@ Verified:
 
 - `AppState` owns `McpConfig`, `AuthPolicy`, `UnraidService`, and shared counters.
 - Tool policy is nested under `[mcp.tools]`.
-- The persistent data directory defaults to `/data` in containers and {{$BT}}HOME/.unraid` locally.
+- The persistent data directory defaults to `/data` in containers and $HOME/.unraid` locally.
 
 Consequence: dynamic runtime state should be clone-cheap shared state in `AppState`. The cache default should use `default_data_dir().join("dynamic-schema-cache.json")`.
 
