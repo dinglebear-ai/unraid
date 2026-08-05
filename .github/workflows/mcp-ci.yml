@@ -36,6 +36,11 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
+          # The only npm project this job installs is plugins/mcp/web (see
+          # "Build and audit the web bundle"); without this the whole dependency
+          # tree was re-downloaded on every run.
+          cache: npm
+          cache-dependency-path: plugins/mcp/web/package-lock.json
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
           toolchain: "1.97.1"
@@ -100,7 +105,8 @@ jobs:
           npm test --prefix web
           npm run build --prefix web
 
-      - name: Build, verify, and reproduce the Rust plugin package
+      - name: Build and verify the Rust plugin package
+        id: package
         run: |
           set -euo pipefail
           version="$(python3 -c 'import tomllib; print(tomllib.load(open("../../unraid-rs/Cargo.toml", "rb"))["package"]["version"])')"
@@ -111,8 +117,29 @@ jobs:
           SOURCE_DATE_EPOCH=0 ./scripts/build-txz.sh "$version" "$binary"
           package="packages/unraid-mcp-${plugin_version}-x86_64-2.txz"
           first="$(sha256sum "$package" | cut -d' ' -f1)"
+          {
+            echo "version=$version"
+            echo "binary=$binary"
+            echo "package=$package"
+            echo "first=$first"
+          } >> "$GITHUB_OUTPUT"
+          echo "package sha256=$first"
+
+      # Determinism is a property of the packaging scripts, not of the PR branch,
+      # so a second full build per PR bought nothing but ~doubled packaging time.
+      # main pushes and manual dispatches still prove reproducibility, which is
+      # where a regression would actually matter (release inputs come from main).
+      - name: Reproduce the package and compare checksums
+        if: github.event_name != 'pull_request'
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+          BINARY: ${{ steps.package.outputs.binary }}
+          PACKAGE: ${{ steps.package.outputs.package }}
+          FIRST: ${{ steps.package.outputs.first }}
+        run: |
+          set -euo pipefail
           UNRAID_MCP_SKIP_WEB_BUILD=true SOURCE_DATE_EPOCH=0 \
-            ./scripts/build-txz.sh "$version" "$binary"
-          second="$(sha256sum "$package" | cut -d' ' -f1)"
-          test "$first" = "$second" || { echo "::error::package is not reproducible: $first != $second"; exit 1; }
+            ./scripts/build-txz.sh "$VERSION" "$BINARY"
+          second="$(sha256sum "$PACKAGE" | cut -d' ' -f1)"
+          test "$FIRST" = "$second" || { echo "::error::package is not reproducible: $FIRST != $second"; exit 1; }
           echo "reproducible package sha256=$second"

@@ -20,7 +20,9 @@ env:
   CARGO_TERM_COLOR: always
 
 # All run: steps execute inside the crate at unraid-rs/. Secret scanning is
-# handled repo-wide by secret-scan.yml; a tracked-.env guard is centralised too.
+# handled repo-wide by GitHub-native secret scanning + push protection (repo
+# settings, unfiltered across every ref) — the gitleaks secret-scan.yml workflow
+# was deleted in #266 as duplicate coverage; a tracked-.env guard is centralised too.
 defaults:
   run:
     working-directory: unraid-rs

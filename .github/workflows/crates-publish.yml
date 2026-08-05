@@ -56,6 +56,14 @@ jobs:
         with:
           toolchain: stable
 
+      # This job compiles the workspace four times from cold (publish --dry-run
+      # for both crates, then two `cargo install` builds from crates.io). The
+      # registry index + downloaded sources dominate that, and rust-cache restores
+      # both alongside the unraid-rs target dir.
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        with:
+          workspaces: unraid-rs
+
       - name: Verify release tag and package versions
         id: versions
         run: |
