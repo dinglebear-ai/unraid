@@ -1,6 +1,6 @@
 {
   "name": "runraid",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "MCP server for Unraid homelab servers — query array health, Docker containers, VMs, and metrics, and drive Docker/VM/array lifecycle operations.",
   "homepage": "https://github.com/dinglebear-ai/unraid",
   "repository": "https://github.com/dinglebear-ai/unraid",
