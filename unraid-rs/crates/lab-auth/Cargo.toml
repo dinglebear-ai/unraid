@@ -1,6 +1,6 @@
 [package]
 name = "lab-auth"
-version = "0.15.0"
+version = "0.4.1"
 edition.workspace = true
 rust-version.workspace = true
 description = "Parameterizable OAuth 2.0 and JWT authentication for Axum and MCP servers."

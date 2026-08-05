@@ -31,7 +31,7 @@ missing_safety_doc = "deny"
 
 [package]
 name = "unraid-rmcp"
-version = "0.4.0"
+version = "0.4.1"
 edition.workspace = true
 rust-version.workspace = true
 categories = ["command-line-utilities", "development-tools"]
@@ -96,7 +96,7 @@ chrono = { version = "0.4", features = ["serde"] }
 toml = "1.1"
 
 # OAuth + JWT
-lab-auth = { version = "=0.15.0", path = "crates/lab-auth" }
+lab-auth = { version = "0.4.1", path = "crates/lab-auth" }
 url = "2"
 
 # Logging
