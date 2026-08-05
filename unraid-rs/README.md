@@ -335,7 +335,8 @@ runraid setup repair [--json]
 When `UNRAID_HOME` is non-empty, the binary reads `<UNRAID_HOME>/.env`.
 Otherwise host installs read `~/.unraid/.env` and containers read `/data/.env`.
 Non-empty process environment values override `.env`; empty plugin placeholders
-inherit persisted `.env` values instead of clearing them.
+inherit persisted `.env` values instead of clearing them. A present but malformed
+`.env` is rejected so parsing cannot silently skip a later deny rule or credential.
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -361,9 +362,10 @@ inherit persisted `.env` values instead of clearing them.
 | `UNRAID_RMCP_AUTH_ADMIN_EMAIL` | unset | Admin email for OAuth bootstrap. |
 
 Tool selectors may target the entire tool (`*`, `unraid`, or `unraid.*`) or
-a single action (`docker_logs` or `unraid.vm_reset`). The advertised action
-schema is filtered, and disabled calls are rejected even when a client uses a
-stale cached schema. Invalid selectors fail configuration loading.
+a single action (`docker_logs` or `unraid.vm_reset`). Tool discovery and the
+schema resource expose only enabled actions and parameters used by those
+actions; disabled calls are still rejected when a client uses a stale cached
+schema. Invalid selectors and unknown TOML fields fail configuration loading.
 
 A set, non-empty `UNRAID_RMCP_ENABLED_TOOLS` / `UNRAID_RMCP_DISABLED_TOOLS`
 **replaces** the corresponding `[mcp.tools]` list from `config.toml` — env and

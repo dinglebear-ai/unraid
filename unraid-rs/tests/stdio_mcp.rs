@@ -212,6 +212,14 @@ async fn stdio_filters_advertised_actions_and_rejects_disabled_calls() {
         tool["inputSchema"]["properties"]["action"]["enum"],
         json!(["status", "help"])
     );
+    assert_eq!(
+        tool["inputSchema"]["properties"]
+            .as_object()
+            .unwrap()
+            .keys()
+            .collect::<Vec<_>>(),
+        vec!["action"]
+    );
 
     let status = service
         .call_tool(
@@ -250,6 +258,14 @@ async fn stdio_filters_advertised_actions_and_rejects_disabled_calls() {
     assert_eq!(
         schema[0]["inputSchema"]["properties"]["action"]["enum"],
         json!(["status", "help"])
+    );
+    assert_eq!(
+        schema[0]["inputSchema"]["properties"]
+            .as_object()
+            .unwrap()
+            .keys()
+            .collect::<Vec<_>>(),
+        vec!["action"]
     );
 
     // action=help reports the same filtered subset in enabled_actions.
@@ -383,6 +399,41 @@ async fn stdio_empty_plugin_values_inherit_dotenv_policy() {
     assert_eq!(
         tool["inputSchema"]["properties"]["action"]["enum"],
         json!(["status", "help"])
+    );
+
+    cancel_and_drain(service, stderr).await;
+}
+
+#[tokio::test]
+async fn stdio_nonempty_process_policy_overrides_dotenv_policy() {
+    let temp = TempDir::new().unwrap();
+    std::fs::write(
+        temp.path().join(".env"),
+        "UNRAID_RMCP_ENABLED_TOOLS=status,help\n",
+    )
+    .unwrap();
+    let unraid_home = temp.path().to_string_lossy().into_owned();
+    let (service, stderr) = stdio_client_with_env(&[
+        ("UNRAID_HOME", &unraid_home),
+        ("UNRAID_RMCP_ENABLED_TOOLS", "docker_logs"),
+        ("UNRAID_RMCP_DISABLED_TOOLS", ""),
+    ])
+    .await
+    .unwrap();
+
+    let tools = service.list_tools(Default::default()).await.unwrap();
+    let tool = serde_json::to_value(&tools.tools[0]).unwrap();
+    assert_eq!(
+        tool["inputSchema"]["properties"]["action"]["enum"],
+        json!(["docker_logs"])
+    );
+    assert_eq!(
+        tool["inputSchema"]["properties"]
+            .as_object()
+            .unwrap()
+            .keys()
+            .collect::<Vec<_>>(),
+        vec!["action", "id", "tail"]
     );
 
     cancel_and_drain(service, stderr).await;

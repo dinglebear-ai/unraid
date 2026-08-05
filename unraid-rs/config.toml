@@ -23,6 +23,7 @@ server_name = "unraid-rmcp"
 # var REPLACES the matching list below (no merge). Empty process placeholders
 # may inherit a matching value from <UNRAID_HOME>/.env, ~/.unraid/.env, or
 # /data/.env. MCP surface only; the CLI is not filtered by this policy.
+# Unknown keys or misspelled tables fail startup instead of being ignored.
 enabled = []
 disabled = []
 

@@ -93,7 +93,7 @@ List actions return a paginated envelope: `{items, total, limit, offset, has_mor
 
 | URI | MIME type | Description |
 |-----|-----------|-------------|
-| `unraid://schema/mcp-tool` | `application/json` | JSON Schema for the `unraid` tool and its parameters |
+| `unraid://schema/mcp-tool` | `application/json` | Policy-filtered JSON Schema containing only enabled actions and their parameters |
 
 ## MCP prompts
 

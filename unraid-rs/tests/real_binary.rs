@@ -79,8 +79,11 @@ async fn binary_renders_representative_actions() {
 /// Spawn `runraid mcp` with the given tool-policy env and expect a startup
 /// failure: non-zero exit and the config error on stderr.
 fn run_runraid_startup_failure(env: &[(&str, &str)]) -> String {
+    let home = tempfile::tempdir().unwrap();
     let mut cmd = Command::new(env!("CARGO_BIN_EXE_runraid"));
     cmd.arg("mcp")
+        .env("HOME", home.path())
+        .env_remove("UNRAID_HOME")
         .env("UNRAID_API_URL", "http://localhost:1/graphql")
         .env("UNRAID_API_KEY", "test")
         .env_remove("UNRAID_RMCP_ENABLED_TOOLS")
@@ -124,34 +127,65 @@ fn binary_refuses_to_start_on_separator_only_tool_selector_value() {
     );
 }
 
-/// Unknown keys under `[mcp.tools]` are security-sensitive typos and must
-/// fail closed instead of silently leaving actions exposed.
-#[test]
-fn binary_refuses_unknown_mcp_tools_toml_keys() {
+fn run_runraid_config_failure(config: &str) -> String {
     let dir = tempfile::tempdir().unwrap();
-    std::fs::write(
-        dir.path().join("config.toml"),
-        "[mcp.tools]\ndisable = [\"vm_reset\"]\n",
-    )
-    .unwrap();
-
+    std::fs::write(dir.path().join("config.toml"), config).unwrap();
     let out = Command::new(env!("CARGO_BIN_EXE_runraid"))
         .arg("mcp")
         .current_dir(dir.path())
+        .env("UNRAID_HOME", dir.path())
         .env("UNRAID_API_URL", "http://localhost:1/graphql")
         .env("UNRAID_API_KEY", "test")
         .env_remove("UNRAID_RMCP_ENABLED_TOOLS")
         .env_remove("UNRAID_RMCP_DISABLED_TOOLS")
         .output()
         .expect("spawn runraid");
-    let stderr = String::from_utf8_lossy(&out.stderr);
+    let stderr = String::from_utf8_lossy(&out.stderr).into_owned();
     assert!(
         !out.status.success(),
-        "runraid must reject unknown [mcp.tools] keys; stderr: {stderr}"
+        "runraid must reject config {config:?}; stderr: {stderr}"
     );
+    stderr
+}
+
+/// Unknown keys under `[mcp.tools]` are security-sensitive typos and must
+/// fail closed instead of silently leaving actions exposed.
+#[test]
+fn binary_refuses_unknown_mcp_tools_toml_keys() {
+    let stderr = run_runraid_config_failure("[mcp.tools]\ndisable = [\"vm_reset\"]\n");
     assert!(
         stderr.contains("unknown field") && stderr.contains("disable"),
         "parse error must identify the typo; got: {stderr}"
+    );
+}
+
+#[test]
+fn binary_refuses_misspelled_mcp_tools_table() {
+    let stderr = run_runraid_config_failure("[mcp.tool]\ndisabled = [\"vm_reset\"]\n");
+    assert!(
+        stderr.contains("unknown field") && stderr.contains("tool"),
+        "parse error must identify the misspelled table; got: {stderr}"
+    );
+}
+
+#[test]
+fn binary_refuses_malformed_dotenv_before_policy() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut contents = vec![0xff, b'\n'];
+    contents.extend_from_slice(b"UNRAID_RMCP_DISABLED_TOOLS=*\n");
+    std::fs::write(dir.path().join(".env"), contents).unwrap();
+    let out = Command::new(env!("CARGO_BIN_EXE_runraid"))
+        .arg("definitely-not-a-command")
+        .env("UNRAID_HOME", dir.path())
+        .env("UNRAID_API_URL", "http://localhost:1/graphql")
+        .env("UNRAID_API_KEY", "test")
+        .output()
+        .expect("spawn runraid");
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(!out.status.success(), "malformed .env must fail closed");
+    assert!(
+        stderr.contains("failed to parse .env"),
+        "stderr must identify the malformed file; got: {stderr}"
     );
 }
 
