@@ -45,8 +45,10 @@ jobs:
         run: |
           set -euo pipefail
           version="$(node -p "require('./web-src/package-lock.json').packages['node_modules/playwright'].version")"
-          [ -n "$version" ] && [ "$version" != "undefined" ] \
-            || { echo "::error::could not resolve playwright version from web-src/package-lock.json"; exit 1; }
+          if [ -z "$version" ] || [ "$version" = "undefined" ]; then
+            echo "::error::could not resolve playwright version from web-src/package-lock.json"
+            exit 1
+          fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright browsers
         id: playwright-cache
