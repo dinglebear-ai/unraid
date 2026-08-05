@@ -76,6 +76,54 @@ async fn binary_renders_representative_actions() {
     }
 }
 
+/// Spawn `runraid mcp` with the given tool-policy env and expect a startup
+/// failure: non-zero exit and the config error on stderr.
+fn run_runraid_startup_failure(env: &[(&str, &str)]) -> String {
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_runraid"));
+    cmd.arg("mcp")
+        .env("UNRAID_API_URL", "http://localhost:1/graphql")
+        .env("UNRAID_API_KEY", "test")
+        .env_remove("UNRAID_RMCP_ENABLED_TOOLS")
+        .env_remove("UNRAID_RMCP_DISABLED_TOOLS");
+    for (key, value) in env {
+        cmd.env(key, value);
+    }
+    let out = cmd.output().expect("spawn runraid");
+    let stderr = String::from_utf8_lossy(&out.stderr).into_owned();
+    assert!(
+        !out.status.success(),
+        "runraid must refuse to start with env {env:?}; stderr:\n{stderr}"
+    );
+    stderr
+}
+
+/// A typo'd selector must fail startup loudly (fail closed) instead of
+/// silently leaving the action exposed.
+#[test]
+fn binary_refuses_to_start_on_unknown_tool_selector() {
+    let stderr = run_runraid_startup_failure(&[("UNRAID_RMCP_DISABLED_TOOLS", "unraid.dockre")]);
+    assert!(
+        stderr.contains("unknown selector") && stderr.contains("unraid.dockre"),
+        "stderr should name the invalid selector; got:\n{stderr}"
+    );
+    assert!(
+        stderr.contains("[mcp.tools].disabled / UNRAID_RMCP_DISABLED_TOOLS"),
+        "stderr should name both config sources; got:\n{stderr}"
+    );
+}
+
+/// A set, non-empty value that parses to zero selectors (separators only) must
+/// also fail startup: the operator visibly set a policy that would otherwise
+/// silently do nothing. (The empty string stays valid — it means unset.)
+#[test]
+fn binary_refuses_to_start_on_separator_only_tool_selector_value() {
+    let stderr = run_runraid_startup_failure(&[("UNRAID_RMCP_DISABLED_TOOLS", ",")]);
+    assert!(
+        stderr.contains("UNRAID_RMCP_DISABLED_TOOLS") && stderr.contains("no selectors"),
+        "stderr should explain the zero-selector value; got:\n{stderr}"
+    );
+}
+
 #[tokio::test]
 async fn binary_passes_id_argument() {
     let server = mock_server("healthy").await;

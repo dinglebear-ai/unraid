@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.3.0...unraid-rs-v0.3.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* **unraid-rs:** bind MCP to trusted interfaces ([#338](https://github.com/dinglebear-ai/unraid/issues/338)) ([060fa1c](https://github.com/dinglebear-ai/unraid/commit/060fa1c502e16e29ef691664ac5a6f0056a57609))
+
 ## [Unreleased]
 
 ### Changed
