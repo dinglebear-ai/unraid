@@ -19,6 +19,7 @@ const server = spawn(process.execPath, [path.join(testDir, "mock-server.mjs")], 
   stdio: ["ignore", "pipe", "pipe"],
 })
 let serverOutput = ""
+let browser
 server.stdout.on("data", (chunk) => { serverOutput += chunk })
 server.stderr.on("data", (chunk) => { serverOutput += chunk })
 
@@ -45,7 +46,7 @@ async function waitFor(predicate, message, timeoutMs = 10_000) {
 
 async function main() {
   await waitForServer()
-  const browser = await chromium.launch({ headless: true })
+  browser = await chromium.launch({ headless: true })
   const page = await browser.newPage({ viewport: { width: 1440, height: 960 } })
   const consoleErrors = []
   page.on("console", (message) => {
@@ -141,16 +142,17 @@ async function main() {
   }))
   assert.equal(dimensions.scrollWidth, dimensions.clientWidth)
   assert.deepEqual(consoleErrors, [])
-  await browser.close()
 }
 
 main()
   .then(() => {
-    server.kill("SIGTERM")
     console.log("Codex browser smoke checks passed")
   })
   .catch((error) => {
-    server.kill("SIGTERM")
     console.error(error.stack || error.message)
     process.exitCode = 1
+  })
+  .finally(async () => {
+    await browser?.close().catch(() => {})
+    if (!server.killed) server.kill("SIGTERM")
   })
