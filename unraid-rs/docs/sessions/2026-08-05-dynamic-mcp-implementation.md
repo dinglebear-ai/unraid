@@ -30,6 +30,12 @@ Phase 00 baseline and inert module skeleton, followed by Phase 01 configuration 
 - Dependency audit: Rust/Cargo 1.97.1; sha2 already transitive; arc-swap, hex, and humantime-serde absent.
 - RED: cargo test dynamic_config_modes --lib failed with unresolved DynamicSurface and StartupFailureMode imports (exit 101).
 - GREEN: cargo test dynamic_config_modes --lib passed 3 tests after adding only the two enums and safe defaults.
+- RED: dynamic config struct tests failed on missing DynamicMcpConfig, OperationOverride, and validate_dynamic_config (exit 101).
+- GREEN: dynamic config struct tests passed 6 focused tests after adding strict defaults, human durations, and aggregate validation.
+- Design correction: selector fields are allowed_operations / disabled_operations; TYPES.md had duplicated enabled fields and was corrected.
+- RED: config integration tests failed only on missing apply_dynamic_env_with (exit 101).
+- GREEN: config::tests passed 12 tests with compiler wrapper disabled, including env precedence and strict rejection of confirmation.
+- Build note: kache repeatedly restarted the test link stage under heavy host load; the stalled worktree-only process was stopped and the same tests passed with RUSTC_WRAPPER disabled.
 
 ## TDD loop
 

@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::mcp::dynamic::config::{DynamicMcpConfig, validate_dynamic_config};
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct Config {
@@ -37,6 +39,8 @@ pub struct McpConfig {
     pub allowed_origins: Vec<String>,
     /// Granular MCP tool/action exposure policy.
     pub tools: McpToolsConfig,
+    /// Runtime GraphQL schema discovery and generated MCP tool policy.
+    pub dynamic: DynamicMcpConfig,
     pub auth: AuthConfig,
 }
 
@@ -186,6 +190,7 @@ impl Default for McpConfig {
             allowed_hosts: Vec::new(),
             allowed_origins: Vec::new(),
             tools: McpToolsConfig::default(),
+            dynamic: DynamicMcpConfig::default(),
             auth: AuthConfig::default(),
         }
     }
@@ -240,6 +245,7 @@ impl Config {
         );
         env_tool_selector_list("UNRAID_RMCP_ENABLED_TOOLS", &mut config.mcp.tools.enabled)?;
         env_tool_selector_list("UNRAID_RMCP_DISABLED_TOOLS", &mut config.mcp.tools.disabled)?;
+        apply_dynamic_env(&mut config.mcp.dynamic)?;
         env_opt_str("UNRAID_RMCP_PUBLIC_URL", &mut config.mcp.auth.public_url);
         env_str(
             "UNRAID_RMCP_AUTH_ADMIN_EMAIL",
@@ -285,12 +291,72 @@ impl Config {
 
         crate::mcp::validate_tool_config(&config.mcp.tools)
             .map_err(|error| anyhow::anyhow!("Invalid MCP tool configuration: {error}"))?;
+        validate_dynamic_config(&config.mcp.dynamic)
+            .map_err(|error| anyhow::anyhow!("Invalid dynamic MCP configuration: {error}"))?;
 
         Ok(config)
     }
 }
 
 // ── env helpers ───────────────────────────────────────────────────────────────
+
+fn apply_dynamic_env(config: &mut DynamicMcpConfig) -> anyhow::Result<()> {
+    apply_dynamic_env_with(config, |key| std::env::var(key).ok())
+}
+
+fn apply_dynamic_env_with<F>(config: &mut DynamicMcpConfig, mut get: F) -> anyhow::Result<()>
+where
+    F: FnMut(&str) -> Option<String>,
+{
+    if let Some(value) = nonempty_env(&mut get, "UNRAID_RMCP_DYNAMIC_ENABLED") {
+        config.enabled = parse_bool_value("UNRAID_RMCP_DYNAMIC_ENABLED", &value)?;
+    }
+    if let Some(value) = nonempty_env(&mut get, "UNRAID_RMCP_DYNAMIC_SURFACE") {
+        config.surface = match value.to_ascii_lowercase().as_str() {
+            "legacy" => crate::mcp::dynamic::config::DynamicSurface::Legacy,
+            "expanded" => crate::mcp::dynamic::config::DynamicSurface::Expanded,
+            "hybrid" => crate::mcp::dynamic::config::DynamicSurface::Hybrid,
+            _ => anyhow::bail!(
+                "UNRAID_RMCP_DYNAMIC_SURFACE: expected legacy, expanded, or hybrid, got {value:?}"
+            ),
+        };
+    }
+    if let Some(value) = nonempty_env(&mut get, "UNRAID_RMCP_DYNAMIC_REFRESH_INTERVAL") {
+        config.refresh_interval =
+            humantime_serde::re::humantime::parse_duration(&value).map_err(|error| {
+                anyhow::anyhow!(
+                    "UNRAID_RMCP_DYNAMIC_REFRESH_INTERVAL: invalid duration {value:?}: {error}"
+                )
+            })?;
+    }
+    if let Some(value) = nonempty_env(&mut get, "UNRAID_RMCP_DYNAMIC_AUTO_ENABLE_QUERIES") {
+        config.auto_enable_queries =
+            parse_bool_value("UNRAID_RMCP_DYNAMIC_AUTO_ENABLE_QUERIES", &value)?;
+    }
+    if let Some(value) = nonempty_env(&mut get, "UNRAID_RMCP_DYNAMIC_AUTO_ENABLE_MUTATIONS") {
+        config.auto_enable_mutations =
+            parse_bool_value("UNRAID_RMCP_DYNAMIC_AUTO_ENABLE_MUTATIONS", &value)?;
+    }
+    if let Some(value) = nonempty_env(&mut get, "UNRAID_RMCP_DYNAMIC_CACHE_PATH") {
+        config.cache_path = value.into();
+    }
+    Ok(())
+}
+
+fn nonempty_env<F>(get: &mut F, key: &str) -> Option<String>
+where
+    F: FnMut(&str) -> Option<String>,
+{
+    get(key).filter(|value| !value.is_empty())
+}
+
+fn parse_bool_value(key: &str, value: &str) -> anyhow::Result<bool> {
+    match value.to_ascii_lowercase().as_str() {
+        "1" | "true" | "yes" => Ok(true),
+        "0" | "false" | "no" => Ok(false),
+        _ => anyhow::bail!("{key}: expected bool, got {value:?}"),
+    }
+}
 
 fn env_str(key: &str, target: &mut String) {
     if let Ok(v) = std::env::var(key)
@@ -374,5 +440,113 @@ fn env_list(key: &str, target: &mut Vec<String>) {
         if !items.is_empty() {
             *target = items;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{collections::BTreeMap, time::Duration};
+
+    use super::*;
+    use crate::mcp::dynamic::config::{DynamicSurface, StartupFailureMode};
+
+    #[test]
+    fn mcp_config_defaults_disable_dynamic_tools() {
+        let config = McpConfig::default();
+        assert!(!config.dynamic.enabled);
+        assert_eq!(config.dynamic.surface, DynamicSurface::Hybrid);
+    }
+
+    #[test]
+    fn nested_dynamic_toml_parses_with_operation_override() {
+        let config: Config = toml::from_str(
+            r#"
+            [mcp.dynamic]
+            enabled = true
+            surface = "expanded"
+            refresh_interval = "30m"
+            startup_failure = "empty_dynamic"
+
+            [mcp.dynamic.operations."mutation.vm.start"]
+            enabled = true
+            destructive = true
+            "#,
+        )
+        .expect("valid nested dynamic MCP config");
+
+        assert!(config.mcp.dynamic.enabled);
+        assert_eq!(config.mcp.dynamic.surface, DynamicSurface::Expanded);
+        assert_eq!(
+            config.mcp.dynamic.refresh_interval,
+            Duration::from_secs(1800)
+        );
+        assert_eq!(
+            config.mcp.dynamic.startup_failure,
+            StartupFailureMode::EmptyDynamic
+        );
+        let vm_start = &config.mcp.dynamic.operations["mutation.vm.start"];
+        assert_eq!(vm_start.enabled, Some(true));
+        assert_eq!(vm_start.destructive, Some(true));
+    }
+
+    #[test]
+    fn nested_dynamic_confirmation_field_is_rejected() {
+        let error = toml::from_str::<Config>(
+            r#"
+            [mcp.dynamic.operations."mutation.vm.start"]
+            enabled = true
+            confirmation = "required"
+            "#,
+        )
+        .expect_err("confirmation is not a supported dynamic MCP field");
+
+        assert!(error.to_string().contains("confirmation"));
+    }
+
+    #[test]
+    fn dynamic_env_overrides_have_expected_precedence() {
+        let values = BTreeMap::from([
+            ("UNRAID_RMCP_DYNAMIC_ENABLED", "true".to_string()),
+            ("UNRAID_RMCP_DYNAMIC_SURFACE", "legacy".to_string()),
+            ("UNRAID_RMCP_DYNAMIC_REFRESH_INTERVAL", "15m".to_string()),
+            (
+                "UNRAID_RMCP_DYNAMIC_AUTO_ENABLE_QUERIES",
+                "false".to_string(),
+            ),
+            (
+                "UNRAID_RMCP_DYNAMIC_AUTO_ENABLE_MUTATIONS",
+                "true".to_string(),
+            ),
+            (
+                "UNRAID_RMCP_DYNAMIC_CACHE_PATH",
+                "/tmp/dynamic-cache.json".to_string(),
+            ),
+        ]);
+        let mut config = DynamicMcpConfig::default();
+
+        apply_dynamic_env_with(&mut config, |key| values.get(key).cloned())
+            .expect("valid dynamic env overrides");
+
+        assert!(config.enabled);
+        assert_eq!(config.surface, DynamicSurface::Legacy);
+        assert_eq!(config.refresh_interval, Duration::from_secs(15 * 60));
+        assert!(!config.auto_enable_queries);
+        assert!(config.auto_enable_mutations);
+        assert_eq!(
+            config.cache_path,
+            std::path::Path::new("/tmp/dynamic-cache.json")
+        );
+    }
+
+    #[test]
+    fn dynamic_env_rejects_invalid_surface() {
+        let mut config = DynamicMcpConfig::default();
+        let error = apply_dynamic_env_with(&mut config, |key| {
+            (key == "UNRAID_RMCP_DYNAMIC_SURFACE").then(|| "sideways".to_string())
+        })
+        .expect_err("unknown dynamic surface must fail");
+
+        assert!(error.to_string().contains("UNRAID_RMCP_DYNAMIC_SURFACE"));
+        assert!(error.to_string().contains("sideways"));
     }
 }

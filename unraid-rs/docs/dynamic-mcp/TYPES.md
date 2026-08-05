@@ -66,8 +66,8 @@ pub struct DynamicMcpConfig {
     pub cache_path: std::path::PathBuf,
     pub root_types: RootTypeNames,
     pub namespace_suffixes: Vec<String>,
-    pub enabled: Vec<String>,
-    pub disabled: Vec<String>,
+    pub allowed_operations: Vec<String>,
+    pub disabled_operations: Vec<String>,
     pub operations: std::collections::BTreeMap<String, OperationOverride>,
     pub scalar_schemas: std::collections::BTreeMap<String, serde_json::Value>,
 }
