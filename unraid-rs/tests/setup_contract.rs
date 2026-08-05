@@ -54,6 +54,8 @@ fn setup_repair_creates_env_file_without_upstream_contact() {
     let dir = tempdir().unwrap();
     let missing = dir.path().join("appdata");
     let mut cmd = base_command(&missing);
+    cmd.env("UNRAID_RMCP_ENABLED_TOOLS", "array,docker,status,help")
+        .env("UNRAID_RMCP_DISABLED_TOOLS", "docker_logs,unraid.vm_reset");
     let output = cmd.args(["setup", "repair"]).output().unwrap();
 
     assert!(
@@ -70,6 +72,8 @@ fn setup_repair_creates_env_file_without_upstream_contact() {
     assert!(env_file.contains("UNRAID_API_URL=https://tower.example/graphql"));
     assert!(env_file.contains("UNRAID_API_KEY=secret"));
     assert!(env_file.contains("UNRAID_RMCP_TOKEN=mcp-secret"));
+    assert!(env_file.contains("UNRAID_RMCP_ENABLED_TOOLS=array,docker,status,help"));
+    assert!(env_file.contains("UNRAID_RMCP_DISABLED_TOOLS=docker_logs,unraid.vm_reset"));
 }
 
 /// The setup wrapper script prefers an installed `runraid` binary, falls back to

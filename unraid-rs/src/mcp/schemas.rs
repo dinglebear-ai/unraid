@@ -1,5 +1,3 @@
-use std::sync::LazyLock;
-
 use serde_json::{Value, json};
 
 /// Canonical specification for one `unraid` tool action.
@@ -609,10 +607,6 @@ pub(super) const ACTIONS: &[ActionSpec] = &[
     },
 ];
 
-/// All valid action names, derived from [`ACTIONS`]. Used for the JSON Schema enum.
-pub(super) static UNRAID_ACTIONS: LazyLock<Vec<&'static str>> =
-    LazyLock::new(|| ACTIONS.iter().map(|a| a.name).collect());
-
 /// The upstream-GraphQL-backed data actions (every read-only action except
 /// `status`, which is local observability with no query/fixture). Re-exported so
 /// the scenario + schema-contract integration tests cover every action
@@ -625,6 +619,13 @@ pub fn data_action_names() -> Vec<&'static str> {
         .collect()
 }
 
+/// Every canonical action name, in declaration order — the full unfiltered
+/// action enum. Re-exported so integration tests can pin the default
+/// (no-policy) MCP surface against the canonical list.
+pub fn all_action_names() -> Vec<&'static str> {
+    ACTIONS.iter().map(|a| a.name).collect()
+}
+
 /// The mutating (write-scoped) actions. Re-exported for the same reason as
 /// [`data_action_names`] — so the contract/scenario tests cover mutations too.
 pub fn write_action_names() -> Vec<&'static str> {
@@ -635,7 +636,7 @@ pub fn write_action_names() -> Vec<&'static str> {
         .collect()
 }
 
-pub(super) fn tool_definitions() -> Vec<Value> {
+pub(super) fn tool_definitions(action_names: &[&str]) -> Vec<Value> {
     vec![json!({
         "name": "unraid",
         "description": "Query and manage the Unraid server via its GraphQL API. Read actions need scope unraid:read; mutating actions need unraid:admin. Use action=help for documentation.",
@@ -645,7 +646,7 @@ pub(super) fn tool_definitions() -> Vec<Value> {
                 "action": {
                     "type": "string",
                     "description": "Operation to perform.",
-                    "enum": *UNRAID_ACTIONS
+                    "enum": action_names
                 },
                 "id": {
                     "type": "string",
@@ -772,12 +773,16 @@ mod tests {
         }
     }
 
-    /// The derived schema-enum name list must agree with the canonical specs,
-    /// in the same order — this is the list the JSON Schema `enum` is built from.
+    /// The generated schema enum must agree with the canonical specs in the
+    /// same order.
     #[test]
     fn schema_enum_matches_canonical() {
         let derived: Vec<&str> = ACTIONS.iter().map(|a| a.name).collect();
-        assert_eq!(*UNRAID_ACTIONS, derived);
+        let definitions = tool_definitions(&derived);
+        assert_eq!(
+            definitions[0]["inputSchema"]["properties"]["action"]["enum"],
+            json!(derived)
+        );
     }
 
     /// `help` must be present in the canonical list (it is reachable with no scope).

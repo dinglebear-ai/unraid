@@ -77,9 +77,13 @@ via `dotenvy` before `Config::load` — see `load_dotenv()` in `config.rs`. A sy
 ## How to add a new action
 
 The set of valid actions lives in ONE place: the `ACTIONS: &[ActionSpec]` slice in
-`src/mcp/schemas.rs`. The schema enum (`UNRAID_ACTIONS`), the error-message action
-list (`VALID_ACTIONS` in `tools.rs`), and the MCP scope gating (`required_scope_for`
-in `rmcp_server.rs`) are all *derived* from it — do not hand-maintain those lists.
+`src/mcp/schemas.rs`. From there, `enabled_action_names()` in `tool_filter.rs`
+filters `ACTIONS` through the configured `[mcp.tools]` enable/disable policy
+(`UNRAID_RMCP_ENABLED_TOOLS` / `UNRAID_RMCP_DISABLED_TOOLS`), and that filtered
+list feeds both the JSON Schema enum — via `tool_definitions(action_names)` in
+`schemas.rs` — and the error-message action list in `tools.rs`. The MCP scope
+gating (`required_scope_for` in `rmcp_server.rs`) is still derived directly from
+`ACTIONS`. Do not hand-maintain any of these lists.
 
 1. **`src/graphql.rs`** — add `pub async fn your_action(&self) -> Result<Value>` that calls `self.query(...)`.
 

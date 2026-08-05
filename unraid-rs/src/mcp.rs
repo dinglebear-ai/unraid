@@ -10,13 +10,15 @@ mod prompts;
 mod rmcp_server;
 mod routes;
 mod schemas;
+mod tool_filter;
 pub(crate) mod tools;
 
 pub use rmcp_server::{
     UnraidRmcpServer, rmcp_server, streamable_http_config, streamable_http_service,
 };
 pub use routes::router;
-pub use schemas::{data_action_names, write_action_names};
+pub use schemas::{all_action_names, data_action_names, write_action_names};
+pub(crate) use tool_filter::validate_tool_config;
 
 /// Authentication policy attached to [`AppState`].
 ///
