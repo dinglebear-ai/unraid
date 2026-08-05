@@ -45,12 +45,15 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      # When a release PR was opened/updated, sync uv.lock to the bumped version on
-      # that branch. Runs only for release PRs (not when a release is tagged).
+      # When release PRs were opened/updated, sync generated artifacts on EVERY
+      # release PR branch. release-please's `pr` output is only the FIRST PR; with
+      # per-component release branches there are two (unraid-py + unraid-rs), so
+      # iterate the `prs` array instead — anchoring on `pr` left the Rust release
+      # PR without its lab-auth invariant fixup and meta-ci validate failed.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: ${{ steps.release.outputs.prs_created == 'true' }}
         with:
-          ref: ${{ fromJson(steps.release.outputs.pr).headBranchName }}
+          fetch-depth: 0
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           persist-credentials: false
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -58,46 +61,53 @@ jobs:
         with:
           version: "0.9.25"
           enable-cache: false
-      - name: Sync uv.lock with the version bump
+      - name: Sync release PR branches (uv.lock + Rust invariants)
         if: ${{ steps.release.outputs.prs_created == 'true' }}
-        # uv.lock (and pyproject.toml) now live in unraid-py/.
-        working-directory: unraid-py
-        run: |
-          set -euo pipefail
-          uv lock
-          if git diff --quiet -- uv.lock; then
-            echo "uv.lock already in sync; nothing to commit."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add uv.lock
-          git commit -m "chore: sync uv.lock with release version bump"
-          git push "https://x-access-token:${RELEASE_PLEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-            "HEAD:${{ fromJson(steps.release.outputs.pr).headBranchName }}"
         env:
           RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          RELEASE_PRS: ${{ steps.release.outputs.prs }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          push_url="https://x-access-token:${RELEASE_PLEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          for branch in $(jq -r '.[].headBranchName' <<<"${RELEASE_PRS}"); do
+            echo "::group::${branch}"
+            git fetch origin "${branch}" "main"
+            git switch -C release-pr-sync "origin/${branch}"
 
-      - name: Restore Rust release invariants
-        if: ${{ steps.release.outputs.prs_created == 'true' }}
-        run: |
-          set -euo pipefail
-          python3 .github/scripts/release_pr_fixup.py
-          files=(
-            unraid-rs/Cargo.toml
-            unraid-rs/Cargo.lock
-            unraid-rs/crates/lab-auth/Cargo.toml
-            unraid-rs/server.json
-          )
-          if git diff --quiet -- "${files[@]}"; then
-            echo "Rust release invariants already in sync; nothing to commit."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "${files[@]}"
-          git commit -m "chore: sync Rust release invariants"
-          git push "https://x-access-token:${RELEASE_PLEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-            "HEAD:${{ fromJson(steps.release.outputs.pr).headBranchName }}"
-        env:
-          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+            # Python component: release-please bumps pyproject.toml but NOT
+            # uv.lock (which records the project's own version). Left unsynced,
+            # the release PR's `uv sync --locked` jobs fail.
+            if ! git diff --quiet "origin/main...HEAD" -- unraid-py/pyproject.toml; then
+              (cd unraid-py && uv lock)
+              if ! git diff --quiet -- unraid-py/uv.lock; then
+                git add unraid-py/uv.lock
+                git commit -m "chore: sync uv.lock with release version bump"
+              fi
+            fi
+
+            # Rust component: restore the frozen lab-auth 0.15.0 snapshot and
+            # npm distribution metadata that release-please's Rust strategy
+            # cannot preserve (meta-ci validate enforces these invariants).
+            if ! git diff --quiet "origin/main...HEAD" -- unraid-rs/Cargo.toml; then
+              python3 .github/scripts/release_pr_fixup.py
+              files=(
+                unraid-rs/Cargo.toml
+                unraid-rs/Cargo.lock
+                unraid-rs/crates/lab-auth/Cargo.toml
+                unraid-rs/server.json
+              )
+              if ! git diff --quiet -- "${files[@]}"; then
+                git add "${files[@]}"
+                git commit -m "chore: sync Rust release invariants"
+              fi
+            fi
+
+            if [ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/${branch}")" ]; then
+              git push "${push_url}" "HEAD:${branch}"
+            else
+              echo "${branch}: already in sync; nothing to push."
+            fi
+            echo "::endgroup::"
+          done
