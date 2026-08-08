@@ -127,7 +127,7 @@ echo '{"jsonrpc":"2.0","method":"tools/list","params":{},"id":1}' | \
 
 ## MCP Registry
 
-The server is published to the MCP Registry as `tv.tootie/unraid-mcp`. Clients that support registry discovery can auto-install:
+The server is published to the MCP Registry as `tv.nashost/unraid-mcp`. Clients that support registry discovery can auto-install:
 
 ```bash
 uvx unraid-mcp

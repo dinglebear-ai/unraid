@@ -415,7 +415,7 @@ curl -s -X POST "https://YOUR-UNRAID/graphql" \
       "path": "/var/log/syslog",
       "totalLines": 1395,
       "startLine": 1386,
-      "content": "Jan 21 07:49:49 unraid-server sshd-session[2992319]: Accepted keyboard-interactive/pam for root from 100.80.181.18 port 49724 ssh2\n..."
+      "content": "Jan 21 07:49:49 unraid-server sshd-session[2992319]: Accepted keyboard-interactive/pam for root from 198.51.100.3 port 49724 ssh2\n..."
     }
   }
 }
