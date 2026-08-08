@@ -14,7 +14,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "reka-ui": "^2.5.0",
-    "tailwind-merge": "^2.6.0",
+    "tailwind-merge": "^3.6.0",
     "vue": "^3.5.20"
   },
   "overrides": {
@@ -28,7 +28,7 @@
     "@vue/test-utils": "^2.4.6",
     "happy-dom": "^20.11.1",
     "tailwindcss": "^4.1.12",
-    "typescript": "^5.6.0",
+    "typescript": "^7.0.2",
     "vite": "^8.1.5",
     "vitest": "^4.1.10",
     "vue-tsc": "^3.3.8"
