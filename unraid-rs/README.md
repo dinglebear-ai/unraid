@@ -436,8 +436,8 @@ CLI shim      (src/cli.rs)           argv -> service -> stdout
 - The npm package remains a compatibility surface only. Automatic npm publishing
   is enabled only when `NPM_TRUSTED_PUBLISHING_ENABLED=true`.
 - Docker/OCI metadata uses `ghcr.io/dinglebear-ai/unraid-rmcp:<version>`.
-- `agents/unraid-rs/.mcp.json` must launch `crgx unraid-rmcp -- mcp` so stdio
-  clients resolve the crates.io package without requiring Node.
+- `agents/unraid-rs/.mcp.json` must launch `npx -y @dinglebear/unraid mcp` so
+  stdio clients resolve the published npm package.
 - The root README is curated. `docs/INVENTORY.md` is the curated inventory for
   actions, CLI commands, env vars, HTTP endpoints, and dependencies.
 
