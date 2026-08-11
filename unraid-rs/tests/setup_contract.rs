@@ -83,10 +83,10 @@ fn setup_repair_creates_env_file_without_upstream_contact() {
 /// invokes this script automatically any more — it is the manual credential-setup
 /// entry point. The contract on its contents still holds.
 #[test]
-fn plugin_setup_script_prefers_binary_then_crgx() {
+fn plugin_setup_script_prefers_binary_then_npx() {
     let setup = std::fs::read_to_string("../agents/unraid-rs/scripts/plugin-setup.sh").unwrap();
-    assert!(setup.contains("command -v crgx"));
-    assert!(setup.contains("exec crgx unraid-rmcp -- setup plugin-hook"));
+    assert!(setup.contains("command -v npx"));
+    assert!(setup.contains("exec npx -y @dinglebear/unraid setup plugin-hook"));
 }
 
 /// The agent plugin must ship no Claude Code hooks: no `hooks/` directory and no
@@ -111,14 +111,14 @@ fn agent_plugin_declares_no_claude_hooks() {
 }
 
 #[test]
-fn claude_mcp_config_uses_crgx() {
+fn claude_mcp_config_uses_published_npm_package() {
     let mcp: Value =
         serde_json::from_str(&std::fs::read_to_string("../agents/unraid-rs/.mcp.json").unwrap())
             .unwrap();
-    assert_eq!(mcp["mcpServers"]["unraid"]["command"], "crgx");
+    assert_eq!(mcp["mcpServers"]["unraid"]["command"], "npx");
     assert_eq!(
         mcp["mcpServers"]["unraid"]["args"],
-        serde_json::json!(["unraid-rmcp", "--", "mcp"])
+        serde_json::json!(["-y", "@dinglebear/unraid", "mcp"])
     );
 }
 
