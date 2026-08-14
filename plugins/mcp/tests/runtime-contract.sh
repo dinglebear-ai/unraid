@@ -64,6 +64,53 @@ if [ "$existed" = false ]; then
     test ! -e "$appdata" || { echo "env script created appdata while the array was unavailable" >&2; exit 1; }
 fi
 
+# Unraid represents an exclusive appdata share as a symlink directly into its
+# pool. Both startup and updater must accept that exact shape while rejecting
+# arbitrary, nested, dangling, and /mnt/user targets.
+test_appdata_share_validator() {
+    local script="$1" fixture share
+    fixture="$(mktemp -d)"
+    mkdir -p "${fixture}/user" "${fixture}/cache/appdata" \
+        "${fixture}/cache/nested/appdata" "${fixture}/user0/appdata"
+    share="${fixture}/user/appdata"
+
+    eval "$(sed -n '/^appdata_share_safe() {/,/^}/p' "${script}")"
+    ln -s ../cache/appdata "${share}"
+    appdata_share_safe "${share}" "${fixture}"
+
+    rm "${share}"
+    ln -s ../cache/nested/appdata "${share}"
+    if appdata_share_safe "${share}" "${fixture}"; then
+        echo "nested pool path was accepted as an exclusive share" >&2
+        return 1
+    fi
+    rm "${share}"
+    ln -s ../user0/appdata "${share}"
+    if appdata_share_safe "${share}" "${fixture}"; then
+        echo "user0 path was accepted as an exclusive share" >&2
+        return 1
+    fi
+    rm "${share}"
+    ln -s /etc "${share}"
+    if appdata_share_safe "${share}" "${fixture}"; then
+        echo "host path was accepted as an exclusive share" >&2
+        return 1
+    fi
+    rm "${share}"
+    ln -s ../missing/appdata "${share}"
+    if appdata_share_safe "${share}" "${fixture}"; then
+        echo "dangling path was accepted as an exclusive share" >&2
+        return 1
+    fi
+    rm -rf "${fixture}"
+}
+test_appdata_share_validator "$rc_script"
+test_appdata_share_validator "$update_script"
+
+# The rc script must apply an appdata override consistently, rather than only
+# exporting it as UNRAID_HOME while continuing to prepare the hardcoded path.
+grep -Fq 'APPDATA_DIR="${UNRAID_MCP_APPDATA_DIR}"' "$rc_script"
+
 # CI runners have no Unraid FUSE mount. In that state update/reset must fail
 # closed rather than constructing a convincing /mnt/user tree in RAM.
 if ! grep -qsE '[[:space:]]/mnt/user[[:space:]]' /proc/mounts; then

@@ -33,6 +33,21 @@ array_mounted() {
     grep -qsE '[[:space:]]/mnt/user[[:space:]]' /proc/mounts
 }
 
+appdata_share_safe() {
+    local path="$1" mount_root="${2:-/mnt}" resolved relative pool
+    [ -L "${path}" ] || return 0
+    resolved="$(readlink -f -- "${path}" 2>/dev/null)" || return 1
+    [ -d "${resolved}" ] || return 1
+    case "${resolved}" in
+        "${mount_root}"/*/appdata) ;;
+        *) return 1 ;;
+    esac
+    relative="${resolved#"${mount_root}"/}"
+    pool="${relative%%/*}"
+    [ -n "${pool}" ] && [ "${relative}" = "${pool}/appdata" ] \
+        && [ "${pool}" != "user" ] && [ "${pool}" != "user0" ]
+}
+
 # Confirm GitHub holds a build-provenance attestation binding this exact digest
 # to this repo's release workflow.
 #
@@ -98,8 +113,12 @@ prepare_overlay_dir() {
         return 1
     fi
 
+    if ! appdata_share_safe /mnt/user/appdata; then
+        echo "error: refusing unsafe symlinked appdata share /mnt/user/appdata" >&2
+        return 1
+    fi
     local path
-    for path in /mnt/user/appdata "${APPDATA_DIR}" "${OVERLAY_DIR}"; do
+    for path in "${APPDATA_DIR}" "${OVERLAY_DIR}"; do
         if [ -L "${path}" ]; then
             echo "error: refusing symlinked overlay path ${path}" >&2
             return 1
