@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.4.2...unraid-rs-v0.5.0) (2026-08-15)
+
+
+### Features
+
+* **unraid-rs:** trust a private CA, and verify update provenance ([#360](https://github.com/dinglebear-ai/unraid/issues/360)) ([2b5e844](https://github.com/dinglebear-ai/unraid/commit/2b5e8449ac2d3e804e0ac1a3ec290ad3174ac07a))
+
+
+### Bug Fixes
+
+* **unraid-rs:** harden granular MCP tool controls ([#358](https://github.com/dinglebear-ai/unraid/issues/358)) ([bd0e373](https://github.com/dinglebear-ai/unraid/commit/bd0e373055761261e2fc45e1ed9c1abdf0d892a2))
+
 ## [0.4.2](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.4.1...unraid-rs-v0.4.2) (2026-08-05)
 
 
