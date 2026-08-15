@@ -91,7 +91,10 @@ test_persistent_path_preparation() {
     mounts="${fixture}/mounts"
     pools="${fixture}/pools"
     mkdir -p "${fixture}/user" "${fixture}/cache/appdata" "${pools}"
-    printf 'shfs %s/user fuse.shfs rw 0 0\n' "${fixture}" >"${mounts}"
+    {
+        printf 'shfs %s/user fuse.shfs rw 0 0\n' "${fixture}"
+        printf '/dev/cache %s/cache btrfs rw 0 0\n' "${fixture}"
+    } >"${mounts}"
     : >"${pools}/cache.cfg"
     share="${fixture}/user/appdata"
     appdata="${share}/unraid-mcp"
@@ -102,6 +105,19 @@ test_persistent_path_preparation() {
         "${appdata}" "${overlay}" "${fixture}" "${pools}" "${mounts}"
     test -d "${appdata}"
     test -d "${overlay}"
+
+    # Pool configuration alone is insufficient: an unavailable pool can leave
+    # a stale directory in the RAM rootfs that must never receive appdata.
+    rm -rf "${share}" "${fixture}/cache/appdata/unraid-mcp"
+    ln -s ../cache/appdata "${share}"
+    printf 'shfs %s/user fuse.shfs rw 0 0\n' "${fixture}" >"${mounts}"
+    if unraid_mcp_prepare_persistent_paths \
+        "${appdata}" "${overlay}" "${fixture}" "${pools}" "${mounts}" 2>/dev/null; then
+        echo "configured but unmounted pool was accepted" >&2
+        return 1
+    fi
+    test ! -e "${appdata}"
+    printf '/dev/cache %s/cache btrfs rw 0 0\n' "${fixture}" >>"${mounts}"
 
     for target in \
         ../cache/nested/appdata \

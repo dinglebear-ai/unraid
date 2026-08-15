@@ -8,7 +8,7 @@ unraid_mcp_array_mounted() {
 
 unraid_mcp_appdata_share_safe() {
     local path="$1" mount_root="${2:-/mnt}" pools_dir="${3:-/boot/config/pools}"
-    local resolved relative pool
+    local mounts_file="${4:-/proc/mounts}" resolved relative pool
     [ -L "${path}" ] || return 0
     resolved="$(readlink -f -- "${path}" 2>/dev/null)" || return 1
     [ -d "${resolved}" ] || return 1
@@ -22,7 +22,8 @@ unraid_mcp_appdata_share_safe() {
     pool="${relative%%/*}"
     [ -n "${pool}" ] && [ "${relative}" = "${pool}/appdata" ] \
         && [ -f "${pools_dir}/${pool}.cfg" ] \
-        && [ ! -L "${pools_dir}/${pool}.cfg" ]
+        && [ ! -L "${pools_dir}/${pool}.cfg" ] \
+        && grep -qsE "[[:space:]]${mount_root}/${pool}[[:space:]]" "${mounts_file}"
 }
 
 unraid_mcp_prepare_persistent_paths() {
@@ -34,7 +35,8 @@ unraid_mcp_prepare_persistent_paths() {
         echo "${mount_root}/user is not mounted; refusing to create appdata in the RAM rootfs" >&2
         return 1
     fi
-    if ! unraid_mcp_appdata_share_safe "${share}" "${mount_root}" "${pools_dir}"; then
+    if ! unraid_mcp_appdata_share_safe \
+        "${share}" "${mount_root}" "${pools_dir}" "${mounts_file}"; then
         echo "refusing unsafe symlinked appdata share ${share}" >&2
         return 1
     fi
