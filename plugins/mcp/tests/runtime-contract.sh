@@ -5,6 +5,7 @@ plugin_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 env_script="$plugin_dir/source/usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-env.sh"
 rc_script="$plugin_dir/source/usr/local/emhttp/plugins/unraid-mcp/scripts/rc.unraid-mcp"
 update_script="$plugin_dir/source/usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-update.sh"
+paths_script="$plugin_dir/source/usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-paths.sh"
 nchan_script="$plugin_dir/source/usr/local/emhttp/plugins/unraid-mcp/nchan/unraid_mcp"
 verifier="$plugin_dir/scripts/verify-package.sh"
 
@@ -63,6 +64,89 @@ existed=false
 if [ "$existed" = false ]; then
     test ! -e "$appdata" || { echo "env script created appdata while the array was unavailable" >&2; exit 1; }
 fi
+
+# An override loaded from .env must update UNRAID_HOME after parsing, not leave
+# the runtime using the pre-parse default while rc and the updater use another
+# directory.
+override_tmp="$(mktemp -d)"
+printf "UNRAID_MCP_APPDATA_DIR='%s'\n" "${override_tmp}/custom" >"${override_tmp}/.env"
+(
+    unset UNRAID_HOME UNRAID_MCP_APPDATA_DIR UNRAID_MCP_ENV_FILE
+    export UNRAID_MCP_CONFIG_DIR="${override_tmp}"
+    # shellcheck source=/dev/null
+    source "$env_script"
+    test "$UNRAID_HOME" = "${override_tmp}/custom"
+    test "$UNRAID_MCP_APPDATA_DIR" = "${override_tmp}/custom"
+)
+rm -rf "$override_tmp"
+
+# Exercise the shared preparation boundary used by both rc.unraid-mcp and the
+# updater. A configured named-pool target succeeds and creates the requested
+# directories; unsafe targets fail before writing anything.
+# shellcheck source=/dev/null
+source "$paths_script"
+test_persistent_path_preparation() {
+    local fixture share appdata overlay mounts pools target
+    fixture="$(mktemp -d)"
+    mounts="${fixture}/mounts"
+    pools="${fixture}/pools"
+    mkdir -p "${fixture}/user" "${fixture}/cache/appdata" "${pools}"
+    {
+        printf 'shfs %s/user fuse.shfs rw 0 0\n' "${fixture}"
+        printf '/dev/cache %s/cache btrfs rw 0 0\n' "${fixture}"
+    } >"${mounts}"
+    : >"${pools}/cache.cfg"
+    share="${fixture}/user/appdata"
+    appdata="${share}/unraid-mcp"
+    overlay="${appdata}/bin"
+
+    ln -s ../cache/appdata "${share}"
+    unraid_mcp_prepare_persistent_paths \
+        "${appdata}" "${overlay}" "${fixture}" "${pools}" "${mounts}"
+    test -d "${appdata}"
+    test -d "${overlay}"
+
+    # Pool configuration alone is insufficient: an unavailable pool can leave
+    # a stale directory in the RAM rootfs that must never receive appdata.
+    rm -rf "${share}" "${fixture}/cache/appdata/unraid-mcp"
+    ln -s ../cache/appdata "${share}"
+    printf 'shfs %s/user fuse.shfs rw 0 0\n' "${fixture}" >"${mounts}"
+    if unraid_mcp_prepare_persistent_paths \
+        "${appdata}" "${overlay}" "${fixture}" "${pools}" "${mounts}" 2>/dev/null; then
+        echo "configured but unmounted pool was accepted" >&2
+        return 1
+    fi
+    test ! -e "${appdata}"
+    printf '/dev/cache %s/cache btrfs rw 0 0\n' "${fixture}" >>"${mounts}"
+
+    for target in \
+        ../cache/nested/appdata \
+        ../disk1/appdata \
+        ../remotes/appdata \
+        ../arbitrary/appdata \
+        /etc \
+        ../missing/appdata; do
+        rm -rf "${share}" "${fixture}/cache/appdata/unraid-mcp"
+        mkdir -p "${fixture}/cache/nested/appdata" \
+            "${fixture}/disk1/appdata" "${fixture}/remotes/appdata" \
+            "${fixture}/arbitrary/appdata"
+        ln -s "${target}" "${share}"
+        if unraid_mcp_prepare_persistent_paths \
+            "${appdata}" "${overlay}" "${fixture}" "${pools}" "${mounts}" 2>/dev/null; then
+            echo "unsafe appdata target was accepted: ${target}" >&2
+            return 1
+        fi
+        test ! -e "${appdata}"
+    done
+    rm -rf "${fixture}"
+}
+test_persistent_path_preparation
+
+# Both runtime entry points must use the shared boundary and the same override.
+grep -Fq 'APPDATA_DIR="${UNRAID_MCP_APPDATA_DIR}"' "$rc_script"
+grep -Fq 'APPDATA_DIR="${UNRAID_MCP_APPDATA_DIR}"' "$update_script"
+grep -Fq 'unraid_mcp_prepare_persistent_paths' "$rc_script"
+grep -Fq 'unraid_mcp_prepare_persistent_paths' "$update_script"
 
 # CI runners have no Unraid FUSE mount. In that state update/reset must fail
 # closed rather than constructing a convincing /mnt/user tree in RAM.

@@ -1,6 +1,6 @@
 #!/bin/bash
-# Scoped runtime environment for the native runraid server. Sourced only by
-# rc.unraid-mcp so plugin settings never leak into login shells or other services.
+# Scoped runtime environment shared by the native runraid service and updater.
+# Plugin settings never leak into login shells or unrelated services.
 
 UNRAID_MCP_CONFIG_DIR="${UNRAID_MCP_CONFIG_DIR:-/boot/config/plugins/unraid-mcp}"
 UNRAID_MCP_APPDATA_DIR="${UNRAID_MCP_APPDATA_DIR:-/mnt/user/appdata/unraid-mcp}"
@@ -20,12 +20,8 @@ unraid_mcp_is_false() {
     esac
 }
 
-# Do not create anything under /mnt/user while merely running status/stop. The
-# rc script prepares this directory only when starting with the array mounted.
-# runraid honors UNRAID_HOME as its exact data directory, avoiding the former
-# accidental /mnt/user/appdata/unraid-mcp/.unraid nesting.
-export UNRAID_HOME="${UNRAID_MCP_APPDATA_DIR}"
-
+# Do not create anything under /mnt/user while merely loading configuration.
+# Persistent paths are prepared only by explicit mutating service/updater actions.
 # Load dotenv assignments as literal data. Never source the file: even a
 # root-owned config can be manually malformed, and command substitutions must
 # not become executable shell syntax. The parser supports the plugin writer's
@@ -70,6 +66,12 @@ unraid_mcp_load_env() {
 if [ -r "${UNRAID_MCP_ENV_FILE}" ]; then
     unraid_mcp_load_env "${UNRAID_MCP_ENV_FILE}"
 fi
+
+# Assign this after dotenv loading so a persistent appdata override cannot
+# split the directory prepared by rc.unraid-mcp from runraid's data directory.
+# runraid honors UNRAID_HOME as its exact data directory, avoiding the former
+# accidental /mnt/user/appdata/unraid-mcp/.unraid nesting.
+export UNRAID_HOME="${UNRAID_MCP_APPDATA_DIR}"
 
 # Preserve existing installations while the settings page migrates from the
 # Python server's UNRAID_MCP_* names to runraid's UNRAID_RMCP_* contract.

@@ -67,6 +67,7 @@ required=(
   usr/local/emhttp/plugins/unraid-mcp/include/config.php
   usr/local/emhttp/plugins/unraid-mcp/scripts/rc.unraid-mcp
   usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-env.sh
+  usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-paths.sh
   usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-update.sh
   usr/local/emhttp/plugins/unraid-mcp/event/disks_mounted
   usr/local/emhttp/plugins/unraid-mcp/event/unmounting_disks
@@ -80,7 +81,7 @@ required=(
 for path in "${required[@]}"; do
   grep -Fxq "$path" "$list" || { echo "package missing required member: $path" >&2; exit 1; }
 done
-for path in usr/local/emhttp/plugins/unraid-mcp/scripts/rc.unraid-mcp usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-env.sh usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-update.sh usr/local/emhttp/plugins/unraid-mcp/event/disks_mounted usr/local/emhttp/plugins/unraid-mcp/event/unmounting_disks usr/local/emhttp/plugins/unraid-mcp/nchan/unraid_mcp usr/local/unraid-mcp/bin/runraid; do
+for path in usr/local/emhttp/plugins/unraid-mcp/scripts/rc.unraid-mcp usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-env.sh usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-paths.sh usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-update.sh usr/local/emhttp/plugins/unraid-mcp/event/disks_mounted usr/local/emhttp/plugins/unraid-mcp/event/unmounting_disks usr/local/emhttp/plugins/unraid-mcp/nchan/unraid_mcp usr/local/unraid-mcp/bin/runraid; do
   [[ -x "$tree/$path" ]] || { echo "required package executable lacks execute mode: $path" >&2; exit 1; }
 done
 
