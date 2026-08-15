@@ -16,8 +16,16 @@
 set -euo pipefail
 
 PREFIX="/usr/local/unraid-mcp"
+EMHTTP_DIR="/usr/local/emhttp/plugins/unraid-mcp"
 BUNDLED_BIN="${PREFIX}/bin/runraid"
-APPDATA_DIR="/mnt/user/appdata/unraid-mcp"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RUNTIME_SCRIPTS_DIR="${EMHTTP_DIR}/scripts"
+[ -r "${RUNTIME_SCRIPTS_DIR}/unraid-mcp-env.sh" ] || RUNTIME_SCRIPTS_DIR="${SCRIPT_DIR}"
+# shellcheck source=unraid-mcp-env.sh
+source "${RUNTIME_SCRIPTS_DIR}/unraid-mcp-env.sh"
+# shellcheck source=unraid-mcp-paths.sh
+source "${RUNTIME_SCRIPTS_DIR}/unraid-mcp-paths.sh"
+APPDATA_DIR="${UNRAID_MCP_APPDATA_DIR}"
 OVERLAY_DIR="${APPDATA_DIR}/bin"
 OVERLAY_BIN="${OVERLAY_DIR}/runraid"
 PREVIOUS_BIN="${OVERLAY_DIR}/runraid.previous"
@@ -28,25 +36,6 @@ RELEASE_WORKFLOW=".github/workflows/rust-release.yml"
 # Set UNRAID_MCP_SKIP_ATTESTATION=true only to install from a release predating
 # build provenance, and only when you have verified the binary another way.
 SKIP_ATTESTATION="${UNRAID_MCP_SKIP_ATTESTATION:-false}"
-
-array_mounted() {
-    grep -qsE '[[:space:]]/mnt/user[[:space:]]' /proc/mounts
-}
-
-appdata_share_safe() {
-    local path="$1" mount_root="${2:-/mnt}" resolved relative pool
-    [ -L "${path}" ] || return 0
-    resolved="$(readlink -f -- "${path}" 2>/dev/null)" || return 1
-    [ -d "${resolved}" ] || return 1
-    case "${resolved}" in
-        "${mount_root}"/*/appdata) ;;
-        *) return 1 ;;
-    esac
-    relative="${resolved#"${mount_root}"/}"
-    pool="${relative%%/*}"
-    [ -n "${pool}" ] && [ "${relative}" = "${pool}/appdata" ] \
-        && [ "${pool}" != "user" ] && [ "${pool}" != "user0" ]
-}
 
 # Confirm GitHub holds a build-provenance attestation binding this exact digest
 # to this repo's release workflow.
@@ -108,32 +97,7 @@ verify_attestation() {
 }
 
 prepare_overlay_dir() {
-    if ! array_mounted; then
-        echo "error: /mnt/user is not mounted; refusing to write an overlay into the RAM rootfs" >&2
-        return 1
-    fi
-
-    if ! appdata_share_safe /mnt/user/appdata; then
-        echo "error: refusing unsafe symlinked appdata share /mnt/user/appdata" >&2
-        return 1
-    fi
-    local path
-    for path in "${APPDATA_DIR}" "${OVERLAY_DIR}"; do
-        if [ -L "${path}" ]; then
-            echo "error: refusing symlinked overlay path ${path}" >&2
-            return 1
-        fi
-    done
-
-    mkdir -p "${OVERLAY_DIR}"
-    for path in "${APPDATA_DIR}" "${OVERLAY_DIR}"; do
-        if [ ! -d "${path}" ] || [ -L "${path}" ]; then
-            echo "error: overlay path is not a real directory: ${path}" >&2
-            return 1
-        fi
-        chown 0:0 "${path}" 2>/dev/null || true
-        chmod 700 "${path}" 2>/dev/null || true
-    done
+    unraid_mcp_prepare_persistent_paths "${APPDATA_DIR}" "${OVERLAY_DIR}"
 }
 
 overlay_valid() {
@@ -287,7 +251,7 @@ do_reset() {
 }
 
 do_commit() {
-    if ! array_mounted; then
+    if ! unraid_mcp_array_mounted; then
         echo "error: /mnt/user is not mounted; refusing to commit an overlay transaction" >&2
         exit 1
     fi

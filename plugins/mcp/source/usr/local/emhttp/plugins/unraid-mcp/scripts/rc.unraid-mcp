@@ -18,9 +18,10 @@ TAILSCALE_BIN="/usr/local/sbin/tailscale"
 
 # shellcheck source=unraid-mcp-env.sh
 source "${EMHTTP_DIR}/scripts/unraid-mcp-env.sh"
+# shellcheck source=unraid-mcp-paths.sh
+source "${EMHTTP_DIR}/scripts/unraid-mcp-paths.sh"
 
-# The environment may override the persistent data directory. Keep every path
-# used by the service aligned with UNRAID_HOME after loading it.
+# Recompute the plugin overlay paths after loading the appdata override.
 APPDATA_DIR="${UNRAID_MCP_APPDATA_DIR}"
 OVERLAY_BIN="${APPDATA_DIR}/bin/runraid"
 
@@ -30,48 +31,12 @@ log() {
     echo "rc.${PLUGIN_NAME}: $*"
 }
 
-array_mounted() {
-    grep -qsE '[[:space:]]/mnt/user[[:space:]]' /proc/mounts
-}
-
-appdata_share_safe() {
-    local path="$1" mount_root="${2:-/mnt}" resolved relative pool
-    [ -L "${path}" ] || return 0
-    resolved="$(readlink -f -- "${path}" 2>/dev/null)" || return 1
-    [ -d "${resolved}" ] || return 1
-
-    # Unraid exclusive shares are represented as
-    # /mnt/user/<share> -> /mnt/<pool>/<share>. Permit that exact shape, but
-    # not arbitrary symlinks into the host filesystem or another user share.
-    case "${resolved}" in
-        "${mount_root}"/*/appdata) ;;
-        *) return 1 ;;
-    esac
-    relative="${resolved#"${mount_root}"/}"
-    pool="${relative%%/*}"
-    [ -n "${pool}" ] && [ "${relative}" = "${pool}/appdata" ] \
-        && [ "${pool}" != "user" ] && [ "${pool}" != "user0" ]
-}
-
 prepare_appdata() {
-    if ! array_mounted; then
-        log "FATAL: /mnt/user is not mounted; refusing to create appdata in the RAM rootfs"
+    local error
+    if ! error="$(unraid_mcp_prepare_persistent_paths "${APPDATA_DIR}" 2>&1)"; then
+        log "FATAL: ${error}"
         return 1
     fi
-    if ! appdata_share_safe /mnt/user/appdata; then
-        log "FATAL: refusing unsafe symlinked appdata share /mnt/user/appdata"
-        return 1
-    fi
-    if [ -L "${APPDATA_DIR}" ]; then
-        log "FATAL: refusing symlinked appdata path ${APPDATA_DIR}"
-        return 1
-    fi
-    mkdir -p "${APPDATA_DIR}"
-    if [ ! -d "${APPDATA_DIR}" ] || [ -L "${APPDATA_DIR}" ]; then
-        log "FATAL: appdata directory is not a real directory: ${APPDATA_DIR}"
-        return 1
-    fi
-    chmod 700 "${APPDATA_DIR}" 2>/dev/null || true
 }
 
 pid_matches() {
