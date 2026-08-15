@@ -21,7 +21,7 @@ unraid_mcp_is_false() {
 }
 
 # Do not create anything under /mnt/user while merely loading configuration.
-# Persistent paths are prepared only by explicit start, update, or reset actions.
+# Persistent paths are prepared only by explicit mutating service/updater actions.
 # Load dotenv assignments as literal data. Never source the file: even a
 # root-owned config can be manually malformed, and command substitutions must
 # not become executable shell syntax. The parser supports the plugin writer's
