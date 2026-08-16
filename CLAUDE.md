@@ -134,10 +134,14 @@ The Python server's detailed dev guide is `unraid-py/CLAUDE.md`.
   `allowed_actions: all` and never allowlisted `dtolnay/rust-toolchain`,
   `Swatinem/rust-cache` or `taiki-e/install-action`.
 
-- **`secret-scan.yml` is genuinely unfiltered** (no `paths:` at all) so a
-  path-scoped workflow can never gate it off. **`meta-ci.yml` is broadly scoped**
-  to the shared root files — its filter must stay exhaustive, since a root file
-  listed in no filter has no gate whatsoever.
+- **Secret scanning is not a workflow.** `secret-scan.yml` was deleted in #266:
+  GitHub-native secret scanning *and* push protection are enabled on this public
+  repo, so the gitleaks job duplicated platform coverage that is already unfiltered
+  across every ref. `.gitleaks.toml` is kept for manual/local `gitleaks git .`
+  history scans, not for CI. Do not "restore" the workflow on the strength of a
+  stale comment — check `gh api repos/<owner>/<repo> --jq .security_and_analysis`
+  first. **`meta-ci.yml` is broadly scoped** to the shared root files — its filter
+  must stay exhaustive, since a root file listed in no filter has no gate whatsoever.
 - **CI workflows are path-scoped per component**; a change under one component's
   subtree only runs that component's jobs.
 

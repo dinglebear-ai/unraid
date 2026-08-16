@@ -2,6 +2,9 @@ name: rust-ci
 
 on:
   push:
+    # main only — feature-branch pushes are covered by their PR run; without
+    # this filter every PR branch push ran the workflow twice.
+    branches: ["main"]
     paths: ["unraid-rs/**", ".github/workflows/rust-ci.yml"]
   pull_request:
     paths: ["unraid-rs/**", ".github/workflows/rust-ci.yml"]
@@ -9,11 +12,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: rust-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
 
 # All run: steps execute inside the crate at unraid-rs/. Secret scanning is
-# handled repo-wide by secret-scan.yml; a tracked-.env guard is centralised too.
+# handled repo-wide by GitHub-native secret scanning + push protection (repo
+# settings, unfiltered across every ref) — the gitleaks secret-scan.yml workflow
+# was deleted in #266 as duplicate coverage; a tracked-.env guard is centralised too.
 defaults:
   run:
     working-directory: unraid-rs
@@ -26,6 +35,7 @@ jobs:
     # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ci-pool-rust
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -45,10 +55,13 @@ jobs:
     # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ci-pool-rust
-    env:
-      # Keep git dependencies out of the runner's shared Cargo checkout cache.
-      # A partially-pruned checkout there can make Clippy fail before compiling.
-      CARGO_HOME: ${{ github.workspace }}/.cargo-home-clippy
+    timeout-minutes: 30
+    # A CARGO_HOME override used to isolate this job from the runner's shared
+    # Cargo GIT-checkout cache (a partially-pruned checkout could fail Clippy
+    # before compiling). unraid-rs/Cargo.lock has zero git dependencies today,
+    # and the override split the registry cache from the test job, doubling
+    # downloads — so it was removed. Re-isolate (or use a rust-cache
+    # prefix-key) only if a git dependency is ever reintroduced.
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -74,6 +87,7 @@ jobs:
     # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ci-pool-rust
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -106,6 +120,7 @@ jobs:
     # push, dispatch, and same-repo (non-fork) PRs; fork PRs are skipped.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ci-pool-ops
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -167,3 +182,24 @@ jobs:
           grep -qx 'src/main.rs' <<<"$files"
           grep -qx 'schema/unraid-schema.graphql' <<<"$files"
           test "$(wc -l <<<"$files")" -lt 90
+
+  docker-image:
+    name: Container Image
+    # The release image build is only exercised by rust-release.yml on a
+    # published release, so a broken Dockerfile stayed invisible for three
+    # consecutive releases (v0.3.0 through v0.4.0 all failed the docker job).
+    # Building it here fails the PR instead of the release.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Plain `docker build` on the runner's preinstalled Docker: no new
+      # third-party action, so nothing to add to .github/allowed-actions.txt.
+      - name: Build the Rust server image
+        working-directory: ${{ github.workspace }}
+        run: docker build -f unraid-rs/config/Dockerfile -t unraid-rmcp:ci ./unraid-rs
+      - name: The built binary must run
+        working-directory: ${{ github.workspace }}
+        run: docker run --rm --entrypoint /usr/local/bin/runraid unraid-rmcp:ci --version

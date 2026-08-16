@@ -70,7 +70,7 @@ interface Seg {
 // message text) instead of a lookbehind, so the pattern parses on older
 // engines too.
 const TOKEN_RE =
-  /(?<ts>\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?)|\b(?<lvl>DEBUG|INFO|NOTICE|WARNING|WARN|ERROR|CRITICAL|FATAL)\b|(?<pre>"\s+)(?<status>[1-5]\d{2})\b|\b(?<mod>(?:unraid_mcp|rc\.unraid-mcp|uvicorn|fastmcp)[\w.-]*)/g;
+  /(?<ts>\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:[.,]\d+)?)|\b(?<lvl>DEBUG|INFO|NOTICE|WARNING|WARN|ERROR|CRITICAL|FATAL)\b|(?<pre>"\s+)(?<status>[1-5]\d{2})\b|\b(?<mod>(?:unraid_mcp|unraid_rmcp|runraid|rc\.unraid-mcp|uvicorn|fastmcp)[\w.-]*)/g;
 
 function tokenize(line: string): Seg[] {
   const segs: Seg[] = [];

@@ -13,6 +13,7 @@ name: meta-ci
 # consolidation — it was neither in this filter nor checked by the script below.
 on:
   push:
+    branches: ["main"]
     paths: &meta_paths
       - "release-please-config.json"
       - ".release-please-manifest.json"
@@ -30,6 +31,10 @@ on:
       - "ca_profile.xml"
   pull_request:
     paths: *meta_paths
+
+concurrency:
+  group: meta-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read

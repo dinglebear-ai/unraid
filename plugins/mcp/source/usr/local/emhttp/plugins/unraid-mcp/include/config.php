@@ -15,6 +15,9 @@
  */
 
 header('Content-Type: application/json');
+header('Cache-Control: no-store, max-age=0');
+header('Pragma: no-cache');
+header('X-Content-Type-Options: nosniff');
 
 const CFG_DIR = '/boot/config/plugins/unraid-mcp';
 const ENV_FILE = CFG_DIR . '/.env';
@@ -35,11 +38,20 @@ const SECRET_KEYS = [
     'UNRAID_MCP_GOOGLE_ENCRYPTION_KEY',
 ];
 
+/** Secrets the settings UI legitimately needs to copy or inspect. Legacy JWT
+ * and encryption keys remain hidden but can never be returned to the browser. */
+const REVEALABLE_SECRET_KEYS = [
+    'UNRAID_API_KEY',
+    'UNRAID_RMCP_TOKEN',
+    'UNRAID_RMCP_GOOGLE_CLIENT_SECRET',
+];
+
 /** Keys the Rust settings UI may persist. Must match web/src/fields.ts. */
 const ALLOWED_KEYS = [
     'UNRAID_API_URL',
     'UNRAID_API_KEY',
     'UNRAID_API_SKIP_TLS_VERIFY',
+    'UNRAID_API_CA_BUNDLE',
     'UNRAID_RMCP_HOST',
     'UNRAID_RMCP_PORT',
     'UNRAID_MCP_TAILSCALE_SERVE',
@@ -49,6 +61,8 @@ const ALLOWED_KEYS = [
     'UNRAID_NOAUTH',
     'UNRAID_RMCP_ALLOWED_HOSTS',
     'UNRAID_RMCP_ALLOWED_ORIGINS',
+    'UNRAID_RMCP_ENABLED_TOOLS',
+    'UNRAID_RMCP_DISABLED_TOOLS',
     'UNRAID_RMCP_AUTH_MODE',
     'UNRAID_RMCP_PUBLIC_URL',
     'UNRAID_RMCP_GOOGLE_CLIENT_ID',
@@ -95,9 +109,22 @@ function read_env(string $path): array
         }
         [$k, $v] = explode('=', $line, 2);
         $k = trim($k);
+        if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $k) !== 1) {
+            continue; // never preserve a line that could become shell syntax
+        }
         $v = trim($v);
-        if (strlen($v) >= 2 && ($v[0] === '"' || $v[0] === "'") && str_ends_with($v, $v[0])) {
+        if (strlen($v) >= 2 && $v[0] === "'" && str_ends_with($v, "'")) {
             $v = substr($v, 1, -1);
+            // Reverse write_env()'s POSIX-shell single-quote encoding:
+            // foo'bar is serialized as 'foo'\''bar'.
+            $v = str_replace("'\\''", "'", $v);
+        } elseif (strlen($v) >= 2 && $v[0] === '"' && str_ends_with($v, '"')) {
+            $v = substr($v, 1, -1);
+            $v = str_replace('\\"', '"', $v);
+            $v = str_replace('\\\\', '\\', $v);
+        }
+        if (preg_match('/[\x00\r\n]/', $v) === 1) {
+            continue;
         }
         $out[$k] = $v;
     }
@@ -110,6 +137,12 @@ function write_env(string $path, array $env): void
     $lines = ["# unraid-mcp configuration — managed by the plugin settings page.",
               "# Manual edits are preserved for keys the UI does not manage."];
     foreach ($env as $k => $v) {
+        if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', (string) $k) !== 1) {
+            fail(500, 'refusing invalid config key');
+        }
+        if (preg_match('/[\x00\r\n]/', (string) $v) === 1) {
+            fail(500, 'refusing config value with NUL or line break');
+        }
         $lines[] = $k . "='" . str_replace("'", "'\\''", (string) $v) . "'";
     }
     $tmp = $path . '.tmp';
@@ -134,6 +167,220 @@ function write_env(string $path, array $env): void
     @chmod($path, 0600);
 }
 
+function command_result(string $command): array
+{
+    $out = [];
+    $code = 0;
+    exec($command . ' 2>&1', $out, $code);
+    return [$code, trim(implode(PHP_EOL, array_slice($out, -8)))];
+}
+
+function rc_result(string $op): array
+{
+    return command_result(escapeshellarg(RC) . ' ' . escapeshellarg($op));
+}
+
+function require_rc(string $op): void
+{
+    [$code, $output] = rc_result($op);
+    if ($code !== 0) {
+        fail(500, "service $op failed" . ($output !== '' ? ": $output" : ''));
+    }
+}
+
+function write_service_state(bool $enabled): void
+{
+    $tmp = CFG_FILE . '.tmp';
+    if (is_link($tmp)) {
+        @unlink($tmp);
+    }
+    $old = umask(0077);
+    $ok = @file_put_contents($tmp, 'SERVICE="' . ($enabled ? 'enabled' : 'disabled') . '"' . PHP_EOL);
+    umask($old);
+    if ($ok === false || !@rename($tmp, CFG_FILE)) {
+        @unlink($tmp);
+        fail(500, 'failed to persist service state');
+    }
+    @chmod(CFG_FILE, 0600);
+}
+
+function process_is_runraid_server(int $pid): bool
+{
+    if ($pid <= 0 || !is_dir("/proc/$pid")) {
+        return false;
+    }
+    $cmdline = @file_get_contents("/proc/$pid/cmdline");
+    if ($cmdline === false) {
+        return false;
+    }
+    $args = explode(chr(0), rtrim($cmdline, chr(0)));
+    foreach ($args as $index => $arg) {
+        if (basename($arg) === 'runraid' && ($args[$index + 1] ?? '') === 'serve') {
+            return true;
+        }
+    }
+    return false;
+}
+
+function is_true_value(string $value): bool
+{
+    return in_array(strtolower($value), ['1', 'true', 'yes'], true);
+}
+
+/** Whether a value is boolean-shaped at all. UNRAID_VERIFY_SSL was overloaded:
+ *  a boolean OR a CA bundle path, so the two cases must be told apart. */
+function is_bool_value(string $value): bool
+{
+    return in_array(strtolower($value), ['1', '0', 'true', 'false', 'yes', 'no'], true);
+}
+
+function validate_bool_value(array $env, string $key): void
+{
+    $value = resolve_value($env, $key);
+    if ($value !== '' && !in_array(strtolower($value), ['1', '0', 'true', 'false', 'yes', 'no'], true)) {
+        fail(400, "$key must be true or false");
+    }
+}
+
+function validate_url_value(string $key, string $value, bool $httpsOnly = false): void
+{
+    if ($value === '') {
+        return;
+    }
+    $parts = parse_url($value);
+    if ($parts === false || !isset($parts['host'])) {
+        fail(400, "$key must be a complete http:// or https:// URL");
+    }
+    $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+    if (!in_array($scheme, ['http', 'https'], true)) {
+        fail(400, "$key must be a complete http:// or https:// URL");
+    }
+    if (isset($parts['user']) || isset($parts['pass'])) {
+        fail(400, "$key must not contain embedded credentials");
+    }
+    if ($httpsOnly && $scheme !== 'https') {
+        fail(400, "$key must use https://");
+    }
+    if ($httpsOnly && (isset($parts['query']) || isset($parts['fragment']))) {
+        fail(400, "$key must not contain a query string or fragment");
+    }
+}
+
+function is_valid_bind_host(string $host): bool
+{
+    $value = trim($host, '[]');
+    if (filter_var($value, FILTER_VALIDATE_IP) !== false) {
+        return true;
+    }
+    if (preg_match('/^[0-9]+(?:\.[0-9]+){3}$/', $value) === 1) {
+        return false;
+    }
+    if (strlen($value) > 253 || str_ends_with($value, '.')) {
+        $value = rtrim($value, '.');
+    }
+    if ($value === '' || strlen($value) > 253) {
+        return false;
+    }
+    foreach (explode('.', $value) as $label) {
+        if ($label === '' || strlen($label) > 63
+            || preg_match('/^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/', $label) !== 1) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function is_loopback_host(string $host): bool
+{
+    $host = trim($host, '[]');
+    return strcasecmp($host, 'localhost') === 0
+        || $host === '::1'
+        || (str_starts_with($host, '127.') && filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false);
+}
+
+function validate_env(array $env): void
+{
+    $apiUrl = resolve_value($env, 'UNRAID_API_URL');
+    if ($apiUrl === '') {
+        fail(400, 'UNRAID_API_URL is required');
+    }
+    validate_url_value('UNRAID_API_URL', $apiUrl);
+
+    $host = resolve_value($env, 'UNRAID_RMCP_HOST') ?: '0.0.0.0';
+    if (strpbrk($host, " \t\r\n/") !== false || !is_valid_bind_host($host)) {
+        fail(400, 'UNRAID_RMCP_HOST must be a valid IP address or hostname without a path');
+    }
+
+    $port = resolve_value($env, 'UNRAID_RMCP_PORT') ?: '40010';
+    if (!ctype_digit($port) || (int) $port < 1 || (int) $port > 65535) {
+        fail(400, 'UNRAID_RMCP_PORT must be an integer from 1 to 65535');
+    }
+
+    foreach (['UNRAID_API_SKIP_TLS_VERIFY', 'UNRAID_MCP_TAILSCALE_SERVE', 'UNRAID_RMCP_DISABLE_HTTP_AUTH', 'UNRAID_NOAUTH'] as $key) {
+        validate_bool_value($env, $key);
+    }
+
+    // runraid refuses to start on an unreadable bundle, so reject it here where
+    // the operator still sees a message instead of a service that won't come up.
+    $caBundle = resolve_value($env, 'UNRAID_API_CA_BUNDLE');
+    if ($caBundle !== '') {
+        if ($caBundle[0] !== '/') {
+            fail(400, 'UNRAID_API_CA_BUNDLE must be an absolute path to a PEM bundle');
+        }
+        if (!is_readable($caBundle)) {
+            fail(400, 'UNRAID_API_CA_BUNDLE is not readable: ' . $caBundle);
+        }
+    }
+
+    $logLevel = strtolower(resolve_value($env, 'RUST_LOG'));
+    if ($logLevel !== '' && !in_array($logLevel, ['trace', 'debug', 'info', 'warn', 'error'], true)) {
+        fail(400, 'RUST_LOG must be trace, debug, info, warn, or error');
+    }
+
+    $authMode = strtolower(resolve_value($env, 'UNRAID_RMCP_AUTH_MODE') ?: 'bearer');
+    if (!in_array($authMode, ['bearer', 'oauth'], true)) {
+        fail(400, 'UNRAID_RMCP_AUTH_MODE must be bearer or oauth');
+    }
+
+    $authDisabled = is_true_value(resolve_value($env, 'UNRAID_RMCP_DISABLE_HTTP_AUTH'));
+    $networkOverride = is_true_value(resolve_value($env, 'UNRAID_NOAUTH'));
+    if ($authDisabled && !is_loopback_host($host) && !$networkOverride) {
+        fail(400, 'Disabling HTTP auth on a non-loopback bind also requires UNRAID_NOAUTH=true');
+    }
+
+    if (!$authDisabled && $authMode === 'bearer' && resolve_value($env, 'UNRAID_RMCP_TOKEN') === '') {
+        fail(400, 'UNRAID_RMCP_TOKEN is required in bearer mode');
+    }
+
+    if (!$authDisabled && $authMode === 'oauth') {
+        validate_url_value('UNRAID_RMCP_PUBLIC_URL', resolve_value($env, 'UNRAID_RMCP_PUBLIC_URL'), true);
+        foreach (['UNRAID_RMCP_PUBLIC_URL', 'UNRAID_RMCP_GOOGLE_CLIENT_ID', 'UNRAID_RMCP_GOOGLE_CLIENT_SECRET', 'UNRAID_RMCP_AUTH_ADMIN_EMAIL'] as $key) {
+            if (resolve_value($env, $key) === '') {
+                fail(400, "$key is required in OAuth mode");
+            }
+        }
+        $email = resolve_value($env, 'UNRAID_RMCP_AUTH_ADMIN_EMAIL');
+        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            fail(400, 'UNRAID_RMCP_AUTH_ADMIN_EMAIL must be a valid email address');
+        }
+    }
+
+    foreach (['UNRAID_RMCP_ENABLED_TOOLS', 'UNRAID_RMCP_DISABLED_TOOLS'] as $key) {
+        $value = resolve_value($env, $key);
+        if ($value !== '' && count(array_filter(array_map('trim', explode(',', $value)))) === 0) {
+            fail(400, "$key must contain at least one selector when set");
+        }
+    }
+}
+
+function validate_startable_env(array $env): void
+{
+    validate_env($env);
+    if (resolve_value($env, 'UNRAID_API_KEY') === '') {
+        fail(400, 'UNRAID_API_KEY is required before the service can start');
+    }
+}
+
 function service_running(): bool
 {
     exec(RC . ' status 2>/dev/null', $out, $code);
@@ -155,7 +402,9 @@ function tailscale_info(): array
     $env = read_env(ENV_FILE);
     $port = (int) (resolve_value($env, 'UNRAID_RMCP_PORT') ?: 40010);
     exec($bin . ' serve status 2>/dev/null', $serveOut, $serveCode);
-    $serveActive = $serveCode === 0 && str_contains(implode("\n", $serveOut), ':' . $port);
+    $serveText = implode("\n", $serveOut);
+    $serveActive = $serveCode === 0
+        && preg_match('/:' . preg_quote((string) $port, '/') . '(?:[^0-9]|$)/', $serveText) === 1;
     // serveActive is a heuristic; the rc script owns the authoritative state.
     return ['available' => $dns !== '', 'dnsName' => $dns, 'serveActive' => $serveActive];
 }
@@ -163,10 +412,10 @@ function tailscale_info(): array
 function process_stats(): array
 {
     $pid = (int) @trim((string) @file_get_contents(PID_FILE));
-    if ($pid <= 0 || !is_dir("/proc/$pid")) {
+    if (!process_is_runraid_server($pid)) {
         return ['pid' => 0, 'cpu' => 0.0, 'memMB' => 0.0, 'uptime' => 0];
     }
-    // Sum the process group (parent + worker threads/children share the tree).
+    // Read the server process identified by the validated PID file.
     $out = [];
     exec('ps -o %cpu=,rss=,etimes= -p ' . $pid . ' 2>/dev/null', $out);
     $cpu = 0.0;
@@ -206,13 +455,25 @@ function current_payload(): array
         if ($key === 'UNRAID_NOAUTH' && !array_key_exists('UNRAID_NOAUTH', $env)) {
             // Mirror unraid-mcp-env.sh: legacy TRUST_PROXY only implies no-auth
             // when the legacy disable-http-auth switch is actually on.
-            if (resolve_value($env, 'UNRAID_RMCP_DISABLE_HTTP_AUTH') !== 'true') {
+            if (!is_true_value(resolve_value($env, 'UNRAID_RMCP_DISABLE_HTTP_AUTH'))) {
                 $value = '';
             }
         }
         if ($key === 'UNRAID_API_SKIP_TLS_VERIFY' && $value === '') {
-            $value = (($env['UNRAID_VERIFY_SSL'] ?? 'true') === 'false'
-                && ($env['UNRAID_ALLOW_INSECURE_TLS'] ?? 'false') === 'true') ? 'true' : 'false';
+            $value = (!is_true_value($env['UNRAID_VERIFY_SSL'] ?? 'true')
+                && is_true_value($env['UNRAID_ALLOW_INSECURE_TLS'] ?? 'false')) ? 'true' : 'false';
+        }
+        if ($key === 'UNRAID_API_CA_BUNDLE' && $value === '') {
+            // Mirror unraid-mcp-env.sh: the Python-era UNRAID_VERIFY_SSL doubled
+            // as a CA bundle path. Surface the migrated value so the field shows
+            // what the server is actually using, not a misleading blank.
+            $legacy = $env['UNRAID_VERIFY_SSL'] ?? '';
+            if ($legacy !== '' && !is_bool_value($legacy) && is_readable($legacy)) {
+                $value = $legacy;
+            }
+        }
+        if (in_array($key, ['UNRAID_API_SKIP_TLS_VERIFY', 'UNRAID_MCP_TAILSCALE_SERVE', 'UNRAID_RMCP_DISABLE_HTTP_AUTH', 'UNRAID_NOAUTH'], true)) {
+            $value = is_true_value($value) ? 'true' : 'false';
         }
         if ($key === 'UNRAID_RMCP_AUTH_MODE' && $value === '') {
             $value = 'bearer';
@@ -238,7 +499,8 @@ function current_payload(): array
         if (!in_array($k, ALLOWED_KEYS, true)
             && !in_array($k, SECRET_KEYS, true)
             && !in_array($k, $legacyKeys, true)
-            && !in_array($k, ['UNRAID_VERIFY_SSL', 'UNRAID_ALLOW_INSECURE_TLS'], true)) {
+            && !in_array($k, ['UNRAID_VERIFY_SSL', 'UNRAID_ALLOW_INSECURE_TLS'], true)
+            && preg_match('/(?:KEY|TOKEN|SECRET)/i', $k) !== 1) {
             $extra[$k] = $v;
         }
     }
@@ -253,6 +515,10 @@ function current_payload(): array
         'version' => version_info(),
         'process' => process_stats(),
     ];
+}
+
+if (defined('UNRAID_MCP_CONFIG_LIBRARY_ONLY') && UNRAID_MCP_CONFIG_LIBRARY_ONLY === true) {
+    return;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -278,8 +544,8 @@ if ($action === 'reveal') {
     // Return a stored secret to the (already session+CSRF authenticated)
     // webGUI admin — the bearer token exists to be copied into MCP clients.
     $key = $body['key'] ?? '';
-    if (!in_array($key, SECRET_KEYS, true)) {
-        fail(400, 'not a secret key');
+    if (!in_array($key, REVEALABLE_SECRET_KEYS, true)) {
+        fail(400, 'secret is not revealable');
     }
     $env = read_env(ENV_FILE);
     echo json_encode(['key' => $key, 'value' => resolve_value($env, $key)]);
@@ -300,9 +566,12 @@ if ($action === 'stats') {
 }
 
 if ($action === 'checkUpdate') {
-    // Contacts GitHub — kept behind an explicit user click, not in every GET.
-    $latest = trim((string) @shell_exec(escapeshellarg(UPDATE_SH) . ' latest 2>/dev/null'));
-    echo json_encode(['latest' => $latest]);
+    // Contacts GitHub only after an explicit user click.
+    [$code, $latest] = command_result(escapeshellarg(UPDATE_SH) . ' latest');
+    if ($code !== 0 || $latest === '') {
+        fail(502, 'update check failed' . ($latest !== '' ? ': ' . $latest : ''));
+    }
+    echo json_encode(['latest' => trim($latest)]);
     exit;
 }
 
@@ -312,23 +581,60 @@ if ($action === 'update' || $action === 'resetVersion') {
         if ($ver !== '' && !preg_match('/^(?:unraid-rs-v|v)?\\d+\\.\\d+\\.\\d+$/', $ver)) {
             fail(400, 'invalid version');
         }
-        $cmd = escapeshellarg(UPDATE_SH) . ' update ' . escapeshellarg($ver);
+        $cmd = escapeshellarg(UPDATE_SH) . ' stage-update ' . escapeshellarg($ver);
     } else {
-        $cmd = escapeshellarg(UPDATE_SH) . ' reset';
+        $cmd = escapeshellarg(UPDATE_SH) . ' stage-reset';
     }
     // Stop first so the active overlay binary is not replaced mid-process.
     $wasRunning = service_running();
     if ($wasRunning) {
-        exec(RC . ' stop >/dev/null 2>&1');
+        [$stopCode, $stopOutput] = rc_result('stop');
+        if ($stopCode !== 0) {
+            fail(500, 'could not stop the service before the version change' . ($stopOutput !== '' ? ': ' . $stopOutput : ''));
+        }
     }
-    $out = [];
-    $code = 0;
-    exec($cmd . ' 2>&1', $out, $code);
-    if ($wasRunning) {
-        exec(RC . ' start >/dev/null 2>&1');
-    }
+
+    $updateCommand = escapeshellarg(UPDATE_SH);
+    [$code, $output] = command_result($cmd);
     if ($code !== 0) {
-        fail(500, 'update failed: ' . trim(implode(' ', array_slice($out, -3))));
+        // A transaction may or may not have started before the updater failed.
+        // Rollback is best-effort here; "no previous transaction" simply means
+        // the original overlay was never touched.
+        command_result($updateCommand . ' rollback');
+        $restoreCode = 0;
+        $restoreOutput = '';
+        if ($wasRunning) {
+            [$restoreCode, $restoreOutput] = rc_result('start');
+        }
+        $message = 'version change failed' . ($output !== '' ? ': ' . $output : '');
+        if ($restoreCode !== 0) {
+            $message .= '; restoring the previous service also failed' . ($restoreOutput !== '' ? ': ' . $restoreOutput : '');
+        }
+        fail(500, $message);
+    }
+
+    if ($wasRunning) {
+        [$restartCode, $restartOutput] = rc_result('start');
+        if ($restartCode !== 0) {
+            [$rollbackCode, $rollbackOutput] = command_result($updateCommand . ' rollback');
+            $restoreCode = 1;
+            $restoreOutput = '';
+            if ($rollbackCode === 0) {
+                [$restoreCode, $restoreOutput] = rc_result('start');
+            }
+            $message = 'the new runtime failed to start and was rolled back' . ($restartOutput !== '' ? ': ' . $restartOutput : '');
+            if ($rollbackCode !== 0) {
+                $message .= '; runtime rollback also failed' . ($rollbackOutput !== '' ? ': ' . $rollbackOutput : '');
+            } elseif ($restoreCode !== 0) {
+                $message .= '; the previous service failed to restart' . ($restoreOutput !== '' ? ': ' . $restoreOutput : '');
+            }
+            fail(500, $message);
+        }
+    }
+
+    [$commitCode, $commitOutput] = command_result($updateCommand . ' commit');
+    if ($commitCode !== 0) {
+        fail(500, 'version changed successfully, but transaction cleanup failed' . ($commitOutput !== '' ? ': ' . $commitOutput : ''));
     }
     echo json_encode(current_payload());
     exit;
@@ -355,19 +661,25 @@ if ($action === 'logs') {
 
 if ($action === 'service') {
     // {action: "service", op: "start"|"stop"|"restart"|"enable"|"disable"}
-    $op = $body['op'] ?? '';
-    if (in_array($op, ['enable', 'disable'], true)) {
-        $enabled = $op === 'enable' ? 'enabled' : 'disabled';
-        @file_put_contents(CFG_FILE, "SERVICE=\"$enabled\"\n");
-        @chmod(CFG_FILE, 0600);
-        if ($op === 'enable' && !service_running()) {
-            exec(RC . ' start >/dev/null 2>&1');
+    $op = (string) ($body['op'] ?? '');
+    if ($op === 'enable') {
+        validate_startable_env(read_env(ENV_FILE));
+        write_service_state(true);
+        if (!service_running()) {
+            [$code, $output] = rc_result('start');
+            if ($code !== 0) {
+                write_service_state(false);
+                fail(500, 'service enable failed' . ($output !== '' ? ': ' . $output : ''));
+            }
         }
-        if ($op === 'disable' && service_running()) {
-            exec(RC . ' stop >/dev/null 2>&1');
-        }
-    } elseif (in_array($op, ['start', 'stop', 'restart'], true)) {
-        exec(RC . ' ' . $op . ' >/dev/null 2>&1');
+    } elseif ($op === 'disable') {
+        write_service_state(false);
+        require_rc('stop');
+    } elseif (in_array($op, ['start', 'restart'], true)) {
+        validate_startable_env(read_env(ENV_FILE));
+        require_rc($op);
+    } elseif ($op === 'stop') {
+        require_rc('stop');
     } else {
         fail(400, 'unknown service op');
     }
@@ -385,6 +697,7 @@ if (!is_array($changes)) {
 }
 
 $env = read_env(ENV_FILE);
+$previousEnv = $env;
 foreach ($changes as $key => $value) {
     if (!in_array($key, ALLOWED_KEYS, true)) {
         fail(400, "key not allowed: $key");
@@ -392,8 +705,8 @@ foreach ($changes as $key => $value) {
     if (!is_string($value)) {
         fail(400, "value for $key must be a string");
     }
-    if (preg_match('/[\r\n]/', $value)) {
-        fail(400, "value for $key must not contain newlines");
+    if (preg_match('/[\x00\r\n]/', $value)) {
+        fail(400, "value for $key must not contain NUL or line breaks");
     }
     $legacy = LEGACY_KEYS[$key] ?? '';
     if ($legacy !== '') {
@@ -408,9 +721,33 @@ foreach ($changes as $key => $value) {
         $env[$key] = $value;
     }
 }
+$wasRunning = service_running();
+if ($wasRunning) {
+    validate_startable_env($env);
+} else {
+    validate_env($env);
+}
 write_env(ENV_FILE, $env);
 
-if (service_running()) {
-    exec(RC . ' restart >/dev/null 2>&1');
+if ($wasRunning) {
+    [$restartCode, $restartOutput] = rc_result('restart');
+    if ($restartCode !== 0) {
+        // The new config was syntactically valid to the web layer but rejected
+        // by runraid or failed at runtime. Restore the exact prior env and bring
+        // the previous service back instead of persisting a broken deployment.
+        write_env(ENV_FILE, $previousEnv);
+        [$restoreCode, $restoreOutput] = rc_result('start');
+        $message = 'settings were rejected by the running service; the previous configuration was restored';
+        if ($restartOutput !== '') {
+            $message .= ': ' . $restartOutput;
+        }
+        if ($restoreCode !== 0) {
+            $message .= '; restoring the previous service also failed';
+            if ($restoreOutput !== '') {
+                $message .= ': ' . $restoreOutput;
+            }
+        }
+        fail(500, $message);
+    }
 }
 echo json_encode(current_payload());

@@ -96,11 +96,29 @@ impl UnraidClient {
                  attackers. Only use this for self-signed certificates on a trusted network."
             );
         }
-        let client = reqwest::ClientBuilder::new()
+        let mut builder = reqwest::ClientBuilder::new()
             .danger_accept_invalid_certs(cfg.skip_tls_verify)
-            .connect_timeout(Duration::from_secs(5))
-            .build()
-            .context("failed to build HTTP client")?;
+            .connect_timeout(Duration::from_secs(5));
+        // A private-CA endpoint should be *verified against that CA*, not waved
+        // through with skip_tls_verify. Every failure here is fatal: silently
+        // falling back to the system roots would turn a deliberate trust
+        // decision into an unexplained connection error at first request.
+        if let Some(path) = cfg.ca_bundle.as_deref() {
+            let pem = std::fs::read(path)
+                .with_context(|| format!("failed to read UNRAID_API_CA_BUNDLE at {path}"))?;
+            let certs = reqwest::Certificate::from_pem_bundle(&pem).with_context(|| {
+                format!("UNRAID_API_CA_BUNDLE at {path} is not a valid PEM certificate bundle")
+            })?;
+            if certs.is_empty() {
+                anyhow::bail!("UNRAID_API_CA_BUNDLE at {path} contains no certificates");
+            }
+            let count = certs.len();
+            for cert in certs {
+                builder = builder.add_root_certificate(cert);
+            }
+            tracing::info!(path, count, "trusting extra CA certificates from bundle");
+        }
+        let client = builder.build().context("failed to build HTTP client")?;
         Ok(Self {
             client,
             url: cfg.api_url.clone(),
@@ -1658,5 +1676,74 @@ impl UnraidClient {
         use cynic::QueryBuilder;
         self.run_typed(crate::gql_typed::ConnectReadQuery::build(()))
             .await
+    }
+}
+
+#[cfg(test)]
+mod ca_bundle_tests {
+    use super::*;
+
+    fn cfg(ca_bundle: Option<&str>) -> UnraidConfig {
+        UnraidConfig {
+            api_url: "http://localhost:1/graphql".into(),
+            api_key: "k".into(),
+            skip_tls_verify: false,
+            ca_bundle: ca_bundle.map(str::to_string),
+        }
+    }
+
+    #[test]
+    fn no_bundle_builds_a_client() {
+        assert!(UnraidClient::new(&cfg(None)).is_ok());
+    }
+
+    // Each of these must be fatal: falling back to the system roots would turn a
+    // deliberate private-CA trust decision into a confusing per-request failure.
+    #[test]
+    fn missing_bundle_file_is_fatal() {
+        let err = UnraidClient::new(&cfg(Some("/nonexistent/ca.pem")))
+            .err()
+            .expect("a missing bundle must fail");
+        assert!(
+            err.to_string()
+                .contains("failed to read UNRAID_API_CA_BUNDLE"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn non_pem_bundle_is_fatal() {
+        let dir = std::env::temp_dir().join("unraid-ca-bundle-tests");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("garbage.pem");
+        std::fs::write(&path, b"definitely not a certificate").unwrap();
+        let err = UnraidClient::new(&cfg(Some(path.to_str().unwrap())))
+            .err()
+            .expect("an invalid bundle must fail");
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("valid PEM certificate bundle")
+                || msg.contains("contains no certificates"),
+            "unexpected error: {msg}"
+        );
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn empty_file_is_fatal() {
+        let dir = std::env::temp_dir().join("unraid-ca-bundle-tests");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("empty.pem");
+        std::fs::write(&path, b"").unwrap();
+        let err = UnraidClient::new(&cfg(Some(path.to_str().unwrap())))
+            .err()
+            .expect("an invalid bundle must fail");
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("contains no certificates")
+                || msg.contains("valid PEM certificate bundle"),
+            "unexpected error: {msg}"
+        );
+        std::fs::remove_file(&path).ok();
     }
 }

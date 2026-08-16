@@ -395,6 +395,7 @@ async fn static_bearer_token_reaches_ordinary_write_dispatch() {
 async fn policy_disabled_action_rejects_authenticated_caller_with_policy_error() {
     let mut state = testing::bearer_state("admin-token");
     state.config.tools.disabled = vec!["vm_stop".into()];
+    let counters = state.counters.clone();
     let (status, value) = post_mcp(
         router(state),
         tool_call_body(serde_json::json!({
@@ -419,6 +420,10 @@ async fn policy_disabled_action_rejects_authenticated_caller_with_policy_error()
         !body.contains("upstream unreachable"),
         "policy-disabled action must not reach dispatch; got: {body}"
     );
+    let snapshot = counters.snapshot();
+    assert_eq!(snapshot.requests_total, 1);
+    assert_eq!(snapshot.errors_total, 1);
+    assert_eq!(snapshot.upstream_calls, 0);
 }
 
 /// Destructive writes still require MCP elicitation after bearer authorization.

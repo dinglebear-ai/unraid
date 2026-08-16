@@ -1,24 +1,77 @@
 #!/bin/bash
-# Scoped runtime environment for the native runraid server. Sourced only by
-# rc.unraid-mcp so plugin settings never leak into login shells or other services.
+# Scoped runtime environment shared by the native runraid service and updater.
+# Plugin settings never leak into login shells or unrelated services.
 
-UNRAID_MCP_CONFIG_DIR="/boot/config/plugins/unraid-mcp"
-UNRAID_MCP_APPDATA_DIR="/mnt/user/appdata/unraid-mcp"
-UNRAID_MCP_ENV_FILE="${UNRAID_MCP_CONFIG_DIR}/.env"
+UNRAID_MCP_CONFIG_DIR="${UNRAID_MCP_CONFIG_DIR:-/boot/config/plugins/unraid-mcp}"
+UNRAID_MCP_APPDATA_DIR="${UNRAID_MCP_APPDATA_DIR:-/mnt/user/appdata/unraid-mcp}"
+UNRAID_MCP_ENV_FILE="${UNRAID_MCP_ENV_FILE:-${UNRAID_MCP_CONFIG_DIR}/.env}"
 
-mkdir -p "${UNRAID_MCP_APPDATA_DIR}"
-chmod 700 "${UNRAID_MCP_APPDATA_DIR}" 2>/dev/null || true
-export HOME="${UNRAID_MCP_APPDATA_DIR}"
+unraid_mcp_is_true() {
+    case "${1,,}" in
+        1|true|yes) return 0 ;;
+        *) return 1 ;;
+    esac
+}
 
-# The settings endpoint writes shell-safe, single-quoted assignments and rejects
-# newlines. Export them into runraid's process environment without exposing them
-# globally.
+unraid_mcp_is_false() {
+    case "${1,,}" in
+        0|false|no) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Do not create anything under /mnt/user while merely loading configuration.
+# Persistent paths are prepared only by explicit mutating service/updater actions.
+# Load dotenv assignments as literal data. Never source the file: even a
+# root-owned config can be manually malformed, and command substitutions must
+# not become executable shell syntax. The parser supports the plugin writer's
+# POSIX single-quote encoding plus simple legacy quoted/unquoted values.
+unraid_mcp_trim() {
+    local value="$1"
+    value="${value#"${value%%[![:space:]]*}"}"
+    value="${value%"${value##*[![:space:]]}"}"
+    printf '%s' "${value}"
+}
+
+unraid_mcp_load_env() {
+    local file="$1" line key raw value
+    while IFS= read -r line || [ -n "${line}" ]; do
+        line="${line%$'\r'}"
+        line="$(unraid_mcp_trim "${line}")"
+        [ -n "${line}" ] || continue
+        [[ "${line}" == \#* ]] && continue
+        if [[ "${line}" != *=* ]]; then
+            echo "unraid-mcp: ignoring malformed env line without =" >&2
+            continue
+        fi
+        key="$(unraid_mcp_trim "${line%%=*}")"
+        raw="$(unraid_mcp_trim "${line#*=}")"
+        if [[ ! "${key}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+            echo "unraid-mcp: ignoring invalid env key ${key}" >&2
+            continue
+        fi
+
+        value="${raw}"
+        if [ "${#raw}" -ge 2 ] && [ "${raw:0:1}" = "'" ] && [ "${raw: -1}" = "'" ]; then
+            value="${raw:1:${#raw}-2}"
+            value="$(printf '%s' "${value}" | sed "s/'\\\\''/'/g")"
+        elif [ "${#raw}" -ge 2 ] && [ "${raw:0:1}" = '"' ] && [ "${raw: -1}" = '"' ]; then
+            value="${raw:1:${#raw}-2}"
+            value="$(printf '%s' "${value}" | sed 's/\\"/"/g; s/\\\\/\\/g')"
+        fi
+        export "${key}=${value}"
+    done <"${file}"
+}
+
 if [ -r "${UNRAID_MCP_ENV_FILE}" ]; then
-    set -a
-    # shellcheck source=/dev/null
-    source "${UNRAID_MCP_ENV_FILE}"
-    set +a
+    unraid_mcp_load_env "${UNRAID_MCP_ENV_FILE}"
 fi
+
+# Assign this after dotenv loading so a persistent appdata override cannot
+# split the directory prepared by rc.unraid-mcp from runraid's data directory.
+# runraid honors UNRAID_HOME as its exact data directory, avoiding the former
+# accidental /mnt/user/appdata/unraid-mcp/.unraid nesting.
+export UNRAID_HOME="${UNRAID_MCP_APPDATA_DIR}"
 
 # Preserve existing installations while the settings page migrates from the
 # Python server's UNRAID_MCP_* names to runraid's UNRAID_RMCP_* contract.
@@ -33,35 +86,40 @@ fi
 export UNRAID_RMCP_HOST UNRAID_RMCP_PORT UNRAID_RMCP_TOKEN UNRAID_RMCP_DISABLE_HTTP_AUTH
 export UNRAID_RMCP_PUBLIC_URL UNRAID_RMCP_GOOGLE_CLIENT_ID UNRAID_RMCP_GOOGLE_CLIENT_SECRET
 
-# A legacy Python-era install with Google OAuth credentials auto-enabled OAuth;
-# runraid needs an explicit UNRAID_RMCP_AUTH_MODE=oauth plus an admin email
-# (which has no legacy source), so we can only warn loudly — never auto-switch,
-# since a missing admin email would crash startup.
-if [ -z "${UNRAID_RMCP_AUTH_MODE:-}" ] \
-    && [ -n "${UNRAID_MCP_GOOGLE_CLIENT_ID:-}" ] \
-    && [ -n "${UNRAID_MCP_GOOGLE_CLIENT_SECRET:-}" ]; then
-    unraid_mcp_oauth_warn="unraid-mcp: WARNING: OAuth credentials detected but auth mode defaulting to bearer; set UNRAID_RMCP_AUTH_MODE=oauth and UNRAID_RMCP_AUTH_ADMIN_EMAIL to restore OAuth"
-    echo "${unraid_mcp_oauth_warn}" >&2
-    mkdir -p /var/log/unraid-mcp 2>/dev/null || true
-    # stderr first so a failed append-open is silenced too (best effort only).
-    echo "$(date '+%Y-%m-%d %H:%M:%S') ${unraid_mcp_oauth_warn}" 2>/dev/null >>/var/log/unraid-mcp/server.log || true
-    unset unraid_mcp_oauth_warn
-fi
-
+# A legacy Python-era install may contain Google credentials but no Rust auth
+# mode/admin email. Default safely to bearer; rc.unraid-mcp emits one warning
+# only when the operator actually starts the service.
 : "${UNRAID_RMCP_AUTH_MODE:=bearer}"
 export UNRAID_RMCP_AUTH_MODE
 
 # Translate the former two-switch TLS guard into runraid's explicit skip flag.
 if [ -z "${UNRAID_API_SKIP_TLS_VERIFY:-}" ] \
-    && [ "${UNRAID_VERIFY_SSL:-true}" = "false" ] \
-    && [ "${UNRAID_ALLOW_INSECURE_TLS:-false}" = "true" ]; then
+    && unraid_mcp_is_false "${UNRAID_VERIFY_SSL:-true}" \
+    && unraid_mcp_is_true "${UNRAID_ALLOW_INSECURE_TLS:-false}"; then
     export UNRAID_API_SKIP_TLS_VERIFY="true"
+fi
+
+# The Python server also accepted a CA *bundle path* in UNRAID_VERIFY_SSL, which
+# is neither true nor false. Such an install has TLS working via a private CA;
+# dropping the value would have broken every GraphQL call with a bare
+# certificate error and no hint that a setting had been silently discarded.
+# runraid expresses the same intent as UNRAID_API_CA_BUNDLE.
+if [ -z "${UNRAID_API_CA_BUNDLE:-}" ] \
+    && [ -n "${UNRAID_VERIFY_SSL:-}" ] \
+    && ! unraid_mcp_is_true "${UNRAID_VERIFY_SSL}" \
+    && ! unraid_mcp_is_false "${UNRAID_VERIFY_SSL}"; then
+    # Only adopt a bundle that actually exists; an unreadable path is reported by
+    # rc.unraid-mcp at service start (this file is also sourced by config.php,
+    # which must stay quiet).
+    if [ -r "${UNRAID_VERIFY_SSL}" ]; then
+        export UNRAID_API_CA_BUNDLE="${UNRAID_VERIFY_SSL}"
+    fi
 fi
 
 # A legacy trusted-proxy opt-in is the equivalent explicit acknowledgement
 # required by runraid before allowing no-auth on a non-loopback bind.
-if [ "${UNRAID_RMCP_DISABLE_HTTP_AUTH}" = "true" ] \
-    && [ "${UNRAID_MCP_TRUST_PROXY:-false}" = "true" ] \
+if unraid_mcp_is_true "${UNRAID_RMCP_DISABLE_HTTP_AUTH}" \
+    && unraid_mcp_is_true "${UNRAID_MCP_TRUST_PROXY:-false}" \
     && [ -z "${UNRAID_NOAUTH:-}" ]; then
     export UNRAID_NOAUTH="true"
 fi

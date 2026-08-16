@@ -3,19 +3,16 @@ name: mcp-ci
 # PR-time gate for the native Unraid plugin and its Rust runtime contract.
 on:
   push:
+    branches: ["main"]
     paths:
       - "plugins/mcp/**"
-      - "unraid-rs/Cargo.toml"
-      - "unraid-rs/Cargo.lock"
-      - "unraid-rs/src/**"
+      - "unraid-rs/**"
       - ".github/workflows/mcp-ci.yml"
       - ".github/workflows/rust-release.yml"
   pull_request:
     paths:
       - "plugins/mcp/**"
-      - "unraid-rs/Cargo.toml"
-      - "unraid-rs/Cargo.lock"
-      - "unraid-rs/src/**"
+      - "unraid-rs/**"
       - ".github/workflows/mcp-ci.yml"
       - ".github/workflows/rust-release.yml"
   workflow_dispatch:
@@ -39,21 +36,26 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
+          # The only npm project this job installs is plugins/mcp/web (see
+          # "Build and audit the web bundle"); without this the whole dependency
+          # tree was re-downloaded on every run.
+          cache: npm
+          cache-dependency-path: plugins/mcp/web/package-lock.json
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
-          toolchain: stable
+          toolchain: "1.97.1"
           targets: x86_64-unknown-linux-gnu
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
         with:
           workspaces: unraid-rs
       - name: Install package validators
-        run: sudo apt-get update && sudo apt-get install -y file libxml2-utils shellcheck xz-utils
+        run: sudo apt-get update && sudo apt-get install -y binutils file libxml2-utils php-cli shellcheck xz-utils
 
       - name: Shellcheck packaging and on-box scripts
         run: |
           set -euo pipefail
           mapfile -t scripts < <(
-            find scripts source tests -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' \) | sort
+            find scripts source tests -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' -o -path '*/nchan/*' \) | sort
           )
           printf 'checking %d scripts\n' "${#scripts[@]}"
           printf '%s\n' "${scripts[@]}"
@@ -66,7 +68,7 @@ jobs:
           while IFS= read -r f; do
             [ -x "$f" ] || { echo "not executable: $f"; status=1; }
             if grep -qU $'\r' "$f"; then echo "CRLF line endings: $f"; status=1; fi
-          done < <(find scripts source tests -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' \))
+          done < <(find scripts source tests -type f \( -name '*.sh' -o -name 'rc.*' -o -path '*/event/*' -o -path '*/nchan/*' \))
           exit "$status"
 
       - name: Validate .plg XML and required entities
@@ -82,16 +84,29 @@ jobs:
               || { echo "::error::unraid-mcp.plg lost its ${placeholder}"; exit 1; }
           done
 
+      - name: Lint PHP endpoint and Unraid pages
+        run: |
+          php -l source/usr/local/emhttp/plugins/unraid-mcp/include/config.php
+          php -l source/usr/local/emhttp/plugins/unraid-mcp/UnraidMCP.page
+          php -l source/usr/local/emhttp/plugins/unraid-mcp/UnraidMCPDashboard.page
+          php -l tests/config-endpoint.php
+
       - name: Validate Community Applications metadata
         run: ./tests/ca-metadata.sh
+
+      - name: Validate runtime and settings contracts
+        run: ./tests/runtime-contract.sh
 
       - name: Build and audit the web bundle
         run: |
           npm ci --no-audit --no-fund --prefix web
-          npm audit --omit=dev --audit-level=high --prefix web
+          npm audit --audit-level=moderate --prefix web
+          npm run typecheck --prefix web
+          npm test --prefix web
           npm run build --prefix web
 
-      - name: Build, verify, and reproduce the Rust plugin package
+      - name: Build and verify the Rust plugin package
+        id: package
         run: |
           set -euo pipefail
           version="$(python3 -c 'import tomllib; print(tomllib.load(open("../../unraid-rs/Cargo.toml", "rb"))["package"]["version"])')"
@@ -102,8 +117,32 @@ jobs:
           SOURCE_DATE_EPOCH=0 ./scripts/build-txz.sh "$version" "$binary"
           package="packages/unraid-mcp-${plugin_version}-x86_64-2.txz"
           first="$(sha256sum "$package" | cut -d' ' -f1)"
-          UNRAID_MCP_SKIP_WEB_BUILD=true SOURCE_DATE_EPOCH=0 \
-            ./scripts/build-txz.sh "$version" "$binary"
-          second="$(sha256sum "$package" | cut -d' ' -f1)"
-          test "$first" = "$second" || { echo "::error::package is not reproducible: $first != $second"; exit 1; }
+          {
+            echo "version=$version"
+            echo "binary=$binary"
+            echo "package=$package"
+            echo "first=$first"
+          } >> "$GITHUB_OUTPUT"
+          echo "package sha256=$first"
+
+      # Determinism is a property of the packaging scripts, not of the PR branch,
+      # so a second full build per PR bought nothing but ~doubled packaging time.
+      # main pushes and manual dispatches still prove reproducibility, which is
+      # where a regression would actually matter (release inputs come from main).
+      - name: Reproduce the package and compare checksums
+        if: github.event_name != 'pull_request'
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+          BINARY: ${{ steps.package.outputs.binary }}
+          PACKAGE: ${{ steps.package.outputs.package }}
+          FIRST: ${{ steps.package.outputs.first }}
+        run: |
+          set -euo pipefail
+          # Deliberately no UNRAID_MCP_SKIP_WEB_BUILD here: reusing the first
+          # run's Vite output made this compare tar determinism only, leaving
+          # the web bundle — the likeliest source of nondeterminism — untested.
+          # Now that this step is main-only, the extra Vite build is cheap.
+          SOURCE_DATE_EPOCH=0 ./scripts/build-txz.sh "$VERSION" "$BINARY"
+          second="$(sha256sum "$PACKAGE" | cut -d' ' -f1)"
+          test "$FIRST" = "$second" || { echo "::error::package is not reproducible: $FIRST != $second"; exit 1; }
           echo "reproducible package sha256=$second"

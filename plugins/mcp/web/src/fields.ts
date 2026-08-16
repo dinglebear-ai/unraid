@@ -42,6 +42,12 @@ export const SECTIONS: Section[] = [
         help: "Disable certificate verification for the Unraid API. Use only with a trusted private endpoint.",
         kind: "toggle",
       },
+      {
+        key: "UNRAID_API_CA_BUNDLE",
+        label: "CA bundle path",
+        help: "Path to a PEM bundle to trust for the Unraid API, e.g. /boot/config/ssl/certs/ca.pem. Prefer this over skipping verification for a private CA.",
+        kind: "text",
+      },
     ],
   },
   {
@@ -120,6 +126,28 @@ export const SECTIONS: Section[] = [
         help: "Optional comma-separated CORS origin allowlist.",
         kind: "text",
         mono: true,
+      },
+    ],
+  },
+  {
+    title: "Tool exposure",
+    col: "b",
+    fields: [
+      {
+        key: "UNRAID_RMCP_ENABLED_TOOLS",
+        label: "Enabled tools",
+        help: "Optional comma-separated allowlist of action names (for example array,docker) or *, unraid, or unraid.*. Empty exposes all actions not denied below.",
+        kind: "text",
+        mono: true,
+        placeholder: "array,docker,status",
+      },
+      {
+        key: "UNRAID_RMCP_DISABLED_TOOLS",
+        label: "Disabled tools",
+        help: "Optional comma-separated denylist. Deny selectors win when an action appears in both lists.",
+        kind: "text",
+        mono: true,
+        placeholder: "vm_reset,array_stop",
       },
     ],
   },

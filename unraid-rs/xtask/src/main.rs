@@ -111,6 +111,8 @@ fn check_env() -> anyhow::Result<()> {
 
     let optional = [
         ("UNRAID_RMCP_TOKEN", "Bearer token for MCP auth"),
+        ("UNRAID_RMCP_ENABLED_TOOLS", "MCP tool/action allowlist"),
+        ("UNRAID_RMCP_DISABLED_TOOLS", "MCP tool/action denylist"),
         ("RUST_LOG", "Log filter (default: info)"),
     ];
 

@@ -7,6 +7,9 @@
 # Override with UNRAID_API_SKIP_TLS_VERIFY=true in .env if the server
 # uses a self-signed certificate.
 skip_tls_verify = false
+# For a private CA, prefer trusting its bundle over disabling verification:
+# set UNRAID_API_CA_BUNDLE=/path/to/ca.pem (or ca_bundle here).
+# ca_bundle = "/boot/config/ssl/certs/ca.pem"
 
 [mcp]
 host = "0.0.0.0"
@@ -20,8 +23,10 @@ server_name = "unraid-rmcp"
 # Empty enabled means all actions. Disabled selectors always win.
 # Selectors: "*", "unraid", "unraid.*", "docker_logs", "unraid.vm_reset".
 # A set, non-empty UNRAID_RMCP_ENABLED_TOOLS / UNRAID_RMCP_DISABLED_TOOLS env
-# var REPLACES the matching list below (no merge). MCP surface only; the CLI
-# is not filtered by this policy.
+# var REPLACES the matching list below (no merge). Empty process placeholders
+# may inherit a matching value from <UNRAID_HOME>/.env, ~/.unraid/.env, or
+# /data/.env. MCP surface only; the CLI is not filtered by this policy.
+# Unknown keys or misspelled tables fail startup instead of being ignored.
 enabled = []
 disabled = []
 

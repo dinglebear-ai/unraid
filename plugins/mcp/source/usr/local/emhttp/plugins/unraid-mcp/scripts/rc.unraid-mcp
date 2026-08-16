@@ -7,30 +7,55 @@ PLUGIN_NAME="unraid-mcp"
 EMHTTP_DIR="/usr/local/emhttp/plugins/${PLUGIN_NAME}"
 PREFIX="/usr/local/${PLUGIN_NAME}"
 BUNDLED_BIN="${PREFIX}/bin/runraid"
-OVERLAY_BIN="/mnt/user/appdata/unraid-mcp/bin/runraid"
+APPDATA_DIR="/mnt/user/appdata/unraid-mcp"
+OVERLAY_BIN="${APPDATA_DIR}/bin/runraid"
 PID_FILE="/var/run/${PLUGIN_NAME}.pid"
+TAILSCALE_PORT_FILE="/var/run/${PLUGIN_NAME}.tailscale-port"
 LOG_DIR="/var/log/${PLUGIN_NAME}"
 LOG_FILE="${LOG_DIR}/server.log"
 LOG_MAX_BYTES=$((5 * 1024 * 1024))
+TAILSCALE_BIN="/usr/local/sbin/tailscale"
 
 # shellcheck source=unraid-mcp-env.sh
 source "${EMHTTP_DIR}/scripts/unraid-mcp-env.sh"
+# shellcheck source=unraid-mcp-paths.sh
+source "${EMHTTP_DIR}/scripts/unraid-mcp-paths.sh"
+
+# Recompute the plugin overlay paths after loading the appdata override.
+APPDATA_DIR="${UNRAID_MCP_APPDATA_DIR}"
+OVERLAY_BIN="${APPDATA_DIR}/bin/runraid"
 
 log() {
+    mkdir -p "${LOG_DIR}" 2>/dev/null || true
     echo "$(date '+%Y-%m-%d %H:%M:%S') rc.${PLUGIN_NAME}: $*" >>"${LOG_FILE}" 2>/dev/null
     echo "rc.${PLUGIN_NAME}: $*"
 }
 
+prepare_appdata() {
+    local error
+    if ! error="$(unraid_mcp_prepare_persistent_paths "${APPDATA_DIR}" 2>&1)"; then
+        log "FATAL: ${error}"
+        return 1
+    fi
+}
+
 pid_matches() {
     local pid="$1"
-    [ -n "$pid" ] && [ -d "/proc/${pid}" ] || return 1
-    # Require the `serve` subcommand: a bare `runraid` match would also hit an
-    # admin's interactive CLI session on a recycled PID and kill -9 it.
+    [ -n "${pid}" ] && [ -d "/proc/${pid}" ] || return 1
+    # Require the serve subcommand so PID recycling cannot target an interactive
+    # runraid CLI process.
     tr '\0' ' ' <"/proc/${pid}/cmdline" 2>/dev/null | grep -qE '(^|[ /])runraid +serve( |$)'
 }
 
+overlay_valid() {
+    [ -f "${OVERLAY_BIN}" ] \
+        && [ ! -L "${OVERLAY_BIN}" ] \
+        && [ -x "${OVERLAY_BIN}" ] \
+        && [ "$(stat -c %u "${OVERLAY_BIN}" 2>/dev/null)" = "0" ]
+}
+
 server_binary() {
-    if [ -x "${OVERLAY_BIN}" ]; then
+    if overlay_valid; then
         echo "${OVERLAY_BIN}"
     else
         echo "${BUNDLED_BIN}"
@@ -38,19 +63,51 @@ server_binary() {
 }
 
 plugin_port() {
-    # unraid-mcp-env.sh (sourced above) guarantees UNRAID_RMCP_PORT is set,
-    # including the legacy UNRAID_MCP_PORT fallback.
     echo "${UNRAID_RMCP_PORT}"
 }
 
-TAILSCALE_BIN="/usr/local/sbin/tailscale"
+health_url() {
+    local host="${UNRAID_RMCP_HOST:-0.0.0.0}"
+    case "${host}" in
+        ''|0.0.0.0) host="127.0.0.1" ;;
+        '::'|'[::]') host="[::1]" ;;
+        '['*']') ;;
+        *:*) host="[${host}]" ;;
+    esac
+    printf 'http://%s:%s/health\n' "${host}" "$(plugin_port)"
+}
+
+valid_port() {
+    [[ "$1" =~ ^[0-9]+$ ]] && [ "$1" -ge 1 ] && [ "$1" -le 65535 ]
+}
 
 serve_start() {
-    [ "${UNRAID_MCP_TAILSCALE_SERVE:-false}" = "true" ] || return 0
-    [ -x "$TAILSCALE_BIN" ] || { log "tailscale serve requested but tailscale CLI not found"; return 0; }
-    local port
+    if ! unraid_mcp_is_true "${UNRAID_MCP_TAILSCALE_SERVE:-false}"; then
+        [ ! -r "${TAILSCALE_PORT_FILE}" ] || serve_stop
+        return 0
+    fi
+    [ -x "${TAILSCALE_BIN}" ] || {
+        log "tailscale serve requested but tailscale CLI not found"
+        return 0
+    }
+
+    local port previous=""
     port="$(plugin_port)"
-    if "$TAILSCALE_BIN" serve --bg --https="$port" "http://127.0.0.1:${port}" >/dev/null 2>&1; then
+    if [ -r "${TAILSCALE_PORT_FILE}" ]; then
+        previous="$(tr -dc '0-9' <"${TAILSCALE_PORT_FILE}" 2>/dev/null)"
+    fi
+    if valid_port "${previous}" && [ "${previous}" != "${port}" ]; then
+        if "${TAILSCALE_BIN}" serve --https="${previous}" off >/dev/null 2>&1; then
+            rm -f "${TAILSCALE_PORT_FILE}"
+        else
+            log "tailscale serve cleanup failed for old https :${previous}; preserving its state for a later retry"
+            return 1
+        fi
+    fi
+
+    if "${TAILSCALE_BIN}" serve --bg --https="${port}" "http://127.0.0.1:${port}" >/dev/null 2>&1; then
+        umask 0077
+        printf '%s\n' "${port}" >"${TAILSCALE_PORT_FILE}"
         log "tailscale serve enabled: https :${port} -> 127.0.0.1:${port}"
     else
         log "tailscale serve setup failed (is HTTPS enabled for the tailnet?)"
@@ -58,10 +115,19 @@ serve_start() {
 }
 
 serve_stop() {
-    [ -x "$TAILSCALE_BIN" ] || return 0
-    local port
-    port="$(plugin_port)"
-    "$TAILSCALE_BIN" serve --https="$port" off >/dev/null 2>&1 || true
+    local port=""
+    if [ -r "${TAILSCALE_PORT_FILE}" ]; then
+        port="$(tr -dc '0-9' <"${TAILSCALE_PORT_FILE}" 2>/dev/null)"
+    fi
+    valid_port "${port}" || port="$(plugin_port)"
+
+    if [ -x "${TAILSCALE_BIN}" ]; then
+        if "${TAILSCALE_BIN}" serve --https="${port}" off >/dev/null 2>&1; then
+            rm -f "${TAILSCALE_PORT_FILE}"
+        else
+            log "tailscale serve cleanup failed for https :${port}; will retry on the next stop/start"
+        fi
+    fi
 }
 
 rotate_log() {
@@ -74,7 +140,43 @@ rotate_log() {
 is_running() {
     local pid
     pid="$(cat "${PID_FILE}" 2>/dev/null)"
-    pid_matches "$pid"
+    pid_matches "${pid}"
+}
+
+validate_required_config() {
+    if [ -z "${UNRAID_API_URL:-}" ]; then
+        log "FATAL: UNRAID_API_URL is not configured"
+        return 1
+    fi
+    if [ -z "${UNRAID_API_KEY:-}" ]; then
+        log "FATAL: UNRAID_API_KEY is not configured; create or paste an admin API key in Settings -> Unraid MCP"
+        return 1
+    fi
+}
+
+warn_legacy_oauth() {
+    if ! grep -q '^UNRAID_RMCP_AUTH_MODE=' "${UNRAID_MCP_ENV_FILE}" 2>/dev/null \
+        && [ -n "${UNRAID_MCP_GOOGLE_CLIENT_ID:-}" ] \
+        && [ -n "${UNRAID_MCP_GOOGLE_CLIENT_SECRET:-}" ]; then
+        log "WARNING: legacy OAuth credentials detected; set UNRAID_RMCP_AUTH_MODE=oauth and UNRAID_RMCP_AUTH_ADMIN_EMAIL to restore OAuth"
+    fi
+}
+
+# The Python server accepted a CA bundle PATH in UNRAID_VERIFY_SSL. env.sh
+# migrates a readable one onto UNRAID_API_CA_BUNDLE; anything else would leave
+# the server verifying against the system store only, which fails every request
+# against a private CA with no clue that a setting was dropped.
+warn_legacy_ca_bundle() {
+    local value="${UNRAID_VERIFY_SSL:-}"
+    [ -n "${value}" ] || return 0
+    case "${value}" in
+        true | True | TRUE | 1 | yes | false | False | FALSE | 0 | no) return 0 ;;
+    esac
+    if [ -r "${value}" ]; then
+        log "migrated legacy UNRAID_VERIFY_SSL CA bundle to UNRAID_API_CA_BUNDLE: ${value}"
+    else
+        log "WARNING: UNRAID_VERIFY_SSL is '${value}', which is neither a boolean nor a readable CA bundle; TLS will use the system trust store only. Set UNRAID_API_CA_BUNDLE to a readable PEM bundle if this server uses a private CA."
+    fi
 }
 
 start() {
@@ -82,46 +184,72 @@ start() {
         log "already running (pid $(cat "${PID_FILE}"))"
         return 0
     fi
-    local bin
+    validate_required_config || return 1
+    prepare_appdata || return 1
+    warn_legacy_oauth
+    warn_legacy_ca_bundle
+
+    if [ -e "${OVERLAY_BIN}" ] && ! overlay_valid; then
+        log "WARNING: ignoring unsafe overlay binary (must be a root-owned regular executable): ${OVERLAY_BIN}"
+    fi
+
+    local bin pid url
     bin="$(server_binary)"
-    if [ ! -x "$bin" ]; then
+    if [ ! -x "${bin}" ]; then
         log "FATAL: runraid binary missing at ${bin}"
         return 1
     fi
+
     rotate_log
-    log "starting $("$bin" --version 2>/dev/null || echo runraid)"
-    setsid "$bin" serve >>"${LOG_FILE}" 2>&1 &
-    local pid=$!
-    echo "$pid" >"${PID_FILE}"
-    for _ in $(seq 1 10); do
-        sleep 1
-        if ! pid_matches "$pid"; then
+    log "starting $("${bin}" --version 2>/dev/null || echo runraid)"
+    setsid "${bin}" serve >>"${LOG_FILE}" 2>&1 &
+    pid=$!
+    printf '%s\n' "${pid}" >"${PID_FILE}"
+    url="$(health_url)"
+
+    for _ in $(seq 1 30); do
+        if ! pid_matches "${pid}"; then
             log "FATAL: server exited during startup — check ${LOG_FILE}"
             rm -f "${PID_FILE}"
+            serve_stop
             return 1
         fi
+        if curl -fsS --noproxy '*' --max-time 2 "${url}" >/dev/null 2>&1; then
+            log "started (pid ${pid}, health ${url})"
+            serve_start
+            return 0
+        fi
+        sleep 1
     done
-    log "started (pid ${pid})"
-    serve_start
+
+    log "FATAL: server did not become healthy at ${url} within 30 seconds"
+    kill "${pid}" 2>/dev/null || true
+    sleep 1
+    pid_matches "${pid}" && kill -9 "${pid}" 2>/dev/null || true
+    rm -f "${PID_FILE}"
+    serve_stop
+    return 1
 }
 
 stop() {
     local pid
     pid="$(cat "${PID_FILE}" 2>/dev/null)"
-    if ! pid_matches "$pid"; then
+    if ! pid_matches "${pid}"; then
         log "not running"
         rm -f "${PID_FILE}"
+        serve_stop
         return 0
     fi
+
     log "stopping (pid ${pid})"
-    kill "$pid" 2>/dev/null
+    kill "${pid}" 2>/dev/null || true
     for _ in $(seq 1 15); do
-        pid_matches "$pid" || break
+        pid_matches "${pid}" || break
         sleep 1
     done
-    if pid_matches "$pid"; then
+    if pid_matches "${pid}"; then
         log "did not exit after 15s, sending SIGKILL"
-        kill -9 "$pid" 2>/dev/null
+        kill -9 "${pid}" 2>/dev/null || true
     fi
     rm -f "${PID_FILE}"
     serve_stop
@@ -140,7 +268,7 @@ status() {
 case "${1:-}" in
     start) start ;;
     stop) stop ;;
-    restart) stop; sleep 1; start ;;
+    restart) stop && sleep 1 && start ;;
     status) status ;;
     *) echo "usage: $0 start|stop|restart|status"; exit 1 ;;
 esac

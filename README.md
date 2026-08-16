@@ -58,7 +58,7 @@ Optional, for **non-plugin** installs (systemd, Docker) that want `~/.unraid/.en
 written to disk:
 
 ```bash
-runraid setup plugin-hook          # or: crgx unraid-rmcp -- setup plugin-hook
+runraid setup plugin-hook          # or: npx -y @dinglebear/unraid setup plugin-hook
 ```
 
 ## unraid-py quickstart (Python MCP server)

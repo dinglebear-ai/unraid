@@ -49,6 +49,10 @@ if grep -Eq '(^/|(^|/)\.\.(/|$))' "$list"; then
   echo "package contains an absolute or traversal path" >&2
   exit 1
 fi
+if tar -tvJf "$archive" | awk '$1 ~ /^[lh]/ { print $NF; found=1 } END { exit !found }' | grep -q .; then
+  echo "package contains a symbolic or hard link; links are forbidden in the root-owned payload" >&2
+  exit 1
+fi
 tar -xJf "$archive" -C "$tree"
 
 bad_owner="$(tar --numeric-owner -tvJf "$archive" | awk '$2 != "0/0" { print $NF; exit }')"
@@ -63,18 +67,21 @@ required=(
   usr/local/emhttp/plugins/unraid-mcp/include/config.php
   usr/local/emhttp/plugins/unraid-mcp/scripts/rc.unraid-mcp
   usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-env.sh
+  usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-paths.sh
   usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-update.sh
   usr/local/emhttp/plugins/unraid-mcp/event/disks_mounted
   usr/local/emhttp/plugins/unraid-mcp/event/unmounting_disks
+  usr/local/emhttp/plugins/unraid-mcp/nchan/unraid_mcp
   usr/local/emhttp/plugins/unraid-mcp/web/unraid-mcp-settings.js
   usr/local/emhttp/plugins/unraid-mcp/web/unraid-mcp-settings.css
+  usr/local/emhttp/plugins/unraid-mcp/web/unraid-mcp-widget.js
   usr/local/emhttp/plugins/unraid-mcp/unraid-mcp.png
   usr/local/unraid-mcp/bin/runraid
 )
 for path in "${required[@]}"; do
   grep -Fxq "$path" "$list" || { echo "package missing required member: $path" >&2; exit 1; }
 done
-for path in usr/local/emhttp/plugins/unraid-mcp/scripts/rc.unraid-mcp usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-env.sh usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-update.sh usr/local/emhttp/plugins/unraid-mcp/event/disks_mounted usr/local/emhttp/plugins/unraid-mcp/event/unmounting_disks usr/local/unraid-mcp/bin/runraid; do
+for path in usr/local/emhttp/plugins/unraid-mcp/scripts/rc.unraid-mcp usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-env.sh usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-paths.sh usr/local/emhttp/plugins/unraid-mcp/scripts/unraid-mcp-update.sh usr/local/emhttp/plugins/unraid-mcp/event/disks_mounted usr/local/emhttp/plugins/unraid-mcp/event/unmounting_disks usr/local/emhttp/plugins/unraid-mcp/nchan/unraid_mcp usr/local/unraid-mcp/bin/runraid; do
   [[ -x "$tree/$path" ]] || { echo "required package executable lacks execute mode: $path" >&2; exit 1; }
 done
 
@@ -92,9 +99,22 @@ file "$binary" | grep -Eq 'ELF 64-bit.*x86-64' || { echo "runraid is not an x86-
 actual_version="$("$binary" --version)"
 [[ "$actual_version" == "unraid-rmcp $rust_version" ]] || { echo "bundled runraid version differs: $actual_version != unraid-rmcp $rust_version" >&2; exit 1; }
 
+# Unraid 7.0.0 (the manifest minimum) ships glibc 2.40. Reject a binary that
+# imports a newer symbol version, otherwise installation succeeds but the
+# service fails immediately with an opaque loader error on supported systems.
+command -v objdump >/dev/null 2>&1 || { echo "objdump is required to verify glibc compatibility" >&2; exit 1; }
+max_glibc="$(objdump -T "$binary" | sed -n 's/.*(GLIBC_\([0-9][0-9.]*\)).*/\1/p' | sort -V | tail -n1)"
+[[ -n "$max_glibc" ]] || { echo "could not determine runraid glibc requirements" >&2; exit 1; }
+min_unraid_glibc="2.40"
+if [[ "$(printf '%s\n%s\n' "$max_glibc" "$min_unraid_glibc" | sort -V | tail -n1)" != "$min_unraid_glibc" ]]; then
+  echo "runraid requires glibc $max_glibc, newer than Unraid 7.0.0 glibc $min_unraid_glibc" >&2
+  exit 1
+fi
+
 echo "Unraid MCP package verification passed"
 echo "version=$version"
 echo "runraid=$rust_version"
+echo "glibc_required=$max_glibc"
 echo "package=$archive"
 echo "md5=$md5"
 echo "sha256=$sha256"

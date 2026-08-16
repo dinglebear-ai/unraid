@@ -20,18 +20,34 @@ automatic credential bootstrap, service controls, and log rotation.
 ## Runtime model
 
 Persistent state lives under `/boot/config/plugins/unraid-mcp/` for the `.env`
-and service-enable flag. OAuth state and self-updated binaries live under
-`/mnt/user/appdata/unraid-mcp/`. The RAM-rootfs runtime is restored by Unraid on
-every boot.
+and service-enable flag. OAuth state and self-updated binaries live directly under
+`/mnt/user/appdata/unraid-mcp/` through the `UNRAID_HOME` override. The service
+refuses to create or modify that tree unless `/mnt/user` is actually mounted,
+and ignores overlay binaries that are symlinks or are not root-owned regular
+executables. The RAM-rootfs runtime is restored by Unraid on every boot.
 
-`rc.unraid-mcp` starts `runraid serve`, preferring the persistent overlay binary
-when one has been installed through the settings page. The updater downloads the
-`runraid-linux-x86_64` asset and its SHA-256 file from a Rust component release,
-verifies both the digest and reported version, then atomically replaces the
-overlay. Reset removes the overlay and returns to the plugin-bundled binary.
+`rc.unraid-mcp` starts `runraid serve`, preferring a safe persistent overlay
+binary when one has been installed through the settings page. Startup is not
+reported successful until the public `/health` endpoint responds. Tailscale
+Serve state remembers the published port so stop/restart also cleans stale
+routes after a port change or an unexpected server exit.
+
+The updater downloads the `runraid-linux-x86_64` asset and its SHA-256 file from
+a Rust component release, verifies both the digest and reported version, then
+atomically replaces the overlay. Public CLI `update` and `reset` commands commit
+their change immediately. The settings controller uses internal staged commands
+to snapshot the prior overlay; if the new runtime fails its health-checked
+startup, it rolls back the binary and restores the previous service. Reset
+returns to the plugin-bundled binary. Update checks occur only after an explicit
+click.
 
 Existing Python-era `UNRAID_MCP_*` settings are translated at launch and surfaced
 through the new Rust settings UI. Saving a migrated field removes its old key.
+Live settings changes are transactional: if runraid rejects the health-checked
+restart, the previous env and service are restored automatically.
+The settings page also exposes `UNRAID_RMCP_ENABLED_TOOLS` and
+`UNRAID_RMCP_DISABLED_TOOLS` for granular action allow/deny policies; deny
+selectors win.
 
 ## Upgrading from the Python plugin
 
@@ -46,6 +62,43 @@ through the new Rust settings UI. Saving a migrated field removes its old key.
   keys this plugin writes. To roll back to the old Python `.plg`, delete
   `/boot/config/plugins/unraid-mcp/.env` first and let the Python plugin
   re-bootstrap its config.
+- **Private CA / TLS**: the Python server overloaded `UNRAID_VERIFY_SSL` as
+  either a boolean *or* a path to a CA bundle. runraid splits those: booleans map
+  to `UNRAID_API_SKIP_TLS_VERIFY`, and a readable bundle path migrates to
+  `UNRAID_API_CA_BUNDLE` ("CA bundle path" in Settings), which keeps verification
+  **on** while trusting your CA. If the old value is neither a boolean nor a
+  readable file it cannot be migrated, and the service log says so at startup —
+  set the bundle path yourself rather than disabling verification.
+
+## Update integrity
+
+`Update` in Settings downloads the release binary and checks it three ways
+before installing:
+
+1. the co-uploaded `.sha256` (catches a corrupted or truncated download),
+2. **GitHub build provenance** — the binary's digest must have an attestation in
+   GitHub's attestation store naming this repo and `rust-release.yml` as its
+   builder, and
+3. the binary's own `--version` must match the tag.
+
+Step 2 matters because step 1 alone proves nothing about authenticity: the
+binary and its checksum are uploaded by the same job to the same release, so
+anyone able to replace one can replace both. Attestations live in a separate,
+GitHub-controlled store, are keyed by digest, and are minted by the
+OIDC-authenticated workflow run, so swapped release assets cannot produce a
+matching record.
+
+What this is **not**: the check confirms a provenance record exists and names
+the expected builder — it does not verify the Sigstore signature chain, which
+would require `cosign` or `gh` (neither ships with Unraid). It closes the
+swapped-asset hole, not a compromise of GitHub's attestation store itself.
+
+Releases published before provenance existed have no attestation and will be
+refused. Install one only if you have verified it another way:
+
+```bash
+UNRAID_MCP_SKIP_ATTESTATION=true unraid-mcp-update.sh update <version>
+```
 
 ## Build
 
@@ -53,17 +106,19 @@ through the new Rust settings UI. Saving a migrated field removes its old key.
 cd unraid-rs
 cargo build --release --locked --target x86_64-unknown-linux-gnu --bin runraid
 cd ../plugins/mcp
-./scripts/build-txz.sh 0.3.0 ../../unraid-rs/target/x86_64-unknown-linux-gnu/release/runraid
+./scripts/build-txz.sh 0.4.1 ../../unraid-rs/target/x86_64-unknown-linux-gnu/release/runraid
 ```
 
 The builder verifies `runraid --version`, builds the web bundle, creates a
 deterministic root-owned archive, checks the generated manifest, confirms the
-embedded x86-64 ELF binary, and rejects any retired Python runtime tree.
+embedded x86-64 ELF binary, rejects any retired Python runtime tree, and rejects
+binaries requiring newer than glibc 2.40 (the library shipped by the minimum
+supported Unraid 7.0.0).
 
 ## Release and Community Applications
 
 The `rust-release` workflow builds the binary and plugin from the same
-`unraid-rs-vX.Y.Z` source. It attaches the versioned `.txz` and `.plg` to that
+`unraid-rs-vX.Y.Z` source using the repository-pinned Rust 1.97.1 toolchain. It attaches the versioned `.txz` and `.plg` to that
 release and refreshes the rolling `unraid-plugin-latest` release asset consumed
 by Community Applications. The package manifest itself points back to the
 versioned Rust release, so installs remain immutable and checksum-pinned.

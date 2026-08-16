@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.4.2...unraid-rs-v0.5.0) (2026-08-15)
+
+
+### Features
+
+* **unraid-rs:** trust a private CA, and verify update provenance ([#360](https://github.com/dinglebear-ai/unraid/issues/360)) ([2b5e844](https://github.com/dinglebear-ai/unraid/commit/2b5e8449ac2d3e804e0ac1a3ec290ad3174ac07a))
+
+
+### Bug Fixes
+
+* **unraid-rs:** harden granular MCP tool controls ([#358](https://github.com/dinglebear-ai/unraid/issues/358)) ([bd0e373](https://github.com/dinglebear-ai/unraid/commit/bd0e373055761261e2fc45e1ed9c1abdf0d892a2))
+
+## [0.4.2](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.4.1...unraid-rs-v0.4.2) (2026-08-05)
+
+
+### Bug Fixes
+
+* **mcp:** harden rust plugin runtime ([#352](https://github.com/dinglebear-ai/unraid/issues/352)) ([746d892](https://github.com/dinglebear-ai/unraid/commit/746d892a52e485928dad78c3732af4909c8af584))
+
+## [0.4.1](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.4.0...unraid-rs-v0.4.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* **docker:** repair the Rust image build (broken since [#262](https://github.com/dinglebear-ai/unraid/issues/262)) ([#350](https://github.com/dinglebear-ai/unraid/issues/350)) ([c077cf3](https://github.com/dinglebear-ai/unraid/commit/c077cf3a47b1896654017c0a110d574abc89407e))
+
+## [0.4.0](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.3.1...unraid-rs-v0.4.0) (2026-08-05)
+
+
+### Features
+
+* **unraid-rs:** add granular MCP tool and action controls ([#342](https://github.com/dinglebear-ai/unraid/issues/342)) ([18c429f](https://github.com/dinglebear-ai/unraid/commit/18c429fa9fedfd0e6cf03d05bceda431c92554d8))
+
 ## [0.3.1](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.3.0...unraid-rs-v0.3.1) (2026-08-05)
 
 

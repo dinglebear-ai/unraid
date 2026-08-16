@@ -73,7 +73,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
-          toolchain: stable
+          toolchain: "1.97.1"
           targets: x86_64-unknown-linux-gnu
 
       - name: Connect shared MinIO Kache
@@ -97,7 +97,7 @@ jobs:
           node-version: "22"
 
       - name: Install plugin package validators
-        run: sudo apt-get update && sudo apt-get install -y file libxml2-utils xz-utils
+        run: sudo apt-get update && sudo apt-get install -y binutils file libxml2-utils xz-utils
 
       - name: Build linux/amd64 binary
         run: cargo build --release --locked --target x86_64-unknown-linux-gnu --bin runraid
@@ -121,12 +121,19 @@ jobs:
       - name: Attest build provenance
         uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4
         with:
-          subject-path: unraid-rs/runraid-linux-x86_64
+          subject-path: |
+            unraid-rs/runraid-linux-x86_64
+            unraid-rs/runraid-linux-x86_64.sha256
+            unraid-rs/runraid-x86_64.tar.gz
+            unraid-rs/runraid-x86_64.tar.gz.sha256
+            plugins/mcp/packages/*.txz
+            plugins/mcp/packages/unraid-mcp.plg
 
       - name: Attach binary + checksums to the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           # The .txz is named by the fixed-width epoch-3 plugin version, not the
           # rust semver (see plugins/mcp/scripts/plugin-version.sh).
           plugin_version="$(bash ../plugins/mcp/scripts/plugin-version.sh "${TAG#unraid-rs-v}")"
@@ -135,12 +142,12 @@ jobs:
             runraid-x86_64.tar.gz runraid-x86_64.tar.gz.sha256 \
             "../plugins/mcp/packages/unraid-mcp-${plugin_version}-x86_64-2.txz" \
             ../plugins/mcp/packages/unraid-mcp.plg --clobber
-          if [ "${{ github.event_name }}" = "release" ]; then
-            release_id="${{ github.event.release.id }}"
-          else
-            release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq .id)"
-          fi
-          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" -f make_latest=false >/dev/null
+
+      - name: Restore the primary Unraid MCP release as Latest
+        id: primary-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 ../.github/scripts/ensure_primary_latest.py "$TAG"
 
       - name: Publish rolling Community Applications manifest
         env:
@@ -178,27 +185,19 @@ jobs:
           gh release upload "$rolling" "$plg" --clobber
 
       # One-time-per-release bridge for legacy installs: Python-era plugins poll
-      # the "latest release" asset-download URL for unraid-mcp.plg (their
-      # baked-in pluginURL). Rust releases are marked make_latest=false
-      # and the .plg otherwise lives only on the rolling prerelease, so that
-      # legacy URL would keep 404ing forever. Attaching the new .plg to
-      # whatever release GitHub currently calls "latest" makes the legacy URL
-      # serve it; once a box upgrades, its stored pluginURL becomes the fixed
-      # unraid-plugin-latest URL and this bridge is no longer needed for it.
+      # the repository Latest asset URL for unraid-mcp.plg (their baked-in
+      # pluginURL). The step above explicitly restores the newest primary vX.Y.Z
+      # release as Latest; attach the rolling manifest to that exact release
+      # rather than resolving a potentially stale or component-owned pointer.
       - name: Bridge legacy releases/latest pluginURL
         env:
           GH_TOKEN: ${{ github.token }}
+          PRIMARY_TAG: ${{ steps.primary-release.outputs.tag }}
         run: |
           set -euo pipefail
-          latest_tag="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq .tag_name || true)"
-          if [ -z "$latest_tag" ]; then
-            echo "::warning::could not resolve the repository's latest release — legacy pluginURL bridge skipped"
-            exit 0
-          fi
-          # If "latest" is this rust release itself, the upload is a harmless
-          # re-clobber of the asset attached earlier.
-          echo "bridging legacy pluginURL: uploading unraid-mcp.plg to latest release ${latest_tag}"
-          gh release upload "$latest_tag" ../plugins/mcp/packages/unraid-mcp.plg --clobber
+          [ -n "$PRIMARY_TAG" ] || { echo "::error::primary release tag output is empty"; exit 1; }
+          echo "bridging legacy pluginURL: uploading unraid-mcp.plg to primary release ${PRIMARY_TAG}"
+          gh release upload "$PRIMARY_TAG" ../plugins/mcp/packages/unraid-mcp.plg --clobber
 
   npm:
     needs: build
@@ -307,6 +306,12 @@ jobs:
           file: ./unraid-rs/config/Dockerfile
           platforms: linux/amd64
           push: true
+          # This job recompiles the crate inside Docker moments after the `build`
+          # job compiled the same binary, with no layer cache at all. mode=min
+          # keeps only the final-stage layers, which is what the next release
+          # actually replays.
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
           tags: |
             ${{ env.RUST_IMAGE }}:${{ steps.tags.outputs.version }}
             ${{ env.RUST_IMAGE }}:latest
