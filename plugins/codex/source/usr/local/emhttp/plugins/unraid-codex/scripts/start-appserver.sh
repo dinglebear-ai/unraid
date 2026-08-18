@@ -87,7 +87,6 @@ fi
 incus </dev/null exec "$CONTAINER" -- chown agent:agent "$CONTAINER_SOCKET_DIR"
 incus </dev/null exec "$CONTAINER" -- chmod 0711 "$CONTAINER_SOCKET_DIR"
 ln -sfn "$SOCKET_PATH" "$WEBGUI_SOCKET"
-/usr/local/emhttp/plugins/unraid-codex/scripts/configure-nginx.sh install
 
 incus </dev/null exec "$CONTAINER" -- install -d -o agent -g agent -m 0700 \
   "$CONTAINER_CONFIG_DIR" "$CODEX_CONFIG_DIR"
@@ -171,7 +170,15 @@ incus </dev/null exec "$CONTAINER" -- sh -c \
 incus </dev/null file push \
   /usr/local/emhttp/plugins/unraid-codex/container/codex-appserver.service \
   "$CONTAINER/etc/systemd/system/codex-appserver.service"
+
 incus </dev/null exec "$CONTAINER" -- systemctl daemon-reload
+effective_execstart="$(incus </dev/null exec "$CONTAINER" -- \
+  systemctl show codex-appserver.service --property=ExecStart --value)"
+if ! grep -Fq -- '--listen unix:///mnt/unraid-codex/appserver.sock' <<<"$effective_execstart"; then
+  logger -t unraid-codex \
+    "Codex service transport is overridden; expected Unix socket ExecStart"
+  exit 1
+fi
 [[ -x "$UPDATE_CLI" ]] || { logger -t unraid-codex "Codex updater is unavailable: $UPDATE_CLI"; exit 1; }
 "$UPDATE_CLI"
 incus </dev/null exec "$CONTAINER" -- systemctl enable codex-appserver.service
@@ -194,5 +201,8 @@ python3 "$APPSERVER_SMOKE" "$SOCKET_PATH" || {
   exit 1
 }
 
+# Publish the browser route only after the backend has completed a real protocol
+# handshake. A failed service start must not leave nginx pointing at a dead socket.
+/usr/local/emhttp/plugins/unraid-codex/scripts/configure-nginx.sh install
 /usr/local/emhttp/plugins/unraid-codex/scripts/configure-schedule.sh install
 logger -t unraid-codex "Codex app-server restarted in $CONTAINER and the WebGUI socket is ready"
