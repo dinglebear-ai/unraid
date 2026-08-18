@@ -153,9 +153,17 @@ grep -Fq 'UNRAID_MCP_URL' "${source_dir}/scripts/start-appserver.sh"
 grep -Fq 'UNRAID_MCP_PROXY_HOST' "${source_dir}/scripts/start-appserver.sh"
 grep -Fq '# unraid-codex-mcp' "${source_dir}/scripts/start-appserver.sh"
 grep -Fq 'systemctl restart codex-appserver.service' "${source_dir}/scripts/start-appserver.sh"
+grep -Fq 'systemctl show codex-appserver.service --property=ExecStart --value' "${source_dir}/scripts/start-appserver.sh"
+grep -Fq -- '--listen unix:///mnt/unraid-codex/appserver.sock' "${source_dir}/scripts/start-appserver.sh"
 grep -Fq 'INCUS_START_HELPER=/usr/local/emhttp/plugins/incus/scripts/start-instance.sh' "${source_dir}/scripts/start-appserver.sh"
 grep -Fq '"$INCUS_START_HELPER" "$CONTAINER"' "${source_dir}/scripts/start-appserver.sh"
 grep -Fq 'App-server service started but $SOCKET_PATH did not become ready' "${source_dir}/scripts/start-appserver.sh"
+smoke_line="$(grep -n -m1 'python3 "$APPSERVER_SMOKE" "$SOCKET_PATH"' "${source_dir}/scripts/start-appserver.sh" | cut -d: -f1)"
+nginx_line="$(grep -n -m1 'configure-nginx.sh install' "${source_dir}/scripts/start-appserver.sh" | cut -d: -f1)"
+[[ -n "$smoke_line" && -n "$nginx_line" && "$nginx_line" -gt "$smoke_line" ]] || {
+  echo "nginx route must only be published after app-server protocol smoke succeeds" >&2
+  exit 1
+}
 grep -Fq 'ENSURE_STATE=/usr/local/emhttp/plugins/unraid-codex/scripts/ensure-state-volume.sh' "${source_dir}/scripts/start-appserver.sh"
 grep -Fq 'PROVISION_CONTAINER=/usr/local/emhttp/plugins/unraid-codex/scripts/provision-container.sh' "${source_dir}/scripts/start-appserver.sh"
 grep -Fq '"$PROVISION_CONTAINER"' "${source_dir}/scripts/start-appserver.sh"
@@ -202,7 +210,7 @@ if find "${source_dir}" -type f \( -name codex-version -o -name codex-release.en
   exit 1
 fi
 test_output_dir="$(mktemp -d)"
-test_names=(install-codex-cli update-codex-cli provision-container configure-nginx backup-restore-state package-verifier ca-metadata)
+test_names=(install-codex-cli update-codex-cli provision-container configure-nginx backup-restore-state package-verifier ca-metadata disks-mounted)
 test_pids=()
 for test_name in "${test_names[@]}"; do
   "${plugin_dir}/tests/$test_name.sh" >"$test_output_dir/$test_name.log" 2>&1 &
