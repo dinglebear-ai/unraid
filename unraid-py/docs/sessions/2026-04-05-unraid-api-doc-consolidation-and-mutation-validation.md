@@ -16,7 +16,7 @@ Consolidated the Unraid API documentation into a canonical 2-doc + 2-artifact la
 ## Timeline
 
 1. **Live introspection audit** — Queried the current Unraid GraphQL API and confirmed the committed docs were stale relative to the live schema
-2. **Certificate inspection** — Verified the second server certificate was issued for `SHART.local`; used hostname-correct access for follow-up introspection
+2. **Certificate inspection** — Verified the second server certificate was issued for `BACKUPHOST.local`; used hostname-correct access for follow-up introspection
 3. **Doc set consolidation** — Reduced the Unraid API docs to the canonical set under `docs/unraid/`
 4. **Generator expansion** — Extended `scripts/generate_unraid_api_reference.py` to write the 4 canonical files plus a new `UNRAID-API-CHANGES.md` report
 5. **Timestamping** — Added generation timestamps and source endpoint metadata to generated Markdown outputs
@@ -31,7 +31,7 @@ Consolidated the Unraid API documentation into a canonical 2-doc + 2-artifact la
 - Root schema counts changed from `46/22/11` (queries/mutations/subscriptions) to `57/45/16`
 - New API areas appeared around cloud/connect, remote access, onboarding, Docker organizer/template management, system time, display, and plugin install tracking
 - The live API no longer accepts `skipCache` on `docker.containers`, which caused schema validation failures until fixed
-- The second Unraid server certificate is valid for `SHART.local`, not the raw Tailscale IP
+- The second Unraid server certificate is valid for `BACKUPHOST.local`, not the raw Tailscale IP
 
 ---
 

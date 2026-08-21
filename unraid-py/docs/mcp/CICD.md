@@ -63,7 +63,7 @@ updates `CHANGELOG.md` from Conventional Commit messages. Merging that PR create
 | Build | `uv build` produces sdist and wheel |
 | PyPI publish | Trusted publisher with attestations |
 | Upload artifacts | Attaches sdist/wheel to the existing release |
-| MCP Registry publish | Sets `server.json` version from the tag, then DNS-authenticated publish to `tv.tootie/unraid-mcp` via `mcp-publisher` |
+| MCP Registry publish | Sets `server.json` version from the tag, then DNS-authenticated publish to `tv.nashost/unraid-mcp` via `mcp-publisher` |
 
 ## Version sync enforcement
 

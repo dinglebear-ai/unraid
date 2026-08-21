@@ -150,11 +150,11 @@ class TestUnraidInfoTool:
             "servers": [
                 {
                     "id": "s:1",
-                    "name": "tootie",
+                    "name": "nashost",
                     "status": "ONLINE",
-                    "lanip": "10.1.0.2",
+                    "lanip": "192.0.2.2",
                     "wanip": "",
-                    "localurl": "http://10.1.0.2:6969",
+                    "localurl": "http://192.0.2.2:6969",
                     "remoteurl": "",
                 }
             ],
@@ -171,7 +171,7 @@ class TestUnraidInfoTool:
         assert "accessUrls" in result
         assert result["httpPort"] == 6969
         assert result["httpsPort"] == 31337
-        assert any(u["type"] == "LAN" and u["ipv4"] == "10.1.0.2" for u in result["accessUrls"])
+        assert any(u["type"] == "LAN" and u["ipv4"] == "192.0.2.2" for u in result["accessUrls"])
 
     async def test_owner_uses_server_owner_url(self, _mock_graphql: AsyncMock) -> None:
         _mock_graphql.side_effect = [
@@ -218,7 +218,7 @@ class TestUnraidInfoTool:
                     "virtual": False,
                     "vlanId": None,
                     "internal": False,
-                    "ipv4Addresses": [{"address": "10.1.0.2", "netmask": "255.255.255.0"}],
+                    "ipv4Addresses": [{"address": "192.0.2.2", "netmask": "255.255.255.0"}],
                     "ipv6Addresses": [{"address": "fd7a:115c:a1e0::1", "prefixLength": 64}],
                 }
             ]
@@ -230,7 +230,7 @@ class TestUnraidInfoTool:
         assert "ipv4Addresses" in query
         assert "ipv6Addresses" in query
         assert result["network_interfaces"][0]["ipv4Addresses"] == [
-            {"address": "10.1.0.2", "netmask": "255.255.255.0"}
+            {"address": "192.0.2.2", "netmask": "255.255.255.0"}
         ]
         assert result["network_interfaces"][0]["ipv6Addresses"] == [
             {"address": "fd7a:115c:a1e0::1", "prefixLength": 64}
