@@ -74,7 +74,7 @@ tokio = { version = "1", features = [
 
 # HTTP / MCP transport
 axum = "0.8"
-rmcp = { version = "=3.1.0", default-features = false, features = [
+rmcp = { version = "=3.1.4", default-features = false, features = [
   "server",
   "macros",
   "elicitation",
@@ -142,7 +142,7 @@ test-support = ["dep:graphql-parser"]
 unraid-rmcp = { path = ".", features = ["test-support"] }
 tempfile = "3"
 tower = { version = "0.5", features = ["util"] }
-rmcp = { version = "=3.1.0", default-features = false, features = [
+rmcp = { version = "=3.1.4", default-features = false, features = [
   "client",
   "transport-child-process",
 ] }
