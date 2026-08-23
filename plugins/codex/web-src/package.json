@@ -16,7 +16,7 @@
     "@radix-ui/react-slot": "^1.3.3",
     "@radix-ui/react-tooltip": "^1.2.16",
     "@tailwindcss/vite": "^4.1.18",
-    "@vitejs/plugin-react": "^5.1.4",
+    "@vitejs/plugin-react": "^6.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.27.0",
@@ -24,7 +24,7 @@
     "react-dom": "^19.2.4",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.1.18",
-    "vite": "^7.3.1"
+    "vite": "^8.2.1"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
@@ -32,7 +32,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/ws": "^8.18.1",
     "playwright": "1.62.1",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "ws": "^8.21.1"
   },
   "overrides": {
