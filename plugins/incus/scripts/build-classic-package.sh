@@ -20,6 +20,10 @@ trap 'rm -rf "$stage"' EXIT
 
 tar -xJf "$previous" -C "$stage"
 cp -a "$ROOT/source/." "$stage/"
+# The historical seed combined an lxcfs 7 executable with Debian's lxcfs 6
+# module. Refresh both files from one immutable package on every build so a
+# carry-forward release cannot perpetuate or reintroduce that ABI mismatch.
+"$ROOT/scripts/stage-locked-lxcfs.sh" "$stage"
 
 # Carry-forward archives may contain helpers from a historically broken build
 # where regular files were mode 0600. Restore the runtime contract explicitly

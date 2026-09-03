@@ -38,7 +38,7 @@ jobs:
         with:
           node-version: "22"
       - name: Install build + validation tooling
-        run: sudo apt-get update && sudo apt-get install -y jq xz-utils libxml2-utils shellcheck
+        run: sudo apt-get update && sudo apt-get install -y curl dpkg jq xz-utils libxml2-utils shellcheck
 
       - name: Build and verify the API backend
         working-directory: plugins/incus/unraid-api-plugin-incus

@@ -2,14 +2,14 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "incus">
   <!ENTITY author    "Dinglebear AI">
-  <!ENTITY version   "20260803.001"> <!-- managed by .github/scripts/plugin_calver.py -->
+  <!ENTITY version   "20260903.001"> <!-- managed by .github/scripts/plugin_calver.py -->
   <!ENTITY launch    "Settings/IncusSettings">
   <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/incus">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY txz       "&name;-unraid-7.0.0-56-x86_64-1.txz">
+  <!ENTITY txz       "&name;-unraid-7.0.0-58-x86_64-1.txz">
   <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/incus-v&version;/&txz;">
-  <!ENTITY md5       "b987f9122eed2e18a56f89440b25efe8">
-  <!ENTITY sha256    "92e05ce7723712a75efe2ef401bf78d5099e7212687dd673dcbd1c9a89cbf467">
+  <!ENTITY md5       "a1d9d5cc342c191c9dbb9ec0940b00e2">
+  <!ENTITY sha256    "1d9c026c1fe3fc1bb20608d912ce4eb377808ef79c90d3fb7cdb831e6758cd5c">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -17,6 +17,11 @@
 <PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="7.0.0" support="https://github.com/dinglebear-ai/unraid/issues">
 
 <CHANGES>
+###2026.09.03
+- Replace the inherited ABI-mismatched lxcfs executable/module payload with a
+  matched, checksummed Debian package pair on every classic package build.
+- Reject classic packages whose lxcfs pair differs from the runtime lock.
+
 ###2026.08.03
 - Publish build 56 from the dinglebear-ai/unraid monorepo with the current API
   backend, start-instance compatibility recovery, complete CA metadata, and

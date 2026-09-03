@@ -1,0 +1,11 @@
+{
+  "lxcfs": {
+    "package": "lxcfs",
+    "version": "6.0.4-1+deb13u1",
+    "architecture": "amd64",
+    "url": "https://deb.debian.org/debian/pool/main/l/lxcfs/lxcfs_6.0.4-1%2Bdeb13u1_amd64.deb",
+    "packageSha256": "504cabc77e496b57729f23c5b27c78e16903f5bab037ca2db8b8c57be9faaf41",
+    "binarySha256": "56bc6e4c82dec7c238acab1c84e070ef99cb8a1a2b37dc2358947af429620748",
+    "moduleSha256": "52d247a495ef8bc4c07e2ee66a3195d6ead6e3fad34f81aa1efdda233188f0db"
+  }
+}

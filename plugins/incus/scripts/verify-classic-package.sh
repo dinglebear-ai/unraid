@@ -124,7 +124,8 @@ smoke_helper() {
 
 smoke_helper '^7\.0\.0$' "$runtime_root/libexec/incus/incusd" --version
 smoke_helper '^7\.0\.0$' "$runtime_root/bin/incus" --version
-smoke_helper '7\.0\.0' "$runtime_root/bin/lxcfs" --version
+locked_lxcfs_version="$(jq -er '.lxcfs.version | split("-")[0]' runtime-lock.json)"
+smoke_helper "^\"?${locked_lxcfs_version//./\\.}\"?$" "$runtime_root/bin/lxcfs" --version
 smoke_helper 'nftables' "$runtime_root/bin/nft" --version
 smoke_helper 'Usage:.*distrobuilder|System container and VM image builder' "$runtime_root/bin/distrobuilder" --help
 smoke_helper 'debootstrap [0-9]' "$runtime_root/bin/debootstrap" --version
@@ -134,6 +135,15 @@ smoke_helper 'unsquashfs version' "$runtime_root/bin/unsquashfs" -version
 smoke_helper 'Zstandard CLI' "$runtime_root/bin/zstd" --version
 smoke_helper '^[0-9]+\.[0-9]+\.[0-9]+$' "$runtime_root/bin/zstdcat" --version
 smoke_helper 'Zstandard CLI' "$runtime_root/bin/unzstd" --version
+
+# lxcfs loads liblxcfs.so dynamically, so ldd and `lxcfs --version` cannot
+# detect a mismatched executable/module pair. Pin and verify both members from
+# one Debian package; the original release seed mixed major versions and only
+# failed after containers began shutting down.
+locked_lxcfs_binary="$(jq -er '.lxcfs.binarySha256' runtime-lock.json)"
+locked_lxcfs_module="$(jq -er '.lxcfs.moduleSha256' runtime-lock.json)"
+echo "$locked_lxcfs_binary  $runtime_root/bin/lxcfs" | sha256sum -c -
+echo "$locked_lxcfs_module  $archive_tree/usr/lib/x86_64-linux-gnu/lxcfs/liblxcfs.so" | sha256sum -c -
 
 for path in "${required_executables[@]}" usr/lib/x86_64-linux-gnu/lxcfs/liblxcfs.so; do
   if file "$archive_tree/$path" | grep -q 'dynamically linked'; then

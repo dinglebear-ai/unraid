@@ -3,21 +3,19 @@
 Release metadata is machine-readable in `release-manifest.json`. The currently
 tracked classic artifact is:
 
-- File: `packages/incus-unraid-7.0.0-56-x86_64-1.txz`
-- Size: 36,091,416 bytes
+- File: `packages/incus-unraid-7.0.0-58-x86_64-1.txz`
+- Size: 36,087,228 bytes
 - Entries: 314
-- MD5 (legacy Unraid downloader field only): `b987f9122eed2e18a56f89440b25efe8`
-- SHA-256: `92e05ce7723712a75efe2ef401bf78d5099e7212687dd673dcbd1c9a89cbf467`
+- MD5 (legacy Unraid downloader field only): `a1d9d5cc342c191c9dbb9ec0940b00e2`
+- SHA-256: `1d9c026c1fe3fc1bb20608d912ce4eb377808ef79c90d3fb7cdb831e6758cd5c`
 - Target: x86_64, glibc 2.38 or newer
 
-The Incus 7.0 runtime was repackaged from Debian trixie packages and has been
-carried forward by overlaying tracked plugin source onto the previous complete
-archive. The repository does not yet contain the original Debian `.deb` files,
-their source-package checksums, or a from-source binary build recipe. Therefore
-this artifact is verifiable against the repository hash and inventory but is
-not reproducible from upstream sources. Do not describe it as reproducible or
-independently attestable until those inputs are checked in or fetched from an
-immutable, checksummed lock manifest.
+The Incus 7.0 runtime was repackaged from Debian trixie packages and is carried
+forward by overlaying tracked plugin source onto the previous complete archive.
+The lxcfs executable and module are refreshed together from the immutable,
+checksummed Debian package recorded in `runtime-lock.json` during every build.
+Other inherited runtime files still lack a complete source lock or from-source
+build recipe, so the full artifact is not independently reproducible yet.
 
 ## Payload boundaries
 
@@ -36,7 +34,7 @@ Required executable inventory includes `incus`, `incusd`, `lxcfs`, `nft`,
 The authoritative full inventory is the archive itself:
 
 ```bash
-tar -tvJf packages/incus-unraid-7.0.0-56-x86_64-1.txz
+tar -tvJf packages/incus-unraid-7.0.0-58-x86_64-1.txz
 ./scripts/verify-classic-package.sh
 ```
 
@@ -44,8 +42,9 @@ tar -tvJf packages/incus-unraid-7.0.0-56-x86_64-1.txz
 
 1. Build and test the API and both frontend bundles.
 2. Run `scripts/build-classic-package.sh NEW_BUILD PREVIOUS_TXZ`. It extracts
-   the previous complete binary payload, overlays tracked `source/`, embeds
-   this manifest, and includes the built API payload when `dist/` is present.
+   the previous complete binary payload, overlays tracked `source/`, refreshes
+   the matched lxcfs pair from `runtime-lock.json`, embeds this manifest, and
+   includes the built API payload when `dist/` is present.
 3. Update `incus.plg` and `release-manifest.json` with the new filename, MD5,
    SHA-256, version, and compatibility values.
 4. Run `scripts/verify-classic-package.sh`. It checks XML, shell syntax/static

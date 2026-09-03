@@ -18,7 +18,9 @@ build_fixture() {
     "$fixture/source/usr/local/emhttp/plugins/incus" \
     "$fixture/source/usr/local/incus/bin" \
     "$seed/usr/local/emhttp/plugins/incus"
-  cp "$ROOT/scripts/build-classic-package.sh" "$fixture/scripts/"
+  cp "$ROOT/scripts/build-classic-package.sh" \
+    "$ROOT/scripts/stage-locked-lxcfs.sh" "$fixture/scripts/"
+  cp "$ROOT/runtime-lock.json" "$fixture/"
   printf '{"release":"test"}\n' >"$fixture/release-manifest.json"
   printf '%s\n' \
     '- File: old' \
