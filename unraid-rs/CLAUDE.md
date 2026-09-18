@@ -65,6 +65,8 @@ UNRAID_RMCP_ALLOWED_ORIGINS    Extra comma-separated CORS origins
 UNRAID_RMCP_PUBLIC_URL         Public URL for OAuth metadata
 UNRAID_RMCP_AUTH_MODE          Auth mode: `bearer` (default) or `oauth`
 UNRAID_RMCP_AUTH_ADMIN_EMAIL   Admin email for OAuth policy
+UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS
+                              Comma-separated HTTPS redirect URI patterns for hosted OAuth clients
 UNRAID_RMCP_GOOGLE_CLIENT_ID       Google OAuth client ID
 UNRAID_RMCP_GOOGLE_CLIENT_SECRET   Google OAuth client secret
 UNRAID_NOAUTH                 Permits a NON-loopback bind without auth being mounted.

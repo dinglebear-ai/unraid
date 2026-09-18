@@ -43,6 +43,10 @@ unsafe_output="$(php "$plugin_dir/tests/config-endpoint.php" unsafe-noauth)"
 grep -Fq 'Disabling HTTP auth on a non-loopback bind' <<<"$unsafe_output"
 oauth_output="$(php "$plugin_dir/tests/config-endpoint.php" incomplete-oauth)"
 grep -Fq 'UNRAID_RMCP_PUBLIC_URL must use https:' <<<"$oauth_output"
+redirect_output="$(php "$plugin_dir/tests/config-endpoint.php" invalid-redirect)"
+grep -Fq 'UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS entries must use https:' <<<"$redirect_output"
+wildcard_output="$(php "$plugin_dir/tests/config-endpoint.php" invalid-host-wildcard)"
+grep -Fq 'host wildcards must occupy a complete DNS label' <<<"$wildcard_output"
 api_key_output="$(php "$plugin_dir/tests/config-endpoint.php" missing-api-key)"
 grep -Fq 'UNRAID_API_KEY is required before the service can start' <<<"$api_key_output"
 
@@ -188,6 +192,7 @@ rm -rf "$ca_tmp"
 grep -Fq 'warn_legacy_ca_bundle' "$rc_script"
 grep -Fq 'UNRAID_API_CA_BUNDLE' "$plugin_dir/source/usr/local/emhttp/plugins/unraid-mcp/include/config.php"
 grep -Fq 'UNRAID_API_CA_BUNDLE' "$plugin_dir/web/src/fields.ts"
+grep -Fq 'UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS' "$plugin_dir/web/src/fields.ts"
 
 # The co-uploaded .sha256 only proves transit integrity; provenance must be
 # checked against GitHub's attestation store before a binary is installed.

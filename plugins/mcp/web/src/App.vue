@@ -9,6 +9,7 @@ import {
   isLoopbackHost,
   isValidBindHost,
   isValidHttpUrl,
+  isValidOAuthRedirectPatterns,
   rustVersion,
   updateIsNewer,
 } from "./lib/client-config";
@@ -111,6 +112,9 @@ function fieldError(key: string): string {
   }
   if (key === "UNRAID_RMCP_AUTH_ADMIN_EMAIL" && activeOAuth && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) {
     return "Enter a valid email address";
+  }
+  if (key === "UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS" && activeOAuth && !isValidOAuthRedirectPatterns(v)) {
+    return "Enter comma-separated HTTPS redirect URI patterns";
   }
   if ((key === "UNRAID_RMCP_ENABLED_TOOLS" || key === "UNRAID_RMCP_DISABLED_TOOLS") && !v.split(",").some((item) => item.trim())) {
     return "Enter at least one comma-separated selector";

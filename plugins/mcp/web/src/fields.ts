@@ -185,6 +185,14 @@ export const SECTIONS: Section[] = [
         kind: "text",
         mono: true,
       },
+      {
+        key: "UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS",
+        label: "Hosted client redirect URIs",
+        help: "Comma-separated HTTPS redirect URI patterns accepted during dynamic client registration. Exact callback URLs are safest; use wildcards only when a client requires variable paths.",
+        kind: "text",
+        mono: true,
+        placeholder: "https://grok.com/connectors/oauth/callback",
+      },
     ],
   },
 ];

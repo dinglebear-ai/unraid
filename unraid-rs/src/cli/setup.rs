@@ -379,6 +379,12 @@ fn write_env_file(data_dir: &Path, config: &Config) -> Result<()> {
                 config.mcp.auth.admin_email
             ));
         }
+        if !config.mcp.auth.allowed_client_redirect_uris.is_empty() {
+            lines.push(format!(
+                "UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS={}",
+                config.mcp.auth.allowed_client_redirect_uris.join(",")
+            ));
+        }
     }
 
     std::fs::write(env_path, format!("{}\n", lines.join("\n")))?;
