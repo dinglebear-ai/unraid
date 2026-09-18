@@ -6,6 +6,7 @@ import {
   isLoopbackHost,
   isValidBindHost,
   isValidHttpUrl,
+  isValidOAuthRedirectPatterns,
   updateIsNewer,
 } from "./client-config";
 
@@ -70,5 +71,18 @@ describe("client configuration helpers", () => {
     expect(isValidHttpUrl("https://user:pass@mcp.example.com")).toBe(false);
     expect(isValidHttpUrl("https://mcp.example.com?redirect=evil", true)).toBe(false);
     expect(isValidHttpUrl("http://mcp.example.com", true)).toBe(false);
+  });
+
+  it("validates hosted OAuth redirect patterns", () => {
+    expect(isValidOAuthRedirectPatterns("")).toBe(true);
+    expect(isValidOAuthRedirectPatterns("https://grok.com/connectors/oauth/callback")).toBe(true);
+    expect(isValidOAuthRedirectPatterns("https://*.example.com/oauth/*")).toBe(true);
+    expect(isValidOAuthRedirectPatterns("https://[::1]/oauth/callback")).toBe(true);
+    expect(isValidOAuthRedirectPatterns("http://grok.com/connectors/oauth/callback")).toBe(false);
+    expect(isValidOAuthRedirectPatterns("https:grok.com/connectors/oauth/callback")).toBe(false);
+    expect(isValidOAuthRedirectPatterns("https://foo*bar.example.com/oauth/callback")).toBe(false);
+    expect(isValidOAuthRedirectPatterns("https://user:pass@grok.com/oauth/callback")).toBe(false);
+    expect(isValidOAuthRedirectPatterns("https://grok.com/oauth/callback#fragment")).toBe(false);
+    expect(isValidOAuthRedirectPatterns(",,")).toBe(false);
   });
 });

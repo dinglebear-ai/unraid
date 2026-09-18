@@ -308,6 +308,35 @@ impl Config {
             "UNRAID_RMCP_GOOGLE_CLIENT_SECRET",
             &mut config.mcp.auth.google_client_secret,
         );
+        env_str(
+            "UNRAID_RMCP_AUTH_SQLITE_PATH",
+            &mut config.mcp.auth.sqlite_path,
+        );
+        env_str("UNRAID_RMCP_AUTH_KEY_PATH", &mut config.mcp.auth.key_path);
+        env_list(
+            "UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS",
+            &mut config.mcp.auth.allowed_client_redirect_uris,
+        );
+        env_parse(
+            "UNRAID_RMCP_AUTH_ACCESS_TOKEN_TTL_SECS",
+            &mut config.mcp.auth.access_token_ttl_secs,
+        )?;
+        env_parse(
+            "UNRAID_RMCP_AUTH_REFRESH_TOKEN_TTL_SECS",
+            &mut config.mcp.auth.refresh_token_ttl_secs,
+        )?;
+        env_parse(
+            "UNRAID_RMCP_AUTH_CODE_TTL_SECS",
+            &mut config.mcp.auth.auth_code_ttl_secs,
+        )?;
+        env_parse(
+            "UNRAID_RMCP_AUTH_REGISTER_REQUESTS_PER_MINUTE",
+            &mut config.mcp.auth.register_rpm,
+        )?;
+        env_parse(
+            "UNRAID_RMCP_AUTH_AUTHORIZE_REQUESTS_PER_MINUTE",
+            &mut config.mcp.auth.authorize_rpm,
+        )?;
         if let Ok(v) = std::env::var("UNRAID_RMCP_AUTH_MODE")
             && !v.is_empty()
         {

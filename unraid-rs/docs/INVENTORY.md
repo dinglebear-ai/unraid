@@ -174,6 +174,7 @@ Server/transport commands:
 | `UNRAID_RMCP_ALLOWED_ORIGINS` | no | — | Extra comma-separated CORS origins |
 | `UNRAID_RMCP_PUBLIC_URL` | no | — | Public URL for OAuth metadata and allowed hosts |
 | `UNRAID_RMCP_AUTH_ADMIN_EMAIL` | no | — | Admin email for OAuth mode |
+| `UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS` | no | — | Comma-separated HTTPS redirect URI patterns accepted during dynamic client registration |
 | `RUST_LOG` | no | `info` (server) / `warn` (stdio/CLI) | Log filter |
 
 ## Runtime dependencies

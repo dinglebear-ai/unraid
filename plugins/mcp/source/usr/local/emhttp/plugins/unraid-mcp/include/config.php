@@ -68,6 +68,7 @@ const ALLOWED_KEYS = [
     'UNRAID_RMCP_GOOGLE_CLIENT_ID',
     'UNRAID_RMCP_GOOGLE_CLIENT_SECRET',
     'UNRAID_RMCP_AUTH_ADMIN_EMAIL',
+    'UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS',
 ];
 
 /** Old Python-server keys accepted while installed configurations migrate. */
@@ -266,6 +267,43 @@ function validate_url_value(string $key, string $value, bool $httpsOnly = false)
     }
 }
 
+function validate_redirect_uri_patterns(string $value): void
+{
+    if ($value === '') {
+        return;
+    }
+    $entries = array_values(array_filter(array_map('trim', explode(',', $value)), static fn (string $entry): bool => $entry !== ''));
+    if ($entries === []) {
+        fail(400, 'UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS must contain at least one redirect URI');
+    }
+    foreach ($entries as $entry) {
+        $parts = parse_url($entry);
+        if ($parts === false) {
+            fail(400, 'UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS entries must use https:// and include a host');
+        }
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        $host = (string) ($parts['host'] ?? '');
+        if ($scheme !== 'https' || $host === '') {
+            fail(400, 'UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS entries must use https:// and include a host');
+        }
+        if (isset($parts['user']) || isset($parts['pass']) || isset($parts['fragment'])) {
+            fail(400, 'UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS entries must not contain credentials or fragments');
+        }
+        $literalHost = trim($host, '[]');
+        if (filter_var($literalHost, FILTER_VALIDATE_IP) !== false) {
+            continue;
+        }
+        foreach (explode('.', $host) as $label) {
+            if ($label === '*') {
+                continue;
+            }
+            if ($label === '' || preg_match('/^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/', $label) !== 1) {
+                fail(400, 'UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS host wildcards must occupy a complete DNS label');
+            }
+        }
+    }
+}
+
 function is_valid_bind_host(string $host): bool
 {
     $value = trim($host, '[]');
@@ -359,6 +397,7 @@ function validate_env(array $env): void
                 fail(400, "$key is required in OAuth mode");
             }
         }
+        validate_redirect_uri_patterns(resolve_value($env, 'UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS'));
         $email = resolve_value($env, 'UNRAID_RMCP_AUTH_ADMIN_EMAIL');
         if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
             fail(400, 'UNRAID_RMCP_AUTH_ADMIN_EMAIL must be a valid email address');
