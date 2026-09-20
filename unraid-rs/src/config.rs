@@ -44,6 +44,8 @@ pub struct McpConfig {
     pub api_token: Option<String>,
     pub allowed_hosts: Vec<String>,
     pub allowed_origins: Vec<String>,
+    /// MCP tool projection exposed at the protocol boundary.
+    pub projection: McpProjectionMode,
     /// Granular MCP tool/action exposure policy.
     pub tools: McpToolsConfig,
     pub auth: AuthConfig,
@@ -61,6 +63,29 @@ impl McpConfig {
 /// `disabled` always win. Selectors may be `*`, `unraid`, `unraid.*`, a
 /// bare action such as `docker_logs`, or a qualified action such as
 /// `unraid.docker_logs`.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum McpProjectionMode {
+    /// Existing single `unraid(action=...)` tool.
+    #[default]
+    Legacy,
+    /// One focused MCP tool per enabled action.
+    Atomic,
+    /// Publish legacy and atomic projections during migration.
+    Both,
+}
+
+fn parse_mcp_projection_mode(value: &str) -> anyhow::Result<McpProjectionMode> {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "legacy" => Ok(McpProjectionMode::Legacy),
+        "atomic" => Ok(McpProjectionMode::Atomic),
+        "both" => Ok(McpProjectionMode::Both),
+        other => anyhow::bail!(
+            "UNRAID_RMCP_PROJECTION: expected legacy, atomic, or both; got {other:?}"
+        ),
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default, deny_unknown_fields)]
 pub struct McpToolsConfig {
@@ -240,6 +265,7 @@ impl Default for McpConfig {
             api_token: None,
             allowed_hosts: Vec::new(),
             allowed_origins: Vec::new(),
+            projection: McpProjectionMode::default(),
             tools: McpToolsConfig::default(),
             auth: AuthConfig::default(),
         }
@@ -293,6 +319,11 @@ impl Config {
             "UNRAID_RMCP_ALLOWED_ORIGINS",
             &mut config.mcp.allowed_origins,
         );
+        if let Ok(value) = std::env::var("UNRAID_RMCP_PROJECTION")
+            && !value.is_empty()
+        {
+            config.mcp.projection = parse_mcp_projection_mode(&value)?;
+        }
         env_tool_selector_list("UNRAID_RMCP_ENABLED_TOOLS", &mut config.mcp.tools.enabled)?;
         env_tool_selector_list("UNRAID_RMCP_DISABLED_TOOLS", &mut config.mcp.tools.disabled)?;
         env_opt_str("UNRAID_RMCP_PUBLIC_URL", &mut config.mcp.auth.public_url);
@@ -480,5 +511,38 @@ mod data_dir_tests {
             data_dir_from_sources(None, false, None),
             PathBuf::from("/tmp/.unraid")
         );
+    }
+}
+
+
+#[cfg(test)]
+mod mcp_projection_mode_tests {
+    use super::{Config, McpProjectionMode, parse_mcp_projection_mode};
+
+    #[test]
+    fn projection_mode_defaults_to_legacy() {
+        assert_eq!(Config::default().mcp.projection, McpProjectionMode::Legacy);
+    }
+
+    #[test]
+    fn projection_mode_deserializes_all_supported_values() {
+        for (raw, expected) in [
+            ("legacy", McpProjectionMode::Legacy),
+            ("atomic", McpProjectionMode::Atomic),
+            ("both", McpProjectionMode::Both),
+        ] {
+            let config: Config =
+                toml::from_str(&format!("[mcp]\nprojection = \"{raw}\"\n")).unwrap();
+            assert_eq!(config.mcp.projection, expected);
+        }
+    }
+
+    #[test]
+    fn projection_mode_env_parser_is_strict() {
+        assert_eq!(
+            parse_mcp_projection_mode("ATOMIC").unwrap(),
+            McpProjectionMode::Atomic
+        );
+        assert!(parse_mcp_projection_mode("split").is_err());
     }
 }
