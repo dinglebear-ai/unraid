@@ -38,9 +38,7 @@ from unraid_mcp.tools._user import _USER_QUERIES
 from unraid_mcp.tools._vm import _VM_MUTATIONS, _VM_QUERIES
 
 
-def public_operation_dicts(
-    *, include_legacy: bool = True
-) -> Iterable[tuple[str, dict[str, str]]]:
+def public_operation_dicts(*, include_legacy: bool = True) -> Iterable[tuple[str, dict[str, str]]]:
     """Return action/subaction operations exposed through the consolidated tool.
 
     Legacy operations remain dispatchable for older Unraid API versions but can

@@ -270,6 +270,7 @@ async def test_remove_disk_with_confirm(_mock_graphql):
     )
     assert result["success"] is True
 
+
 @pytest.mark.asyncio
 async def test_remove_disk_reports_unsupported_on_new_api(_mock_graphql):
     _mock_graphql.side_effect = ToolError(
