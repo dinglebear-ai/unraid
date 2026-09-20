@@ -9,7 +9,7 @@ domain below.)
 
 | Domain (`action=`) | Destructive subactions |
 |--------------------|------------------------|
-| `array` | `stop_array`, `clear_disk_stats` |
+| `array` | `stop_array`, `remove_disk`, `clear_disk_stats` |
 | `vm` | `force_stop`, `reset` |
 | `notification` | `delete`, `delete_archived` |
 | `rclone` | `delete_remote` |
@@ -34,6 +34,17 @@ domain below.)
 
 **Strategy: mock/safety audit only.**
 Stopping the array unmounts all shares and can interrupt running containers and VMs accessing array data. Test via `tests/safety/` confirming the `confirm=False` guard raises `ToolError`. Do not run live unless all containers and VMs are shut down first.
+
+---
+
+### `remove_disk` — Remove a disk from the array
+
+```bash
+# Prerequisite: array must already be stopped; use a disk you intend to remove
+
+mcporter call --stdio-cmd "uv run unraid-mcp-server" --tool unraid \
+  --args '{"action":"array","subaction":"remove_disk","disk_id":"<DISK_ID>","confirm":true}' --output json
+```
 
 ---
 
@@ -351,6 +362,7 @@ uv run pytest tests/safety/ -v
 | Domain (`action=`) | Subaction | Strategy | Target Server |
 |--------------------|-----------|----------|---------------|
 | `array` | `stop_array` | Mock/safety audit only | — |
+| `array` | `remove_disk` | Array must be stopped; use intended disk | either |
 | `array` | `clear_disk_stats` | Discover disk ID → clear | either |
 | `vm` | `force_stop` | Minimal Alpine test VM | either |
 | `vm` | `reset` | Minimal Alpine test VM | either |

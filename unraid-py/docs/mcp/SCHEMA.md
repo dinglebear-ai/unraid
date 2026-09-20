@@ -132,7 +132,7 @@ Mutations are handled with early-return blocks before the query dict lookup to p
 Each domain with destructive operations defines a frozenset:
 
 ```python
-_ARRAY_DESTRUCTIVE = {"stop_array", "clear_disk_stats"}
+_ARRAY_DESTRUCTIVE = {"stop_array", "remove_disk", "clear_disk_stats"}
 _VM_DESTRUCTIVE = {"force_stop", "reset"}
 _NOTIFICATION_DESTRUCTIVE = {"delete", "delete_archived"}
 ```

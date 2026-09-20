@@ -104,6 +104,7 @@ Parity checks, array lifecycle, and disk operations.
 | `start_array` | Start the array | -- | -- |
 | `stop_array` | Stop the array | -- | Yes |
 | `add_disk` | Add a disk to the array | `slot`, `disk_id` | -- |
+| `remove_disk` | Remove a disk from the array (legacy Unraid API only; newer APIs report unsupported) | `disk_id` | Yes |
 | `mount_disk` | Mount a disk | `disk_id` | -- |
 | `unmount_disk` | Unmount a disk | `disk_id` | -- |
 | `clear_disk_stats` | Clear disk statistics permanently | -- | Yes |
@@ -377,6 +378,7 @@ All destructive operations require `confirm=True`. Without it, interactive clien
 | Domain | Subaction | Risk |
 |--------|-----------|------|
 | `array` | `stop_array` | Stops array while containers/VMs may use shares |
+| `array` | `remove_disk` | Removes disk from array |
 | `array` | `clear_disk_stats` | Clears disk statistics permanently |
 | `vm` | `force_stop` | Hard kills VM without graceful shutdown |
 | `vm` | `reset` | Hard resets VM |

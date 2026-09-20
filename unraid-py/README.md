@@ -296,6 +296,7 @@ Parity checks and array disk operations. Destructive subactions marked with *.
 | `start_array` | Start the Unraid array | — | — |
 | `stop_array` | Stop the Unraid array | `confirm=True` | * |
 | `add_disk` | Add a disk to the array | `disk_id`; optional `slot` | — |
+| `remove_disk` | Remove a disk from the array on legacy Unraid APIs; newer APIs report unsupported | `disk_id`, `confirm=True` | * |
 | `mount_disk` | Mount an array disk | `disk_id` | — |
 | `unmount_disk` | Unmount an array disk | `disk_id` | — |
 | `clear_disk_stats` | Clear I/O statistics for a disk (irreversible) | `disk_id`, `confirm=True` | * |
@@ -592,6 +593,7 @@ All destructive actions require `confirm=True`. Omitting it or passing `confirm=
 | Action | Subaction | Notes |
 | --- | --- | --- |
 | `array` | `stop_array` | Unmounts shares; stop containers and VMs first |
+| `array` | `remove_disk` | Array must be stopped first |
 | `array` | `clear_disk_stats` | I/O stats are permanently erased |
 | `vm` | `force_stop` | Hard power-off; unsaved data may be lost |
 | `vm` | `reset` | Hard reset; unsaved data may be lost |

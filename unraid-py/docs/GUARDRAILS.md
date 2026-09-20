@@ -46,7 +46,7 @@ All destructive operations are gated by the `gate_destructive_action()` function
 
 | Domain | Destructive subactions |
 | --- | --- |
-| `array` | `stop_array`, `clear_disk_stats` |
+| `array` | `stop_array`, `remove_disk`, `clear_disk_stats` |
 | `vm` | `force_stop`, `reset` |
 | `notification` | `delete`, `delete_archived` |
 | `rclone` | `delete_remote` |

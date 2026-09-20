@@ -48,7 +48,7 @@ Each domain provides human-readable descriptions for its destructive actions:
 
 ```python
 # Example from _array.py
-_ARRAY_DESTRUCTIVE = {"stop_array", "clear_disk_stats"}
+_ARRAY_DESTRUCTIVE = {"stop_array", "remove_disk", "clear_disk_stats"}
 # Each has a description dict explaining the impact
 ```
 
