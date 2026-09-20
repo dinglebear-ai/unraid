@@ -26,7 +26,6 @@ impl Respond for ScenarioResponder {
     }
 }
 
-
 /// Responder representing a current Unraid API where removeDiskFromArray has
 /// been removed from ArrayMutations.
 struct CurrentApiResponder {
@@ -183,7 +182,6 @@ async fn healthy_inherits_baseline_for_unoverridden_actions() {
 
     assert_eq!(h_info, d_info, "info should be inherited unchanged");
 }
-
 
 #[tokio::test]
 async fn remove_disk_reports_unsupported_on_current_api() {
