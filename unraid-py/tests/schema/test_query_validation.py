@@ -262,6 +262,14 @@ class TestArrayMutations:
         errors = _validate_operation(schema, MUTATIONS["add_disk"])
         assert not errors, f"add_disk mutation validation failed: {errors}"
 
+    def test_remove_disk_legacy_mutation_is_not_in_current_schema(
+        self, schema: GraphQLSchema
+    ) -> None:
+        from unraid_mcp.tools._array import _ARRAY_LEGACY_MUTATIONS
+
+        errors = _validate_operation(schema, _ARRAY_LEGACY_MUTATIONS["remove_disk"])
+        assert errors, "legacy remove_disk unexpectedly validated against the current SDL"
+
     def test_mount_disk_mutation(self, schema: GraphQLSchema) -> None:
         from unraid_mcp.tools._array import _ARRAY_MUTATIONS as MUTATIONS
 
@@ -296,6 +304,11 @@ class TestArrayMutations:
             "clear_disk_stats",
         }
         assert set(MUTATIONS.keys()) == expected
+
+    def test_legacy_array_mutations_covered(self) -> None:
+        from unraid_mcp.tools._array import _ARRAY_LEGACY_MUTATIONS
+
+        assert set(_ARRAY_LEGACY_MUTATIONS) == {"remove_disk"}
 
 
 # ============================================================================

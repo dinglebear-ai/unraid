@@ -33,7 +33,6 @@ class TestArrayValidation:
             "shutdown",
             "reboot",
             "clear_stats",
-            "remove_disk",
         ):
             with pytest.raises(ToolError, match="Invalid subaction"):
                 await tool_fn(action="array", subaction=subaction)
@@ -250,6 +249,36 @@ async def test_add_disk_success(_mock_graphql):
     # data is projected to the array.addDiskToArray subtree, not the raw blob.
     assert result["data"] == {"state": "STARTED"}
     assert "array" not in result
+
+
+# remove_disk — destructive
+
+
+@pytest.mark.asyncio
+async def test_remove_disk_requires_confirm(_mock_graphql):
+    with pytest.raises(ToolError, match="not confirmed"):
+        await _make_tool()(
+            action="array", subaction="remove_disk", disk_id="abc123:local", confirm=False
+        )
+
+
+@pytest.mark.asyncio
+async def test_remove_disk_with_confirm(_mock_graphql):
+    _mock_graphql.return_value = {"array": {"removeDiskFromArray": {"state": "STOPPED"}}}
+    result = await _make_tool()(
+        action="array", subaction="remove_disk", disk_id="abc123:local", confirm=True
+    )
+    assert result["success"] is True
+
+@pytest.mark.asyncio
+async def test_remove_disk_reports_unsupported_on_new_api(_mock_graphql):
+    _mock_graphql.side_effect = ToolError(
+        'GraphQL API error: Cannot query field "removeDiskFromArray" on type "ArrayMutations".'
+    )
+    with pytest.raises(ToolError, match="not supported by this Unraid API version"):
+        await _make_tool()(
+            action="array", subaction="remove_disk", disk_id="abc123:local", confirm=True
+        )
 
 
 # mount_disk / unmount_disk
