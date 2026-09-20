@@ -592,7 +592,6 @@ All destructive actions require `confirm=True`. Omitting it or passing `confirm=
 | Action | Subaction | Notes |
 | --- | --- | --- |
 | `array` | `stop_array` | Unmounts shares; stop containers and VMs first |
-| `array` | `remove_disk` | Array must be stopped first |
 | `array` | `clear_disk_stats` | I/O stats are permanently erased |
 | `vm` | `force_stop` | Hard power-off; unsaved data may be lost |
 | `vm` | `reset` | Hard reset; unsaved data may be lost |

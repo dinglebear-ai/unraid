@@ -377,7 +377,6 @@ All destructive operations require `confirm=True`. Without it, interactive clien
 | Domain | Subaction | Risk |
 |--------|-----------|------|
 | `array` | `stop_array` | Stops array while containers/VMs may use shares |
-| `array` | `remove_disk` | Removes disk from array |
 | `array` | `clear_disk_stats` | Clears disk statistics permanently |
 | `vm` | `force_stop` | Hard kills VM without graceful shutdown |
 | `vm` | `reset` | Hard resets VM |
