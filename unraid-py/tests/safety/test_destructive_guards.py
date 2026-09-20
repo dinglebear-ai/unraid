@@ -61,7 +61,7 @@ _ONBOARDING_ALL_MUTATIONS = {**_ONBOARDING_SIMPLE_MUTATIONS, **_ONBOARDING_INPUT
 
 KNOWN_DESTRUCTIVE: dict[str, dict] = {
     "array": {
-        "actions": {"remove_disk", "clear_disk_stats", "stop_array"},
+        "actions": {"clear_disk_stats", "stop_array"},
         "runtime_set": _ARRAY_DESTRUCTIVE,
         "mutations": _ARRAY_MUTATIONS,
     },
@@ -181,7 +181,6 @@ class TestDestructiveActionRegistries:
 # (action, subaction, extra_kwargs)
 _DESTRUCTIVE_TEST_CASES: list[tuple[str, str, dict]] = [
     # Array
-    ("array", "remove_disk", {"disk_id": "abc123:local"}),
     ("array", "clear_disk_stats", {"disk_id": "abc123:local"}),
     ("array", "stop_array", {}),
     # VM
@@ -417,13 +416,6 @@ class TestConfirmAllowsExecution:
         )
         assert result["success"] is True
 
-    async def test_array_remove_disk_with_confirm(self, _mock_graphql: AsyncMock) -> None:
-        _mock_graphql.return_value = {"array": {"removeDiskFromArray": {"state": "STOPPED"}}}
-        tool_fn = make_tool_fn(_MODULE, _REGISTER_FN, _TOOL_NAME)
-        result = await tool_fn(
-            action="array", subaction="remove_disk", disk_id="abc:local", confirm=True
-        )
-        assert result["success"] is True
 
     async def test_array_clear_disk_stats_with_confirm(self, _mock_graphql: AsyncMock) -> None:
         _mock_graphql.return_value = {"array": {"clearArrayDiskStatistics": True}}

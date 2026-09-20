@@ -1,8 +1,8 @@
 """Array domain handler for the Unraid MCP tool.
 
 Covers: parity_status, parity_history, assignable_disks, parity_start, parity_pause,
-parity_resume, parity_cancel, start_array, stop_array*, add_disk, remove_disk*,
-mount_disk, unmount_disk, clear_disk_stats* (14 subactions).
+parity_resume, parity_cancel, start_array, stop_array*, add_disk, mount_disk,
+unmount_disk, clear_disk_stats* (13 subactions).
 """
 
 from typing import Any
@@ -42,14 +42,13 @@ _ARRAY_MUTATIONS: dict[str, str] = {
     "start_array": "mutation StartArray { array { setState(input: { desiredState: START }) { state capacity { kilobytes { free used total } } } } }",
     "stop_array": "mutation StopArray { array { setState(input: { desiredState: STOP }) { state } } }",
     "add_disk": "mutation AddDisk($id: PrefixedID!, $slot: Int) { array { addDiskToArray(input: { id: $id, slot: $slot }) { state disks { id name device type status } } } }",
-    "remove_disk": "mutation RemoveDisk($id: PrefixedID!) { array { removeDiskFromArray(input: { id: $id }) { state disks { id name device type } } } }",
     "mount_disk": "mutation MountDisk($id: PrefixedID!) { array { mountArrayDisk(id: $id) { id name device status } } }",
     "unmount_disk": "mutation UnmountDisk($id: PrefixedID!) { array { unmountArrayDisk(id: $id) { id name device status } } }",
     "clear_disk_stats": "mutation ClearDiskStats($id: PrefixedID!) { array { clearArrayDiskStatistics(id: $id) } }",
 }
 
 _ARRAY_SUBACTIONS: set[str] = set(_ARRAY_QUERIES) | set(_ARRAY_MUTATIONS)
-_ARRAY_DESTRUCTIVE: set[str] = {"remove_disk", "clear_disk_stats", "stop_array"}
+_ARRAY_DESTRUCTIVE: set[str] = {"clear_disk_stats", "stop_array"}
 
 # Maps each non-list subaction to the GraphQL key chain for its meaningful result
 # subtree, so the handler projects to that subtree under `data` instead of echoing
@@ -65,7 +64,6 @@ _ARRAY_RESULT_FIELD: dict[str, tuple[str, ...]] = {
     "start_array": ("array", "setState"),
     "stop_array": ("array", "setState"),
     "add_disk": ("array", "addDiskToArray"),
-    "remove_disk": ("array", "removeDiskFromArray"),
     "mount_disk": ("array", "mountArrayDisk"),
     "unmount_disk": ("array", "unmountArrayDisk"),
     "clear_disk_stats": ("array", "clearArrayDiskStatistics"),
@@ -89,7 +87,6 @@ async def _handle_array(
         _ARRAY_DESTRUCTIVE,
         confirm,
         {
-            "remove_disk": f"Remove disk **{disk_id}** from the array. The array must be stopped first.",
             "clear_disk_stats": f"Clear all I/O statistics for disk **{disk_id}**. This cannot be undone.",
             "stop_array": "Stop the Unraid array. Running containers and VMs may lose access to array shares.",
         },
@@ -154,7 +151,7 @@ async def _handle_array(
             result = safe_get(data, *_ARRAY_RESULT_FIELD[subaction])
             return {"success": True, "subaction": subaction, "data": result}
 
-        if subaction in ("remove_disk", "mount_disk", "unmount_disk", "clear_disk_stats"):
+        if subaction in ("mount_disk", "unmount_disk", "clear_disk_stats"):
             if not disk_id:
                 raise ToolError(f"disk_id is required for array/{subaction}")
             data = await _client.make_graphql_request(_ARRAY_MUTATIONS[subaction], {"id": disk_id})

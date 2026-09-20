@@ -262,12 +262,6 @@ class TestArrayMutations:
         errors = _validate_operation(schema, MUTATIONS["add_disk"])
         assert not errors, f"add_disk mutation validation failed: {errors}"
 
-    def test_remove_disk_mutation(self, schema: GraphQLSchema) -> None:
-        from unraid_mcp.tools._array import _ARRAY_MUTATIONS as MUTATIONS
-
-        errors = _validate_operation(schema, MUTATIONS["remove_disk"])
-        assert not errors, f"remove_disk mutation validation failed: {errors}"
-
     def test_mount_disk_mutation(self, schema: GraphQLSchema) -> None:
         from unraid_mcp.tools._array import _ARRAY_MUTATIONS as MUTATIONS
 
@@ -297,7 +291,6 @@ class TestArrayMutations:
             "start_array",
             "stop_array",
             "add_disk",
-            "remove_disk",
             "mount_disk",
             "unmount_disk",
             "clear_disk_stats",
