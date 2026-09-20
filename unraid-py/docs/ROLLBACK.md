@@ -8,7 +8,7 @@ What to do when a bad release ships. Merging the release-please PR fires a chain
 4. **GitHub Release assets** -- the exact attested wheel, sdist, and `SHA256SUMS`.
 
 The published tool surface includes **destructive Unraid actions** (`array stop_array`,
-`array remove_disk`, `docker remove_container`, `vm force_stop`, `key delete`, ...). A bad
+`docker remove_container`, `vm force_stop`, `key delete`, ...). A bad
 release has real blast radius, so treat rollback as an incident, not housekeeping.
 
 > **First rule of releases:** versions are immutable. You cannot un-publish and re-use a

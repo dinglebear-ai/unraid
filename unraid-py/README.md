@@ -296,7 +296,6 @@ Parity checks and array disk operations. Destructive subactions marked with *.
 | `start_array` | Start the Unraid array | — | — |
 | `stop_array` | Stop the Unraid array | `confirm=True` | * |
 | `add_disk` | Add a disk to the array | `disk_id`; optional `slot` | — |
-| `remove_disk` | Remove a disk from the array (array must be stopped) | `disk_id`, `confirm=True` | * |
 | `mount_disk` | Mount an array disk | `disk_id` | — |
 | `unmount_disk` | Unmount an array disk | `disk_id` | — |
 | `clear_disk_stats` | Clear I/O statistics for a disk (irreversible) | `disk_id`, `confirm=True` | * |

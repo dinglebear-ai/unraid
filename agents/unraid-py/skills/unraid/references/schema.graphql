@@ -912,18 +912,6 @@ type ArrayMutations {
   
   #### Description:
   
-  Remove existing disk from array. NOTE: The array must be stopped before running this otherwise it'll throw an error.
-  """
-  removeDiskFromArray(input: ArrayDiskInput!): UnraidArray!
-
-  """
-  #### Required Permissions:
-  
-  - Action: **UPDATE_ANY**
-  - Resource: **ARRAY**
-  
-  #### Description:
-  
   Mount a disk in the array
   """
   mountArrayDisk(id: PrefixedID!): ArrayDisk!

@@ -6,7 +6,7 @@ subactions via the action + subaction pattern.
 Actions:
   system       - Server info, metrics, network, UPS (25 subactions)
   health       - Health checks, connection test, diagnostics, setup (4 subactions)
-  array        - Parity checks, array state, disk operations (14 subactions)
+  array        - Parity checks, array state, disk operations (13 subactions)
   disk         - Shares, physical disks, log files (6 subactions)
   docker       - Container lifecycle, updates, organizer, networks (27 subactions)
   vm           - Virtual machine lifecycle (9 subactions)

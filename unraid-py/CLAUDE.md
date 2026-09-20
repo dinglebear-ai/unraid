@@ -124,7 +124,7 @@ The handler functions live in `src/unraid_mcp/subscriptions/diagnostics.py`
 |--------|-----------|
 | **system** (25) | overview, array, network, registration, variables, metrics, network_metrics, services, display, display_details, config, online, owner, settings, server, server_details, servers, network_access_urls, flash, ups_devices, ups_device, ups_config, server_time, timezones, network_interfaces |
 | **health** (4) | check, test_connection, diagnose, setup |
-| **array** (14) | parity_status, parity_history, assignable_disks, parity_start, parity_pause, parity_resume, parity_cancel, start_array, stop_array*, add_disk, remove_disk*, mount_disk, unmount_disk, clear_disk_stats* |
+| **array** (13) | parity_status, parity_history, assignable_disks, parity_start, parity_pause, parity_resume, parity_cancel, start_array, stop_array*, add_disk, mount_disk, unmount_disk, clear_disk_stats* |
 | **disk** (6) | shares, disks, disk_details, log_files, logs, flash_backup* |
 | **docker** (27) | list, details, logs, check_updates, ports, start, stop, restart, unpause, networks, network_details, remove_container*, update_container, update_containers, update_all_containers, update_autostart, refresh_digests, sync_template_paths, reset_template_mappings*, create_folder, create_folder_with_items, rename_folder, set_folder_children, delete_entries*, move_entries_to_folder, move_items_to_position, update_view_preferences |
 | **vm** (9) | list, details, start, stop, pause, resume, force_stop*, reboot, reset* |
@@ -166,7 +166,7 @@ context + `---` separators) and `count_log_matches(lines, level=None)` (severity
 count only), both in `src/unraid_mcp/core/utils.py`.
 
 ### Destructive Actions (require `confirm=True`)
-- **array**: stop_array, remove_disk, clear_disk_stats
+- **array**: stop_array, clear_disk_stats
 - **vm**: force_stop, reset
 - **notification**: delete, delete_archived
 - **rclone**: delete_remote
