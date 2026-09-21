@@ -1192,11 +1192,6 @@ type ArrayMutations {
   """Add new disk to array"""
   addDiskToArray(input: ArrayDiskInput!): UnraidArray!
 
-  """
-  Remove existing disk from array. NOTE: The array must be stopped before running this otherwise it'll throw an error.
-  """
-  removeDiskFromArray(input: ArrayDiskInput!): UnraidArray!
-
   """Mount a disk in the array"""
   mountArrayDisk(id: PrefixedID!): ArrayDisk!
 

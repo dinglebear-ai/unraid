@@ -104,7 +104,7 @@ Parity checks, array lifecycle, and disk operations.
 | `start_array` | Start the array | -- | -- |
 | `stop_array` | Stop the array | -- | Yes |
 | `add_disk` | Add a disk to the array | `slot`, `disk_id` | -- |
-| `remove_disk` | Remove a disk from the array | `slot` | Yes |
+| `remove_disk` | Remove a disk from the array (legacy Unraid API only; newer APIs report unsupported) | `disk_id` | Yes |
 | `mount_disk` | Mount a disk | `disk_id` | -- |
 | `unmount_disk` | Unmount a disk | `disk_id` | -- |
 | `clear_disk_stats` | Clear disk statistics permanently | -- | Yes |
