@@ -89,10 +89,12 @@ def schema_operation_dicts() -> Iterable[tuple[str, dict[str, str]]]:
     yield ("live_collect", COLLECT_ACTIONS)
 
 
-def dispatch_operation_cases() -> list[tuple[str, str, str]]:
+def dispatch_operation_cases(
+    *, include_legacy: bool = True
+) -> list[tuple[str, str, str]]:
     """Return public action/subaction cases that can be driven through dispatch."""
     cases: list[tuple[str, str, str]] = []
-    for action, operations in public_operation_dicts():
+    for action, operations in public_operation_dicts(include_legacy=include_legacy):
         for subaction, operation in operations.items():
             cases.append((action, subaction, operation))
     return cases
