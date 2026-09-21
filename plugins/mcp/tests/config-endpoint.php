@@ -45,6 +45,29 @@ if ($case === 'incomplete-oauth') {
 ");
     exit(1);
 }
+if ($case === 'invalid-host-wildcard') {
+    validate_redirect_uri_patterns('https://foo*bar.example.com/oauth/callback');
+    fwrite(STDERR, "partial host wildcard was accepted
+");
+    exit(1);
+}
+if ($case === 'invalid-redirect') {
+    validate_env([
+        'UNRAID_API_URL' => 'http://127.0.0.1/graphql',
+        'UNRAID_RMCP_HOST' => '127.0.0.1',
+        'UNRAID_RMCP_PORT' => '40010',
+        'UNRAID_RMCP_AUTH_MODE' => 'oauth',
+        'UNRAID_RMCP_DISABLE_HTTP_AUTH' => 'false',
+        'UNRAID_RMCP_PUBLIC_URL' => 'https://mcp.example.com',
+        'UNRAID_RMCP_GOOGLE_CLIENT_ID' => 'client-id',
+        'UNRAID_RMCP_GOOGLE_CLIENT_SECRET' => 'client-secret',
+        'UNRAID_RMCP_AUTH_ADMIN_EMAIL' => 'admin@example.com',
+        'UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS' => 'http://grok.com/connectors/oauth/callback',
+    ]);
+    fwrite(STDERR, "insecure hosted OAuth redirect was accepted
+");
+    exit(1);
+}
 
 function expect_same(mixed $expected, mixed $actual, string $message): void
 {
@@ -92,6 +115,20 @@ $valid = [
     'UNRAID_RMCP_ENABLED_TOOLS' => 'array,docker',
 ];
 validate_env($valid);
+$validOauth = [
+    'UNRAID_API_URL' => 'http://127.0.0.1/graphql',
+    'UNRAID_RMCP_HOST' => '127.0.0.1',
+    'UNRAID_RMCP_PORT' => '40010',
+    'UNRAID_RMCP_AUTH_MODE' => 'oauth',
+    'UNRAID_RMCP_DISABLE_HTTP_AUTH' => 'false',
+    'UNRAID_RMCP_PUBLIC_URL' => 'https://mcp.example.com',
+    'UNRAID_RMCP_GOOGLE_CLIENT_ID' => 'client-id',
+    'UNRAID_RMCP_GOOGLE_CLIENT_SECRET' => 'client-secret',
+    'UNRAID_RMCP_AUTH_ADMIN_EMAIL' => 'admin@example.com',
+    'UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS' => 'https://grok.com/connectors/oauth/callback,https://*.example.com/oauth/*',
+];
+validate_env($validOauth);
+validate_redirect_uri_patterns('https://[::1]/oauth/callback');
 expect_same(true, is_valid_bind_host('tower.local'), 'valid hostname was rejected');
 expect_same(false, is_valid_bind_host('127.999.1.1'), 'invalid dotted numeric address was accepted');
 expect_same(true, is_loopback_host('127.42.1.9'), '127/8 loopback was not recognized');
@@ -99,5 +136,10 @@ expect_same(true, is_loopback_host('[::1]'), 'IPv6 loopback was not recognized')
 expect_same(false, process_is_runraid_server(getmypid()), 'PHP test process was mistaken for runraid serve');
 expect_same(false, in_array('UNRAID_MCP_GOOGLE_JWT_SIGNING_KEY', REVEALABLE_SECRET_KEYS, true), 'legacy JWT key became browser-revealable');
 expect_same(true, in_array('UNRAID_RMCP_TOKEN', REVEALABLE_SECRET_KEYS, true), 'bearer token must remain copyable');
+expect_same(
+    true,
+    in_array('UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS', ALLOWED_KEYS, true),
+    'OAuth redirect allowlist must be configurable from the settings endpoint',
+);
 
 echo "Unraid MCP config endpoint tests passed\n";

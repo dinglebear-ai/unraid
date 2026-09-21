@@ -361,6 +361,7 @@ inherit persisted `.env` values instead of clearing them. A present but malforme
 | `UNRAID_RMCP_GOOGLE_CLIENT_ID` | unset | Google OAuth client ID. |
 | `UNRAID_RMCP_GOOGLE_CLIENT_SECRET` | unset | Google OAuth client secret. |
 | `UNRAID_RMCP_AUTH_ADMIN_EMAIL` | unset | Admin email for OAuth bootstrap. |
+| `UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS` | unset | Comma-separated HTTPS redirect URI patterns allowed during OAuth dynamic client registration. Loopback HTTP callbacks are allowed automatically. |
 
 Tool selectors may target the entire tool (`*`, `unraid`, or `unraid.*`) or
 a single action (`docker_logs` or `unraid.vm_reset`). Tool discovery and the
@@ -392,7 +393,7 @@ HTTP MCP auth policy:
 
 Read actions require `unraid:read`; mutating actions require `unraid:admin`.
 Configured static bearer tokens are operator credentials and receive admin scope.
-OAuth clients receive the scopes granted by the authorization flow.
+OAuth clients receive the scopes granted by the authorization flow. Hosted clients that use dynamic client registration must register an HTTPS callback present in `UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS`; loopback HTTP callbacks are accepted automatically. Prefer exact callback URLs, for example `https://grok.com/connectors/oauth/callback`, and use wildcard patterns only when the client requires them.
 
 ## Safety And Trust Model
 

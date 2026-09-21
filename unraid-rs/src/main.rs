@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 use rmcp::{ServiceExt, transport::stdio};
-use std::sync::Arc;
+use std::{collections::BTreeMap, sync::Arc};
 use tracing::info;
 
 use unraid_rmcp::{
@@ -206,6 +206,79 @@ async fn build_state(config: Config) -> Result<AppState> {
     })
 }
 
+fn oauth_source_vars(
+    config: &Config,
+    vars: impl IntoIterator<Item = (String, String)>,
+) -> Vec<(String, String)> {
+    let mut vars = vars.into_iter().collect::<BTreeMap<_, _>>();
+    let auth = &config.mcp.auth;
+
+    vars.insert(
+        "UNRAID_RMCP_AUTH_MODE".into(),
+        match auth.mode {
+            AuthMode::Bearer => "bearer",
+            AuthMode::OAuth => "oauth",
+        }
+        .into(),
+    );
+    if let Some(value) = auth.public_url.as_deref().filter(|value| !value.is_empty()) {
+        vars.insert("UNRAID_RMCP_PUBLIC_URL".into(), value.into());
+    }
+    if let Some(value) = auth
+        .google_client_id
+        .as_deref()
+        .filter(|value| !value.is_empty())
+    {
+        vars.insert("UNRAID_RMCP_GOOGLE_CLIENT_ID".into(), value.into());
+    }
+    if let Some(value) = auth
+        .google_client_secret
+        .as_deref()
+        .filter(|value| !value.is_empty())
+    {
+        vars.insert("UNRAID_RMCP_GOOGLE_CLIENT_SECRET".into(), value.into());
+    }
+    if !auth.admin_email.is_empty() {
+        vars.insert(
+            "UNRAID_RMCP_AUTH_ADMIN_EMAIL".into(),
+            auth.admin_email.clone(),
+        );
+    }
+    vars.insert(
+        "UNRAID_RMCP_AUTH_SQLITE_PATH".into(),
+        auth.sqlite_path.clone(),
+    );
+    vars.insert("UNRAID_RMCP_AUTH_KEY_PATH".into(), auth.key_path.clone());
+    if !auth.allowed_client_redirect_uris.is_empty() {
+        vars.insert(
+            "UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS".into(),
+            auth.allowed_client_redirect_uris.join(","),
+        );
+    }
+    vars.insert(
+        "UNRAID_RMCP_AUTH_ACCESS_TOKEN_TTL_SECS".into(),
+        auth.access_token_ttl_secs.to_string(),
+    );
+    vars.insert(
+        "UNRAID_RMCP_AUTH_REFRESH_TOKEN_TTL_SECS".into(),
+        auth.refresh_token_ttl_secs.to_string(),
+    );
+    vars.insert(
+        "UNRAID_RMCP_AUTH_CODE_TTL_SECS".into(),
+        auth.auth_code_ttl_secs.to_string(),
+    );
+    vars.insert(
+        "UNRAID_RMCP_AUTH_REGISTER_REQUESTS_PER_MINUTE".into(),
+        auth.register_rpm.to_string(),
+    );
+    vars.insert(
+        "UNRAID_RMCP_AUTH_AUTHORIZE_REQUESTS_PER_MINUTE".into(),
+        auth.authorize_rpm.to_string(),
+    );
+
+    vars.into_iter().collect()
+}
+
 async fn build_auth_policy(config: &Config) -> Result<AuthPolicy> {
     if config.mcp.no_auth || is_loopback_host(&config.mcp.host) {
         return Ok(AuthPolicy::LoopbackDev);
@@ -213,12 +286,14 @@ async fn build_auth_policy(config: &Config) -> Result<AuthPolicy> {
     if config.mcp.auth.mode == AuthMode::OAuth {
         let auth_cfg = lab_auth::config::AuthConfigBuilder::new()
             .env_prefix("UNRAID_RMCP")
+            .default_data_dir(unraid_rmcp::config::default_data_dir())
             .session_cookie_name("unraid_rmcp_session")
             .scopes_supported(vec!["unraid:read".into(), "unraid:admin".into()])
             .default_scope("unraid:read")
             .resource_path("/mcp")
             .enable_dynamic_registration(true)
-            .build_from_sources(std::env::vars())
+            .disable_static_token_with_oauth(config.mcp.auth.disable_static_token_with_oauth)
+            .build_from_sources(oauth_source_vars(config, std::env::vars()))
             .map_err(|e| anyhow::anyhow!("OAuth config error: {e}"))?;
         let auth_state = lab_auth::state::AuthState::new(auth_cfg)
             .await
@@ -318,4 +393,64 @@ async fn shutdown_signal() {
 
     tokio::select! { _ = ctrl_c => {}, _ = terminate => {} }
     tracing::info!("Shutdown signal received");
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+
+    use super::{AuthMode, Config, oauth_source_vars};
+
+    #[test]
+    fn oauth_source_vars_project_configured_redirects_and_preserve_extra_env() {
+        let mut config = Config::default();
+        config.mcp.auth.mode = AuthMode::OAuth;
+        config.mcp.auth.sqlite_path = "/tmp/unraid-auth.db".into();
+        config.mcp.auth.register_rpm = 42;
+        config.mcp.auth.allowed_client_redirect_uris = vec![
+            "https://grok.com/connectors/oauth/callback".into(),
+            "https://www.grok.com/connectors/oauth/callback".into(),
+        ];
+
+        let vars = oauth_source_vars(
+            &config,
+            [
+                (
+                    "UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS".to_string(),
+                    "https://stale.example/callback".to_string(),
+                ),
+                (
+                    "UNRAID_RMCP_GOOGLE_SCOPES".to_string(),
+                    "openid,email".to_string(),
+                ),
+            ],
+        )
+        .into_iter()
+        .collect::<BTreeMap<_, _>>();
+
+        assert_eq!(
+            vars.get("UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS")
+                .map(String::as_str),
+            Some(
+                "https://grok.com/connectors/oauth/callback,https://www.grok.com/connectors/oauth/callback"
+            )
+        );
+        assert_eq!(
+            vars.get("UNRAID_RMCP_GOOGLE_SCOPES").map(String::as_str),
+            Some("openid,email")
+        );
+        assert_eq!(
+            vars.get("UNRAID_RMCP_AUTH_SQLITE_PATH").map(String::as_str),
+            Some("/tmp/unraid-auth.db")
+        );
+        assert_eq!(
+            vars.get("UNRAID_RMCP_AUTH_REGISTER_REQUESTS_PER_MINUTE")
+                .map(String::as_str),
+            Some("42")
+        );
+        assert_eq!(
+            vars.get("UNRAID_RMCP_AUTH_MODE").map(String::as_str),
+            Some("oauth")
+        );
+    }
 }
