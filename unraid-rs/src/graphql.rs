@@ -203,6 +203,31 @@ impl UnraidClient {
         Ok(data)
     }
 
+    /// Check whether a field exists on an upstream GraphQL object type.
+    ///
+    /// Used for compatibility-only operations that were removed from the current
+    /// Unraid SDL but still exist on older servers. Capability detection avoids
+    /// guessing from API version strings or intentionally sending invalid mutations.
+    async fn graphql_field_exists(&self, type_name: &str, field_name: &str) -> Result<bool> {
+        let data = self
+            .send_graphql(json!({
+                "query": "query Capability($name: String!) { __type(name: $name) { fields { name } } }",
+                "variables": { "name": type_name }
+            }))
+            .await?;
+
+        Ok(data
+            .get("__type")
+            .and_then(|value| value.get("fields"))
+            .and_then(Value::as_array)
+            .is_some_and(|fields| {
+                fields
+                    .iter()
+                    .filter_map(|field| field.get("name").and_then(Value::as_str))
+                    .any(|name| name == field_name)
+            }))
+    }
+
     /// Expose the HTTP client and URL for the health probe.
     pub fn raw_client(&self) -> (&Client, &str, &str) {
         (&self.client, &self.url, &self.api_key)
@@ -870,17 +895,26 @@ impl UnraidClient {
     }
 
     pub async fn array_remove_disk_from_array(&self, id: &str, slot: Option<i32>) -> Result<Value> {
-        use crate::gql_typed::{
-            ArrayDiskInput, ArrayDiskInputVars, ArrayRemoveDiskFromArrayMutation, PrefixedID,
-        };
-        use cynic::MutationBuilder;
-        let input = ArrayDiskInput {
-            id: PrefixedID(id.to_string()),
-            slot,
-        };
-        self.run_typed(ArrayRemoveDiskFromArrayMutation::build(
-            ArrayDiskInputVars { input },
-        ))
+        if !self
+            .graphql_field_exists("ArrayMutations", "removeDiskFromArray")
+            .await?
+        {
+            return Err(UpstreamError::Other(
+                "array_remove_disk_from_array is not supported by the connected Unraid API version"
+                    .to_string(),
+            )
+            .into());
+        }
+
+        self.send_graphql(json!({
+            "query": "mutation RemoveDisk($input: ArrayDiskInput!) { array { removeDiskFromArray(input: $input) { id state } } }",
+            "variables": {
+                "input": {
+                    "id": id,
+                    "slot": slot,
+                }
+            }
+        }))
         .await
     }
 
