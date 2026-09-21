@@ -80,9 +80,9 @@ fn parse_mcp_projection_mode(value: &str) -> anyhow::Result<McpProjectionMode> {
         "legacy" => Ok(McpProjectionMode::Legacy),
         "atomic" => Ok(McpProjectionMode::Atomic),
         "both" => Ok(McpProjectionMode::Both),
-        other => anyhow::bail!(
-            "UNRAID_RMCP_PROJECTION: expected legacy, atomic, or both; got {other:?}"
-        ),
+        other => {
+            anyhow::bail!("UNRAID_RMCP_PROJECTION: expected legacy, atomic, or both; got {other:?}")
+        }
     }
 }
 
@@ -513,7 +513,6 @@ mod data_dir_tests {
         );
     }
 }
-
 
 #[cfg(test)]
 mod mcp_projection_mode_tests {

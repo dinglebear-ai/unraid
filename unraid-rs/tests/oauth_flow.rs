@@ -12,7 +12,7 @@ use lab_auth::jwt::AccessClaims;
 use lab_auth::metadata::canonical_resource_url;
 use tempfile::TempDir;
 use tower::util::ServiceExt;
-use unraid_rmcp::{mcp::router, testing};
+use unraid_rmcp::{config::McpProjectionMode, mcp::router, testing};
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -80,6 +80,14 @@ fn status_call() -> serde_json::Value {
     serde_json::json!({ "name": "unraid", "arguments": { "action": "status" } })
 }
 
+fn atomic_status_call() -> serde_json::Value {
+    serde_json::json!({ "name": "unraid_status", "arguments": {} })
+}
+
+fn atomic_vm_stop_call() -> serde_json::Value {
+    serde_json::json!({ "name": "unraid_vm_stop", "arguments": { "id": "vm-1" } })
+}
+
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 /// Valid JWT with `unraid:read` -> `tools/call action=status` succeeds (200).
@@ -122,6 +130,90 @@ async fn valid_jwt_with_admin_scope_satisfies_read() {
         status,
         StatusCode::OK,
         "unraid:admin must implicitly satisfy unraid:read"
+    );
+}
+
+#[tokio::test]
+async fn atomic_read_scope_parity_allows_status_and_admin_satisfies_read() {
+    for scope in ["unraid:read", "unraid:admin"] {
+        let dir = TempDir::new().unwrap();
+        let (mut state, auth_state) = testing::oauth_state_with_auth_state(dir.path()).await;
+        state.config.projection = McpProjectionMode::Atomic;
+        let token = auth_state
+            .signing_keys
+            .issue_access_token(&make_claims(&auth_state, scope, 60))
+            .unwrap();
+
+        let (status, value) = post_mcp(
+            router(state),
+            "tools/call",
+            Some(atomic_status_call()),
+            &token,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{scope} atomic status HTTP result");
+        assert!(
+            value["result"]["content"][0]["text"]
+                .as_str()
+                .unwrap_or("")
+                .contains("\"status\""),
+            "{scope} should reach atomic status; got: {value}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn atomic_empty_scope_is_denied_by_same_scope_gate() {
+    let dir = TempDir::new().unwrap();
+    let (mut state, auth_state) = testing::oauth_state_with_auth_state(dir.path()).await;
+    state.config.projection = McpProjectionMode::Atomic;
+    let counters = state.counters.clone();
+    let token = auth_state
+        .signing_keys
+        .issue_access_token(&make_claims(&auth_state, "", 60))
+        .unwrap();
+
+    let (status, value) = post_mcp(
+        router(state),
+        "tools/call",
+        Some(atomic_status_call()),
+        &token,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let msg = value["error"]["message"].as_str().unwrap_or("");
+    assert!(
+        msg.contains("forbidden") && msg.contains("unraid:read"),
+        "atomic scope denial must use shared read scope gate; got: {value}"
+    );
+    let snapshot = counters.snapshot();
+    assert_eq!(snapshot.requests_total, 1);
+    assert_eq!(snapshot.errors_total, 1);
+    assert_eq!(snapshot.upstream_calls, 0);
+}
+
+#[tokio::test]
+async fn atomic_read_token_cannot_call_write_action() {
+    let dir = TempDir::new().unwrap();
+    let (mut state, auth_state) = testing::oauth_state_with_auth_state(dir.path()).await;
+    state.config.projection = McpProjectionMode::Atomic;
+    let token = auth_state
+        .signing_keys
+        .issue_access_token(&make_claims(&auth_state, "unraid:read", 60))
+        .unwrap();
+
+    let (status, value) = post_mcp(
+        router(state),
+        "tools/call",
+        Some(atomic_vm_stop_call()),
+        &token,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let msg = value["error"]["message"].as_str().unwrap_or("");
+    assert!(
+        msg.contains("unraid:admin"),
+        "atomic mutation must require admin scope through shared gate; got: {value}"
     );
 }
 

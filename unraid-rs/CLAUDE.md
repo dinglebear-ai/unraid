@@ -29,7 +29,7 @@
 
 **Thin shims.** Neither the CLI nor the MCP tool contains logic. They parse their input format and delegate to `UnraidService`. The service delegates to `UnraidClient`. All data retrieval is in the client's GraphQL queries.
 
-**Action-based dispatch.** The single MCP tool `unraid` uses an `action` string parameter. `mcp/tools.rs` matches on `action` and calls the corresponding service method.
+**Projection-only MCP boundary.** `legacy` mode exposes the single `unraid(action=...)` tool; `atomic` exposes focused `unraid_<action>` tools; `both` exposes both during migration. Selectors are applied to canonical actions before projection. `rmcp_server.rs` normalizes either surface to a canonical action before scope checks, destructive elicitation, and the same `mcp/tools.rs` dispatcher. Never add a second dispatcher for atomic tools.
 
 **GraphQL as the data layer.** `graphql.rs` POSTs to `UNRAID_API_URL` with `x-api-key: UNRAID_API_KEY`. Responses are `serde_json::Value` throughout the dispatch/CLI/MCP layers.
 
@@ -55,6 +55,7 @@ UNRAID_API_CA_BUNDLE          PEM CA bundle to trust; verifies instead of skippi
 UNRAID_HOME                   Exact data directory; overrides /data or ~/.unraid
 UNRAID_RMCP_HOST               Bind host (default 0.0.0.0)
 UNRAID_RMCP_PORT               Bind port (default 40010)
+UNRAID_RMCP_PROJECTION         Tool projection: legacy (default), atomic, or both
 UNRAID_RMCP_ENABLED_TOOLS      Comma-separated MCP tool/action allowlist
 UNRAID_RMCP_DISABLED_TOOLS     Comma-separated MCP tool/action denylist
 UNRAID_RMCP_TOKEN              Static bearer token for /mcp
@@ -87,9 +88,7 @@ The set of valid actions lives in ONE place: the `ACTIONS: &[ActionSpec]` slice 
 `src/mcp/schemas.rs`. From there, `enabled_action_names()` in `tool_filter.rs`
 filters `ACTIONS` through the configured `[mcp.tools]` enable/disable policy
 (`UNRAID_RMCP_ENABLED_TOOLS` / `UNRAID_RMCP_DISABLED_TOOLS`), and that filtered
-list feeds the JSON Schema enum and filters the visible parameter set through
-`action_params.rs` before `tool_definitions(action_names)` returns discovery. A
-unit tripwire scans `dispatch_action` so argument/catalog drift fails tests. The
+list feeds the legacy JSON Schema enum or one focused atomic schema per action through `projected_tool_definitions`. `action_params.rs` owns both action-to-parameter membership and dispatcher-required parameter metadata. Unit tripwires scan `dispatch_action` so parameter/catalog drift fails tests. The
 MCP scope
 gating (`required_scope_for` in `rmcp_server.rs`) is still derived directly from
 `ACTIONS`. Do not hand-maintain any of these lists.

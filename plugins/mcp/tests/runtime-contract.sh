@@ -45,6 +45,8 @@ oauth_output="$(php "$plugin_dir/tests/config-endpoint.php" incomplete-oauth)"
 grep -Fq 'UNRAID_RMCP_PUBLIC_URL must use https:' <<<"$oauth_output"
 api_key_output="$(php "$plugin_dir/tests/config-endpoint.php" missing-api-key)"
 grep -Fq 'UNRAID_API_KEY is required before the service can start' <<<"$api_key_output"
+projection_output="$(php "$plugin_dir/tests/config-endpoint.php" invalid-projection)"
+grep -Fq 'UNRAID_RMCP_PROJECTION must be legacy, atomic, or both' <<<"$projection_output"
 
 # Sourcing the environment must select the exact persistent directory without
 # creating /mnt/user paths merely for status/stop operations.

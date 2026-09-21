@@ -1,6 +1,13 @@
 use serde_json::{Value, json};
 
-use super::action_params::{enabled_actions_for_parameter, visible_parameter_names};
+use crate::config::McpProjectionMode;
+
+use super::{
+    action_params::{
+        enabled_actions_for_parameter, required_parameter_names, visible_parameter_names,
+    },
+    elicitation::DESTRUCTIVE_ACTIONS,
+};
 
 /// Canonical specification for one `unraid` tool action.
 ///
@@ -638,7 +645,7 @@ pub fn write_action_names() -> Vec<&'static str> {
         .collect()
 }
 
-pub(super) fn tool_definitions(action_names: &[&str]) -> Vec<Value> {
+fn legacy_tool_definitions(action_names: &[&str]) -> Vec<Value> {
     let help_hint = if action_names.contains(&"help") {
         " Use action=help for documentation."
     } else {
@@ -790,12 +797,104 @@ pub(super) fn tool_definitions(action_names: &[&str]) -> Vec<Value> {
     })]
 }
 
+pub(super) const ATOMIC_TOOL_PREFIX: &str = "unraid_";
+
+pub(super) fn atomic_tool_name(action: &str) -> String {
+    format!("{ATOMIC_TOOL_PREFIX}{action}")
+}
+
+pub(super) fn atomic_action_from_tool_name(tool_name: &str) -> Option<&'static str> {
+    let action = tool_name.strip_prefix(ATOMIC_TOOL_PREFIX)?;
+    ACTIONS
+        .iter()
+        .find(|spec| spec.name == action)
+        .map(|spec| spec.name)
+}
+
+fn atomic_tool_definitions(action_names: &[&str]) -> Vec<Value> {
+    action_names
+        .iter()
+        .map(|action| {
+            let mut legacy = legacy_tool_definitions(&[*action])
+                .into_iter()
+                .next()
+                .expect("single-action legacy schema");
+            let input = legacy
+                .get_mut("inputSchema")
+                .and_then(Value::as_object_mut)
+                .expect("legacy input schema");
+            let properties = input
+                .get_mut("properties")
+                .and_then(Value::as_object_mut)
+                .expect("legacy properties");
+            properties.remove("action");
+
+            input.insert(
+                "required".to_string(),
+                json!(required_parameter_names(action)),
+            );
+            input.insert("additionalProperties".to_string(), Value::Bool(false));
+
+            let spec = ACTIONS
+                .iter()
+                .find(|spec| spec.name == *action)
+                .expect("enabled action must be canonical");
+            let scope = match spec.scope {
+                Scope::None => "no OAuth scope",
+                Scope::Read => "scope unraid:read",
+                Scope::Write => "scope unraid:admin",
+            };
+            let read_only = spec.scope != Scope::Write;
+            let destructive = DESTRUCTIVE_ACTIONS.contains(action);
+
+            json!({
+                "name": atomic_tool_name(action),
+                "description": format!(
+                    "Run the Unraid {action} action. Requires {scope}. Atomic projection of unraid(action={action:?})."
+                ),
+                "inputSchema": input,
+                "annotations": {
+                    "title": format!("Unraid: {action}"),
+                    "readOnlyHint": read_only,
+                    "destructiveHint": destructive,
+                    "openWorldHint": false
+                }
+            })
+        })
+        .collect()
+}
+
+pub(super) fn projected_tool_definitions(
+    action_names: &[&str],
+    projection: McpProjectionMode,
+) -> Vec<Value> {
+    if action_names.is_empty() {
+        return Vec::new();
+    }
+
+    match projection {
+        McpProjectionMode::Legacy => legacy_tool_definitions(action_names),
+        McpProjectionMode::Atomic => atomic_tool_definitions(action_names),
+        McpProjectionMode::Both => {
+            let mut tools = legacy_tool_definitions(action_names);
+            tools.extend(atomic_tool_definitions(action_names));
+            tools
+        }
+    }
+}
+
+/// Compatibility helper for legacy-only callers and tests.
+#[cfg(test)]
+pub(super) fn tool_definitions(action_names: &[&str]) -> Vec<Value> {
+    legacy_tool_definitions(action_names)
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
 
     use super::*;
-    use crate::mcp::action_params::ACTION_PARAMETERS;
+    use crate::mcp::action_params::{ACTION_PARAMETERS, REQUIRED_ACTION_PARAMETERS};
 
     fn schema_property_names(action_names: &[&str]) -> HashSet<String> {
         tool_definitions(action_names)[0]["inputSchema"]["properties"]
@@ -920,7 +1019,98 @@ mod tests {
         );
     }
 
-    /// `help` must be present in the canonical list (it is reachable with no scope).
+    #[test]
+    fn atomic_projection_has_one_unique_tool_per_enabled_action() {
+        let enabled = ["docker_logs", "status", "help"];
+        let tools = projected_tool_definitions(&enabled, McpProjectionMode::Atomic);
+        assert_eq!(tools.len(), enabled.len());
+        let names = tools
+            .iter()
+            .map(|tool| tool["name"].as_str().unwrap())
+            .collect::<HashSet<_>>();
+        assert_eq!(names.len(), enabled.len());
+        assert!(names.contains("unraid_docker_logs"));
+        assert!(names.contains("unraid_status"));
+        assert!(names.contains("unraid_help"));
+        assert!(!names.contains("unraid"));
+    }
+
+    #[test]
+    fn both_projection_keeps_legacy_and_adds_atomic_tools() {
+        let enabled = ["status", "help"];
+        let tools = projected_tool_definitions(&enabled, McpProjectionMode::Both);
+        assert_eq!(tools.len(), 3);
+        assert_eq!(tools[0]["name"], "unraid");
+        assert_eq!(tools[1]["name"], "unraid_status");
+        assert_eq!(tools[2]["name"], "unraid_help");
+    }
+
+    #[test]
+    fn atomic_schemas_are_minimal_and_required_fields_are_exact() {
+        for spec in ACTIONS {
+            let tool = projected_tool_definitions(&[spec.name], McpProjectionMode::Atomic)
+                .pop()
+                .unwrap();
+            let properties = tool["inputSchema"]["properties"].as_object().unwrap();
+            assert!(!properties.contains_key("action"));
+            let expected: HashSet<String> = ACTION_PARAMETERS
+                .iter()
+                .find(|(action, _)| *action == spec.name)
+                .map(|(_, params)| params.iter().map(|p| (*p).to_string()).collect())
+                .unwrap_or_default();
+            assert_eq!(
+                properties.keys().cloned().collect::<HashSet<_>>(),
+                expected,
+                "atomic schema property drift for {}",
+                spec.name
+            );
+            let expected_required = REQUIRED_ACTION_PARAMETERS
+                .iter()
+                .find(|(action, _)| *action == spec.name)
+                .map(|(_, params)| json!(params))
+                .unwrap_or_else(|| json!([]));
+            assert_eq!(
+                tool["inputSchema"]["required"], expected_required,
+                "atomic required-field drift for {}",
+                spec.name
+            );
+            assert_eq!(tool["inputSchema"]["additionalProperties"], false);
+        }
+    }
+
+    #[test]
+    fn atomic_names_round_trip_to_canonical_actions() {
+        for spec in ACTIONS {
+            let name = atomic_tool_name(spec.name);
+            assert_eq!(atomic_action_from_tool_name(&name), Some(spec.name));
+        }
+        assert_eq!(atomic_action_from_tool_name("unraid_not_real"), None);
+        assert_eq!(atomic_action_from_tool_name("status"), None);
+    }
+
+    #[test]
+    fn atomic_annotations_follow_scope_and_elicitation_metadata() {
+        for spec in ACTIONS {
+            let tool = projected_tool_definitions(&[spec.name], McpProjectionMode::Atomic)
+                .pop()
+                .unwrap();
+            assert_eq!(
+                tool["annotations"]["readOnlyHint"],
+                json!(spec.scope != Scope::Write),
+                "{} readOnlyHint",
+                spec.name
+            );
+            assert_eq!(
+                tool["annotations"]["destructiveHint"],
+                json!(DESTRUCTIVE_ACTIONS.contains(&spec.name)),
+                "{} destructiveHint",
+                spec.name
+            );
+            assert!(tool["annotations"].get("idempotentHint").is_none());
+        }
+    }
+
+    /// help must be present in the canonical list (it is reachable with no scope).
     #[test]
     fn help_is_present() {
         assert!(ACTIONS.iter().any(|a| a.name == "help"));

@@ -61,6 +61,7 @@ const ALLOWED_KEYS = [
     'UNRAID_NOAUTH',
     'UNRAID_RMCP_ALLOWED_HOSTS',
     'UNRAID_RMCP_ALLOWED_ORIGINS',
+    'UNRAID_RMCP_PROJECTION',
     'UNRAID_RMCP_ENABLED_TOOLS',
     'UNRAID_RMCP_DISABLED_TOOLS',
     'UNRAID_RMCP_AUTH_MODE',
@@ -337,6 +338,11 @@ function validate_env(array $env): void
         fail(400, 'RUST_LOG must be trace, debug, info, warn, or error');
     }
 
+    $projection = strtolower(resolve_value($env, 'UNRAID_RMCP_PROJECTION') ?: 'legacy');
+    if (!in_array($projection, ['legacy', 'atomic', 'both'], true)) {
+        fail(400, 'UNRAID_RMCP_PROJECTION must be legacy, atomic, or both');
+    }
+
     $authMode = strtolower(resolve_value($env, 'UNRAID_RMCP_AUTH_MODE') ?: 'bearer');
     if (!in_array($authMode, ['bearer', 'oauth'], true)) {
         fail(400, 'UNRAID_RMCP_AUTH_MODE must be bearer or oauth');
@@ -474,6 +480,9 @@ function current_payload(): array
         }
         if (in_array($key, ['UNRAID_API_SKIP_TLS_VERIFY', 'UNRAID_MCP_TAILSCALE_SERVE', 'UNRAID_RMCP_DISABLE_HTTP_AUTH', 'UNRAID_NOAUTH'], true)) {
             $value = is_true_value($value) ? 'true' : 'false';
+        }
+        if ($key === 'UNRAID_RMCP_PROJECTION' && $value === '') {
+            $value = 'legacy';
         }
         if ($key === 'UNRAID_RMCP_AUTH_MODE' && $value === '') {
             $value = 'bearer';

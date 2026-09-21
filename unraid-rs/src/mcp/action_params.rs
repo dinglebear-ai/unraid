@@ -147,6 +147,99 @@ pub(super) const ACTION_PARAMETERS: &[(&str, &[&str])] = &[
     ),
 ];
 
+/// Parameters that the dispatcher rejects when omitted for a canonical action.
+pub(super) const REQUIRED_ACTION_PARAMETERS: &[(&str, &[&str])] = &[
+    ("docker_logs", &["id"]),
+    ("log_file", &["path"]),
+    ("api_key", &["id"]),
+    ("disk", &["id"]),
+    ("oidc_provider", &["id"]),
+    ("ups_device_by_id", &["id"]),
+    ("plugin_install_operation", &["id"]),
+    ("validate_oidc_session", &["token"]),
+    ("get_permissions_for_roles", &["roles"]),
+    ("archive_notification", &["id"]),
+    (
+        "create_notification",
+        &["title", "subject", "description", "importance"],
+    ),
+    ("vm_start", &["id"]),
+    ("vm_stop", &["id"]),
+    ("vm_pause", &["id"]),
+    ("vm_resume", &["id"]),
+    ("vm_force_stop", &["id"]),
+    ("vm_reboot", &["id"]),
+    ("vm_reset", &["id"]),
+    ("docker_start", &["id"]),
+    ("docker_stop", &["id"]),
+    ("docker_restart", &["id"]),
+    ("docker_pause", &["id"]),
+    ("docker_unpause", &["id"]),
+    ("docker_update_container", &["id"]),
+    ("docker_remove_container", &["id"]),
+    ("docker_update_containers", &["ids"]),
+    ("docker_create_folder", &["name"]),
+    ("docker_create_folder_with_items", &["name"]),
+    ("docker_set_folder_children", &["children_ids"]),
+    ("docker_delete_entries", &["entry_ids"]),
+    (
+        "docker_move_entries_to_folder",
+        &["source_entry_ids", "destination_folder_id"],
+    ),
+    (
+        "docker_move_items_to_position",
+        &["source_entry_ids", "destination_folder_id", "position"],
+    ),
+    ("docker_rename_folder", &["folder_id", "new_name"]),
+    ("docker_update_autostart_configuration", &["entries"]),
+    ("customization_set_locale", &["locale"]),
+    ("customization_set_theme", &["theme"]),
+    ("array_set_state", &["desired_state"]),
+    ("array_add_disk_to_array", &["id"]),
+    ("array_remove_disk_from_array", &["id"]),
+    ("array_mount_array_disk", &["id"]),
+    ("array_unmount_array_disk", &["id"]),
+    ("array_clear_array_disk_statistics", &["id"]),
+    ("api_key_create", &["name"]),
+    ("api_key_add_role", &["api_key_id", "role"]),
+    ("api_key_remove_role", &["api_key_id", "role"]),
+    ("api_key_delete", &["ids"]),
+    ("api_key_update", &["id"]),
+    ("rclone_create_r_clone_remote", &["name", "type"]),
+    ("rclone_delete_r_clone_remote", &["name"]),
+    ("unraid_plugins_install_plugin", &["url"]),
+    ("unraid_plugins_install_language", &["url"]),
+    (
+        "onboarding_create_internal_boot_pool",
+        &["pool_name", "devices", "boot_size_mib", "update_bios"],
+    ),
+    ("archive_notifications", &["ids"]),
+    ("unarchive_notifications", &["ids"]),
+    ("unread_notification", &["id"]),
+    ("update_server_identity", &["name"]),
+    ("connect_sign_in", &["api_key"]),
+    ("setup_remote_access", &["access_type"]),
+    ("enable_dynamic_remote_access", &["enabled", "access_url"]),
+    ("update_settings", &["input"]),
+    ("update_ssh_settings", &["enabled", "port"]),
+    (
+        "initiate_flash_backup",
+        &["remote_name", "source_path", "destination_path"],
+    ),
+    (
+        "notify_if_unique",
+        &["title", "subject", "description", "importance"],
+    ),
+];
+
+pub(super) fn required_parameter_names(action: &str) -> &'static [&'static str] {
+    REQUIRED_ACTION_PARAMETERS
+        .iter()
+        .find(|(candidate, _)| *candidate == action)
+        .map(|(_, parameters)| *parameters)
+        .unwrap_or(&[])
+}
+
 pub(super) fn visible_parameter_names(action_names: &[&str]) -> HashSet<&'static str> {
     ACTION_PARAMETERS
         .iter()
@@ -209,6 +302,51 @@ mod tests {
         keys
     }
 
+    fn scan_required_keys(compact: &str) -> HashSet<String> {
+        let mut required = HashSet::new();
+
+        if compact.contains("require_id(args") {
+            required.insert("id".to_string());
+        }
+
+        for key in scan_call_keys(compact) {
+            if compact.contains(&format!("req(\"{key}\")")) {
+                required.insert(key);
+                continue;
+            }
+
+            let mut is_required = false;
+            for needle in [
+                format!("string_arg(args,\"{key}\")"),
+                format!("string_array_arg(args,\"{key}\")"),
+                format!("usize_arg(args,\"{key}\")"),
+                format!("i64_arg(args,\"{key}\")"),
+                format!("args.get(\"{key}\")"),
+                format!("args.get_mut(\"{key}\")"),
+            ] {
+                let mut offset = 0;
+                while let Some(start) = compact[offset..].find(&needle) {
+                    let statement_start = offset + start;
+                    let tail = &compact[statement_start..];
+                    let statement_end = tail.find(';').unwrap_or(tail.len());
+                    if tail[..statement_end].contains(".ok_or_else(") {
+                        is_required = true;
+                        break;
+                    }
+                    offset = statement_start + needle.len();
+                }
+                if is_required {
+                    break;
+                }
+            }
+            if is_required {
+                required.insert(key);
+            }
+        }
+
+        required
+    }
+
     fn dispatcher_parameter_usage() -> HashMap<String, HashSet<String>> {
         let lines: Vec<&str> = include_str!("tools.rs").lines().collect();
         let dispatch_start = lines
@@ -250,6 +388,54 @@ mod tests {
                 .filter(|ch| !ch.is_whitespace())
                 .collect::<String>();
             let keys = scan_call_keys(&compact);
+            for name in names {
+                usage.insert(name.clone(), keys.clone());
+            }
+        }
+        usage
+    }
+
+    fn dispatcher_required_parameter_usage() -> HashMap<String, HashSet<String>> {
+        let lines: Vec<&str> = include_str!("tools.rs").lines().collect();
+        let dispatch_start = lines
+            .iter()
+            .position(|line| line.starts_with("async fn dispatch_action"))
+            .unwrap();
+        let dispatch_end = lines[dispatch_start..]
+            .iter()
+            .position(|line| line.starts_with("// ── help text"))
+            .map(|offset| dispatch_start + offset)
+            .unwrap_or(lines.len());
+        let starts: Vec<(usize, Vec<String>)> = lines[dispatch_start..dispatch_end]
+            .iter()
+            .enumerate()
+            .filter_map(|(offset, line)| {
+                if !line.starts_with("        \"") || !line.contains("=>") {
+                    return None;
+                }
+                let lhs = line.split_once("=>")?.0;
+                let names = lhs
+                    .split('\"')
+                    .skip(1)
+                    .step_by(2)
+                    .map(str::to_string)
+                    .collect::<Vec<_>>();
+                Some((dispatch_start + offset, names))
+            })
+            .collect();
+
+        let mut usage = HashMap::new();
+        for (index, (start, names)) in starts.iter().enumerate() {
+            let end = starts
+                .get(index + 1)
+                .map(|(next, _)| *next)
+                .unwrap_or(dispatch_end);
+            let compact = lines[*start..end]
+                .join("")
+                .chars()
+                .filter(|ch| !ch.is_whitespace())
+                .collect::<String>();
+            let keys = scan_required_keys(&compact);
             for name in names {
                 usage.insert(name.clone(), keys.clone());
             }
@@ -305,6 +491,45 @@ mod tests {
                 Some(expected),
                 "catalog action missing from dispatcher scan: {action}"
             );
+        }
+    }
+
+    #[test]
+    fn required_parameter_catalog_matches_dispatcher_validation() {
+        let dispatcher = dispatcher_required_parameter_usage();
+        for spec in ACTIONS {
+            let actual = dispatcher.get(spec.name).cloned().unwrap_or_default();
+            let expected = required_parameter_names(spec.name)
+                .iter()
+                .map(|name| (*name).to_string())
+                .collect::<HashSet<_>>();
+            assert_eq!(
+                actual, expected,
+                "required-parameter catalog drift for action {}",
+                spec.name
+            );
+        }
+    }
+
+    #[test]
+    fn required_parameter_catalog_is_a_valid_subset() {
+        let canonical: HashSet<&str> = ACTIONS.iter().map(|spec| spec.name).collect();
+        for (action, required) in REQUIRED_ACTION_PARAMETERS {
+            assert!(
+                canonical.contains(action),
+                "unknown required action: {action}"
+            );
+            let parameters = ACTION_PARAMETERS
+                .iter()
+                .find(|(candidate, _)| candidate == action)
+                .map(|(_, parameters)| *parameters)
+                .expect("required action must have a parameter catalog entry");
+            for name in *required {
+                assert!(
+                    parameters.contains(name),
+                    "required parameter {action}.{name} is absent from ACTION_PARAMETERS"
+                );
+            }
         }
     }
 

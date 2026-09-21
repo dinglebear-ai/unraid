@@ -45,9 +45,7 @@ Existing Python-era `UNRAID_MCP_*` settings are translated at launch and surface
 through the new Rust settings UI. Saving a migrated field removes its old key.
 Live settings changes are transactional: if runraid rejects the health-checked
 restart, the previous env and service are restored automatically.
-The settings page also exposes `UNRAID_RMCP_ENABLED_TOOLS` and
-`UNRAID_RMCP_DISABLED_TOOLS` for granular action allow/deny policies; deny
-selectors win.
+The settings page exposes `UNRAID_RMCP_PROJECTION` with `legacy` (default), `atomic`, and `both` modes. Atomic mode publishes focused `unraid_<action>` tools while preserving the same selector, auth, confirmation, and dispatcher paths. It also exposes `UNRAID_RMCP_ENABLED_TOOLS` and `UNRAID_RMCP_DISABLED_TOOLS` for granular action allow/deny policies; deny selectors win.
 
 ## Upgrading from the Python plugin
 
