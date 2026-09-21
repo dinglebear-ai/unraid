@@ -271,6 +271,17 @@ async def test_remove_disk_with_confirm(_mock_graphql):
     assert result["success"] is True
 
 
+@pytest.mark.asyncio
+async def test_remove_disk_reports_unsupported_on_new_api(_mock_graphql):
+    _mock_graphql.side_effect = ToolError(
+        'GraphQL API error: Cannot query field "removeDiskFromArray" on type "ArrayMutations".'
+    )
+    with pytest.raises(ToolError, match="not supported by this Unraid API version"):
+        await _make_tool()(
+            action="array", subaction="remove_disk", disk_id="abc123:local", confirm=True
+        )
+
+
 # mount_disk / unmount_disk
 
 
