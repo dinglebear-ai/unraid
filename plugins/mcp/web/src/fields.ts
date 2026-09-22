@@ -134,6 +134,13 @@ export const SECTIONS: Section[] = [
     col: "b",
     fields: [
       {
+        key: "UNRAID_RMCP_PROJECTION",
+        label: "Tool projection",
+        help: "Legacy exposes one unraid(action=...) tool. Atomic exposes focused unraid_<action> tools. Both exposes both surfaces during migration.",
+        kind: "select",
+        options: ["legacy", "atomic", "both"],
+      },
+      {
         key: "UNRAID_RMCP_ENABLED_TOOLS",
         label: "Enabled tools",
         help: "Optional comma-separated allowlist of action names (for example array,docker) or *, unraid, or unraid.*. Empty exposes all actions not denied below.",

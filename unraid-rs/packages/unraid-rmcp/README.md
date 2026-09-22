@@ -2,7 +2,7 @@
 
 Rust MCP server and CLI for Unraid GraphQL operations across NAS, Docker, VM, and storage workflows.
 
-It exposes one MCP tool, `unraid`, plus the `runraid` CLI. Agents can inspect
+It supports legacy and atomic MCP projections plus the `runraid` CLI. Legacy mode exposes the single `unraid` tool; atomic mode exposes one focused `unraid_<action>` tool per enabled action. Agents can inspect
 array health, disks, Docker containers and logs, VMs, shares, notifications,
 system metrics, UPS, logs, network settings, plugins, parity history, rclone,
 remote access, and Unraid Connect through stdio MCP, Streamable HTTP MCP, or
@@ -57,7 +57,7 @@ through MCP tool arguments.
 | crates.io package | `unraid-rmcp` |
 | CRGX command | `crgx unraid-rmcp -- <runraid args>` |
 | Legacy npm package | `unraid-rmcp` |
-| MCP tool | `unraid` |
+| MCP tools | `unraid` (legacy), `unraid_<action>` (atomic) |
 | Config home | `~/.unraid` on hosts, `/data` in containers |
 | Env prefixes | `UNRAID_*`, `UNRAID_RMCP_*` |
 
@@ -242,8 +242,13 @@ as action arguments.
 
 ## MCP Tool Reference
 
-One MCP tool is exposed: `unraid`. Pass the required `action` argument to select
-the operation.
+MCP projection is configurable with `UNRAID_RMCP_PROJECTION` (or `mcp.projection`):
+
+- `legacy` (default) exposes the compatibility tool `unraid`; pass its required `action` argument.
+- `atomic` exposes one focused `unraid_<action>` tool for each enabled action. Atomic schemas contain only that action's parameters and mark dispatcher-required fields as required.
+- `both` exposes the legacy tool plus all enabled atomic tools for migration. Generated prompts prefer atomic calls in this mode.
+
+Selectors are applied to canonical actions before projection, so the same `[mcp.tools]` policy controls all three modes. Calls from either surface normalize to the same canonical action before scope checks, destructive confirmation, and dispatch.
 
 ### Core Actions
 
@@ -347,6 +352,7 @@ inherit persisted `.env` values instead of clearing them. A present but malforme
 | `UNRAID_HOME` | platform default | Exact data directory for `.env`, auth DB, and JWT key; overrides `/data` or `~/.unraid`. |
 | `UNRAID_RMCP_HOST` | `0.0.0.0` | HTTP bind host. |
 | `UNRAID_RMCP_PORT` | `40010` | HTTP bind port. |
+| `UNRAID_RMCP_PROJECTION` | `legacy` | MCP tool projection: `legacy`, `atomic`, or `both`. |
 | `UNRAID_RMCP_ENABLED_TOOLS` | unset | Comma-separated MCP tool/action allowlist; empty means all. |
 | `UNRAID_RMCP_DISABLED_TOOLS` | unset | Comma-separated MCP tool/action denylist; deny rules win. |
 | `UNRAID_RMCP_SERVER_NAME` | `unraid-rmcp` | Advertised MCP server name. |
@@ -362,11 +368,7 @@ inherit persisted `.env` values instead of clearing them. A present but malforme
 | `UNRAID_RMCP_GOOGLE_CLIENT_SECRET` | unset | Google OAuth client secret. |
 | `UNRAID_RMCP_AUTH_ADMIN_EMAIL` | unset | Admin email for OAuth bootstrap. |
 
-Tool selectors may target the entire tool (`*`, `unraid`, or `unraid.*`) or
-a single action (`docker_logs` or `unraid.vm_reset`). Tool discovery and the
-schema resource expose only enabled actions and parameters used by those
-actions; disabled calls are still rejected when a client uses a stale cached
-schema. Invalid selectors and unknown TOML fields fail configuration loading.
+Tool selectors may target the entire surface (`*`, `unraid`, or `unraid.*`) or a single canonical action (`docker_logs` or `unraid.vm_reset`). Selectors do not change between projection modes. Tool discovery and `unraid://schema/mcp-tool` reflect the active projection and expose only enabled actions and their parameters; disabled calls are still rejected when a client uses a stale cached schema. Atomic tool annotations derive read-only and destructive hints from the same canonical scope and elicitation metadata. Invalid selectors, projection values, and unknown TOML fields fail configuration loading.
 
 A set, non-empty `UNRAID_RMCP_ENABLED_TOOLS` / `UNRAID_RMCP_DISABLED_TOOLS`
 **replaces** the corresponding `[mcp.tools]` list from `config.toml` — env and

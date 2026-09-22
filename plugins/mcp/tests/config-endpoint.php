@@ -31,6 +31,19 @@ if ($case === 'missing-api-key') {
     fwrite(STDERR, "startable config accepted a missing API key" . PHP_EOL);
     exit(1);
 }
+if ($case === 'invalid-projection') {
+    validate_env([
+        'UNRAID_API_URL' => 'http://127.0.0.1/graphql',
+        'UNRAID_RMCP_HOST' => '127.0.0.1',
+        'UNRAID_RMCP_PORT' => '40010',
+        'UNRAID_RMCP_PROJECTION' => 'split',
+        'UNRAID_RMCP_AUTH_MODE' => 'bearer',
+        'UNRAID_RMCP_TOKEN' => 'test-token',
+        'UNRAID_RMCP_DISABLE_HTTP_AUTH' => 'false',
+    ]);
+    fwrite(STDERR, "invalid projection was accepted" . PHP_EOL);
+    exit(1);
+}
 if ($case === 'incomplete-oauth') {
     validate_env([
         'UNRAID_API_URL' => 'http://127.0.0.1/graphql',
@@ -82,6 +95,7 @@ $valid = [
     'UNRAID_API_URL' => 'http://127.0.0.1/graphql',
     'UNRAID_RMCP_HOST' => '127.0.0.1',
     'UNRAID_RMCP_PORT' => '40010',
+    'UNRAID_RMCP_PROJECTION' => 'atomic',
     'UNRAID_RMCP_AUTH_MODE' => 'bearer',
     'UNRAID_RMCP_TOKEN' => 'test-token',
     'UNRAID_API_SKIP_TLS_VERIFY' => 'false',
@@ -99,5 +113,6 @@ expect_same(true, is_loopback_host('[::1]'), 'IPv6 loopback was not recognized')
 expect_same(false, process_is_runraid_server(getmypid()), 'PHP test process was mistaken for runraid serve');
 expect_same(false, in_array('UNRAID_MCP_GOOGLE_JWT_SIGNING_KEY', REVEALABLE_SECRET_KEYS, true), 'legacy JWT key became browser-revealable');
 expect_same(true, in_array('UNRAID_RMCP_TOKEN', REVEALABLE_SECRET_KEYS, true), 'bearer token must remain copyable');
+expect_same(true, in_array('UNRAID_RMCP_PROJECTION', ALLOWED_KEYS, true), 'projection must be persistable by the settings UI');
 
 echo "Unraid MCP config endpoint tests passed\n";
