@@ -857,6 +857,7 @@ fn atomic_tool_definitions(action_names: &[&str]) -> Vec<Value> {
                     "title": format!("Unraid: {action}"),
                     "readOnlyHint": read_only,
                     "destructiveHint": destructive,
+                    "idempotentHint": idempotent_hint(spec),
                     "openWorldHint": false
                 }
             })
@@ -879,6 +880,116 @@ pub(super) fn projected_tool_definitions(
             let mut tools = legacy_tool_definitions(action_names);
             tools.extend(atomic_tool_definitions(action_names));
             tools
+        }
+    }
+}
+
+/// Write actions whose repeated invocation with identical arguments does not
+/// introduce additional state changes. The complementary non-idempotent set
+/// below is exhaustive for write-scoped actions and pinned by tests.
+const IDEMPOTENT_WRITE_ACTIONS: &[&str] = &[
+    "delete_archived_notifications",
+    "archive_notification",
+    "vm_start",
+    "vm_stop",
+    "vm_pause",
+    "vm_resume",
+    "vm_force_stop",
+    "docker_start",
+    "docker_stop",
+    "docker_pause",
+    "docker_unpause",
+    "docker_remove_container",
+    "docker_set_folder_children",
+    "docker_delete_entries",
+    "docker_move_entries_to_folder",
+    "docker_move_items_to_position",
+    "docker_rename_folder",
+    "docker_update_view_preferences",
+    "docker_update_autostart_configuration",
+    "reset_docker_template_mappings",
+    "sync_docker_template_paths",
+    "customization_set_locale",
+    "customization_set_theme",
+    "array_set_state",
+    "array_add_disk_to_array",
+    "array_remove_disk_from_array",
+    "array_mount_array_disk",
+    "array_unmount_array_disk",
+    "parity_check_pause",
+    "parity_check_resume",
+    "parity_check_cancel",
+    "api_key_add_role",
+    "api_key_remove_role",
+    "api_key_delete",
+    "api_key_update",
+    "rclone_delete_r_clone_remote",
+    "onboarding_complete_onboarding",
+    "onboarding_reset_onboarding",
+    "onboarding_bypass_onboarding",
+    "onboarding_clear_onboarding_override",
+    "onboarding_close_onboarding",
+    "onboarding_open_onboarding",
+    "onboarding_resume_onboarding",
+    "onboarding_set_onboarding_override",
+    "archive_notifications",
+    "unarchive_notifications",
+    "unread_notification",
+    "archive_all",
+    "unarchive_all",
+    "update_server_identity",
+    "configure_ups",
+    "update_system_time",
+    "update_temperature_config",
+    "remove_plugin",
+    "connect_sign_out",
+    "setup_remote_access",
+    "enable_dynamic_remote_access",
+    "update_api_settings",
+    "update_settings",
+    "update_ssh_settings",
+    "notify_if_unique",
+];
+
+const NON_IDEMPOTENT_WRITE_ACTIONS: &[&str] = &[
+    "recalculate_overview",
+    "create_notification",
+    "vm_reboot",
+    "vm_reset",
+    "docker_restart",
+    "docker_update_container",
+    "docker_update_containers",
+    "docker_update_all_containers",
+    "docker_create_folder",
+    "docker_create_folder_with_items",
+    "refresh_docker_digests",
+    "array_clear_array_disk_statistics",
+    "parity_check_start",
+    "api_key_create",
+    "rclone_create_r_clone_remote",
+    "unraid_plugins_install_plugin",
+    "unraid_plugins_install_language",
+    "onboarding_refresh_internal_boot_context",
+    "onboarding_create_internal_boot_pool",
+    "add_plugin",
+    "connect_sign_in",
+    "initiate_flash_backup",
+];
+
+fn idempotent_hint(spec: &ActionSpec) -> bool {
+    match spec.scope {
+        Scope::None | Scope::Read => true,
+        Scope::Write => {
+            if IDEMPOTENT_WRITE_ACTIONS.contains(&spec.name) {
+                true
+            } else {
+                debug_assert!(
+                    NON_IDEMPOTENT_WRITE_ACTIONS.contains(&spec.name),
+                    "unclassified write action: {}",
+                    spec.name
+                );
+                false
+            }
         }
     }
 }
@@ -1106,8 +1217,41 @@ mod tests {
                 "{} destructiveHint",
                 spec.name
             );
-            assert!(tool["annotations"].get("idempotentHint").is_none());
+            assert_eq!(
+                tool["annotations"]["idempotentHint"],
+                json!(idempotent_hint(spec)),
+                "{} idempotentHint",
+                spec.name
+            );
         }
+    }
+
+    #[test]
+    fn every_write_action_has_explicit_idempotency_classification() {
+        let idempotent = IDEMPOTENT_WRITE_ACTIONS
+            .iter()
+            .copied()
+            .collect::<HashSet<_>>();
+        let non_idempotent = NON_IDEMPOTENT_WRITE_ACTIONS
+            .iter()
+            .copied()
+            .collect::<HashSet<_>>();
+
+        assert!(
+            idempotent.is_disjoint(&non_idempotent),
+            "write idempotency sets must not overlap"
+        );
+
+        let classified = idempotent
+            .union(&non_idempotent)
+            .copied()
+            .collect::<HashSet<_>>();
+        let writes = ACTIONS
+            .iter()
+            .filter(|spec| spec.scope == Scope::Write)
+            .map(|spec| spec.name)
+            .collect::<HashSet<_>>();
+        assert_eq!(classified, writes, "every write action must be classified");
     }
 
     /// help must be present in the canonical list (it is reachable with no scope).
