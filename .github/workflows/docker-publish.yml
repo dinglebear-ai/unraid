@@ -28,7 +28,7 @@ jobs:
       id-token: write
       attestations: write
       security-events: write
-    uses: dinglebear-ai/workflows/.github/workflows/hosted-container-release.yml@d7bbe71ddc1157e32ed0bebf928fc07438ba58b0 # fleet-2026-07-30
+    uses: dinglebear-ai/workflows/.github/workflows/hosted-container-release.yml@e04c7ee5b494b376372023194cb418200761c722 # fleet-2026-07-30
     with:
       checkout-ref: ${{ github.event.release.tag_name }}
       image: ghcr.io/${{ github.repository_owner }}/unraid-mcp
