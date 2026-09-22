@@ -50,7 +50,7 @@ stdio. No mcporter required — uses `curl` and `jq`.
 ./tests/test_live.sh --mode http --url http://localhost:6970/mcp --token <tok>
 
 # HTTP against a remote server via gateway
-./tests/test_live.sh --mode http --url https://unraid.tootie.tv/mcp --skip-auth
+./tests/test_live.sh --mode http --url https://unraid.example.internal/mcp --skip-auth
 
 # Docker mode (builds the image, starts a container, tests, tears down)
 ./tests/test_live.sh --mode docker
@@ -130,7 +130,7 @@ All destructive actions require `confirm=True` at the call site. There is no env
 | **Dedicated test remote** | Action requires a remote target (`flash_backup`) |
 | **Test VM** | Action requires a live VM (`force_stop`, `reset`) |
 | **Mock/safety audit only** | Global blast radius, no safe isolation (`update_all`, `reset_template_mappings`, `setup_remote_access`, `configure_ups`) |
-| **Secondary server only** | Run on `shart` (10.1.0.3), never `tootie` (10.1.0.2) |
+| **Secondary server only** | Run on `backuphost` (192.0.2.3), never `nashost` (192.0.2.2) |
 
 For exact per-action mcporter commands, see [`docs/DESTRUCTIVE_ACTIONS.md`](../../docs/DESTRUCTIVE_ACTIONS.md).
 

@@ -149,7 +149,7 @@ mcporter call --stdio-cmd "uv run unraid-mcp-server" --tool unraid \
   --args '{"action":"notification","subaction":"delete_archived","confirm":true}' --output json
 ```
 
-> Run on `shart` if archival history on `tootie` matters.
+> Run on `backuphost` if archival history on `nashost` matters.
 
 ---
 
@@ -319,7 +319,7 @@ host you own. Confirm each `confirm=False` guard in `tests/safety/`.
 | `setup_remote_access` | Configure remote access |
 | `enable_dynamic_remote_access` | Enable dynamic remote access |
 
-> Run live only on `shart` (a host you fully control), never on a production tower.
+> Run live only on `backuphost` (a host you fully control), never on a production tower.
 
 ---
 
@@ -367,7 +367,7 @@ uv run pytest tests/safety/ -v
 | `vm` | `force_stop` | Minimal Alpine test VM | either |
 | `vm` | `reset` | Minimal Alpine test VM | either |
 | `notification` | `delete` | Create notification → destroy | either |
-| `notification` | `delete_archived` | Create → archive → wipe | shart preferred |
+| `notification` | `delete_archived` | Create → archive → wipe | backuphost preferred |
 | `rclone` | `delete_remote` | Create local:/tmp remote → destroy | either |
 | `key` | `delete` | Create test key → destroy | either |
 | `disk` | `flash_backup` | Dedicated test remote, isolated path | either |
@@ -380,10 +380,10 @@ uv run pytest tests/safety/ -v
 | `docker` | `remove_container` | Throwaway container → delete | either |
 | `docker` | `delete_entries` | Test organizer view only | either |
 | `docker` | `reset_template_mappings` | Mock/safety audit only | — |
-| `connect` | `sign_in` | Mock/safety audit only | shart only |
-| `connect` | `sign_out` | Mock/safety audit only | shart only |
-| `connect` | `update_api_settings` | Mock/safety audit only | shart only |
-| `connect` | `setup_remote_access` | Mock/safety audit only | shart only |
-| `connect` | `enable_dynamic_remote_access` | Mock/safety audit only | shart only |
+| `connect` | `sign_in` | Mock/safety audit only | backuphost only |
+| `connect` | `sign_out` | Mock/safety audit only | backuphost only |
+| `connect` | `update_api_settings` | Mock/safety audit only | backuphost only |
+| `connect` | `setup_remote_access` | Mock/safety audit only | backuphost only |
+| `connect` | `enable_dynamic_remote_access` | Mock/safety audit only | backuphost only |
 | `onboarding` | `reset` | Mock/safety audit only | — |
 | `onboarding` | `create_internal_boot_pool` | Mock/safety audit only | — |

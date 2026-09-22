@@ -235,7 +235,7 @@ class TestSafeDisplayUrl:
         assert safe_display_url("https://unraid.local/graphql") == "https://unraid.local"
 
     def test_preserves_port(self) -> None:
-        assert safe_display_url("https://10.1.0.2:31337/api/graphql") == "https://10.1.0.2:31337"
+        assert safe_display_url("https://192.0.2.2:31337/api/graphql") == "https://192.0.2.2:31337"
 
     def test_strips_path(self) -> None:
         result = safe_display_url("http://unraid.local/some/deep/path?query=1")
@@ -261,8 +261,8 @@ class TestSafeDisplayUrl:
         assert result == "http://10.0.0.1:8080"
 
     def test_tailscale_url(self) -> None:
-        result = safe_display_url("https://100.118.209.1:31337/graphql")
-        assert result == "https://100.118.209.1:31337"
+        result = safe_display_url("https://198.51.100.2:31337/graphql")
+        assert result == "https://198.51.100.2:31337"
 
     def test_malformed_ipv6_url_returns_unparseable(self) -> None:
         """Malformed IPv6 brackets in netloc cause urlparse.hostname to raise ValueError."""

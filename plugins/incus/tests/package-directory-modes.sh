@@ -30,7 +30,7 @@ build_fixture() {
   printf '#!/bin/sh\nexit 0\n' >"$fixture/source/usr/local/incus/bin/zstd"
   chmod 0644 "$fixture/source/usr/local/incus/bin/zstd"
 
-  # Reproduce the unsafe input metadata that caused the tootie incident.
+  # Reproduce the unsafe input metadata that caused the nashost incident.
   chmod 0777 "$seed" "$seed/usr" "$seed/usr/local" \
     "$seed/usr/local/emhttp" "$seed/usr/local/emhttp/plugins" \
     "$seed/usr/local/emhttp/plugins/incus"

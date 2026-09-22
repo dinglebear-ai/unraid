@@ -85,7 +85,7 @@ test-http-no-auth:
     bash tests/test_live.sh --mode http --skip-auth
 
 # Run HTTP e2e test against a remote URL
-# Usage: just test-http-remote https://unraid.tootie.tv/mcp
+# Usage: just test-http-remote https://unraid.example.internal/mcp
 test-http-remote url:
     bash tests/test_live.sh --mode http --url {{url}} --skip-auth
 
