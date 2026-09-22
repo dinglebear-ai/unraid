@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.2](https://github.com/dinglebear-ai/unraid/compare/v2.10.1...v2.10.2) (2026-09-22)
+
+
+### Bug Fixes
+
+* **unraid-py:** support old and new remove-disk APIs ([#412](https://github.com/dinglebear-ai/unraid/issues/412)) ([87673a4](https://github.com/dinglebear-ai/unraid/commit/87673a493832cdf65f91f9aff19b348cd96b3f6a))
+
 ## [2.10.1](https://github.com/dinglebear-ai/unraid/compare/v2.10.0...v2.10.1) (2026-08-05)
 
 
