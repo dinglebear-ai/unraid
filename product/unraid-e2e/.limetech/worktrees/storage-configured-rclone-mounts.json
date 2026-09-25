@@ -1,0 +1,23 @@
+{
+  "schema_version": "2.0.0",
+  "worktree_slug": "storage-configured-rclone-mounts",
+  "repo_slug": "unraid-e2e",
+  "lane": "core-ui-test",
+  "branch": "test/core-ui-storage-configured-rclone-mounts",
+  "worktree_path": "/Users/jmagar/workspace/unraid-e2e-worktrees/storage-configured-rclone-mounts",
+  "base_ref": "origin/main",
+  "base_remote": "origin",
+  "push_remote": "origin",
+  "created_at": "2026-09-18T21:27:21Z",
+  "created_by": "chatgpt-core942-20260918",
+  "updated_at": "2026-09-18T21:27:21Z",
+  "lock": {
+    "state": "locked",
+    "owner": "chatgpt-core942-20260918",
+    "acquired_at": "2026-09-18T21:27:21Z",
+    "heartbeat_at": "2026-09-18T21:27:21Z",
+    "ttl_seconds": 3600,
+    "host": "macpoo"
+  },
+  "handoff_history": []
+}
