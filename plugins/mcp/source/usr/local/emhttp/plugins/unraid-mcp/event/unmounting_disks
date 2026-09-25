@@ -1,4 +1,0 @@
-#!/bin/bash
-# emhttp event: array is going down. Stop the MCP server first.
-/etc/rc.d/rc.unraid-mcp stop
-exit 0

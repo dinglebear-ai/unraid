@@ -1,0 +1,20 @@
+Workspace cleanup archive for dinglebear-ai/unraid
+Date: 2026-09-25
+Default: main
+
+STALE_BRANCHES 4
+STALE	codex/incus-lxcfs-abi	003b7b07d63ad02edae1d6345983b295f90311a7
+STALE	feat/dynamic-mcp-schema-tdd	84f8b2f4473ca8c91ef98b930da03f9bd8b8d8d7
+STALE	fix/codex-polish-completion-20260805	3ef3313bcc87dba86e608ba3d49c43305744c3ee
+STALE	fix/restore-primary-release-latest-20260805	448f6c8870ea482e3cfef6ca06a924c65a3edfc1
+
+LOCAL_ONLY_BRANCHES 5
+LOCAL_ONLY	chore/scrub-internal-identifiers-20260805	49b2d0b7936b2fa64cead80bca1329df402aefff
+LOCAL_ONLY	codex/incus-lxcfs-abi	003b7b07d63ad02edae1d6345983b295f90311a7
+LOCAL_ONLY	feat/dynamic-mcp-schema-tdd	84f8b2f4473ca8c91ef98b930da03f9bd8b8d8d7
+LOCAL_ONLY	fix/codex-polish-completion-20260805	3ef3313bcc87dba86e608ba3d49c43305744c3ee
+LOCAL_ONLY	fix/restore-primary-release-latest-20260805	448f6c8870ea482e3cfef6ca06a924c65a3edfc1
+
+STALE_WORKTREES 0
+
+WIP_SNAPSHOTS 0
