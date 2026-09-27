@@ -120,7 +120,7 @@ cargo build --release
 ./target/release/runraid --help
 ```
 
-Minimum supported Rust version: 1.90.
+Minimum supported Rust version: 1.97.1 (edition 2024).
 
 ## Quickstart
 
@@ -455,18 +455,24 @@ npm --prefix packages/unraid-rmcp run check
 
 ## Verification
 
+Run from `unraid-rs/`. The shared checker lives in this repository; no personal
+checkout or external documentation script is required. The npm `check` command
+also performs a packed-install smoke test and requires the supported Linux x64
+platform; `npm --prefix packages/unraid-rmcp test` runs the portable wrapper tests.
+
 ```bash
-python3 /home/jmagar/workspace/soma/scripts/check-readme-guide.py README.md
+python3 ../.github/scripts/check_documentation.py
 npm --prefix packages/unraid-rmcp run check
 cargo check
 cargo test
 git diff --check
 ```
 
-Runtime smoke:
+Runtime smoke requires an explicitly selected disposable test server and
+privately supplied credentials. It is not part of the offline documentation gate.
 
 ```bash
-UNRAID_API_URL=https://10-1-0-2.<hash>.myunraid.net:31337/graphql \
+UNRAID_API_URL=https://your-test-server.example/graphql \
 UNRAID_API_KEY=... \
 runraid server --json
 ```

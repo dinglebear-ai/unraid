@@ -26,7 +26,13 @@ on:
       - ".gitleaks.toml"
       - ".mise.toml"
       - "lefthook.yml"
+      - "AGENTS.md"
       - "CLAUDE.md"
+      - "GEMINI.md"
+      - "**/*.md"
+      - "Cargo.toml"
+      - "rust-toolchain.toml"
+      - ".fleet-contract.toml"
       - "README.md"
       - "ca_profile.xml"
   pull_request:
@@ -63,7 +69,10 @@ jobs:
       - name: Validate release manager, versions, and tag contract
         run: python3 ./.github/scripts/release_contract.py
 
-      - name: Test release tooling
+      - name: Validate canonical instructions and maintained documentation links
+        run: python3 .github/scripts/check_documentation.py
+
+      - name: Test shared repository tooling
         run: python3 -m unittest discover -s .github/scripts/tests -p 'test_*.py'
 
       - name: Unraid .plg versions must not regress under string comparison
