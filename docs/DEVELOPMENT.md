@@ -1,3 +1,9 @@
+---
+title: Development and verification
+created: 2026-09-27
+updated: 2026-09-27
+---
+
 # Development and verification
 
 Commands below state their working directory. The repository root is the clone

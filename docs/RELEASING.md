@@ -1,3 +1,9 @@
+---
+title: Release and packaging guide
+created: 2026-09-27
+updated: 2026-09-27
+---
+
 # Release and packaging guide
 
 Release policy is shared across the monorepo; build contexts and artifacts are

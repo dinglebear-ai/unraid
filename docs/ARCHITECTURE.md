@@ -1,3 +1,9 @@
+---
+title: Repository architecture
+created: 2026-09-27
+updated: 2026-09-27
+---
+
 # Repository architecture
 
 This monorepo contains two independent MCP implementations, three Unraid OS

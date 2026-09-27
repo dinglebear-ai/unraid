@@ -70,6 +70,58 @@ class DocumentationTests(unittest.TestCase):
         (self.root / "CLAUDE.md").symlink_to("AGENTS.md")
         self.assertTrue(docs.check_instruction_links(self.root, [Path(".")]))
 
+    def stage_all(self):
+        subprocess.run(["git", "-C", str(self.root), "add", "-A"], check=True)
+
+    def test_index_requires_tracked_instructions(self):
+        self.initialize_git()
+        self.triplet()
+        self.assertTrue(docs.check_index_instruction_links(self.root))
+
+    def test_index_accepts_canonical_root_and_nested_triplets(self):
+        self.initialize_git()
+        self.triplet()
+        self.triplet("component/docs")
+        self.stage_all()
+        self.assertEqual(docs.check_index_instruction_links(self.root), [])
+
+    def test_index_rejects_unstaged_repairs_of_legacy_layout(self):
+        self.initialize_git()
+        self.write("CLAUDE.md", "Canonical legacy content\n")
+        (self.root / "AGENTS.md").symlink_to("CLAUDE.md")
+        (self.root / "GEMINI.md").symlink_to("CLAUDE.md")
+        self.stage_all()
+        for name in docs.INSTRUCTION_NAMES:
+            (self.root / name).unlink()
+        self.triplet()
+        self.assertEqual(docs.check_instruction_links(self.root, [Path(".")]), [])
+        self.assertTrue(docs.check_index_instruction_links(self.root))
+        self.stage_all()
+        self.assertEqual(docs.check_index_instruction_links(self.root), [])
+
+    def test_index_rejects_alias_copies_and_absolute_targets(self):
+        self.initialize_git()
+        self.triplet()
+        alias = self.root / "CLAUDE.md"
+        alias.unlink()
+        self.write("CLAUDE.md", "A copy is not an alias\n")
+        self.stage_all()
+        self.assertTrue(docs.check_index_instruction_links(self.root))
+        alias.unlink()
+        alias.symlink_to(self.root / "AGENTS.md")
+        self.stage_all()
+        self.assertTrue(docs.check_index_instruction_links(self.root))
+
+    def test_index_rejects_missing_peer_and_canonical(self):
+        self.initialize_git()
+        self.triplet()
+        (self.root / "GEMINI.md").unlink()
+        self.stage_all()
+        self.assertTrue(docs.check_index_instruction_links(self.root))
+        (self.root / "AGENTS.md").unlink()
+        self.stage_all()
+        self.assertTrue(docs.check_index_instruction_links(self.root))
+
     def local_pair(self, scope="."):
         canonical = self.write(str(Path(scope) / "AGENTS.override.md"),
                                "Read and follow the shared AGENTS.md first.\n\n@AGENTS.md\n")

@@ -176,6 +176,13 @@ for fast-changing versions, counts, and inventories. Historical session logs,
 changelogs, and imported upstream snapshots remain historical; do not rewrite
 them to manufacture current evidence.
 
+`main` requires a pull request and the `Repository Contract` status. When
+authorized to publish to `main`, push the reviewed work to a branch and merge
+its PR only after the required checks pass; do not bypass the protection.
+The [contract adapter](.github/scripts/check_repository_contract.py) retains the
+pinned fleet checks and replaces only its obsolete Claude-canonical rule with
+our mandatory Git-index and working-tree instruction validation.
+
 When Beads is configured, use `bd prime` and its current task-tracking profile.
 It does not grant permission to push, sync other stores, discard stashes, or
 modify neighboring repositories. At completion, run the relevant gates,

@@ -1,3 +1,9 @@
+---
+title: Shared and local agent instructions
+created: 2026-09-27
+updated: 2026-09-27
+---
+
 # Shared and local agent instructions
 
 ## Ownership and layout
@@ -93,7 +99,7 @@ Do not silently overwrite an independent local document.
 From the repository root:
 
 ```bash
-python3 .github/scripts/check_documentation.py
+python3 .github/scripts/check_documentation.py --check-index
 python3 -m unittest discover -s .github/scripts/tests -p 'test_*.py'
 git ls-files 'AGENTS.override.md' '**/AGENTS.override.md' \
   'CLAUDE.local.md' '**/CLAUDE.local.md'
@@ -106,6 +112,20 @@ of private instruction names, and the local alias/import contract in each
 discovered instruction scope that contains a local pair. A clean CI checkout is not required to contain local files.
 The checker never prints their contents. `--repair-links` repairs shared aliases
 only; it neither creates nor overwrites local instructions.
+
+`--check-index` also checks the staged file modes and symlink targets. Stage
+reviewed changes before using this gate; a repaired working tree must not hide
+an obsolete layout still staged for publication.
+
+The [Repository Contract workflow](../.github/workflows/repository-contract.yml)
+loads an immutable fleet-validator revision and invokes the
+[local adapter](../.github/scripts/check_repository_contract.py). That revision
+hard-codes `CLAUDE.md` as canonical, so the adapter replaces only its
+`symlink-convention` rule with the mandatory local index/working-tree check.
+All other fleet findings remain fatal, including document frontmatter, Cargo,
+tracked-path, environment-schema, and artifact-policy violations. Missing or
+broken validators also fail the gate. Keep this exception narrow when updating
+the upstream pin; do not modify the fleet repository as incidental local work.
 
 For client-level confirmation, start a new Codex session in the intended scope
 and ask it to identify the active instruction files and read `AGENTS.md`. In

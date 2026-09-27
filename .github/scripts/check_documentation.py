@@ -88,6 +88,40 @@ def repair_instruction_links(root: Path, scopes: list[Path]) -> list[str]:
     return []
 
 
+def check_index_instruction_links(root: Path) -> list[str]:
+    """Validate the staged/published Git layout, not only the working tree."""
+    raw = subprocess.check_output(["git", "-C", str(root), "ls-files", "-s", "-z"])
+    entries: dict[Path, tuple[str, str]] = {}
+    errors = []
+    for record in raw.split(b"\0"):
+        if not record:
+            continue
+        metadata, path = record.split(b"\t", 1)
+        mode, blob, stage = metadata.decode("ascii").split()
+        relative = Path(os.fsdecode(path))
+        if stage != "0":
+            errors.append(f"{relative}: unresolved index entry")
+        entries[relative] = (mode, blob)
+    scopes = instruction_scopes(list(entries))
+    if not scopes:
+        errors.append("index: no tracked instruction scopes found")
+    for scope in scopes:
+        canonical = scope / "AGENTS.md"
+        entry = entries.get(canonical)
+        if entry is None or entry[0] not in {"100644", "100755"}:
+            errors.append(f"{canonical}: index must contain a regular canonical file")
+        for name in ALIASES:
+            path = scope / name
+            entry = entries.get(path)
+            if entry is None or entry[0] != "120000":
+                errors.append(f"{path}: index must contain a relative symlink to AGENTS.md")
+                continue
+            target = subprocess.check_output(["git", "-C", str(root), "cat-file", "-p", entry[1]])
+            if target != b"AGENTS.md":
+                errors.append(f"{path}: index symlink must target AGENTS.md")
+    return errors
+
+
 def check_local_instruction_policy(root: Path, files: list[Path], scopes: list[Path]) -> list[str]:
     """Private instruction names must be ignored and absent from Git discovery.
 
@@ -201,6 +235,7 @@ def check_local_links(root: Path, paths: list[Path]) -> tuple[list[str], int, in
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repair-links", action="store_true", help="repair aliases without replacing real documents")
+    parser.add_argument("--check-index", action="store_true", help="also validate staged Git instruction modes and targets")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
     try:
@@ -211,6 +246,8 @@ def main() -> int:
         errors = repair_instruction_links(root, scopes) if args.repair_links else []
         if not errors:
             errors.extend(check_instruction_links(root, scopes))
+        if args.check_index:
+            errors.extend(check_index_instruction_links(root))
         errors.extend(check_local_instruction_policy(root, files, scopes))
         errors.extend(check_local_instruction_links(root, scopes))
         link_errors, docs, links = check_local_links(root, files)
