@@ -91,8 +91,8 @@ Once pushed to GitHub, users install via:
 For testing locally before publishing:
 
 ```bash
-# Add local marketplace
-/plugin marketplace add /home/jmagar/workspace/unraid-mcp
+# Substitute the absolute repository root from git rev-parse --show-toplevel
+/plugin marketplace add /absolute/path/to/unraid
 
 # Install the plugin
 /plugin install unraid-mcp@unraid-mcp

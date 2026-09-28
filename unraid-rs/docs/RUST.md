@@ -20,7 +20,7 @@ The canonical reference is [soma/docs/RUST.md](https://github.com/dinglebear-ai/
 
 ## System prerequisites
 
-- Rust stable ≥ 1.90 (`rustup update stable`)
+- Rust 1.97.1, edition 2024 (use the checked-in toolchain pin rather than an unbounded stable update)
 - `clang` and `mold` for fast Linux builds: `apt install clang mold`
 - `just` command runner (optional): `cargo install just`
 

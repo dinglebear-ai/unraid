@@ -1,4 +1,4 @@
-# Root lefthook config for the unraid-mcp monorepo.
+# Root lefthook config for the unraid tooling monorepo.
 #
 # WHY THIS EXISTS: git hooks are installed once per REPOSITORY, not per directory.
 # After the consolidation there was no root config — only unraid-py/lefthook.yml

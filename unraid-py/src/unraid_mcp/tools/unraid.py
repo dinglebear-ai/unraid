@@ -39,6 +39,7 @@ from ..core.utils import validate_subaction
 # Re-export array queries for schema tests
 from ._array import (  # noqa: F401
     _ARRAY_DESTRUCTIVE,
+    _ARRAY_LEGACY_MUTATIONS,
     _ARRAY_MUTATIONS,
     _ARRAY_QUERIES,
     _ARRAY_SUBACTIONS,

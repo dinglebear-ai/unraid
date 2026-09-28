@@ -8,9 +8,9 @@ A monorepo of Unraid tooling: two MCP servers (Python and Rust) and three Unraid
 OS plugins, plus the Claude/Codex agent integrations that surface them.
 
 > **Repo name.** This repo was renamed `unraid-mcp` → `unraid` on 2026-07-27, and
-> the former standalone `runraid` and `incus-unraid` repos were merged in here. The
-> old GitHub name still redirects, so existing plugin install/update URLs keep
-> working. The **PyPI package, the container image, the Claude plugin, and the
+> the former standalone `runraid` and `incus-unraid` repos were merged in here. Some
+> deployed plugin install/update URLs still depend on the old-name redirect;
+> migrating those runtime URLs requires a deliberate release. The **PyPI package, the container image, the Claude plugin, and the
 > Unraid `.plg`** are all still named `unraid-mcp` — only the repo changed.
 
 ## Components
@@ -18,7 +18,7 @@ OS plugins, plus the Claude/Codex agent integrations that surface them.
 | Path | What it is | Toolchain | Build / test |
 |------|-----------|-----------|--------------|
 | [`unraid-py/`](unraid-py/) | **unraid-mcp** — Python MCP server (GraphQL), the flagship. Published to PyPI as `unraid-mcp`. | Python / uv / hatchling | `cd unraid-py && uv run pytest && uv build --wheel` |
-| [`unraid-rs/`](unraid-rs/) | **runraid** — Rust MCP server + CLI (single static binary). Crate `unraid-rmcp` on crates.io, plus a legacy npm wrapper of the same name. | Rust / cargo | `cd unraid-rs && cargo fmt --check && cargo clippy --all-targets --features test-support -- -D warnings && cargo test` |
+| [`unraid-rs/`](unraid-rs/) | **runraid** — Rust MCP server + CLI (single static binary). Crate `unraid-rmcp` on crates.io, plus the compatibility npm launcher `@dinglebear/unraid`. | Rust / cargo | `cd unraid-rs && cargo fmt --check && cargo clippy --all-targets --features test-support -- -D warnings && cargo test` |
 | [`plugins/mcp/`](plugins/mcp/) | Unraid OS plugin that ships the Rust `runraid` MCP server onto an Unraid box. | shell `.plg` + Rust + Vue | `bash plugins/mcp/scripts/build-txz.sh <ver> <runraid-binary>` |
 | [`plugins/incus/`](plugins/incus/) | Unraid OS plugin running Incus system containers ("dev containers") firewalled off the LAN. Includes a NestJS/GraphQL `unraid-api` backend. | shell `.plg` + NestJS/Vue | `cd plugins/incus && ./scripts/verify-classic-package.sh && ./tests/classic-contract.sh` |
 | [`plugins/codex/`](plugins/codex/) | Unraid OS plugin embedding a Codex chathead app-server. | shell `.plg` + React | `cd plugins/codex && ./tests/contract.sh` |
@@ -49,8 +49,7 @@ plugin's `userConfig`).
 
 The agent plugins ship **no Claude Code hooks**, and none are needed: both
 `.mcp.json` files map your plugin settings into the server environment directly
-via `${user_config.*}`. `agents/unraid-rs` wires 10 keys (endpoint, API key, TLS
-skip, bearer token, four OAuth vars); `agents/unraid-py` wires `UNRAID_API_URL`
+via `${user_config.*}`. `agents/unraid-rs` wires endpoint, TLS, authentication, and tool-selector settings; `agents/unraid-py` wires `UNRAID_API_URL`
 and `UNRAID_API_KEY`. Set them in plugin settings and the server picks them up on
 next launch.
 
@@ -72,10 +71,11 @@ package `unraid_mcp`) and launches with `uvx unraid-mcp`.
 ## unraid-rs quickstart (Rust MCP server + CLI)
 
 ```bash
-cd unraid-rs && cargo build --release      # → target/release/runraid
-runraid setup plugin-hook                  # writes ~/.unraid/.env
-runraid array                              # CLI
-runraid serve mcp                          # MCP over HTTP on :40010
+cargo install --path unraid-rs --locked     # from the repository root
+# Configure UNRAID_API_URL and UNRAID_API_KEY privately before querying.
+runraid setup check                        # inspect setup without repairing files
+runraid array                              # read array state
+runraid serve mcp                          # MCP HTTP (default :40010; configure auth)
 ```
 
 | Env var | Purpose |
@@ -87,11 +87,23 @@ runraid serve mcp                          # MCP over HTTP on :40010
 | `UNRAID_RMCP_TOKEN` | Static bearer token for `/mcp` |
 | `UNRAID_RMCP_AUTH_MODE` | `bearer` (default) or `oauth` |
 
-Full list and the OAuth variables: [`unraid-rs/CLAUDE.md`](unraid-rs/CLAUDE.md).
+Full list and the OAuth variables: [`unraid-rs/AGENTS.md`](unraid-rs/AGENTS.md).
 
 **Not read-only.** The Rust server exposes both queries and mutations. Read actions
 need the `unraid:read` scope; mutating actions (VM and Docker lifecycle, array
 start/stop, notification writes) need `unraid:admin`.
+
+## Development and documentation
+
+Start with [AGENTS.md](AGENTS.md), the canonical contributor guide.
+`CLAUDE.md` and `GEMINI.md` are symlinks to it, including within components.
+The [documentation index](docs/README.md) links to
+[development and verification](docs/DEVELOPMENT.md),
+[architecture](docs/ARCHITECTURE.md), and [release procedures](docs/RELEASING.md).
+
+Rust MCP supports `UNRAID_RMCP_PROJECTION=legacy` (default), `atomic`, or `both`.
+All projections share enabled-action policy, scopes, and execution; atomic mode
+is not a second backend. See the Rust README for selectors and migration.
 
 ## Releases
 

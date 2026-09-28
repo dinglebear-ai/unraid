@@ -1,4 +1,4 @@
-# CODEOWNERS for the unraid-mcp monorepo.
+# CODEOWNERS for the unraid tooling monorepo.
 #
 # NOTE: a pattern matching no file is silently inert — no error, no required
 # reviewer. After the consolidation moved the Python server into unraid-py/, the
@@ -16,7 +16,10 @@
 /.gitleaks.toml @jmagar
 /.mise.toml @jmagar
 /lefthook.yml @jmagar
+/AGENTS.md @jmagar
 /CLAUDE.md @jmagar
+/GEMINI.md @jmagar
+/docs/ @jmagar
 /README.md @jmagar
 
 # ── Components ───────────────────────────────────────────────────────────────

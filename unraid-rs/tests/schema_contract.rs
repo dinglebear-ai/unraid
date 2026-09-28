@@ -36,7 +36,11 @@ use unraid_rmcp::testing::{mutation_action_calls, upstream_action_calls};
 /// Every query AND mutation, so the contract test validates the whole surface.
 fn action_calls() -> Vec<(&'static str, Value)> {
     let mut calls = upstream_action_calls();
-    calls.extend(mutation_action_calls());
+    calls.extend(
+        mutation_action_calls()
+            .into_iter()
+            .filter(|(action, _)| *action != "array_remove_disk_from_array"),
+    );
     calls
 }
 

@@ -97,6 +97,9 @@ const dirty = computed(() => {
 function fieldError(key: string): string {
   const v = form[key] ?? "";
   if (v === "") return key === "UNRAID_API_URL" ? "GraphQL URL is required" : "";
+  if (key === "UNRAID_RMCP_PROJECTION" && !["legacy", "atomic", "both"].includes(v)) {
+    return "Projection must be legacy, atomic, or both";
+  }
   if (key === "UNRAID_RMCP_PORT") {
     const n = Number(v);
     if (!Number.isInteger(n) || n < 1 || n > 65535) return "Port must be 1–65535";

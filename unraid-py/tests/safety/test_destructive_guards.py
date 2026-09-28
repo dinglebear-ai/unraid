@@ -16,6 +16,7 @@ from unraid_mcp.core.exceptions import ToolError
 # Import DESTRUCTIVE_ACTIONS and MUTATIONS sets from the consolidated unraid module
 from unraid_mcp.tools.unraid import (
     _ARRAY_DESTRUCTIVE,
+    _ARRAY_LEGACY_MUTATIONS,
     _ARRAY_MUTATIONS,
     _CONNECT_DESTRUCTIVE,
     _CONNECT_MUTATIONS,
@@ -63,7 +64,7 @@ KNOWN_DESTRUCTIVE: dict[str, dict] = {
     "array": {
         "actions": {"remove_disk", "clear_disk_stats", "stop_array"},
         "runtime_set": _ARRAY_DESTRUCTIVE,
-        "mutations": _ARRAY_MUTATIONS,
+        "mutations": {**_ARRAY_MUTATIONS, **_ARRAY_LEGACY_MUTATIONS},
     },
     "vm": {
         "actions": {"force_stop", "reset"},

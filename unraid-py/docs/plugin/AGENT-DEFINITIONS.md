@@ -1,25 +1,38 @@
 ---
 title: Agent definitions
 created: 2026-06-20
-updated: 2026-07-30
+updated: 2026-09-27
 ---
 
 # Agent Definitions -- unraid-mcp
 
 ## Status
 
-unraid-mcp does not currently define any agents. The `unraid` MCP tool with its 19 actions provides sufficient coverage for all Unraid operations without requiring specialized agent behavior.
+The Python integration does not define standalone agents. It exposes the
+consolidated `unraid` MCP tool and its supporting skill. Consult the tool
+reference for the supported action catalog rather than assuming full API coverage.
 
-## Agent-memory symlinks
+## Shared and local instruction files
 
-The repository includes `AGENTS.md` and `GEMINI.md` as symlinks to `CLAUDE.md` for Codex and Gemini compatibility:
+`AGENTS.md` is the regular, canonical instruction file in every documented
+scope. `CLAUDE.md` and `GEMINI.md` are relative symlinks to `AGENTS.md`, not
+independently maintained copies. These are development instructions, not agent
+definitions.
+
+From the repository root, repair shared aliases with the content-preserving helper:
 
 ```bash
-ln -sf CLAUDE.md AGENTS.md
-ln -sf CLAUDE.md GEMINI.md
+python3 .github/scripts/check_documentation.py --repair-links
 ```
 
-These are not agent definitions -- they are development instruction files for AI coding assistants.
+The helper refuses to overwrite a regular alias file. Reconcile existing
+content before migrating an inverted layout.
+
+Personal settings belong in the ignored `AGENTS.override.md`, with the ignored
+relative alias `CLAUDE.local.md -> AGENTS.override.md`. The override must load
+the shared baseline because Codex selects only one file per directory. See
+[shared and local instructions](../../../docs/AGENT_INSTRUCTIONS.md) for
+precedence, safe setup, and verification.
 
 ## See Also
 
