@@ -68,6 +68,7 @@ where
             .env("RUST_LOG", "warn")
             .env_remove("UNRAID_HOME")
             .env_remove("UNRAID_RMCP_TOKEN")
+            .env_remove("UNRAID_RMCP_PROJECTION")
             .env_remove("UNRAID_RMCP_ENABLED_TOOLS")
             .env_remove("UNRAID_RMCP_DISABLED_TOOLS");
         for (key, value) in env {
@@ -505,6 +506,232 @@ async fn stdio_validation_guidance_respects_enabled_actions() {
         !error.contains("action=help") && !error.contains("docker"),
         "missing-action error referenced a disabled action: {error}"
     );
+
+    cancel_and_drain(service, stderr).await;
+}
+
+#[tokio::test]
+async fn stdio_atomic_projection_lists_focused_tools_and_calls_status() {
+    let (service, stderr) = stdio_client_with_env(&[
+        ("UNRAID_RMCP_PROJECTION", "atomic"),
+        ("UNRAID_RMCP_ENABLED_TOOLS", "docker_logs,status,help"),
+    ])
+    .await
+    .unwrap();
+
+    let tools = service.list_tools(Default::default()).await.unwrap();
+    let names = tools
+        .tools
+        .iter()
+        .map(|tool| tool.name.as_ref())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        names,
+        vec!["unraid_docker_logs", "unraid_status", "unraid_help"]
+    );
+
+    let docker_logs = serde_json::to_value(&tools.tools[0]).unwrap();
+    assert!(
+        docker_logs["inputSchema"]["properties"]
+            .get("action")
+            .is_none()
+    );
+    assert_eq!(docker_logs["inputSchema"]["required"], json!(["id"]));
+    assert_eq!(docker_logs["annotations"]["readOnlyHint"], true);
+    assert_eq!(docker_logs["annotations"]["destructiveHint"], false);
+
+    let status = service
+        .call_tool(CallToolRequestParams::new("unraid_status"))
+        .await
+        .unwrap();
+    assert_eq!(text_content_json(&status)["status"], "ok");
+
+    let invalid = service
+        .call_tool(CallToolRequestParams::new("unraid_docker_logs"))
+        .await
+        .unwrap_err();
+    assert!(
+        invalid.to_string().contains("id") && invalid.to_string().contains("required"),
+        "atomic invalid-input error was: {invalid}"
+    );
+
+    let legacy = service
+        .call_tool(
+            CallToolRequestParams::new("unraid")
+                .with_arguments(json!({"action": "status"}).as_object().unwrap().clone()),
+        )
+        .await
+        .unwrap_err();
+    assert!(
+        legacy.to_string().contains("atomic projection"),
+        "legacy tool should be rejected in atomic mode: {legacy}"
+    );
+
+    cancel_and_drain(service, stderr).await;
+}
+
+#[tokio::test]
+async fn stdio_atomic_projection_preserves_selector_filtering_and_schema_resource() {
+    let (service, stderr) = stdio_client_with_env(&[
+        ("UNRAID_RMCP_PROJECTION", "atomic"),
+        ("UNRAID_RMCP_ENABLED_TOOLS", "array,status,help"),
+        ("UNRAID_RMCP_DISABLED_TOOLS", "array"),
+    ])
+    .await
+    .unwrap();
+
+    let tools = service.list_tools(Default::default()).await.unwrap();
+    let names = tools
+        .tools
+        .iter()
+        .map(|tool| tool.name.as_ref())
+        .collect::<Vec<_>>();
+    assert_eq!(names, vec!["unraid_status", "unraid_help"]);
+
+    let disabled = service
+        .call_tool(CallToolRequestParams::new("unraid_array"))
+        .await
+        .unwrap_err();
+    assert!(
+        disabled.to_string().contains("disabled by server policy"),
+        "disabled atomic action error was: {disabled}"
+    );
+
+    let resource = service
+        .read_resource(ReadResourceRequestParams::new("unraid://schema/mcp-tool"))
+        .await
+        .unwrap();
+    let resource = serde_json::to_value(&resource).unwrap();
+    let schema: serde_json::Value =
+        serde_json::from_str(resource["contents"][0]["text"].as_str().unwrap()).unwrap();
+    assert_eq!(schema.as_array().unwrap().len(), 2);
+    assert_eq!(schema[0]["name"], "unraid_status");
+    assert_eq!(schema[1]["name"], "unraid_help");
+    assert!(
+        schema[0]["inputSchema"]["properties"]
+            .get("action")
+            .is_none()
+    );
+
+    cancel_and_drain(service, stderr).await;
+}
+
+#[tokio::test]
+async fn stdio_both_projection_advertises_legacy_and_atomic_surfaces() {
+    let (service, stderr) = stdio_client_with_env(&[
+        ("UNRAID_RMCP_PROJECTION", "both"),
+        ("UNRAID_RMCP_ENABLED_TOOLS", "status,help"),
+    ])
+    .await
+    .unwrap();
+
+    let tools = service.list_tools(Default::default()).await.unwrap();
+    let names = tools
+        .tools
+        .iter()
+        .map(|tool| tool.name.as_ref())
+        .collect::<Vec<_>>();
+    assert_eq!(names, vec!["unraid", "unraid_status", "unraid_help"]);
+
+    let legacy = service
+        .call_tool(
+            CallToolRequestParams::new("unraid")
+                .with_arguments(json!({"action": "status"}).as_object().unwrap().clone()),
+        )
+        .await
+        .unwrap();
+    let atomic = service
+        .call_tool(CallToolRequestParams::new("unraid_status"))
+        .await
+        .unwrap();
+    assert_eq!(text_content_json(&legacy)["status"], "ok");
+    assert_eq!(text_content_json(&atomic)["status"], "ok");
+
+    cancel_and_drain(service, stderr).await;
+}
+
+#[tokio::test]
+async fn stdio_atomic_prompt_names_only_enabled_atomic_summary_tools() {
+    let (service, stderr) = stdio_client_with_env(&[
+        ("UNRAID_RMCP_PROJECTION", "atomic"),
+        ("UNRAID_RMCP_ENABLED_TOOLS", "info,array,help"),
+    ])
+    .await
+    .unwrap();
+
+    let prompt = service
+        .get_prompt(GetPromptRequestParams::new("server_summary"))
+        .await
+        .unwrap();
+    let prompt = serde_json::to_string(&prompt).unwrap();
+    for enabled in ["unraid_info", "unraid_array"] {
+        assert!(
+            prompt.contains(enabled),
+            "prompt omitted {enabled}: {prompt}"
+        );
+    }
+    assert!(!prompt.contains("action=info"));
+    assert!(!prompt.contains("unraid_disks"));
+
+    cancel_and_drain(service, stderr).await;
+}
+
+#[tokio::test]
+async fn atomic_destructive_action_acceptance_reaches_same_dispatch() {
+    let calls = Arc::new(AtomicUsize::new(0));
+    let client = ElicitingClient::new(ElicitationDecision::Accept, calls.clone());
+    let (service, stderr) = stdio_client_with_handler_and_env(
+        client,
+        &[
+            ("UNRAID_RMCP_PROJECTION", "atomic"),
+            ("UNRAID_RMCP_ENABLED_TOOLS", "vm_reset"),
+        ],
+    )
+    .await
+    .unwrap();
+
+    let result = service
+        .call_tool(
+            CallToolRequestParams::new("unraid_vm_reset")
+                .with_arguments(json!({"id": "vm-1"}).as_object().unwrap().clone()),
+        )
+        .await
+        .unwrap();
+    let text = text_content(&result);
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    assert!(
+        text.contains("upstream unreachable"),
+        "accepted atomic destructive action should reach shared dispatch: {text}"
+    );
+
+    cancel_and_drain(service, stderr).await;
+}
+
+#[tokio::test]
+async fn atomic_destructive_action_decline_stops_before_same_dispatch() {
+    let calls = Arc::new(AtomicUsize::new(0));
+    let client = ElicitingClient::new(ElicitationDecision::Decline, calls.clone());
+    let (service, stderr) = stdio_client_with_handler_and_env(
+        client,
+        &[
+            ("UNRAID_RMCP_PROJECTION", "atomic"),
+            ("UNRAID_RMCP_ENABLED_TOOLS", "vm_reset"),
+        ],
+    )
+    .await
+    .unwrap();
+
+    let result = service
+        .call_tool(
+            CallToolRequestParams::new("unraid_vm_reset")
+                .with_arguments(json!({"id": "vm-1"}).as_object().unwrap().clone()),
+        )
+        .await
+        .unwrap();
+    let text = text_content(&result);
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    assert!(text.contains("declined by the user"));
+    assert!(!text.contains("upstream unreachable"));
 
     cancel_and_drain(service, stderr).await;
 }

@@ -1432,8 +1432,10 @@ pub struct DockerUpdateAllContainersNs {
 // `mutation { array { <op> } }`. Same two-struct-per-op shape as the VM
 // namespace: a `Mutation`-root struct selecting the `array` field, and an
 // `ArrayMutations`-typed namespace struct selecting the op with #[arguments(...)].
-// setState/addDiskToArray/removeDiskFromArray return UnraidArray! -> UnraidArrayRef
-// (minimal { id state }); mount/unmount return ArrayDisk! -> ArrayDiskRef
+// setState/addDiskToArray return UnraidArray! -> UnraidArrayRef (minimal
+// { id state }); the legacy removeDiskFromArray compatibility path is raw GraphQL
+// because the field no longer exists in the current vendored SDL. mount/unmount
+// return ArrayDisk! -> ArrayDiskRef
 // ({ id name status }); clearArrayDiskStatistics returns Boolean! -> bool.
 
 /// Minimal `UnraidArray` selection for mutation results ({ id state }).
@@ -1534,27 +1536,6 @@ pub struct ArrayAddDiskToArrayMutation {
 pub struct ArrayAddDiskToArrayNs {
     #[arguments(input: $input)]
     pub add_disk_to_array: UnraidArrayRef,
-}
-
-// removeDiskFromArray(input: ArrayDiskInput!): UnraidArray!
-
-#[derive(cynic::QueryFragment, serde::Serialize)]
-#[cynic(graphql_type = "Mutation", variables = "ArrayDiskInputVars")]
-#[serde(rename_all = "camelCase")]
-pub struct ArrayRemoveDiskFromArrayMutation {
-    pub array: ArrayRemoveDiskFromArrayNs,
-}
-
-#[derive(cynic::QueryFragment, serde::Serialize)]
-#[cynic(
-    graphql_type = "ArrayMutations",
-    variables = "ArrayDiskInputVars",
-    rename_all = "camelCase"
-)]
-#[serde(rename_all = "camelCase")]
-pub struct ArrayRemoveDiskFromArrayNs {
-    #[arguments(input: $input)]
-    pub remove_disk_from_array: UnraidArrayRef,
 }
 
 // mountArrayDisk(id: PrefixedID!): ArrayDisk!

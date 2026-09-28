@@ -1,6 +1,13 @@
 use serde_json::{Value, json};
 
-use super::action_params::{enabled_actions_for_parameter, visible_parameter_names};
+use crate::config::McpProjectionMode;
+
+use super::{
+    action_params::{
+        enabled_actions_for_parameter, required_parameter_names, visible_parameter_names,
+    },
+    elicitation::DESTRUCTIVE_ACTIONS,
+};
 
 /// Canonical specification for one `unraid` tool action.
 ///
@@ -638,7 +645,7 @@ pub fn write_action_names() -> Vec<&'static str> {
         .collect()
 }
 
-pub(super) fn tool_definitions(action_names: &[&str]) -> Vec<Value> {
+fn legacy_tool_definitions(action_names: &[&str]) -> Vec<Value> {
     let help_hint = if action_names.contains(&"help") {
         " Use action=help for documentation."
     } else {
@@ -790,12 +797,215 @@ pub(super) fn tool_definitions(action_names: &[&str]) -> Vec<Value> {
     })]
 }
 
+pub(super) const ATOMIC_TOOL_PREFIX: &str = "unraid_";
+
+pub(super) fn atomic_tool_name(action: &str) -> String {
+    format!("{ATOMIC_TOOL_PREFIX}{action}")
+}
+
+pub(super) fn atomic_action_from_tool_name(tool_name: &str) -> Option<&'static str> {
+    let action = tool_name.strip_prefix(ATOMIC_TOOL_PREFIX)?;
+    ACTIONS
+        .iter()
+        .find(|spec| spec.name == action)
+        .map(|spec| spec.name)
+}
+
+fn atomic_tool_definitions(action_names: &[&str]) -> Vec<Value> {
+    action_names
+        .iter()
+        .map(|action| {
+            let mut legacy = legacy_tool_definitions(&[*action])
+                .into_iter()
+                .next()
+                .expect("single-action legacy schema");
+            let input = legacy
+                .get_mut("inputSchema")
+                .and_then(Value::as_object_mut)
+                .expect("legacy input schema");
+            let properties = input
+                .get_mut("properties")
+                .and_then(Value::as_object_mut)
+                .expect("legacy properties");
+            properties.remove("action");
+
+            input.insert(
+                "required".to_string(),
+                json!(required_parameter_names(action)),
+            );
+            input.insert("additionalProperties".to_string(), Value::Bool(false));
+
+            let spec = ACTIONS
+                .iter()
+                .find(|spec| spec.name == *action)
+                .expect("enabled action must be canonical");
+            let scope = match spec.scope {
+                Scope::None => "no OAuth scope",
+                Scope::Read => "scope unraid:read",
+                Scope::Write => "scope unraid:admin",
+            };
+            let read_only = spec.scope != Scope::Write;
+            let destructive = DESTRUCTIVE_ACTIONS.contains(action);
+
+            json!({
+                "name": atomic_tool_name(action),
+                "description": format!(
+                    "Run the Unraid {action} action. Requires {scope}. Atomic projection of unraid(action={action:?})."
+                ),
+                "inputSchema": input,
+                "annotations": {
+                    "title": format!("Unraid: {action}"),
+                    "readOnlyHint": read_only,
+                    "destructiveHint": destructive,
+                    "idempotentHint": idempotent_hint(spec),
+                    "openWorldHint": false
+                }
+            })
+        })
+        .collect()
+}
+
+pub(super) fn projected_tool_definitions(
+    action_names: &[&str],
+    projection: McpProjectionMode,
+) -> Vec<Value> {
+    if action_names.is_empty() {
+        return Vec::new();
+    }
+
+    match projection {
+        McpProjectionMode::Legacy => legacy_tool_definitions(action_names),
+        McpProjectionMode::Atomic => atomic_tool_definitions(action_names),
+        McpProjectionMode::Both => {
+            let mut tools = legacy_tool_definitions(action_names);
+            tools.extend(atomic_tool_definitions(action_names));
+            tools
+        }
+    }
+}
+
+/// Write actions whose repeated invocation with identical arguments does not
+/// introduce additional state changes. The complementary non-idempotent set
+/// below is exhaustive for write-scoped actions and pinned by tests.
+const IDEMPOTENT_WRITE_ACTIONS: &[&str] = &[
+    "delete_archived_notifications",
+    "archive_notification",
+    "vm_start",
+    "vm_stop",
+    "vm_pause",
+    "vm_resume",
+    "vm_force_stop",
+    "docker_start",
+    "docker_stop",
+    "docker_pause",
+    "docker_unpause",
+    "docker_remove_container",
+    "docker_set_folder_children",
+    "docker_delete_entries",
+    "docker_move_entries_to_folder",
+    "docker_move_items_to_position",
+    "docker_rename_folder",
+    "docker_update_view_preferences",
+    "docker_update_autostart_configuration",
+    "reset_docker_template_mappings",
+    "sync_docker_template_paths",
+    "customization_set_locale",
+    "customization_set_theme",
+    "array_set_state",
+    "array_add_disk_to_array",
+    "array_remove_disk_from_array",
+    "array_mount_array_disk",
+    "array_unmount_array_disk",
+    "parity_check_pause",
+    "parity_check_resume",
+    "parity_check_cancel",
+    "api_key_add_role",
+    "api_key_remove_role",
+    "api_key_delete",
+    "api_key_update",
+    "rclone_delete_r_clone_remote",
+    "onboarding_complete_onboarding",
+    "onboarding_reset_onboarding",
+    "onboarding_bypass_onboarding",
+    "onboarding_clear_onboarding_override",
+    "onboarding_close_onboarding",
+    "onboarding_open_onboarding",
+    "onboarding_resume_onboarding",
+    "onboarding_set_onboarding_override",
+    "archive_notifications",
+    "unarchive_notifications",
+    "unread_notification",
+    "archive_all",
+    "unarchive_all",
+    "update_server_identity",
+    "configure_ups",
+    "update_system_time",
+    "update_temperature_config",
+    "remove_plugin",
+    "connect_sign_out",
+    "setup_remote_access",
+    "enable_dynamic_remote_access",
+    "update_api_settings",
+    "update_settings",
+    "update_ssh_settings",
+    "notify_if_unique",
+];
+
+const NON_IDEMPOTENT_WRITE_ACTIONS: &[&str] = &[
+    "recalculate_overview",
+    "create_notification",
+    "vm_reboot",
+    "vm_reset",
+    "docker_restart",
+    "docker_update_container",
+    "docker_update_containers",
+    "docker_update_all_containers",
+    "docker_create_folder",
+    "docker_create_folder_with_items",
+    "refresh_docker_digests",
+    "array_clear_array_disk_statistics",
+    "parity_check_start",
+    "api_key_create",
+    "rclone_create_r_clone_remote",
+    "unraid_plugins_install_plugin",
+    "unraid_plugins_install_language",
+    "onboarding_refresh_internal_boot_context",
+    "onboarding_create_internal_boot_pool",
+    "add_plugin",
+    "connect_sign_in",
+    "initiate_flash_backup",
+];
+
+fn idempotent_hint(spec: &ActionSpec) -> bool {
+    match spec.scope {
+        Scope::None | Scope::Read => true,
+        Scope::Write => {
+            if IDEMPOTENT_WRITE_ACTIONS.contains(&spec.name) {
+                true
+            } else {
+                debug_assert!(
+                    NON_IDEMPOTENT_WRITE_ACTIONS.contains(&spec.name),
+                    "unclassified write action: {}",
+                    spec.name
+                );
+                false
+            }
+        }
+    }
+}
+
+/// Compatibility helper for legacy-only callers and tests.
+#[cfg(test)]
+pub(super) fn tool_definitions(action_names: &[&str]) -> Vec<Value> {
+    legacy_tool_definitions(action_names)
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
 
     use super::*;
-    use crate::mcp::action_params::ACTION_PARAMETERS;
+    use crate::mcp::action_params::{ACTION_PARAMETERS, REQUIRED_ACTION_PARAMETERS};
 
     fn schema_property_names(action_names: &[&str]) -> HashSet<String> {
         tool_definitions(action_names)[0]["inputSchema"]["properties"]
@@ -920,7 +1130,131 @@ mod tests {
         );
     }
 
-    /// `help` must be present in the canonical list (it is reachable with no scope).
+    #[test]
+    fn atomic_projection_has_one_unique_tool_per_enabled_action() {
+        let enabled = ["docker_logs", "status", "help"];
+        let tools = projected_tool_definitions(&enabled, McpProjectionMode::Atomic);
+        assert_eq!(tools.len(), enabled.len());
+        let names = tools
+            .iter()
+            .map(|tool| tool["name"].as_str().unwrap())
+            .collect::<HashSet<_>>();
+        assert_eq!(names.len(), enabled.len());
+        assert!(names.contains("unraid_docker_logs"));
+        assert!(names.contains("unraid_status"));
+        assert!(names.contains("unraid_help"));
+        assert!(!names.contains("unraid"));
+    }
+
+    #[test]
+    fn both_projection_keeps_legacy_and_adds_atomic_tools() {
+        let enabled = ["status", "help"];
+        let tools = projected_tool_definitions(&enabled, McpProjectionMode::Both);
+        assert_eq!(tools.len(), 3);
+        assert_eq!(tools[0]["name"], "unraid");
+        assert_eq!(tools[1]["name"], "unraid_status");
+        assert_eq!(tools[2]["name"], "unraid_help");
+    }
+
+    #[test]
+    fn atomic_schemas_are_minimal_and_required_fields_are_exact() {
+        for spec in ACTIONS {
+            let tool = projected_tool_definitions(&[spec.name], McpProjectionMode::Atomic)
+                .pop()
+                .unwrap();
+            let properties = tool["inputSchema"]["properties"].as_object().unwrap();
+            assert!(!properties.contains_key("action"));
+            let expected: HashSet<String> = ACTION_PARAMETERS
+                .iter()
+                .find(|(action, _)| *action == spec.name)
+                .map(|(_, params)| params.iter().map(|p| (*p).to_string()).collect())
+                .unwrap_or_default();
+            assert_eq!(
+                properties.keys().cloned().collect::<HashSet<_>>(),
+                expected,
+                "atomic schema property drift for {}",
+                spec.name
+            );
+            let expected_required = REQUIRED_ACTION_PARAMETERS
+                .iter()
+                .find(|(action, _)| *action == spec.name)
+                .map(|(_, params)| json!(params))
+                .unwrap_or_else(|| json!([]));
+            assert_eq!(
+                tool["inputSchema"]["required"], expected_required,
+                "atomic required-field drift for {}",
+                spec.name
+            );
+            assert_eq!(tool["inputSchema"]["additionalProperties"], false);
+        }
+    }
+
+    #[test]
+    fn atomic_names_round_trip_to_canonical_actions() {
+        for spec in ACTIONS {
+            let name = atomic_tool_name(spec.name);
+            assert_eq!(atomic_action_from_tool_name(&name), Some(spec.name));
+        }
+        assert_eq!(atomic_action_from_tool_name("unraid_not_real"), None);
+        assert_eq!(atomic_action_from_tool_name("status"), None);
+    }
+
+    #[test]
+    fn atomic_annotations_follow_scope_and_elicitation_metadata() {
+        for spec in ACTIONS {
+            let tool = projected_tool_definitions(&[spec.name], McpProjectionMode::Atomic)
+                .pop()
+                .unwrap();
+            assert_eq!(
+                tool["annotations"]["readOnlyHint"],
+                json!(spec.scope != Scope::Write),
+                "{} readOnlyHint",
+                spec.name
+            );
+            assert_eq!(
+                tool["annotations"]["destructiveHint"],
+                json!(DESTRUCTIVE_ACTIONS.contains(&spec.name)),
+                "{} destructiveHint",
+                spec.name
+            );
+            assert_eq!(
+                tool["annotations"]["idempotentHint"],
+                json!(idempotent_hint(spec)),
+                "{} idempotentHint",
+                spec.name
+            );
+        }
+    }
+
+    #[test]
+    fn every_write_action_has_explicit_idempotency_classification() {
+        let idempotent = IDEMPOTENT_WRITE_ACTIONS
+            .iter()
+            .copied()
+            .collect::<HashSet<_>>();
+        let non_idempotent = NON_IDEMPOTENT_WRITE_ACTIONS
+            .iter()
+            .copied()
+            .collect::<HashSet<_>>();
+
+        assert!(
+            idempotent.is_disjoint(&non_idempotent),
+            "write idempotency sets must not overlap"
+        );
+
+        let classified = idempotent
+            .union(&non_idempotent)
+            .copied()
+            .collect::<HashSet<_>>();
+        let writes = ACTIONS
+            .iter()
+            .filter(|spec| spec.scope == Scope::Write)
+            .map(|spec| spec.name)
+            .collect::<HashSet<_>>();
+        assert_eq!(classified, writes, "every write action must be classified");
+    }
+
+    /// help must be present in the canonical list (it is reachable with no scope).
     #[test]
     fn help_is_present() {
         assert!(ACTIONS.iter().any(|a| a.name == "help"));

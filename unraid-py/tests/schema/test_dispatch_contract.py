@@ -14,6 +14,7 @@ from conftest import make_tool_fn
 
 from tests.schema.mock_unraid import CONTAINER_ID, mock_graphql_response
 from unraid_mcp.devtools.graphql_inventory import dispatch_operation_cases
+from unraid_mcp.tools._array import _ARRAY_LEGACY_MUTATIONS
 from unraid_mcp.tools._docker import _DOCKER_ORGANIZER, _DOCKER_RESOLVE_QUERY
 
 
@@ -110,22 +111,52 @@ def _mock_graphql_response(query: str, *_args: Any, **_kwargs: Any) -> dict[str,
 
 @pytest.mark.parametrize(
     ("action", "subaction", "expected_query"),
-    dispatch_operation_cases(),
+    dispatch_operation_cases(include_legacy=False),
     ids=lambda value: value if isinstance(value, str) else None,
 )
-async def test_every_graphql_operation_is_emitted_by_dispatch(
+async def test_every_current_graphql_operation_is_emitted_by_dispatch(
     action: str,
     subaction: str,
     expected_query: str,
     mock_graphql_request: AsyncMock,
 ) -> None:
-    """Every query/mutation dict entry is reachable through real tool dispatch."""
+    """Every current-SDL operation is reachable through real tool dispatch."""
     mock_graphql_request.side_effect = _mock_graphql_response
 
     await _make_tool()(**_call_kwargs(action, subaction))
 
     emitted_queries = [call.args[0] for call in mock_graphql_request.call_args_list]
     assert expected_query in emitted_queries
+
+
+async def test_legacy_remove_disk_is_emitted_by_dispatch(
+    mock_graphql_request: AsyncMock,
+) -> None:
+    """Legacy remove_disk still dispatches against an old-server response."""
+    mock_graphql_request.return_value = {
+        "array": {
+            "removeDiskFromArray": {
+                "state": "STOPPED",
+                "disks": [],
+            }
+        }
+    }
+
+    result = await _make_tool()(
+        action="array",
+        subaction="remove_disk",
+        disk_id="disk-1",
+        confirm=True,
+    )
+
+    emitted_queries = [call.args[0] for call in mock_graphql_request.call_args_list]
+
+    assert _ARRAY_LEGACY_MUTATIONS["remove_disk"] in emitted_queries
+    assert result["success"] is True
+    assert result["data"] == {
+        "state": "STOPPED",
+        "disks": [],
+    }
 
 
 async def test_docker_name_resolution_query_is_emitted_by_dispatch(

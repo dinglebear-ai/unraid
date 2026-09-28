@@ -180,7 +180,8 @@ class PrimaryLatestTests(unittest.TestCase):
 class ReleasePrFixupTests(unittest.TestCase):
     def test_restores_compatibility_crate_and_npm_distribution(self):
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            # apply() resolves its root; macOS aliases /var through /private/var.
+            root = Path(tmp).resolve()
             (root / "unraid-rs/crates/lab-auth").mkdir(parents=True)
             (root / ".release-please-manifest.json").write_text(
                 '{"unraid-rs": "0.3.0"}\n',
