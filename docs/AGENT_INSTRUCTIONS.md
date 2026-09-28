@@ -1,135 +1,125 @@
 ---
-title: Shared and local agent instructions
+title: Agent instruction layout reference
 created: 2026-09-27
 updated: 2026-09-27
 ---
 
-# Shared and local agent instructions
+# Agent instruction layout reference
 
-## Ownership and layout
+This page explains the repository's instruction-file validation and local setup.
+The root [AGENTS.md](../AGENTS.md) is a compact repository map and contract guide,
+not a copy of a developer's global workflow policy.
 
-Keep portable repository policy in [AGENTS.md](../AGENTS.md). Each component's
-`AGENTS.md` adds instructions for that scope. Edit the canonical file, not an
-independent assistant-specific copy.
+## Separate the scopes
 
-| File | Ownership | Git policy |
+| Scope | Content | Publication |
 | --- | --- | --- |
-| `AGENTS.md` | Shared repository or component guidance | Tracked, regular file |
+| Global `AGENTS.md` | Cross-project workflow, Git safety, tools, evidence, communication, instruction conventions | User configuration, outside this repo |
+| Global `AGENTS.override.md` | Verified workstation facts and tool-resolution observations | Private user configuration |
+| Repository/component `AGENTS.md` | Architecture, build roots, commands, contracts, component pitfalls | Tracked here |
+| Repository/component `AGENTS.override.md` | Checkout paths, private service configuration, local prerequisites and caveats | Ignored here |
+
+Host facts should be checked on the actual machine and dated. Configuration,
+reachability, authentication, and successful execution are different facts.
+Record names and locations, not credential values. Do not commit copies of
+global instructions or private overrides merely to publish all dirty changes.
+
+## Global entry points
+
+The default global locations are Codex `~/.codex/AGENTS.md`, Claude Code
+`~/.claude/CLAUDE.md`, and Gemini CLI `~/.gemini/GEMINI.md`. In an
+AGENTS-canonical setup, the latter two can be relative symlinks to the first.
+Check configured homes and existing content before changing this layout.
+These are client entry points, not additional files for this repository.
+
+Codex also selects a global `AGENTS.override.md` ahead of its base. Do not
+assume Claude discovers a configuration-directory `CLAUDE.local.md` as a
+global-local layer: use an explicit import from its global entry point when
+needed. A global override imported by its base must guard its base-read
+directive against recursive loading. Do not put a reciprocal `@` import in it.
+
+See the official [Codex guide](https://developers.openai.com/codex/guides/agents-md/),
+[Claude Code memory guide](https://code.claude.com/docs/en/memory), and
+[Gemini CLI context guide](https://geminicli.com/docs/cli/gemini-md/).
+The paths and precedence above were checked on 2026-09-27; desktop products
+can differ. In particular, Claude's documented Cowork restrictions exclude
+symlinked global memory files. This setup targets the CLIs, not a universal
+desktop loading contract.
+
+## Repository layout
+
+| File | Required form | Git policy |
+| --- | --- | --- |
+| `AGENTS.md` | Regular canonical file | Tracked |
 | `CLAUDE.md` | Relative symlink to `AGENTS.md` | Tracked symlink |
 | `GEMINI.md` | Relative symlink to `AGENTS.md` | Tracked symlink |
-| `AGENTS.override.md` | Canonical personal instructions for this checkout/scope | Ignored, regular file |
-| `CLAUDE.local.md` | Relative symlink to `AGENTS.override.md` | Ignored symlink |
+| `AGENTS.override.md` | Optional regular local file | Ignored |
+| `CLAUDE.local.md` | Relative symlink to `AGENTS.override.md` when present | Ignored |
 
-Shared guidance includes project architecture, supported toolchains, product
-default paths, build commands, safety rules, and release contracts. Local
-guidance includes a developer's hostnames, usernames, checkout paths, private
-service endpoints, and personal tool preferences. Product defaults such as a
-credential directory are not the same as one developer's actual credentials.
-Never put secret values in either instruction file.
+Codex loads at most one instruction file per directory, preferring
+`AGENTS.override.md` to `AGENTS.md`. A checkout override must therefore tell
+it to read the matching base unless already loaded. Claude loads the local
+file alongside its shared file and supports `@path` imports. The valid name
+is `CLAUDE.local.md`, not `CLAUDE.md.local`. No default `GEMINI.local.md`
+convention is assumed; clients without override discovery need an explicit
+read instruction from their user-level guidance.
 
-## Confirmed client behavior
-
-The official [Codex instruction guide](https://developers.openai.com/codex/guides/agents-md)
-specifies `AGENTS.override.md`, then `AGENTS.md`, then configured fallback names.
-Codex chooses at most one nonempty instruction file per directory and combines
-scopes from the project root down to the working directory. Consequently, a
-root override does **not** automatically supplement the root `AGENTS.md`.
-
-The official [Claude Code memory guide](https://code.claude.com/docs/en/memory)
-specifies `CLAUDE.local.md` for private project instructions and loads it
-alongside `CLAUDE.md`. Claude supports `@path` imports. The filename is
-**not** `CLAUDE.md.local`; retain the legacy ignore rule only to prevent
-accidental publication during migration.
-
-Our local template explicitly tells Codex to read the shared file and uses
-`@AGENTS.md` for Claude's import mechanism. The explicit reading instruction is
-a repository convention, not a claim that Codex implements Claude's `@` imports.
-Do not copy the entire shared guide into the override: that creates another
-version to maintain. The shared guide must not import the local override, which
-would create a cycle and make private instructions a dependency of the repo.
-
-## Create a local override
-
-From the instruction scope, first inspect existing files and symlink targets.
-Preserve and reconcile any existing content before changing its location.
-Create `AGENTS.override.md` as a regular file with this baseline:
+A repository override starts with:
 
 ```markdown
-# Local agent instructions
+# Local checkout instructions
 
-Before doing any work, read and follow the shared AGENTS.md in this directory.
-Codex selects this override instead of that file; the notes below supplement
-the shared policy rather than replace it.
+Before doing any work, read and follow the shared AGENTS.md in this directory
+unless already loaded. Codex selects this override instead of that file.
 
 @AGENTS.md
 
-## Local environment
-
-Add this checkout's non-secret machine and workflow details here.
+Add verified, nonsecret facts specific to this checkout here.
 ```
 
-Then create the alias only when neither a regular file nor a symlink already
-occupies its name:
+The plain-language directive is for Codex; it does not implement Claude's
+import syntax. The import line is also required by the local checker. The
+shared repository guide must not import an ignored private file.
 
-```bash
-test ! -e CLAUDE.local.md && test ! -L CLAUDE.local.md &&
-  ln -s AGENTS.override.md CLAUDE.local.md
-chmod 600 AGENTS.override.md
-git check-ignore --no-index AGENTS.override.md CLAUDE.local.md
-```
+Preserve existing notes before creating or repairing either local file. When
+its alias is absent, create `CLAUDE.local.md -> AGENTS.override.md`, set the
+override to mode 0600, and verify both names are ignored. Ignored files do not
+arrive in new worktrees through Git. A nested override loads its matching
+component guide rather than a different scope's file.
 
-Both filenames are ignored at every depth. Do not force-add them, including
-when a task authorizes publishing all existing dirty changes. A local override
-is specific to its checkout; a new worktree does not receive ignored files
-automatically. Recreate or deliberately copy local guidance into the intended
-worktree rather than following a link into a different checkout.
+## Repository validation
 
-Keep root overrides at the root unless a component genuinely needs additional
-local instructions. A nested override must load that directory's `AGENTS.md`.
-This layout establishes no unsupported Gemini local filename.
-
-## Migration and verification
-
-For inverted layouts, preserve the old canonical content, move it into a regular
-`AGENTS.md`, and replace only the reconciled aliases with relative symlinks.
-For `CLAUDE.md.local`, move the reconciled personal content into
-`AGENTS.override.md`, include the baseline above, and use `CLAUDE.local.md`.
-Do not silently overwrite an independent local document.
-
-From the repository root:
+From the root, after staging reviewed shared changes:
 
 ```bash
 python3 .github/scripts/check_documentation.py --check-index
 python3 -m unittest discover -s .github/scripts/tests -p 'test_*.py'
-git ls-files 'AGENTS.override.md' '**/AGENTS.override.md' \
-  'CLAUDE.local.md' '**/CLAUDE.local.md'
+git check-ignore --no-index AGENTS.override.md CLAUDE.local.md
+git ls-files 'AGENTS.override.md' '**/AGENTS.override.md' 'CLAUDE.local.md' '**/CLAUDE.local.md'
 git diff --check
 ```
 
-The `git ls-files` command must return no local instruction files. The checker
-validates shared instruction triplets, ignore coverage, accidental publication
-of private instruction names, and the local alias/import contract in each
-discovered instruction scope that contains a local pair. A clean CI checkout is not required to contain local files.
-The checker never prints their contents. `--repair-links` repairs shared aliases
-only; it neither creates nor overwrites local instructions.
+The `git ls-files` command must return no private instruction files. The checker
+validates canonical files, shared aliases, ignore coverage, accidental staging
+of local files, and any existing local alias/import pairs without printing
+private contents. Clean clones do not need local overrides. `--check-index`
+validates staged modes and targets so a repaired working tree cannot hide a
+broken published layout.
 
-`--check-index` also checks the staged file modes and symlink targets. Stage
-reviewed changes before using this gate; a repaired working tree must not hide
-an obsolete layout still staged for publication.
+`--repair-links` only repairs shared aliases after validating every scope. It
+refuses to overwrite independent regular documents. Reconcile inverted
+layouts and preserve their content before replacing aliases.
 
 The [Repository Contract workflow](../.github/workflows/repository-contract.yml)
-loads an immutable fleet-validator revision and invokes the
-[local adapter](../.github/scripts/check_repository_contract.py). That revision
-hard-codes `CLAUDE.md` as canonical, so the adapter replaces only its
-`symlink-convention` rule with the mandatory local index/working-tree check.
-All other fleet findings remain fatal, including document frontmatter, Cargo,
-tracked-path, environment-schema, and artifact-policy violations. Missing or
-broken validators also fail the gate. Keep this exception narrow when updating
-the upstream pin; do not modify the fleet repository as incidental local work.
+uses an immutable fleet-validator revision and a
+[local adapter](../.github/scripts/check_repository_contract.py). The adapter
+replaces only the upstream Claude-canonical rule with this repository's
+AGENTS-canonical index/working-tree checks; all remaining fleet rules stay
+fatal. The Codex plugin's `container/workspace-CLAUDE.md` remains a runtime
+template, not an instruction triplet.
 
-For client-level confirmation, start a new Codex session in the intended scope
-and ask it to identify the active instruction files and read `AGENTS.md`. In
-Claude Code, use `/context` to inspect loaded memory files. Filesystem and unit
-tests establish the layout, not a guarantee that an agent follows every rule.
+Filesystem checks establish the layout, not client compliance. Start a new
+Codex session to check its loaded instruction chain; use Claude `/context` or
+Gemini `/memory show` to inspect their loaded context.
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) for the remaining validation gates.
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the other repository gates.

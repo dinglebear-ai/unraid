@@ -8,19 +8,32 @@ updated: 2026-09-27
 
 Commands below state their working directory. The repository root is the clone
 of `dinglebear-ai/unraid`; it is not an Unraid Core checkout. See
-[AGENTS.md](../AGENTS.md) for safety and contributor policy.
+[AGENTS.md](../AGENTS.md) for the repository map and component contracts.
 
 ## Bootstrap
 
-From the repository root, inspect `git status --short --branch` and
-`git remote -v` before installing tools or editing files. Preserve existing
-work. Root `.mise.toml` selects Python 3.12, Node 22, uv, and Rust 1.97.1.
-`mise install` installs those selections; verify the activated versions with
-`python3 --version`, `node --version`, and `rustc --version`.
+Root [.mise.toml](../.mise.toml) owns the development tool selections.
+`mise install` installs them. The commands below assume an activated repository
+toolchain; a noninteractive shell can retain global PATH selections even when
+its working directory is inside the repository. From the root, verify:
+
+```bash
+mise exec -- python3 --version
+mise exec -- node --version
+mise exec -- rustc --version
+```
+
+Use `mise exec -- <command>` for subsequent checks when shell activation is not
+reliable. Compare its output with the manifests rather than changing project
+pins to match the workstation.
 
 `just`, `lefthook`, cargo-nextest, and shell validation tools are separate
 utilities, not all supplied by `.mise.toml`. Install the ones required by your
-selected gate. Run `lefthook install` at the root to enable shared git hooks.
+selected gate. Before running root `lefthook install`, inspect
+`git config --show-origin --get core.hooksPath` and existing hooks. No value
+means Git uses its default hooks directory. A migrated absolute path can leave
+hooks inactive; reconcile any existing Beads/custom hook integration before
+repairing it. Installing a hook manager is not proof Git will invoke it.
 
 The root Cargo manifest is a policy mirror with no members. The actual Rust
 workspace is `unraid-rs/`. Both servers own component-local `Justfile`s.

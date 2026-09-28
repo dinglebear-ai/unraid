@@ -19,12 +19,14 @@ and [AGENTS.md](../AGENTS.md) for authoritative contributor instructions.
 
 ## Source-of-truth rules
 
-`AGENTS.md` is the editable instruction file at every scope. `CLAUDE.md` and
-`GEMINI.md` must be relative symlinks to it, not independently maintained copies.
-The root guide owns shared policy; nested guides add component-specific details.
-Personal host and checkout details belong only in the ignored local override
-pair described in [AGENT_INSTRUCTIONS.md](AGENT_INSTRUCTIONS.md), not in shared
-guides or copied assistant-specific files.
+The checker validates a regular `AGENTS.md` with relative `CLAUDE.md` and
+`GEMINI.md` aliases at every repository instruction scope. The root guide owns
+only repository-specific maps, commands, and contracts; nested guides add
+component details. Cross-project workflow and instruction conventions belong
+in the developer's global guide. Workstation facts belong in a global override,
+and checkout facts in the ignored local pair described in
+[AGENT_INSTRUCTIONS.md](AGENT_INSTRUCTIONS.md). Neither private source belongs
+on the repository's main branch or in a shared artifact.
 
 Code, manifests, lockfiles, and executable tests establish current behavior.
 Avoid copying action counts or dependency versions into multiple pages; link
