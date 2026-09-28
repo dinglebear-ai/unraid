@@ -48,6 +48,7 @@ for file in "${claude_manifest}" "${codex_manifest}"; do
 done
 
 jq -er '.mcpServers | type == "object" and length > 0' "${mcp_json}" >/dev/null
+jq -er '.mcpServers.unraid.command == "npx" and .mcpServers.unraid.args == ["-y", "@dinglebear/unraid", "mcp"]' "${mcp_json}" >/dev/null
 
 # Neither manifest may declare a `hooks` key — Claude Code hooks are retired here.
 for file in "${claude_manifest}" "${codex_manifest}"; do

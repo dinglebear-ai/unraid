@@ -2,6 +2,7 @@ name: incus-api-ci
 
 on:
   push:
+    branches: ["main"]
     paths:
       - "plugins/incus/unraid-api-plugin-incus/**"
       - "plugins/incus/packages/**"
@@ -21,6 +22,10 @@ on:
 
 # This covers the NestJS/GraphQL backend and Vue frontend. Classic package
 # verification is handled by incus-classic-ci.yml.
+
+concurrency:
+  group: incus-api-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -101,7 +106,11 @@ jobs:
         with:
           name: unraid-api-plugin-incus-dist
           path: plugins/incus/unraid-api-plugin-incus/dist/
-          retention-days: 14
+          # Build outputs re-derivable from any checkout, uploaded on every push
+          # and PR; nothing downstream downloads them (grepped: no download-artifact
+          # references these names). Short retention keeps them useful for triaging
+          # a failed run without paying two weeks of storage per run.
+          retention-days: 3
 
   frontend:
     name: Frontend (web/) — typecheck + build (settings + dashboard bundles)
@@ -148,11 +157,19 @@ jobs:
         with:
           name: incus-settings-bundle
           path: plugins/incus/unraid-api-plugin-incus/dist-web/
-          retention-days: 14
+          # Build outputs re-derivable from any checkout, uploaded on every push
+          # and PR; nothing downstream downloads them (grepped: no download-artifact
+          # references these names). Short retention keeps them useful for triaging
+          # a failed run without paying two weeks of storage per run.
+          retention-days: 3
 
       - name: Upload incus-dashboard bundle
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
         with:
           name: incus-dashboard-bundle
           path: plugins/incus/unraid-api-plugin-incus/dist-web-dashboard/
-          retention-days: 14
+          # Build outputs re-derivable from any checkout, uploaded on every push
+          # and PR; nothing downstream downloads them (grepped: no download-artifact
+          # references these names). Short retention keeps them useful for triaging
+          # a failed run without paying two weeks of storage per run.
+          retention-days: 3

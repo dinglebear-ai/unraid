@@ -31,7 +31,7 @@ missing_safety_doc = "deny"
 
 [package]
 name = "unraid-rmcp"
-version = "0.3.0"
+version = "0.5.0"
 edition.workspace = true
 rust-version.workspace = true
 categories = ["command-line-utilities", "development-tools"]
@@ -113,12 +113,10 @@ reqwest = { version = "0.12", default-features = false, features = [
   "rustls-tls",
 ] }
 
-# Typed GraphQL client (codegen from the vendored Unraid SDL). SPIKE: currently
-# powers a couple of actions; being evaluated as the path to compile-time query +
-# mutation/input type-checking across the whole API surface. We deliberately do
-# NOT enable `http-reqwest` — that pulls reqwest 0.13 (we're on 0.12). cynic is
-# used only to build typed operations + deserialize responses; transport stays on
-# our existing reqwest client.
+# Typed GraphQL operations checked against the vendored Unraid SDL. cynic
+# builds operations and deserializes responses; the existing reqwest client
+# owns HTTP transport. Keep `http-reqwest` disabled so transport policy remains
+# in one place rather than introducing another HTTP integration.
 cynic = { version = "3" }
 
 # Errors

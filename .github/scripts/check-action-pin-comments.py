@@ -6,7 +6,7 @@ unraid-py/tests/test_supply_chain_policy.py::test_every_external_action_is_immut
 This script guards the *comment* beside it, which is what a human actually reads
 when auditing pins or bumping a version.
 
-Why it matters: after the consolidation, build-unraid-plugin.yml annotated
+Why it matters: after the consolidation, the former plugin packaging workflow annotated
 actions/checkout@9c091bb… as "# v5.0.0" while every other workflow annotated the
 SAME SHA as "# v7.0.0". Nothing was broken at runtime, but anyone bumping from
 that file would have "upgraded" to a real v5 SHA — a silent downgrade.

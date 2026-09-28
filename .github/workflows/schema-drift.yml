@@ -1,9 +1,22 @@
 name: Schema drift
 
+# Daily check: has Unraid's published GraphQL SDL drifted from either vendored
+# copy? Both servers pin the schema independently — the Python SDL at
+# unraid-py/docs/unraid/UNRAID-SCHEMA.graphql and the Rust SDL at
+# unraid-rs/schema/unraid-schema.graphql (which carries a provenance header that
+# has to be stripped before diffing). This used to be two workflows on the SAME
+# 06:00 UTC cron fetching the SAME upstream blob; rust-schema-drift.yml was merged
+# in here so `unraid/api@main` is resolved and downloaded exactly once. The two
+# sides keep separate issue labels (schema-drift / schema-drift-rust) and separate
+# reporting, because re-vendoring them is separate work.
 on:
   schedule:
-    - cron: "0 6 * * *"
+    - cron: "0 6 * * *" # 06:00 UTC daily
   workflow_dispatch: {}
+
+concurrency:
+  group: schema-drift
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -11,13 +24,14 @@ permissions:
 
 jobs:
   drift:
-    name: Compare vendored Unraid SDL to upstream
+    name: Compare vendored Unraid SDLs to upstream
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       GH_TOKEN: ${{ github.token }}
     # The vendored Python SDL (docs/unraid/UNRAID-SCHEMA.graphql) and the
-    # schema_diff_summary devtool live under unraid-py/; run: steps execute there.
+    # schema_diff_summary devtool live under unraid-py/; run: steps execute there
+    # by default. The Rust steps below override working-directory to unraid-rs.
     defaults:
       run:
         working-directory: unraid-py
@@ -26,6 +40,11 @@ jobs:
         with:
           persist-credentials: false
 
+      # Resolve `main` to an immutable commit first. Fetching the mutable ref
+      # directly makes this job's result depend on when it ran rather than on repo
+      # state — two runs of the same commit could disagree, and a reported diff
+      # could not be reproduced. Both the Python and Rust comparisons below read
+      # this one downloaded blob.
       - name: Resolve and fetch immutable upstream SDL
         id: upstream
         env:
@@ -42,7 +61,7 @@ jobs:
           echo "commit=${upstream_commit}" >> "$GITHUB_OUTPUT"
           echo "Resolved unraid/api@main to immutable commit ${upstream_commit}."
 
-      - name: Diff vendored schema
+      - name: Diff vendored Python schema
         id: diff
         run: |
           if diff -u docs/unraid/UNRAID-SCHEMA.graphql upstream-schema.graphql > schema.diff; then
@@ -213,3 +232,107 @@ jobs:
             gh issue close "$existing" \
               --comment "Schema drift resolved by the current vendored SDL."
           fi
+
+      # ---------------------------------------------------------------------
+      # Rust SDL (unraid-rs/schema/unraid-schema.graphql), merged in from the
+      # former rust-schema-drift.yml. It reads the SAME upstream blob fetched
+      # above (../unraid-py/upstream-schema.graphql) instead of re-resolving and
+      # re-downloading it on the same cron minute.
+      # ---------------------------------------------------------------------
+      - name: Strip vendored Rust provenance header
+        if: ${{ !cancelled() }}
+        working-directory: unraid-rs
+        run: |
+          # Guard: without the marker, `sed '1,/pat/d'` deletes to EOF → an empty
+          # body that reads as a full-file drift (loud false positive). Fail instead.
+          grep -q 'VENDOR-HEADER-END' schema/unraid-schema.graphql \
+            || { echo "::error::VENDOR-HEADER-END marker missing in schema/unraid-schema.graphql"; exit 1; }
+          sed '1,/VENDOR-HEADER-END/d' schema/unraid-schema.graphql > vendored-body.graphql
+
+      - name: Diff vendored Rust schema
+        id: rust_diff
+        if: ${{ !cancelled() }}
+        working-directory: unraid-rs
+        run: |
+          if diff -u vendored-body.graphql ../unraid-py/upstream-schema.graphql > schema.diff; then
+            echo "drift=false" >> "$GITHUB_OUTPUT"
+            echo "Vendored Rust Unraid SDL is up to date."
+          else
+            echo "drift=true" >> "$GITHUB_OUTPUT"
+            echo "Unraid SDL has drifted from the vendored Rust copy:"
+            cat schema.diff
+          fi
+
+      - name: Upload Rust schema drift artifacts
+        if: ${{ !cancelled() && steps.rust_diff.outputs.drift == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
+        with:
+          name: unraid-rs-schema-drift-${{ github.run_id }}
+          path: |
+            unraid-rs/schema.diff
+            unraid-rs/vendored-body.graphql
+          retention-days: 14
+
+      - name: Open / update Rust drift issue
+        if: ${{ !cancelled() && steps.rust_diff.outputs.drift == 'true' }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const diff = fs.readFileSync('unraid-rs/schema.diff', 'utf8').slice(0, 60000);
+            const title = 'Unraid GraphQL schema drift detected (unraid-rs)';
+            const body = [
+              'The vendored `unraid-rs/schema/unraid-schema.graphql` no longer matches',
+              'Unraid\'s published SDL (`unraid/api@main`).',
+              '',
+              'Re-vendor it (copy the upstream file, re-add the provenance header),',
+              'then let the cargo schema-contract test surface which queries/fixtures',
+              'need updating.',
+              '',
+              '<details><summary>diff</summary>',
+              '',
+              '```diff',
+              diff,
+              '```',
+              '',
+              '</details>',
+            ].join('\n');
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'schema-drift-rust',
+            });
+            if (existing.data.length) {
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.data[0].number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ['schema-drift-rust'],
+              });
+            }
+
+      # Parity with the Python "Close resolved drift issue" step. Without this, a
+      # drift issue opened here stayed open forever — even after the SDL was
+      # re-vendored — leaving a permanently red signal nobody trusts.
+      - name: Close resolved Rust drift issue
+        if: ${{ !cancelled() && steps.rust_diff.outputs.drift == 'false' }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'schema-drift-rust',
+            });
+            for (const issue of existing.data) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number,
+                body: 'The vendored `unraid-rs/schema/unraid-schema.graphql` now matches `unraid/api@main`; closing this drift report.',
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number, state: 'closed',
+              });
+            }

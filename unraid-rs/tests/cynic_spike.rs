@@ -33,6 +33,7 @@ async fn healthy_client() -> (MockServer, UnraidClient) {
         api_url: server.uri(),
         api_key: "test".into(),
         skip_tls_verify: true,
+        ca_bundle: None,
     })
     .unwrap();
     (server, client)

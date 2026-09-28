@@ -211,6 +211,18 @@ impl Scenario {
     /// (`{"data": …}`), or a GraphQL `errors` body when the query is not
     /// recognised. This is the whole server behaviour in one call.
     pub fn respond(&self, query: &str) -> Value {
+        if query.contains("__type") && query.contains("fields") {
+            return serde_json::json!({
+                "data": {
+                    "__type": {
+                        "fields": [
+                            { "name": "removeDiskFromArray" }
+                        ]
+                    }
+                }
+            });
+        }
+
         match classify_query(query).and_then(|key| self.payload(&key)) {
             Some(data) => serde_json::json!({ "data": data }),
             None => serde_json::json!({

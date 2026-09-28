@@ -8,23 +8,24 @@ use rmcp::{
         GetPromptRequestParams, GetPromptResponse, Implementation, ListPromptsResult,
         ListResourcesResult, ListToolsResult, PaginatedRequestParams, ReadResourceRequestParams,
         ReadResourceResponse, ReadResourceResult, Resource, ResourceContents, ServerCapabilities,
-        ServerInfo, Tool,
+        ServerInfo, Tool, ToolAnnotations,
     },
     service::RequestContext,
     transport::streamable_http_server::{
         StreamableHttpServerConfig, StreamableHttpService, session::local::LocalSessionManager,
     },
 };
-use serde_json::{Map, Value};
+use serde_json::Value;
 
-use crate::config::McpConfig;
+use crate::config::{McpConfig, McpProjectionMode};
 
 use super::{
     AppState, AuthPolicy,
     elicitation::require_destructive_elicitation,
     host_filter::{allowed_hosts, allowed_origins},
     prompts,
-    schemas::{ACTIONS, tool_definitions},
+    schemas::{ACTIONS, atomic_action_from_tool_name, projected_tool_definitions},
+    tool_filter::{enabled_action_names, ensure_tool_call_enabled, tool_is_enabled},
     tools::{execute_tool, serialize_response},
 };
 
@@ -50,7 +51,8 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<ListToolsResult, ErrorData> {
         require_auth_context(&self.state, &context)?;
-        let tools = rmcp_tool_definitions()?;
+        let action_names = enabled_action_names(&self.state.config.tools);
+        let tools = rmcp_tool_definitions(&action_names, self.state.config.projection)?;
         tracing::info!(tool_count = tools.len(), "MCP tools listed");
         Ok(ListToolsResult {
             tools,
@@ -64,28 +66,55 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<CallToolResponse, ErrorData> {
         let tool_name = request.name.to_string();
-
-        let action: String = request
-            .arguments
-            .as_ref()
-            .and_then(|m| m.get("action"))
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned();
-
         let auth = require_auth_context(&self.state, &context)?;
-        if let (Some(auth), Some(required_scope)) = (auth, required_scope_for(&action)) {
-            check_scope(auth, required_scope, &action)?;
+        let started = Instant::now();
+        // Count every authenticated tools/call exactly once at the MCP boundary,
+        // including projection/policy/scope denials, pre-dispatch validation, and
+        // serialization errors. Requests rejected by HTTP auth middleware never
+        // reach this handler.
+        self.state.counters.inc_requests();
+
+        let mut argument_map = request.arguments.unwrap_or_default();
+        let action = match resolve_projection_action(
+            &tool_name,
+            &argument_map,
+            self.state.config.projection,
+        ) {
+            Ok(action) => action,
+            Err(error) => {
+                self.state.counters.inc_errors();
+                return Err(error);
+            }
+        };
+        // The dispatcher remains authoritative. Legacy calls keep their exact
+        // historical argument object so missing-action validation/error text is
+        // unchanged. Atomic calls receive only the canonical action synthesized
+        // from the tool name, overwriting any smuggled action argument.
+        if tool_name != "unraid" {
+            argument_map.insert("action".to_string(), Value::String(action.clone()));
+        }
+        let arguments = Value::Object(argument_map);
+
+        if let Err(message) = ensure_tool_call_enabled(&self.state.config.tools, "unraid", &action)
+        {
+            let elapsed = started.elapsed().as_millis();
+            self.state.counters.inc_errors();
+            tracing::warn!(
+                tool = %tool_name,
+                action = %action,
+                elapsed_ms = elapsed,
+                reason = %message,
+                "MCP tool denied by server policy"
+            );
+            return Err(ErrorData::invalid_request(message, None));
+        }
+        if let (Some(auth), Some(required_scope)) = (auth, required_scope_for(&action))
+            && let Err(error) = check_scope(auth, required_scope, &action)
+        {
+            self.state.counters.inc_errors();
+            return Err(error);
         }
 
-        let arguments = request
-            .arguments
-            .map(Value::Object)
-            .unwrap_or_else(|| Value::Object(Map::new()));
-        let started = Instant::now();
-        // Count every tool call exactly once at the MCP boundary (see the note in
-        // `tools::dispatch`). Covers pre-dispatch validation and serialization errors.
-        self.state.counters.inc_requests();
         tracing::info!(tool = %tool_name, action = %action, "MCP tool execution started");
 
         if let Err(message) =
@@ -105,7 +134,7 @@ impl ServerHandler for UnraidRmcpServer {
 
         // All errors become agent-readable CallToolResult::error — never Err(ErrorData).
         // This keeps the MCP session alive even when the upstream Unraid API is down.
-        match execute_tool(&self.state, &tool_name, arguments).await {
+        match execute_tool(&self.state, "unraid", arguments).await {
             Ok(result) => {
                 let elapsed = started.elapsed().as_millis();
                 tracing::info!(tool = %tool_name, elapsed_ms = elapsed, "MCP tool execution completed");
@@ -148,8 +177,13 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<ListResourcesResult, ErrorData> {
         require_auth_context(&self.state, &context)?;
+        let resources = if tool_is_enabled(&self.state.config.tools) {
+            vec![schema_resource()]
+        } else {
+            Vec::new()
+        };
         Ok(ListResourcesResult {
-            resources: vec![schema_resource()],
+            resources,
             ..Default::default()
         })
     }
@@ -166,7 +200,14 @@ impl ServerHandler for UnraidRmcpServer {
                 None,
             ));
         }
-        let schema = tool_definitions();
+        if !tool_is_enabled(&self.state.config.tools) {
+            return Err(ErrorData::invalid_request(
+                "unraid MCP tool is disabled by server policy",
+                None,
+            ));
+        }
+        let action_names = enabled_action_names(&self.state.config.tools);
+        let schema = projected_tool_definitions(&action_names, self.state.config.projection);
         let text = serde_json::to_string_pretty(&schema)
             .map_err(|e| ErrorData::internal_error(format!("serialization error: {e}"), None))?;
         Ok(ReadResourceResult::new(vec![
@@ -183,7 +224,11 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<ListPromptsResult, ErrorData> {
         require_auth_context(&self.state, &context)?;
-        Ok(prompts::list_prompts())
+        let action_names = enabled_action_names(&self.state.config.tools);
+        Ok(prompts::list_prompts_for_projection(
+            &action_names,
+            self.state.config.projection,
+        ))
     }
 
     async fn get_prompt(
@@ -192,7 +237,14 @@ impl ServerHandler for UnraidRmcpServer {
         context: RequestContext<RoleServer>,
     ) -> Result<GetPromptResponse, ErrorData> {
         require_auth_context(&self.state, &context)?;
-        prompts::get_prompt(request)
+        if !tool_is_enabled(&self.state.config.tools) {
+            return Err(ErrorData::invalid_request(
+                "unraid MCP tool is disabled by server policy",
+                None,
+            ));
+        }
+        let action_names = enabled_action_names(&self.state.config.tools);
+        prompts::get_prompt_for_projection(request, &action_names, self.state.config.projection)
             .map(Into::into)
             .map_err(|e| ErrorData::invalid_params(e.to_string(), None))
     }
@@ -245,14 +297,17 @@ const SCHEMA_RESOURCE_URI: &str = "unraid://schema/mcp-tool";
 
 fn schema_resource() -> Resource {
     Resource::new(SCHEMA_RESOURCE_URI, "unraid tool schema")
-        .with_description("JSON schema for the unraid MCP tool and its action-based parameters")
+        .with_description("JSON schema catalog for the active Unraid MCP tool projection")
         .with_mime_type("application/json")
 }
 
 // ── tool definition conversion ────────────────────────────────────────────────
 
-fn rmcp_tool_definitions() -> Result<Vec<Tool>, ErrorData> {
-    tool_definitions()
+fn rmcp_tool_definitions(
+    action_names: &[&str],
+    projection: McpProjectionMode,
+) -> Result<Vec<Tool>, ErrorData> {
+    projected_tool_definitions(action_names, projection)
         .into_iter()
         .map(rmcp_tool_from_json)
         .collect()
@@ -272,11 +327,68 @@ fn rmcp_tool_from_json(value: Value) -> Result<Tool, ErrorData> {
         .and_then(Value::as_object)
         .cloned()
         .ok_or_else(|| ErrorData::internal_error("tool definition missing inputSchema", None))?;
-    Ok(Tool::new_with_raw(
+    let annotations: Option<ToolAnnotations> = value
+        .get("annotations")
+        .cloned()
+        .map(serde_json::from_value)
+        .transpose()
+        .map_err(|error| {
+            ErrorData::internal_error(format!("invalid tool annotations: {error}"), None)
+        })?;
+    let mut tool = Tool::new_with_raw(
         Cow::Owned(name.to_string()),
         description,
         Arc::new(input_schema),
-    ))
+    );
+    if let Some(annotations) = annotations {
+        tool = tool.annotate(annotations);
+    }
+    Ok(tool)
+}
+
+fn resolve_projection_action(
+    tool_name: &str,
+    arguments: &serde_json::Map<String, Value>,
+    projection: McpProjectionMode,
+) -> Result<String, ErrorData> {
+    let legacy_action = || {
+        arguments
+            .get("action")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned()
+    };
+    match projection {
+        McpProjectionMode::Legacy => {
+            if tool_name == "unraid" {
+                Ok(legacy_action())
+            } else {
+                Err(ErrorData::invalid_request(
+                    format!("unknown MCP tool {tool_name:?} in legacy projection"),
+                    None,
+                ))
+            }
+        }
+        McpProjectionMode::Atomic => atomic_action_from_tool_name(tool_name)
+            .map(str::to_owned)
+            .ok_or_else(|| {
+                ErrorData::invalid_request(
+                    format!("unknown MCP tool {tool_name:?} in atomic projection"),
+                    None,
+                )
+            }),
+        McpProjectionMode::Both => {
+            if tool_name == "unraid" {
+                Ok(legacy_action())
+            } else {
+                atomic_action_from_tool_name(tool_name)
+                    .map(str::to_owned)
+                    .ok_or_else(|| {
+                        ErrorData::invalid_request(format!("unknown MCP tool {tool_name:?}"), None)
+                    })
+            }
+        }
+    }
 }
 
 // ── auth helpers ──────────────────────────────────────────────────────────────
@@ -363,6 +475,73 @@ mod tests {
             };
             assert_eq!(got, want, "{} scope mapping", spec.name);
         }
+    }
+
+    #[test]
+    fn empty_action_set_hides_the_tool() {
+        assert!(
+            rmcp_tool_definitions(&[], McpProjectionMode::Legacy)
+                .unwrap()
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn projection_resolution_normalizes_legacy_atomic_and_both() {
+        let legacy_args = serde_json::Map::from_iter([(
+            "action".to_string(),
+            Value::String("status".to_string()),
+        )]);
+        assert_eq!(
+            resolve_projection_action("unraid", &legacy_args, McpProjectionMode::Legacy).unwrap(),
+            "status"
+        );
+        assert_eq!(
+            resolve_projection_action(
+                "unraid_status",
+                &serde_json::Map::new(),
+                McpProjectionMode::Atomic
+            )
+            .unwrap(),
+            "status"
+        );
+        assert_eq!(
+            resolve_projection_action(
+                "unraid_status",
+                &serde_json::Map::new(),
+                McpProjectionMode::Both
+            )
+            .unwrap(),
+            "status"
+        );
+        assert_eq!(
+            resolve_projection_action("unraid", &legacy_args, McpProjectionMode::Both).unwrap(),
+            "status"
+        );
+    }
+
+    #[test]
+    fn projection_resolution_rejects_wrong_surface_and_unknown_atomic_names() {
+        assert!(
+            resolve_projection_action(
+                "unraid_status",
+                &serde_json::Map::new(),
+                McpProjectionMode::Legacy
+            )
+            .is_err()
+        );
+        assert!(
+            resolve_projection_action("unraid", &serde_json::Map::new(), McpProjectionMode::Atomic)
+                .is_err()
+        );
+        assert!(
+            resolve_projection_action(
+                "unraid_not_real",
+                &serde_json::Map::new(),
+                McpProjectionMode::Atomic
+            )
+            .is_err()
+        );
     }
 
     #[test]

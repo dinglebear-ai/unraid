@@ -2,14 +2,14 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "unraid-codex">
   <!ENTITY author    "Dinglebear AI">
-  <!ENTITY version   "20260802.001"> <!-- managed by .github/scripts/plugin_calver.py -->
+  <!ENTITY version   "20260805.001"> <!-- managed by .github/scripts/plugin_calver.py -->
   <!ENTITY launch    "Settings/CodexSettings">
   <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/codex">
   <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/codex-v&version;/&txz;">
   <!ENTITY pluginURL "&gitURL;/unraid-codex.plg">
-  <!ENTITY txz       "unraid-codex-20260802.001-x86_64-34.txz">
-  <!ENTITY md5       "4839ae50c3aebd665f922e3cad75e027">
-  <!ENTITY sha256    "30599dbaff980e84714b0e5562a173850b950a8689f7a9d00a341912759ef970">
+  <!ENTITY txz       "unraid-codex-20260805.001-x86_64-35.txz">
+  <!ENTITY md5       "9a48c3f7c7f05e2a8db353c0bb0d321a">
+  <!ENTITY sha256    "c6a3a20085563e572b4d5a49388cd1cdf9e5036979264046112593506f4f9f32">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -17,6 +17,13 @@
 <PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="7.0.0" support="https://github.com/dinglebear-ai/unraid/issues">
 
 <CHANGES>
+###2026.08.05
+- Build 35 completes the Codex plugin polish pass: verified encrypted backup
+  generation, safe restore with automatic rollback, a resilient accessible
+  Settings fallback, deterministic shortcut-to-prompt focus, exact package
+  structure validation, PHP page linting, explicit Unraid 7.0+ compatibility
+  policy, and stronger failed-install and uninstall cleanup.
+
 ###2026.08.02
 - Build 34 is the first Community Applications release candidate. It adds a
   clean-install provisioner that creates a dedicated, LAN-contained Incus
@@ -61,7 +68,11 @@
 
 <FILE Run="/bin/bash">
 <INLINE>
-echo "&sha256;  &plugin;/&txz;" | sha256sum -c - || exit 1
+if ! echo "&sha256;  &plugin;/&txz;" | sha256sum -c -; then
+  echo "ERROR: Unraid Codex package checksum verification failed." &gt;&amp;2
+  rm -f &plugin;/&txz;
+  exit 1
+fi
 if mountpoint -q /mnt/user 2>/dev/null; then
   INCUS_ENV=/usr/local/emhttp/plugins/incus/scripts/incus-env.sh
   INCUS_CONFIG=/boot/config/plugins/incus/incus.cfg
@@ -93,7 +104,10 @@ mkdir -p &plugin;
 chmod 0700 &plugin;
 if mountpoint -q /mnt/user 2>/dev/null; then
   if ! &emhttp;/scripts/start-appserver.sh; then
-    echo "ERROR: Unraid Codex installed, but its managed container did not become ready. Check the system log for 'unraid-codex'." &gt;&amp;2
+    &emhttp;/scripts/stop-appserver.sh 2&gt;/dev/null || true
+    &emhttp;/scripts/configure-nginx.sh --remove 2&gt;/dev/null || true
+    rm -f /etc/cron.d/unraid-codex /var/run/unraid-codex-appserver.sock
+    echo "ERROR: Unraid Codex installed, but its managed container did not become ready. Partial proxy and schedule state was cleaned up. Check the system log for 'unraid-codex'." &gt;&amp;2
     exit 1
   fi
 fi
@@ -104,7 +118,8 @@ fi
 <INLINE>
 &emhttp;/scripts/stop-appserver.sh 2>/dev/null || true
 &emhttp;/scripts/configure-nginx.sh --remove 2>/dev/null || true
-removepkg &name; 2>/dev/null
+rm -f /etc/cron.d/unraid-codex /var/run/unraid-codex-appserver.sock
+removepkg &name; 2>/dev/null || true
 rm -rf &emhttp;
 echo "Unraid Codex removed. Its Incus container, persistent state, backups, and flash configuration were left intact."
 </INLINE>

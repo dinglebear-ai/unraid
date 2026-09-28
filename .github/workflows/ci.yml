@@ -35,7 +35,11 @@ concurrency:
   cancel-in-progress: true
 
 # The Python package now lives in unraid-py/; every run: step executes there.
-# Secret scanning remains extracted to the unfiltered secret-scan.yml workflow.
+# Secret scanning is NOT a job here and no longer has a workflow at all: the
+# gitleaks secret-scan.yml was deleted in #266 because GitHub-native secret
+# scanning + push protection are enabled on this public repo and already cover
+# every ref unfiltered. Repo settings are the gate; see .gitleaks.toml for the
+# manual/local `gitleaks git .` config that survives for ad-hoc history scans.
 defaults:
   run:
     working-directory: unraid-py
@@ -99,6 +103,11 @@ jobs:
   e2e:
     name: Integration & Mock Roundtrip
     runs-on: ubuntu-latest
+    # The weekly cron exists only to run the live mcp-integration smoke against
+    # the real Unraid box (and its lint/typecheck/test prerequisites). This job
+    # tests the repo at rest, which nothing changed since the last push — skip it
+    # on schedule. Nothing `needs:` it, so skipping it blocks no other job.
+    if: github.event_name != 'schedule'
     timeout-minutes: 15
     permissions:
       contents: read
@@ -122,6 +131,11 @@ jobs:
   version-sync:
     name: Version Sync Check
     runs-on: ubuntu-latest
+    # The weekly cron exists only to run the live mcp-integration smoke against
+    # the real Unraid box (and its lint/typecheck/test prerequisites). This job
+    # tests the repo at rest, which nothing changed since the last push — skip it
+    # on schedule. Nothing `needs:` it, so skipping it blocks no other job.
+    if: github.event_name != 'schedule'
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -163,6 +177,11 @@ jobs:
   audit:
     name: Security Audit
     runs-on: ubuntu-latest
+    # The weekly cron exists only to run the live mcp-integration smoke against
+    # the real Unraid box (and its lint/typecheck/test prerequisites). This job
+    # tests the repo at rest, which nothing changed since the last push — skip it
+    # on schedule. Nothing `needs:` it, so skipping it blocks no other job.
+    if: github.event_name != 'schedule'
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -185,6 +204,11 @@ jobs:
   package-artifact:
     name: Package Artifact Smoke
     runs-on: ubuntu-latest
+    # The weekly cron exists only to run the live mcp-integration smoke against
+    # the real Unraid box (and its lint/typecheck/test prerequisites). This job
+    # tests the repo at rest, which nothing changed since the last push — skip it
+    # on schedule. Nothing `needs:` it, so skipping it blocks no other job.
+    if: github.event_name != 'schedule'
     timeout-minutes: 15
     permissions:
       contents: read
@@ -201,7 +225,7 @@ jobs:
         run: uv build --no-sources
       - name: Validate package metadata and contents
         run: |
-          uv tool run --from twine==6.2.0 twine check dist/*
+          uv tool run --from twine==7.0.0 twine check dist/*
           unzip -l dist/*.whl | tee wheel-contents.txt
           grep -q 'unraid_mcp/server.py' wheel-contents.txt
           grep -q 'licenses/LICENSE' wheel-contents.txt

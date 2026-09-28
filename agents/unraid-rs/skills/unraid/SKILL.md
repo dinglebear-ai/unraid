@@ -116,7 +116,7 @@ unraid(action="parity_history")
 
 ## Tier 2 — CLI Binary
 
-Binary: `runraid` — invoked on demand through `crgx unraid-rmcp -- ...`, installed persistently with `cargo install unraid-rmcp`, or built locally with `cargo build --release`.
+Binary: `runraid` — invoked on demand through `npx -y @dinglebear/unraid ...`, installed persistently from npm, or built locally with `cargo build --release`.
 
 All commands accept `--json` for machine-readable output.
 

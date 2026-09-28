@@ -22,6 +22,12 @@ const status = ref<Status | null>(null);
 const connected = ref(false);
 let es: EventSource | null = null;
 
+const stateText = computed(() => {
+  if (!status.value) return connected.value ? "Waiting…" : "Connecting…";
+  if (!connected.value) return "Reconnecting…";
+  return status.value.running ? "Running" : "Stopped";
+});
+
 const uptimeText = computed(() => {
   const s = status.value?.uptime ?? 0;
   if (!s || !status.value?.running) return "—";
@@ -42,6 +48,7 @@ function connect() {
       // Validate before trusting fields the template calls .toFixed() on — a
       // future publisher change or partial frame must not throw in render.
       if (typeof d.running !== "boolean") return;
+      connected.value = true;
       status.value = {
         running: d.running,
         pid: Number(d.pid) || 0,
@@ -72,20 +79,21 @@ onBeforeUnmount(() => es?.close());
           width: '9px',
           height: '9px',
           borderRadius: '50%',
-          background: status?.running ? '#63a659' : '#8a8a8a',
+          background: !connected ? '#c6a36b' : status?.running ? '#63a659' : '#8a8a8a',
         }"
       ></span>
-      <strong>{{ status?.running ? "Running" : status ? "Stopped" : "Connecting…" }}</strong>
+      <strong>{{ stateText }}</strong>
       <span v-if="status" style="opacity: 0.7">v{{ status.version }}</span>
       <a href="/Settings/UnraidMCP" style="margin-left: auto; font-size: 1.15rem">Settings ›</a>
     </div>
 
-    <div v-if="status?.running" style="display: flex; gap: 18px; opacity: 0.9">
+    <div v-if="status?.running && connected" style="display: flex; gap: 18px; opacity: 0.9">
       <span><b>{{ status.cpu.toFixed(1) }}%</b> cpu</span>
       <span><b>{{ status.memMB }}</b> MB</span>
       <span><b>{{ uptimeText }}</b> up</span>
       <span style="opacity: 0.6">pid {{ status.pid }}</span>
     </div>
-    <div v-else-if="status" style="opacity: 0.7">Service is not running.</div>
+    <div v-else-if="status && connected" style="opacity: 0.7">Service is not running.</div>
+    <div v-else-if="status" style="opacity: 0.7">Live status unavailable; reconnecting.</div>
   </div>
 </template>

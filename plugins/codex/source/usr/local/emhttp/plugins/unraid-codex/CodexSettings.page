@@ -5,14 +5,69 @@ Tag="codex.png"
 ---
 <?PHP
 /* Native Unraid Settings entry for the persistent Codex chathead. The
- * chathead owns the settings UI; this page opens its Session Inspector while
- * preserving the stock Settings route and navigation chrome.
+ * chathead owns the interactive settings UI. This page remains a useful,
+ * accessible fallback while the browser bundle is loading or unavailable.
  */
 ?>
-<h2>Codex</h2>
-<p>Codex settings are available in the Session Inspector panel.</p>
-<input type="button" value="Open Codex Settings" onclick="window.UnraidCodex?.openSettings()">
+<style>
+.uc-settings-card { max-width: 760px; padding: 24px; border: 1px solid var(--border-color, #3f4652); border-radius: 10px; background: var(--background-color, rgba(255,255,255,.03)); }
+.uc-settings-card h2 { margin-top: 0; }
+.uc-settings-card code { overflow-wrap: anywhere; }
+.uc-settings-grid { display: grid; grid-template-columns: minmax(130px, 180px) 1fr; gap: 8px 18px; margin: 20px 0; }
+.uc-settings-grid dt { font-weight: 600; }
+.uc-settings-grid dd { margin: 0; }
+.uc-settings-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.uc-settings-status { margin: 0; opacity: .8; }
+@media (max-width: 640px) { .uc-settings-grid { grid-template-columns: 1fr; gap: 4px; } .uc-settings-grid dd { margin-bottom: 10px; } }
+</style>
+
+<section class="uc-settings-card" aria-labelledby="uc-settings-title">
+  <h2 id="uc-settings-title">Unraid Codex</h2>
+  <p>Runtime controls and conversation settings live in the Codex Session Inspector.</p>
+  <dl class="uc-settings-grid">
+    <dt>Persistent state</dt>
+    <dd><code>unraid-codex-state</code> Incus volume</dd>
+    <dt>Encrypted backups</dt>
+    <dd><code>/mnt/cache_appdata/appdata/unraid-codex/backups</code></dd>
+    <dt>Restore safety</dt>
+    <dd>Backups verify without changing state by default. A forced restore retains the previous volume for rollback.</dd>
+  </dl>
+  <div class="uc-settings-actions">
+    <button type="button" id="uc-open-settings">Open Session Inspector</button>
+    <p id="uc-settings-status" class="uc-settings-status" role="status" aria-live="polite">Loading the Codex browser integration…</p>
+  </div>
+</section>
 
 <script>
-window.UnraidCodex?.openSettings();
+(() => {
+  const button = document.getElementById("uc-open-settings");
+  const status = document.getElementById("uc-settings-status");
+  let attempts = 0;
+  let opened = false;
+
+  const openSettings = () => {
+    if (typeof window.UnraidCodex?.openSettings !== "function") return false;
+    window.UnraidCodex?.openSettings();
+    opened = true;
+    status.textContent = "Session Inspector opened.";
+    return true;
+  };
+
+  button.addEventListener("click", () => {
+    if (!openSettings()) {
+      status.textContent = "Codex is still loading. Check the browser console and Unraid system log if this persists.";
+    }
+  });
+
+  if (openSettings()) return;
+  const timer = window.setInterval(() => {
+    attempts += 1;
+    if (openSettings() || attempts >= 20) {
+      window.clearInterval(timer);
+      if (!opened) {
+        status.textContent = "Codex did not load. Confirm the plugin service is healthy, then refresh this page.";
+      }
+    }
+  }, 250);
+})();
 </script>

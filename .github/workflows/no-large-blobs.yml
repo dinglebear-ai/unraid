@@ -6,6 +6,10 @@ name: no-large-blobs
 on:
   pull_request:
 
+concurrency:
+  group: no-large-blobs-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

@@ -4,7 +4,7 @@ Get unraid-rmcp running and make your first MCP call in five minutes.
 
 ## Prerequisites
 
-- Rust 1.90+ (`rustup show` or `curl https://sh.rustup.rs | sh`)
+- Rust 1.97.1, selected by the checked-in toolchain configuration (`rustup show`)
 - An Unraid server with the API enabled
 - Your Unraid API URL and API key (Settings → API Management in the Unraid web UI)
 
@@ -26,6 +26,9 @@ export UNRAID_API_URL="https://10-1-0-2.<hash>.myunraid.net:31337/graphql"
 export UNRAID_API_KEY="your-api-key-here"
 export UNRAID_RMCP_PORT=40010
 export UNRAID_RMCP_DISABLE_HTTP_AUTH=true
+# Optional: expose only selected actions, then subtract explicit denies.
+# export UNRAID_RMCP_ENABLED_TOOLS="array,docker,status,help"
+# export UNRAID_RMCP_DISABLED_TOOLS="unraid.vm_reset"
 ```
 
 If your Unraid API uses a self-signed certificate:

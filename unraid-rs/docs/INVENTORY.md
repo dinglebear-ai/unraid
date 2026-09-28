@@ -1,10 +1,24 @@
 # Component Inventory — unraid-rmcp
 
-Complete listing of all MCP actions, CLI commands, env vars, HTTP endpoints, and dependencies.
+Curated reference for MCP actions, CLI commands, environment variables, HTTP
+endpoints, and dependencies. The current action catalog and scopes live in
+[`schemas.rs`](../src/mcp/schemas.rs); parameter metadata lives in
+[`action_params.rs`](../src/mcp/action_params.rs).
 
-## MCP tool: `unraid`
+## MCP tool projections
 
-One tool is exposed. The required `action` argument selects the operation. All actions are read-only.
+`UNRAID_RMCP_PROJECTION` selects the presentation of the enabled action catalog:
+
+| Mode | Exposed tools |
+| --- | --- |
+| `legacy` (default) | One `unraid` tool with a required `action` argument |
+| `atomic` | A focused `unraid_<action>` tool for each enabled action |
+| `both` | The legacy tool and the atomic tools together |
+
+Selectors filter canonical actions before projection. All modes retain the same
+scope checks, destructive-action confirmation, and dispatcher. No tools are
+exposed when no actions are enabled. Actions include read-only queries, local
+metadata operations, and admin-scoped mutations.
 
 ### Core actions
 
@@ -70,7 +84,7 @@ One tool is exposed. The required `action` argument selects the operation. All a
 | Action | Description |
 |--------|-------------|
 | `status` | Server observability: version, PID, uptime, request counters (requires `unraid:read`; MCP-only) |
-| `help` | Markdown reference for all actions (no auth scope required) |
+| `help` | Markdown reference for actions enabled by server policy (no auth scope required) |
 
 ### Action parameters
 
@@ -93,13 +107,13 @@ List actions return a paginated envelope: `{items, total, limit, offset, has_mor
 
 | URI | MIME type | Description |
 |-----|-----------|-------------|
-| `unraid://schema/mcp-tool` | `application/json` | JSON Schema for the `unraid` tool and its parameters |
+| `unraid://schema/mcp-tool` | `application/json` | Policy-filtered JSON Schema containing only enabled actions and their parameters |
 
 ## MCP prompts
 
 | Name | Description |
 |------|-------------|
-| `server_summary` | Instructs the model to call `action=info` and summarise array, disks, VMs, containers, notifications |
+| `server_summary` | Advertised only when at least one summary-data action is enabled; instructs the model to call only the enabled subset of `info`, `array`, `disks`, `vms`, `docker`, and `notifications` |
 
 ## CLI commands
 
@@ -162,8 +176,12 @@ Server/transport commands:
 | `UNRAID_API_URL` | **yes** | — | Unraid GraphQL endpoint |
 | `UNRAID_API_KEY` | **yes** | — | API key sent as `x-api-key` header |
 | `UNRAID_API_SKIP_TLS_VERIFY` | no | `false` | Skip TLS certificate verification |
+| `UNRAID_HOME` | no | `/data` in containers, `~/.unraid` locally | Exact data directory for `.env`, auth DB, and JWT key |
 | `UNRAID_RMCP_HOST` | no | `0.0.0.0` | Bind host for the MCP HTTP server |
 | `UNRAID_RMCP_PORT` | no | `40010` | Bind port |
+| `UNRAID_RMCP_PROJECTION` | no | `legacy` | Tool presentation: `legacy`, `atomic`, or `both` |
+| `UNRAID_RMCP_ENABLED_TOOLS` | no | — | Comma-separated MCP tool/action allowlist; empty inherits persisted `.env` policy |
+| `UNRAID_RMCP_DISABLED_TOOLS` | no | — | Comma-separated MCP tool/action denylist; deny rules win |
 | `UNRAID_RMCP_TOKEN` | no | — | Static bearer token for `/mcp` |
 | `UNRAID_RMCP_DISABLE_HTTP_AUTH` | no | `false` | Disable MCP auth (1/true/yes) |
 | `UNRAID_RMCP_NO_AUTH` | no | `false` | Alias for disabling auth |
@@ -179,7 +197,7 @@ Server/transport commands:
 |-------|---------|
 | `tokio` | Async runtime |
 | `axum` | HTTP framework |
-| `rmcp` 1.6 | MCP protocol and transports |
+| `rmcp` 3.1 | MCP protocol and transports |
 | `tower-http` | CORS, body limit, tracing middleware |
 | `reqwest` | GraphQL HTTP client (rustls, no OpenSSL) |
 | `serde` / `serde_json` | Serialization |

@@ -161,5 +161,5 @@ jobs:
       - name: Attach the publication manifest
         run: gh release upload "$TAG" incus.plg --clobber
 
-      - name: Keep the primary Unraid MCP release marked latest
-        run: gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${{ github.event.release.id }}" -f make_latest=false >/dev/null
+      - name: Restore the primary Unraid MCP release as Latest
+        run: python3 ../../.github/scripts/ensure_primary_latest.py "$TAG"

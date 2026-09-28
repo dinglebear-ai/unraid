@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.2](https://github.com/dinglebear-ai/unraid/compare/v2.10.1...v2.10.2) (2026-09-28)
+
+
+### Bug Fixes
+
+* **unraid-py:** support old and new remove-disk APIs ([#412](https://github.com/dinglebear-ai/unraid/issues/412)) ([87673a4](https://github.com/dinglebear-ai/unraid/commit/87673a493832cdf65f91f9aff19b348cd96b3f6a))
+
+
+### Documentation
+
+* unify agent instructions and refresh repository guides ([c07e31c](https://github.com/dinglebear-ai/unraid/commit/c07e31c843be22d69e207ae845f3b4ea453b7afa))
+
+## [2.10.1](https://github.com/dinglebear-ai/unraid/compare/v2.10.0...v2.10.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* **mcp:** centralize Registry publication ([#339](https://github.com/dinglebear-ai/unraid/issues/339)) ([7e09025](https://github.com/dinglebear-ai/unraid/commit/7e090250228461538646b6364c5c3ded9b5748c5))
+* **unraid-py:** upgrade cryptography to 50.0.0 for CVE-2026-69247 ([#346](https://github.com/dinglebear-ai/unraid/issues/346)) ([f4501b9](https://github.com/dinglebear-ai/unraid/commit/f4501b92da082ece759a46059bc42697e2e0daef))
+
 ## [2.10.0](https://github.com/dinglebear-ai/unraid/compare/v2.9.0...v2.10.0) (2026-08-04)
 
 

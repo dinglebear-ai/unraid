@@ -43,6 +43,7 @@ dinglebear-ai/workflows/.github/workflows/mcp-registry-publish.yml@*
 dtolnay/rust-toolchain@*
 gitleaks/gitleaks-action@*
 googleapis/release-please-action@*
+kunobi-ninja/kache-action@*
 peter-evans/create-pull-request@*
 pypa/gh-action-pypi-publish@*
 Swatinem/rust-cache@*

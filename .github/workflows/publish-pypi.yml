@@ -78,7 +78,7 @@ jobs:
         run: uv build --no-sources
       - name: Validate metadata, wheel contents, and installed stdio server
         run: |
-          uv tool run --from twine==6.2.0 twine check dist/*
+          uv tool run --from twine==7.0.0 twine check dist/*
           unzip -l dist/*.whl | tee wheel-contents.txt
           grep -q 'unraid_mcp/server.py' wheel-contents.txt
           grep -q 'licenses/LICENSE' wheel-contents.txt

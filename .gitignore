@@ -96,7 +96,11 @@ client_secret_*.apps.googleusercontent.com.json
 
 .worktrees
 
-# Personal local cheatsheet (never commit)
+# Personal agent instructions at any depth (never commit).
+# AGENTS.override.md owns local content; CLAUDE.local.md is its relative symlink.
+AGENTS.override.md
+CLAUDE.local.md
+# Preserve protection for the legacy, unsupported filename during migration.
 CLAUDE.md.local
 logs/
 backups/

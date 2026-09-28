@@ -5,7 +5,7 @@
 //! Commands:
 //!   dist         Build release binary and copy to bin/
 //!   ci           Run fmt + clippy + nextest
-//!   symlink-docs Create AGENTS.md and GEMINI.md symlinks for all CLAUDE.md files
+//!   symlink-docs Safely link CLAUDE.md and GEMINI.md to canonical AGENTS.md files
 //!   check-env    Validate required environment variables
 
 use std::env;
@@ -62,44 +62,14 @@ fn ci() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Create AGENTS.md and GEMINI.md symlinks alongside every CLAUDE.md
+/// Repair instruction aliases using the shared, non-destructive repository helper.
 fn symlink_docs() -> anyhow::Result<()> {
-    use std::path::Path;
-
-    let output = Command::new("find")
-        .args([
-            ".",
-            "-name",
-            "CLAUDE.md",
-            "-not",
-            "-path",
-            "./.git/*",
-            "-not",
-            "-path",
-            "./target/*",
-            "-not",
-            "-path",
-            "./xtask/*",
-        ])
-        .output()?;
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    for line in stdout.lines() {
-        let claude_path = Path::new(line.trim());
-        let dir = claude_path.parent().unwrap_or(Path::new("."));
-
-        for link_name in &["AGENTS.md", "GEMINI.md"] {
-            let link_path = dir.join(link_name);
-            // Remove existing symlink/file if present
-            let _ = std::fs::remove_file(&link_path);
-            #[cfg(unix)]
-            std::os::unix::fs::symlink("CLAUDE.md", &link_path)?;
-            #[cfg(not(unix))]
-            std::fs::copy(claude_path, &link_path)?;
-            println!("==> Linked {}", link_path.display());
-        }
-    }
-    Ok(())
+    let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.github/scripts/check_documentation.py");
+    let script = script
+        .to_str()
+        .ok_or_else(|| anyhow::anyhow!("documentation helper path is not valid UTF-8"))?;
+    run("python3", &[script, "--repair-links"])
 }
 
 /// Validate required environment variables are set
@@ -111,6 +81,8 @@ fn check_env() -> anyhow::Result<()> {
 
     let optional = [
         ("UNRAID_RMCP_TOKEN", "Bearer token for MCP auth"),
+        ("UNRAID_RMCP_ENABLED_TOOLS", "MCP tool/action allowlist"),
+        ("UNRAID_RMCP_DISABLED_TOOLS", "MCP tool/action denylist"),
         ("RUST_LOG", "Log filter (default: info)"),
     ];
 

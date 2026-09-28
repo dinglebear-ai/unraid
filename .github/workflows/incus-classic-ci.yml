@@ -7,6 +7,7 @@ name: incus-classic-ci
 # filter would let a bad .plg or checksum merge with this gate never running.
 on:
   push:
+    branches: ["main"]
     paths:
       - "plugins/incus/**"
       - "!plugins/incus/unraid-api-plugin-incus/**"
@@ -27,6 +28,10 @@ on:
       # could not run on the very edit it guards against.
       - ".github/workflows/incus-api-ci.yml"
   workflow_dispatch:
+
+concurrency:
+  group: incus-classic-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read

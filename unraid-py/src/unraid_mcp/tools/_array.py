@@ -42,13 +42,21 @@ _ARRAY_MUTATIONS: dict[str, str] = {
     "start_array": "mutation StartArray { array { setState(input: { desiredState: START }) { state capacity { kilobytes { free used total } } } } }",
     "stop_array": "mutation StopArray { array { setState(input: { desiredState: STOP }) { state } } }",
     "add_disk": "mutation AddDisk($id: PrefixedID!, $slot: Int) { array { addDiskToArray(input: { id: $id, slot: $slot }) { state disks { id name device type status } } } }",
-    "remove_disk": "mutation RemoveDisk($id: PrefixedID!) { array { removeDiskFromArray(input: { id: $id }) { state disks { id name device type } } } }",
     "mount_disk": "mutation MountDisk($id: PrefixedID!) { array { mountArrayDisk(id: $id) { id name device status } } }",
     "unmount_disk": "mutation UnmountDisk($id: PrefixedID!) { array { unmountArrayDisk(id: $id) { id name device status } } }",
     "clear_disk_stats": "mutation ClearDiskStats($id: PrefixedID!) { array { clearArrayDiskStatistics(id: $id) } }",
 }
 
-_ARRAY_SUBACTIONS: set[str] = set(_ARRAY_QUERIES) | set(_ARRAY_MUTATIONS)
+# Compatibility-only operations retained for older Unraid API releases. These are
+# intentionally excluded from the current vendored-schema contract because newer
+# APIs removed the fields, but remain callable at runtime against older servers.
+_ARRAY_LEGACY_MUTATIONS: dict[str, str] = {
+    "remove_disk": "mutation RemoveDisk($id: PrefixedID!) { array { removeDiskFromArray(input: { id: $id }) { state disks { id name device type } } } }",
+}
+
+_ARRAY_SUBACTIONS: set[str] = (
+    set(_ARRAY_QUERIES) | set(_ARRAY_MUTATIONS) | set(_ARRAY_LEGACY_MUTATIONS)
+)
 _ARRAY_DESTRUCTIVE: set[str] = {"remove_disk", "clear_disk_stats", "stop_array"}
 
 # Maps each non-list subaction to the GraphQL key chain for its meaningful result
@@ -157,7 +165,22 @@ async def _handle_array(
         if subaction in ("remove_disk", "mount_disk", "unmount_disk", "clear_disk_stats"):
             if not disk_id:
                 raise ToolError(f"disk_id is required for array/{subaction}")
-            data = await _client.make_graphql_request(_ARRAY_MUTATIONS[subaction], {"id": disk_id})
+            mutation = _ARRAY_LEGACY_MUTATIONS.get(subaction, _ARRAY_MUTATIONS.get(subaction))
+            if mutation is None:
+                raise ToolError(f"Unhandled array mutation '{subaction}' — this is a bug")
+            try:
+                data = await _client.make_graphql_request(mutation, {"id": disk_id})
+            except ToolError as exc:
+                message = str(exc)
+                if subaction == "remove_disk" and (
+                    'Cannot query field "removeDiskFromArray"' in message
+                    or "Cannot query field 'removeDiskFromArray'" in message
+                ):
+                    raise ToolError(
+                        "array/remove_disk is not supported by this Unraid API version. "
+                        "The mutation is available only on older Unraid API releases."
+                    ) from exc
+                raise
             result = safe_get(data, *_ARRAY_RESULT_FIELD[subaction])
             return {"success": True, "subaction": subaction, "data": result}
 

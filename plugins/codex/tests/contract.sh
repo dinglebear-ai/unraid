@@ -18,6 +18,7 @@ required=(
   "${source_dir}/scripts/stop-appserver.sh"
   "${source_dir}/scripts/configure-nginx.sh"
   "${source_dir}/scripts/backup-state.sh"
+  "${source_dir}/scripts/restore-state.sh"
   "${source_dir}/scripts/configure-schedule.sh"
   "${source_dir}/scripts/ensure-state-volume.sh"
   "${source_dir}/scripts/verify-codex-cli.sh"
@@ -45,6 +46,7 @@ for path in \
   "${source_dir}/scripts/stop-appserver.sh" \
   "${source_dir}/scripts/configure-nginx.sh" \
   "${source_dir}/scripts/backup-state.sh" \
+  "${source_dir}/scripts/restore-state.sh" \
   "${source_dir}/scripts/configure-schedule.sh" \
   "${source_dir}/scripts/ensure-state-volume.sh" \
   "${source_dir}/scripts/verify-codex-cli.sh" \
@@ -77,15 +79,19 @@ for path in \
   }
 done
 
+php -l "${source_dir}/CodexButton.page" >/dev/null
+php -l "${source_dir}/CodexSettings.page" >/dev/null
 node --check "${source_dir}/web/unraid-codex.js"
 node --check "${plugin_dir}/tests/aurora-contract.cjs"
 node --check "${plugin_dir}/tests/appserver-smoke.cjs"
 node --check "${plugin_dir}/tests/appserver-device-login.cjs"
+node --check "${plugin_dir}/tests/settings-page.cjs"
 bash -n \
   "${source_dir}/scripts/start-appserver.sh" \
   "${source_dir}/scripts/stop-appserver.sh" \
   "${source_dir}/scripts/configure-nginx.sh" \
   "${source_dir}/scripts/backup-state.sh" \
+  "${source_dir}/scripts/restore-state.sh" \
   "${source_dir}/scripts/configure-schedule.sh" \
   "${source_dir}/scripts/ensure-state-volume.sh" \
   "${source_dir}/scripts/verify-codex-cli.sh" \
@@ -101,8 +107,15 @@ grep -Fq 'Menu="Buttons:' "${source_dir}/CodexButton.page"
 grep -Fq 'Menu="Utilities"' "${source_dir}/CodexSettings.page"
 grep -Fq 'Icon="codex.png"' "${source_dir}/CodexSettings.page"
 grep -Fq 'window.UnraidCodex?.openSettings()' "${source_dir}/CodexSettings.page"
+grep -Fq 'role="status" aria-live="polite"' "${source_dir}/CodexSettings.page"
+grep -Fq 'unraid-codex-state-pre-restore-*' "${plugin_dir}/README.md"
+node "${plugin_dir}/tests/settings-page.cjs" "${source_dir}/CodexSettings.page"
 file "${source_dir}/codex.png" | grep -Fq 'PNG image data, 128 x 128, 8-bit/color RGBA'
 grep -Fq '<URL>&txzURL;</URL>' "${plugin_dir}/unraid-codex.plg"
+grep -Fq 'min="7.0.0"' "${plugin_dir}/unraid-codex.plg"
+grep -Fq 'Unraid OS 7.0.0 as the minimum supported release' "${plugin_dir}/README.md"
+grep -Fq 'Partial proxy and schedule state was cleaned up' "${plugin_dir}/unraid-codex.plg"
+grep -Fq 'rm -f /etc/cron.d/unraid-codex /var/run/unraid-codex-appserver.sock' "${plugin_dir}/unraid-codex.plg"
 grep -Fq 'incus &lt;/dev/null storage show "$CODEX_POOL"' "${plugin_dir}/unraid-codex.plg"
 grep -Fq 'incus &lt;/dev/null profile show "$CODEX_PROFILE"' "${plugin_dir}/unraid-codex.plg"
 grep -Fq 'attachShadow({ mode: "open" })' "${web_src}/main.tsx"
@@ -149,7 +162,18 @@ grep -Fq '"$PROVISION_CONTAINER"' "${source_dir}/scripts/start-appserver.sh"
 grep -Fq 'storage volume create "$POOL" "$VOLUME" security.shifted=true' "${source_dir}/scripts/ensure-state-volume.sh"
 grep -Fq 'storage volume snapshot create' "${source_dir}/scripts/backup-state.sh"
 grep -Fq 'openssl enc -aes-256-cbc -pbkdf2' "${source_dir}/scripts/backup-state.sh"
+grep -Fq 'openssl dgst -sha256 -mac HMAC' "${source_dir}/scripts/backup-state.sh"
 grep -Fq 'unraid-codex-maintenance.lock' "${source_dir}/scripts/backup-state.sh"
+grep -Fq 'storage volume import' "${source_dir}/scripts/restore-state.sh"
+grep -Fq 'openssl dgst -sha256 -mac HMAC' "${source_dir}/scripts/restore-state.sh"
+grep -Fq 'backup HMAC verification failed' "${source_dir}/scripts/restore-state.sh"
+if grep -Fq 'python3 - "$tmp"' "${source_dir}/scripts/backup-state.sh" \
+  || grep -Fq 'python3 - "$BACKUP"' "${source_dir}/scripts/restore-state.sh"; then
+  echo "host backup and restore integrity checks must not require Python" >&2
+  exit 1
+fi
+grep -Fq 'pre-restore-$stamp' "${source_dir}/scripts/restore-state.sh"
+grep -Fq 'Previous Codex state was restored successfully' "${source_dir}/scripts/restore-state.sh"
 grep -Fq '/etc/cron.d/unraid-codex' "${source_dir}/scripts/configure-schedule.sh"
 grep -Fq 'NoNewPrivileges=true' "${source_dir}/container/codex-appserver.service"
 grep -Fq 'CapabilityBoundingSet=' "${source_dir}/container/codex-appserver.service"
@@ -178,7 +202,7 @@ if find "${source_dir}" -type f \( -name codex-version -o -name codex-release.en
   exit 1
 fi
 test_output_dir="$(mktemp -d)"
-test_names=(install-codex-cli update-codex-cli provision-container configure-nginx package-verifier ca-metadata)
+test_names=(install-codex-cli update-codex-cli provision-container configure-nginx backup-restore-state package-verifier ca-metadata)
 test_pids=()
 for test_name in "${test_names[@]}"; do
   "${plugin_dir}/tests/$test_name.sh" >"$test_output_dir/$test_name.log" 2>&1 &

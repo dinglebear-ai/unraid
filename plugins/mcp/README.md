@@ -1,79 +1,122 @@
-# unraid-mcp — native unRAID plugin
+# unraid-mcp — native Unraid plugin
 
-Packages the MCP server as a classic unRAID plugin (`.plg` + Slackware `.txz`)
-with a bundled relocatable Python, bearer-token auth, and a webGUI settings
-page. Community Applications metadata, release assets, source, documentation,
-and support are maintained in the public `dinglebear-ai/unraid` monorepo.
+Packages the Rust `runraid` MCP server as a classic Unraid plugin (`.plg` plus
+Slackware `.txz`) with bearer/OAuth authentication, a webGUI settings page,
+automatic credential bootstrap, service controls, and log rotation.
 
-## Layout
+## Package layout
 
-- `unraid-mcp.plg` — manifest template. `VERSION/MD5/SHA256_PLACEHOLDER` are
-  substituted by `scripts/build-txz.sh`; the final `.plg` + `.txz` get attached
-  to the GitHub release.
-- `source/` — the txz payload root (extracts onto `/` on Unraid):
-  - `usr/local/emhttp/plugins/unraid-mcp/` — webGUI tree: `UnraidMCP.page`
-    (thin shell), `include/config.php` (settings endpoint), `scripts/`
-    (`rc.unraid-mcp`, `unraid-mcp-env.sh`), `event/` (array up/down hooks),
-    `web/` (built Vue bundle — generated, not committed).
-  - `usr/local/unraid-mcp/python/` — vendored python-build-standalone CPython
-    with unraid-mcp installed (staged at build time, not committed).
-- `web/` — Vite + Vue 3 settings app compiled to a light-DOM custom element.
-  UI kit (components/ui, styles) is vendored from Unraid's `@unraid/ui` via
-  incus-unraid — native webGUI look, all four Unraid themes supported.
-- `runtime-requirements.in` and `runtime-requirements.txt` — version input and
-  hash-locked binary dependency closure for the bundled Python runtime.
-- `scripts/update-runtime-lock.sh` — regenerates that lock for Python 3.12 on
-  x86-64 Linux.
-- `scripts/build-txz.sh <version> <wheel>` — builds the web bundle, vendors
-  Python 3.12, installs hash-locked dependencies plus the explicit wheel, and
-  emits `packages/unraid-mcp-<v>-x86_64-2.txz` with its filled manifest.
+- `unraid-mcp.plg` is the manifest template. The package build substitutes the
+  version and checksums. The plugin version is a fixed-width epoch-3 string
+  derived from the runraid semver by `scripts/plugin-version.sh`
+  (`0.3.1` → `3.000.003.001`) so it sorts after every legacy Python-lane
+  `2.x` release under Unraid's raw-string version comparison.
+- `source/usr/local/emhttp/plugins/unraid-mcp/` contains the webGUI, service
+  scripts, updater, and array lifecycle hooks.
+- `usr/local/unraid-mcp/bin/runraid` is staged at build time from the matching
+  `unraid-rs-vX.Y.Z` release binary. No Python interpreter is bundled.
+- `web/` is the Vite/Vue settings application.
 
-## Runtime model (RAM rootfs rules)
+## Runtime model
 
-- Persistent: `/boot/config/plugins/unraid-mcp/` — `.env` (all server config,
-  chmod 600 attempted; the FAT32 mount umask is the real gate) and
-  `unraid-mcp.cfg` (`SERVICE=enabled|disabled`).
-- Ephemeral, re-laid every boot by the `.plg`: `/usr/local/unraid-mcp`,
-  `/usr/local/emhttp/plugins/unraid-mcp`, the `/etc/rc.d/rc.unraid-mcp`
-  symlink.
-- Service starts from `event/disks_mounted` (array up) when
-  `SERVICE=enabled`; stops in `event/unmounting_disks`. Logs:
-  `/var/log/unraid-mcp/server.log` (5 MB rotation).
-- Install auto-generates `UNRAID_MCP_BEARER_TOKEN` and, when the
-  `unraid-api` CLI is present, auto-provisions `UNRAID_API_KEY` via
-  `unraid-api apikey --create --name unraidmcp -r admin --json` — zero-paste
-  setup.
+Persistent state lives under `/boot/config/plugins/unraid-mcp/` for the `.env`
+and service-enable flag. OAuth state and self-updated binaries live directly under
+`/mnt/user/appdata/unraid-mcp/` through the `UNRAID_HOME` override. The service
+refuses to create or modify that tree unless `/mnt/user` is actually mounted,
+and ignores overlay binaries that are symlinks or are not root-owned regular
+executables. The RAM-rootfs runtime is restored by Unraid on every boot.
 
-## Settings page
+`rc.unraid-mcp` starts `runraid serve`, preferring a safe persistent overlay
+binary when one has been installed through the settings page. Startup is not
+reported successful until the public `/health` endpoint responds. Tailscale
+Serve state remembers the published port so stop/restart also cleans stale
+routes after a port change or an unexpected server exit.
 
-`Settings → Unraid MCP`. Vue custom element (`<unraid-mcp-settings-app>`)
-talking to `include/config.php` (webGUI session + `window.csrf_token`).
-Secrets are write-only: the endpoint returns `<KEY>_configured` booleans,
-never values; saving restarts the service when it's running. Env keys not
-managed by the form are preserved on save and listed read-only.
+The updater downloads the `runraid-linux-x86_64` asset and its SHA-256 file from
+a Rust component release, verifies both the digest and reported version, then
+atomically replaces the overlay. Public CLI `update` and `reset` commands commit
+their change immediately. The settings controller uses internal staged commands
+to snapshot the prior overlay; if the new runtime fails its health-checked
+startup, it rolls back the binary and restores the previous service. Reset
+returns to the plugin-bundled binary. Update checks occur only after an explicit
+click.
+
+Existing Python-era `UNRAID_MCP_*` settings are translated at launch and surfaced
+through the new Rust settings UI. Saving a migrated field removes its old key.
+Live settings changes are transactional: if runraid rejects the health-checked
+restart, the previous env and service are restored automatically.
+The settings page exposes `UNRAID_RMCP_PROJECTION` with `legacy` (default), `atomic`, and `both` modes. Atomic mode publishes focused `unraid_<action>` tools while preserving the same selector, auth, confirmation, and dispatcher paths. It also exposes `UNRAID_RMCP_ENABLED_TOOLS` and `UNRAID_RMCP_DISABLED_TOOLS` for granular action allow/deny policies; deny selectors win.
+
+## Upgrading from the Python plugin
+
+- **Port**: upgraded boxes keep their existing port (the Python default was
+  6970); only fresh installs get the Rust default 40010. Check firewall rules
+  and MCP client URLs against whichever port your `.env` actually carries.
+- **OAuth**: the Python server auto-enabled Google OAuth when client
+  credentials were present. runraid does not — after upgrading, set
+  `UNRAID_RMCP_AUTH_MODE=oauth` **and** `UNRAID_RMCP_AUTH_ADMIN_EMAIL` in
+  Settings, or the server stays on bearer auth (a warning is logged).
+- **Rollback**: the old Python server does not understand the `UNRAID_RMCP_*`
+  keys this plugin writes. To roll back to the old Python `.plg`, delete
+  `/boot/config/plugins/unraid-mcp/.env` first and let the Python plugin
+  re-bootstrap its config.
+- **Private CA / TLS**: the Python server overloaded `UNRAID_VERIFY_SSL` as
+  either a boolean *or* a path to a CA bundle. runraid splits those: booleans map
+  to `UNRAID_API_SKIP_TLS_VERIFY`, and a readable bundle path migrates to
+  `UNRAID_API_CA_BUNDLE` ("CA bundle path" in Settings), which keeps verification
+  **on** while trusting your CA. If the old value is neither a boolean nor a
+  readable file it cannot be migrated, and the service log says so at startup —
+  set the bundle path yourself rather than disabling verification.
+
+## Update integrity
+
+`Update` in Settings downloads the release binary and checks it three ways
+before installing:
+
+1. the co-uploaded `.sha256` (catches a corrupted or truncated download),
+2. **GitHub build provenance** — the binary's digest must have an attestation in
+   GitHub's attestation store naming this repo and `rust-release.yml` as its
+   builder, and
+3. the binary's own `--version` must match the tag.
+
+Step 2 matters because step 1 alone proves nothing about authenticity: the
+binary and its checksum are uploaded by the same job to the same release, so
+anyone able to replace one can replace both. Attestations live in a separate,
+GitHub-controlled store, are keyed by digest, and are minted by the
+OIDC-authenticated workflow run, so swapped release assets cannot produce a
+matching record.
+
+What this is **not**: the check confirms a provenance record exists and names
+the expected builder — it does not verify the Sigstore signature chain, which
+would require `cosign` or `gh` (neither ships with Unraid). It closes the
+swapped-asset hole, not a compromise of GitHub's attestation store itself.
+
+Releases published before provenance existed have no attestation and will be
+refused. Install one only if you have verified it another way:
+
+```bash
+UNRAID_MCP_SKIP_ATTESTATION=true unraid-mcp-update.sh update <version>
+```
 
 ## Build
 
 ```bash
-./scripts/update-runtime-lock.sh
-./scripts/build-txz.sh 2.9.0 ../../unraid-py/dist/unraid_mcp-2.9.0-py3-none-any.whl
+cd unraid-rs
+cargo build --release --locked --target x86_64-unknown-linux-gnu --bin runraid
+cd ../plugins/mcp
+./scripts/build-txz.sh 0.4.1 ../../unraid-rs/target/x86_64-unknown-linux-gnu/release/runraid
 ```
 
-The build fails closed when the input version and lock disagree, when a locked
-dependency hash does not match, or when the generated archive fails its package
-verifier. Release builds use the exact wheel attached to the matching `v*`
-release; the builder never resolves `unraid-mcp` itself from an unpinned index.
+The builder verifies `runraid --version`, builds the web bundle, creates a
+deterministic root-owned archive, checks the generated manifest, confirms the
+embedded x86-64 ELF binary, rejects any retired Python runtime tree, and rejects
+binaries requiring newer than glibc 2.40 (the library shipped by the minimum
+supported Unraid 7.0.0).
 
-Install on a test box: copy `packages/unraid-mcp.plg` URL (or file) into
-Plugins → Install Plugin, with the `.txz` uploaded to the matching GitHub
-release (or adjust `txzURL` for a local test).
+## Release and Community Applications
 
-## Community Applications publication
-
-The repository profile is `/ca_profile.xml` and the Unraid MCP wrapper is
-`plugins/mcp/ca/unraid-mcp.xml`. The wrapper uses the stable repository-level
-latest-release URL for `unraid-mcp.plg`; component release workflows must not
-claim the repository-wide **Latest** designation, while each primary `v*` MCP
-release claims it only after the verified `.plg` and `.txz` assets are attached.
-Run Validate and Scan for `https://github.com/dinglebear-ai/unraid` before
-requesting manual plugin review.
+The `rust-release` workflow builds the binary and plugin from the same
+`unraid-rs-vX.Y.Z` source using the repository-pinned Rust 1.97.1 toolchain. It attaches the versioned `.txz` and `.plg` to that
+release and refreshes the rolling `unraid-plugin-latest` release asset consumed
+by Community Applications. The package manifest itself points back to the
+versioned Rust release, so installs remain immutable and checksum-pinned.

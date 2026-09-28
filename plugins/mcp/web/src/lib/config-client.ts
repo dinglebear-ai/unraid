@@ -57,7 +57,7 @@ async function csrfToken(): Promise<string> {
     if (window.csrf_token) return window.csrf_token;
     await new Promise((r) => setTimeout(r, 100));
   }
-  return window.csrf_token ?? "";
+  throw new Error("Unraid CSRF token is unavailable; reload the webGUI and try again");
 }
 
 async function request(init?: RequestInit): Promise<ConfigPayload> {
@@ -136,12 +136,12 @@ export async function checkUpdate(): Promise<string> {
   return (await postJson<{ latest?: string }>({ action: "checkUpdate" })).latest ?? "";
 }
 
-/** Install a version (empty string = latest) into the array overlay venv. */
+/** Install a Rust release (empty string = latest) as the persistent binary overlay. */
 export async function updateServer(version: string): Promise<ConfigPayload> {
   return post({ action: "update", version });
 }
 
-/** Remove the overlay venv, reverting to the plugin-bundled version. */
+/** Remove the overlay binary, reverting to the plugin-bundled version. */
 export async function resetServer(): Promise<ConfigPayload> {
   return post({ action: "resetVersion" });
 }

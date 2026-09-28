@@ -388,6 +388,12 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
     }
   }, [])
 
+  const focusConversationPrompt = React.useCallback(() => {
+    requestAnimationFrame(() => {
+      rootElement.querySelector<HTMLTextAreaElement>('[aria-label="Prompt input"]')?.focus()
+    })
+  }, [rootElement])
+
   return (
     <TooltipProvider delayDuration={250}>
       <Sheet open={open} onOpenChange={handleOpenChange} modal={false}>
@@ -416,6 +422,11 @@ export function App({ rootElement }: { rootElement: HTMLElement }) {
           side="right"
           className={`uc-sheet uc-theme-${theme}`}
           data-chat-theme={theme}
+          onOpenAutoFocus={(event) => {
+            if (surface !== "conversation") return
+            event.preventDefault()
+            focusConversationPrompt()
+          }}
           style={{ "--uc-dock-width": `${dockWidth}px` } as React.CSSProperties}
         >
           {docked ? (

@@ -22,6 +22,22 @@ default. That policy is deny-list containment, not a complete security
 boundary. Review the Incus network ACL, workspace mounts, and any allow-holes
 for the actual network before running untrusted workloads.
 
+## Compatibility policy
+
+The plugin manifest enforces Unraid OS 7.0.0 as the minimum supported release.
+Unraid 6.x and non-x86-64 systems are not supported. Compatibility checks in
+the release contract validate the manifest boundary, XML, PHP page syntax,
+package layout and permissions, lifecycle scripts, and browser bundle. A live
+smoke test on a supported Unraid host remains the final release gate because CI
+cannot emulate the proprietary webGUI and plugin manager.
+
+The plugin follows the Incus plugin's configured storage pool, jail profile,
+workspace root, and start helper rather than assuming one Unraid point release
+or one local storage layout. Host-side backup and restore validation use
+Bash, coreutils, OpenSSL, and the Incus CLI, so they do not require Python on
+the Unraid host. The packaged Python helpers execute inside the managed
+container, where provisioning installs their runtime.
+
 ## Clean install behavior
 
 On the first array-mounted start, the plugin:
@@ -75,6 +91,32 @@ The encryption and HMAC key is stored with mode `0600` at:
 
 `/boot/config/plugins/unraid-codex/backup.key`
 
+Every encrypted export has matching `.sha256` and `.hmac` sidecars. Keep all
+three files together and preserve `backup.key`; the encrypted archive cannot be
+recovered without that key.
+
+Verify a backup without changing the live state volume:
+
+```bash
+/usr/local/emhttp/plugins/unraid-codex/scripts/restore-state.sh \
+  /mnt/cache_appdata/appdata/unraid-codex/backups/unraid-codex-state-YYYYMMDD-HHMMSS.tar.gz.enc
+```
+
+Perform the restore only after verification succeeds:
+
+```bash
+/usr/local/emhttp/plugins/unraid-codex/scripts/restore-state.sh --force \
+  /mnt/cache_appdata/appdata/unraid-codex/backups/unraid-codex-state-YYYYMMDD-HHMMSS.tar.gz.enc
+```
+
+A forced restore imports into a temporary volume, stops the container for the
+volume swap, restarts the prior runtime state, and checks app-server health.
+The previous state is retained as a timestamped `unraid-codex-state-pre-restore-*`
+volume. If the restored app-server fails to become healthy, the script
+automatically promotes that previous volume back and preserves the failed
+restore for inspection. Use `--discard-rollback` only when storage pressure
+outweighs the value of the safety copy.
+
 Uninstall removes the webGUI integration, service schedule, package, and proxy
 configuration. It intentionally leaves the Incus container, persistent state,
 backups, and flash configuration intact so a reinstall or manual recovery does
@@ -102,7 +144,7 @@ Run the complete source contract:
 Prepare a coherent release candidate, including cache-busters, deterministic
 package, checksums, and all verification gates:
 
-`./scripts/prepare-release.sh 20260802.001 34`
+`./scripts/prepare-release.sh 20260805.001 35`
 
 Reverify an already prepared tree:
 
@@ -110,7 +152,7 @@ Reverify an already prepared tree:
 
 The package builder requires explicit fixed-width CalVer and build arguments:
 
-`./scripts/build-package.sh 20260802.001 34`
+`./scripts/build-package.sh 20260805.001 35`
 
 ## Community Applications publication
 

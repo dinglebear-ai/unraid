@@ -2,7 +2,7 @@
 
 Rust MCP server and CLI for Unraid GraphQL operations across NAS, Docker, VM, and storage workflows.
 
-It exposes one MCP tool, `unraid`, plus the `runraid` CLI. Agents can inspect
+It supports legacy and atomic MCP projections plus the `runraid` CLI. Legacy mode exposes the single `unraid` tool; atomic mode exposes one focused `unraid_<action>` tool per enabled action. Agents can inspect
 array health, disks, Docker containers and logs, VMs, shares, notifications,
 system metrics, UPS, logs, network settings, plugins, parity history, rclone,
 remote access, and Unraid Connect through stdio MCP, Streamable HTTP MCP, or
@@ -57,7 +57,7 @@ through MCP tool arguments.
 | crates.io package | `unraid-rmcp` |
 | CRGX command | `crgx unraid-rmcp -- <runraid args>` |
 | Legacy npm package | `unraid-rmcp` |
-| MCP tool | `unraid` |
+| MCP tools | `unraid` (legacy), `unraid_<action>` (atomic) |
 | Config home | `~/.unraid` on hosts, `/data` in containers |
 | Env prefixes | `UNRAID_*`, `UNRAID_RMCP_*` |
 
@@ -120,7 +120,7 @@ cargo build --release
 ./target/release/runraid --help
 ```
 
-Minimum supported Rust version: 1.90.
+Minimum supported Rust version: 1.97.1 (edition 2024).
 
 ## Quickstart
 
@@ -242,8 +242,13 @@ as action arguments.
 
 ## MCP Tool Reference
 
-One MCP tool is exposed: `unraid`. Pass the required `action` argument to select
-the operation.
+MCP projection is configurable with `UNRAID_RMCP_PROJECTION` (or `mcp.projection`):
+
+- `legacy` (default) exposes the compatibility tool `unraid`; pass its required `action` argument.
+- `atomic` exposes one focused `unraid_<action>` tool for each enabled action. Atomic schemas contain only that action's parameters and mark dispatcher-required fields as required.
+- `both` exposes the legacy tool plus all enabled atomic tools for migration. Generated prompts prefer atomic calls in this mode.
+
+Selectors are applied to canonical actions before projection, so the same `[mcp.tools]` policy controls all three modes. Calls from either surface normalize to the same canonical action before scope checks, destructive confirmation, and dispatch.
 
 ### Core Actions
 
@@ -289,7 +294,7 @@ the operation.
 | `connect` | Unraid Connect dynamic remote access state. |
 | `plugins` | Installed community plugins with versions. |
 | `status` | Server observability: version, PID, uptime, and counters. |
-| `help` | Markdown reference for all actions. |
+| `help` | Markdown reference for the actions enabled by server policy. |
 
 Pagination and filtering are MCP-only. List actions return a paginated envelope
 with `items`, `total`, `limit`, `offset`, `has_more`, and `next_offset`.
@@ -332,16 +337,24 @@ runraid setup repair [--json]
 
 ## Configuration
 
-Host installs read `~/.unraid/.env` before loading config. Containers read
-`/data/.env`. Process environment overrides both.
+When `UNRAID_HOME` is non-empty, the binary reads `<UNRAID_HOME>/.env`.
+Otherwise host installs read `~/.unraid/.env` and containers read `/data/.env`.
+Non-empty process environment values override `.env`; empty plugin placeholders
+inherit persisted `.env` values instead of clearing them. A present but malformed
+`.env` is rejected so parsing cannot silently skip a later deny rule or credential.
 
 | Variable | Default | Purpose |
 |---|---|---|
 | `UNRAID_API_URL` | unset | Full Unraid GraphQL endpoint URL. |
 | `UNRAID_API_KEY` | unset | API key for the `x-api-key` header. |
 | `UNRAID_API_SKIP_TLS_VERIFY` | `false` | Skip TLS certificate verification for self-signed endpoints. |
+| `UNRAID_API_CA_BUNDLE` | _(unset)_ | Path to a PEM CA bundle to trust. Prefer this over skipping verification for a private CA; startup fails if the file is unreadable or not a PEM bundle. |
+| `UNRAID_HOME` | platform default | Exact data directory for `.env`, auth DB, and JWT key; overrides `/data` or `~/.unraid`. |
 | `UNRAID_RMCP_HOST` | `0.0.0.0` | HTTP bind host. |
 | `UNRAID_RMCP_PORT` | `40010` | HTTP bind port. |
+| `UNRAID_RMCP_PROJECTION` | `legacy` | MCP tool projection: `legacy`, `atomic`, or `both`. |
+| `UNRAID_RMCP_ENABLED_TOOLS` | unset | Comma-separated MCP tool/action allowlist; empty means all. |
+| `UNRAID_RMCP_DISABLED_TOOLS` | unset | Comma-separated MCP tool/action denylist; deny rules win. |
 | `UNRAID_RMCP_SERVER_NAME` | `unraid-rmcp` | Advertised MCP server name. |
 | `UNRAID_RMCP_TOKEN` | unset | Static bearer token for HTTP MCP. |
 | `UNRAID_RMCP_NO_AUTH` | `false` | Disable auth only for loopback development. |
@@ -354,6 +367,17 @@ Host installs read `~/.unraid/.env` before loading config. Containers read
 | `UNRAID_RMCP_GOOGLE_CLIENT_ID` | unset | Google OAuth client ID. |
 | `UNRAID_RMCP_GOOGLE_CLIENT_SECRET` | unset | Google OAuth client secret. |
 | `UNRAID_RMCP_AUTH_ADMIN_EMAIL` | unset | Admin email for OAuth bootstrap. |
+
+Tool selectors may target the entire surface (`*`, `unraid`, or `unraid.*`) or a single canonical action (`docker_logs` or `unraid.vm_reset`). Selectors do not change between projection modes. Tool discovery and `unraid://schema/mcp-tool` reflect the active projection and expose only enabled actions and their parameters; disabled calls are still rejected when a client uses a stale cached schema. Atomic tool annotations derive read-only and destructive hints from the same canonical scope and elicitation metadata. Invalid selectors, projection values, and unknown TOML fields fail configuration loading.
+
+A set, non-empty `UNRAID_RMCP_ENABLED_TOOLS` / `UNRAID_RMCP_DISABLED_TOOLS`
+**replaces** the corresponding `[mcp.tools]` list from `config.toml` — env and
+toml are never merged, so the env var is the complete policy for that list.
+An env var set to the empty string is treated as a placeholder: a matching
+value from `<UNRAID_HOME>/.env`, `~/.unraid/.env`, or `/data/.env` is loaded when
+present, otherwise it behaves as unset. A non-empty value that parses to zero selectors (for example
+`","`) fails startup. This policy governs the MCP surface only; the `runraid`
+CLI is not filtered by `[mcp.tools]`.
 
 ## Authentication
 
@@ -414,8 +438,8 @@ CLI shim      (src/cli.rs)           argv -> service -> stdout
 - The npm package remains a compatibility surface only. Automatic npm publishing
   is enabled only when `NPM_TRUSTED_PUBLISHING_ENABLED=true`.
 - Docker/OCI metadata uses `ghcr.io/dinglebear-ai/unraid-rmcp:<version>`.
-- `agents/unraid-rs/.mcp.json` must launch `crgx unraid-rmcp -- mcp` so stdio
-  clients resolve the crates.io package without requiring Node.
+- `agents/unraid-rs/.mcp.json` must launch `npx -y @dinglebear/unraid mcp` so
+  stdio clients resolve the published npm package.
 - The root README is curated. `docs/INVENTORY.md` is the curated inventory for
   actions, CLI commands, env vars, HTTP endpoints, and dependencies.
 
@@ -431,18 +455,24 @@ npm --prefix packages/unraid-rmcp run check
 
 ## Verification
 
+Run from `unraid-rs/`. The shared checker lives in this repository; no personal
+checkout or external documentation script is required. The npm `check` command
+also performs a packed-install smoke test and requires the supported Linux x64
+platform; `npm --prefix packages/unraid-rmcp test` runs the portable wrapper tests.
+
 ```bash
-python3 /home/jmagar/workspace/soma/scripts/check-readme-guide.py README.md
+python3 ../.github/scripts/check_documentation.py
 npm --prefix packages/unraid-rmcp run check
 cargo check
 cargo test
 git diff --check
 ```
 
-Runtime smoke:
+Runtime smoke requires an explicitly selected disposable test server and
+privately supplied credentials. It is not part of the offline documentation gate.
 
 ```bash
-UNRAID_API_URL=https://10-1-0-2.<hash>.myunraid.net:31337/graphql \
+UNRAID_API_URL=https://your-test-server.example/graphql \
 UNRAID_API_KEY=... \
 runraid server --json
 ```
@@ -478,7 +508,7 @@ gateway.
 | Symptom | Check |
 |---|---|
 | `UNRAID_API_URL` or `UNRAID_API_KEY` is missing | Set it in env or `~/.unraid/.env`. |
-| TLS errors against Unraid | Set `UNRAID_API_SKIP_TLS_VERIFY=true` only for self-signed endpoints. |
+| TLS errors against Unraid | Point `UNRAID_API_CA_BUNDLE` at your CA's PEM bundle to keep verification on. Use `UNRAID_API_SKIP_TLS_VERIFY=true` only when you have no bundle. |
 | HTTP `/mcp` returns unauthorized | Set `UNRAID_RMCP_TOKEN` and send `Authorization: Bearer <token>`. |
 | Stdio client hangs or logs JSON errors | Ensure client config runs `unraid-rmcp mcp`, not the default HTTP server mode. |
 | Large list response is truncated | Use `limit`, `offset`, `name`, or `state` filters on MCP list actions. |
