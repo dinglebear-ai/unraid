@@ -14,13 +14,31 @@ permissions: {}
 
 jobs:
   contract:
+    runs-on: ci-pool-ops
+    timeout-minutes: 5
     permissions:
       contents: read
-    uses: dinglebear-ai/workflows/.github/workflows/fleet-contract.yml@d1a41a7af9c41189e0f1062234364f5814bda99d # fleet-2026-07-31
-    with:
-      profile: rust
-      implementation-ref: d1a41a7af9c41189e0f1062234364f5814bda99d
-    secrets: inherit
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: target
+          persist-credentials: false
+      - name: Check out pinned fleet validator
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: dinglebear-ai/workflows
+          ref: d1a41a7af9c41189e0f1062234364f5814bda99d
+          path: workflow-library
+          persist-credentials: false
+      - name: Validate fleet and AGENTS-canonical repository contracts
+        # Keep the pinned fleet rules. Only its obsolete CLAUDE-canonical rule
+        # is replaced by the stricter local working-tree and index check.
+        run: >-
+          python3 target/.github/scripts/check_repository_contract.py
+          --repo target
+          --fleet-script workflow-library/scripts/fleet_contract.py
+          --profile rust
 
   repository-contract:
     name: Repository Contract

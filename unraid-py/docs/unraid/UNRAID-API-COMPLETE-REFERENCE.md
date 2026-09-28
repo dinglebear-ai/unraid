@@ -2725,23 +2725,6 @@ Add new disk to array
 <td></td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong id="arraymutations.removediskfromarray">removeDiskFromArray</strong></td>
-<td valign="top"><a href="#unraidarray">UnraidArray</a>!</td>
-<td>
-
-
-#### Required Permissions:
-
-- Action: **UPDATE_ANY**
-- Resource: **ARRAY**
-
-#### Description:
-
-Remove existing disk from array. NOTE: The array must be stopped before running this otherwise it'll throw an error.
-
-</td>
-</tr>
-<tr>
 <td colspan="2" align="right" valign="top">input</td>
 <td valign="top"><a href="#arraydiskinput">ArrayDiskInput</a>!</td>
 <td></td>

@@ -49,6 +49,8 @@ wildcard_output="$(php "$plugin_dir/tests/config-endpoint.php" invalid-host-wild
 grep -Fq 'host wildcards must occupy a complete DNS label' <<<"$wildcard_output"
 api_key_output="$(php "$plugin_dir/tests/config-endpoint.php" missing-api-key)"
 grep -Fq 'UNRAID_API_KEY is required before the service can start' <<<"$api_key_output"
+projection_output="$(php "$plugin_dir/tests/config-endpoint.php" invalid-projection)"
+grep -Fq 'UNRAID_RMCP_PROJECTION must be legacy, atomic, or both' <<<"$projection_output"
 
 # Sourcing the environment must select the exact persistent directory without
 # creating /mnt/user paths merely for status/stop operations.

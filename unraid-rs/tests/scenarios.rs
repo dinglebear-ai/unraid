@@ -26,6 +26,33 @@ impl Respond for ScenarioResponder {
     }
 }
 
+/// Responder representing a current Unraid API where removeDiskFromArray has
+/// been removed from ArrayMutations.
+struct CurrentApiResponder {
+    scenario: Scenario,
+}
+
+impl Respond for CurrentApiResponder {
+    fn respond(&self, request: &Request) -> ResponseTemplate {
+        let body: Value = serde_json::from_slice(&request.body).unwrap_or(Value::Null);
+        let query = body.get("query").and_then(Value::as_str).unwrap_or("");
+        if query.contains("__type") && query.contains("fields") {
+            return ResponseTemplate::new(200).set_body_json(json!({
+                "data": {
+                    "__type": {
+                        "fields": [
+                            { "name": "addDiskToArray" },
+                            { "name": "mountArrayDisk" },
+                            { "name": "unmountArrayDisk" }
+                        ]
+                    }
+                }
+            }));
+        }
+        ResponseTemplate::new(200).set_body_json(self.scenario.respond(query))
+    }
+}
+
 async fn mock_server_for(scenario: &str) -> MockServer {
     let server = MockServer::start().await;
     Mock::given(wiremock::matchers::method("POST"))
@@ -154,4 +181,29 @@ async fn healthy_inherits_baseline_for_unoverridden_actions() {
     .expect("degraded info ok");
 
     assert_eq!(h_info, d_info, "info should be inherited unchanged");
+}
+
+#[tokio::test]
+async fn remove_disk_reports_unsupported_on_current_api() {
+    let server = MockServer::start().await;
+    Mock::given(wiremock::matchers::method("POST"))
+        .respond_with(CurrentApiResponder {
+            scenario: Scenario::load("healthy").expect("known scenario"),
+        })
+        .mount(&server)
+        .await;
+
+    let state = state_with_upstream(&server.uri());
+    let result = execute_tool(
+        &state,
+        "unraid",
+        json!({ "action": "array_remove_disk_from_array", "id": "disk/sdb" }),
+    )
+    .await;
+
+    let error = result.expect_err("current API should reject legacy remove-disk capability");
+    assert!(
+        error.contains("not supported by the connected Unraid API version"),
+        "unexpected error: {error}"
+    );
 }

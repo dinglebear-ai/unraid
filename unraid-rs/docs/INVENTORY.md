@@ -1,10 +1,24 @@
 # Component Inventory — unraid-rmcp
 
-Complete listing of all MCP actions, CLI commands, env vars, HTTP endpoints, and dependencies.
+Curated reference for MCP actions, CLI commands, environment variables, HTTP
+endpoints, and dependencies. The current action catalog and scopes live in
+[`schemas.rs`](../src/mcp/schemas.rs); parameter metadata lives in
+[`action_params.rs`](../src/mcp/action_params.rs).
 
-## MCP tool: `unraid`
+## MCP tool projections
 
-One action-based tool is exposed when at least one action is enabled. The required `action` argument selects the operation; actions include read-only queries, local meta operations, and admin-scoped mutations.
+`UNRAID_RMCP_PROJECTION` selects the presentation of the enabled action catalog:
+
+| Mode | Exposed tools |
+| --- | --- |
+| `legacy` (default) | One `unraid` tool with a required `action` argument |
+| `atomic` | A focused `unraid_<action>` tool for each enabled action |
+| `both` | The legacy tool and the atomic tools together |
+
+Selectors filter canonical actions before projection. All modes retain the same
+scope checks, destructive-action confirmation, and dispatcher. No tools are
+exposed when no actions are enabled. Actions include read-only queries, local
+metadata operations, and admin-scoped mutations.
 
 ### Core actions
 
@@ -165,6 +179,7 @@ Server/transport commands:
 | `UNRAID_HOME` | no | `/data` in containers, `~/.unraid` locally | Exact data directory for `.env`, auth DB, and JWT key |
 | `UNRAID_RMCP_HOST` | no | `0.0.0.0` | Bind host for the MCP HTTP server |
 | `UNRAID_RMCP_PORT` | no | `40010` | Bind port |
+| `UNRAID_RMCP_PROJECTION` | no | `legacy` | Tool presentation: `legacy`, `atomic`, or `both` |
 | `UNRAID_RMCP_ENABLED_TOOLS` | no | — | Comma-separated MCP tool/action allowlist; empty inherits persisted `.env` policy |
 | `UNRAID_RMCP_DISABLED_TOOLS` | no | — | Comma-separated MCP tool/action denylist; deny rules win |
 | `UNRAID_RMCP_TOKEN` | no | — | Static bearer token for `/mcp` |

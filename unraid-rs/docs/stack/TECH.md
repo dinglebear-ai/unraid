@@ -1,111 +1,72 @@
-# Technology Choices — unraid-rmcp
+# Technology choices — unraid-rmcp
 
-Technology stack reference and crate selection rationale.
+## Workspace and compiler
 
-## Language: Rust
+The build root is `unraid-rs/`, not the policy-only Cargo workspace above it.
+Its members are the server/CLI package `unraid-rmcp`, frozen compatibility crate
+`crates/lab-auth`, and automation crate `xtask`. The server binary is `runraid`.
+The workspace uses edition 2024 and MSRV 1.97.1; the selected build toolchain
+is also 1.97.1. See [Cargo.toml](../../Cargo.toml),
+[Cargo.lock](../../Cargo.lock), and [root mise](../../../.mise.toml).
 
-Rust was chosen because:
-- Single static binary (`runraid`) simplifies deployment and Docker images
-- Memory safety without GC pause eliminates latency spikes in HTTP service code
-- Strong async story via tokio for the MCP HTTP server and concurrent GraphQL calls
-- `reqwest` with `rustls` avoids OpenSSL system library version issues
+## Runtime and protocol
 
-## Async runtime: tokio
+Tokio supplies the asynchronous runtime. The manifest explicitly enables
+`rt-multi-thread`, `macros`, `net`, and `signal`, rather than the `full` feature.
+Axum and Tower compose HTTP routing and middleware. RMCP owns the protocol
+lifecycle, Streamable HTTP, stdio, schemas, and elicitation. The current exact
+RMCP requirement and lock resolution are 3.1.0; inspect both when upgrading.
 
-`tokio` with `features = ["full"]` provides:
-- `tokio::net` — TCP listener for the MCP HTTP server
-- `tokio::signal` — graceful shutdown on SIGTERM / CTRL-C
-- `tokio::time` — not used directly, but depended on by axum and rmcp
+MCP projection is application policy: `legacy` exposes `unraid(action=...)`,
+`atomic` exposes `unraid_<action>`, and `both` provides both surfaces. All route
+to the same canonical action execution and authorization.
 
-## HTTP framework: axum
+## Typed GraphQL with flexible presentation
 
-Minimal, composable HTTP framework built on tokio and tower:
-- Native tower middleware support (CORS via `tower-http`, request body limit)
-- Type-safe state injection (`AppState` via `axum::extract::State`)
-- Composable router for `/mcp`, `/health`, and OAuth discovery routes
-- Mounts rmcp's tower-compatible `StreamableHttpService`
+Cynic operations in `src/gql_typed.rs` are compile-time checked against the
+vendored SDL through `build.rs`. The existing reqwest 0.12 client supplies
+HTTP transport using JSON and rustls, without cynic's `http-reqwest` feature.
+Typed results are serialized to `serde_json::Value` for the service, CLI, and
+MCP boundary. This is not an untyped-query architecture.
 
-## MCP SDK: rmcp 1.6
+The trade-off is deliberate: schema/type errors surface earlier, while output
+formatters retain flexible JSON handling. Compile-time validation cannot prove
+a deployed server honors its schema. Scenario fixtures, runtime compatibility
+fallbacks, and explicit live validation cover different parts of that gap.
+BigInt fields often arrive as strings; preserve defensive string/number
+handling in formatters instead of silently substituting zero.
 
-rmcp owns the MCP protocol lifecycle:
-- `transport-streamable-http-server` — Streamable HTTP in stateless JSON-response mode
-- `transport-io` — stdio transport for `runraid mcp` child-process mode
-- `server` + `macros` — `ServerHandler` trait and derive helpers
-- stateless mode: every `POST /mcp` is independent; no session state stored
+## Authentication and configuration
 
-## HTTP client: reqwest 0.12
+`crates/lab-auth` is a frozen, local compatibility crate consumed by version
+and path. It supplies bearer/OAuth middleware and state. It is not a private
+Git dependency. MCP reads require `unraid:read`; mutations require
+`unraid:admin`; admin satisfies read. Destructive-operation confirmation is
+an additional gate. CLI/stdio local execution has a different trust boundary
+from authenticated HTTP.
 
-Used exclusively in `graphql.rs` for GraphQL API calls:
-- `features = ["json", "rustls-tls"]` — no OpenSSL dependency
-- `danger_accept_invalid_certs` — controlled by `UNRAID_API_SKIP_TLS_VERIFY`
-- All requests POST JSON to `UNRAID_API_URL` with `x-api-key` header
+TOML and environment settings are loaded by `src/config.rs`. Follow that
+loader and [component AGENTS](../../AGENTS.md) for precedence and persisted
+credentials. `UNRAID_API_CA_BUNDLE` supports a trusted PEM bundle; do not
+recommend disabling TLS verification as the default certificate fix.
 
-## Serialization: serde + serde_json + toml
+## Observability and testing
 
-| Crate | Purpose |
-|-------|---------|
-| `serde` | Derive macros for config structs |
-| `serde_json` | Tool argument/result payloads; `Value` is the universal data type |
-| `toml` | `config.toml` parsing |
+Tracing sends diagnostics to stderr so stdio stdout stays protocol-safe.
+`anyhow` carries contextual errors across the client/service boundary;
+structured MCP error handling is at the server edge. The process exposes a
+health endpoint and action counters, not an ingestion database.
 
-All GraphQL responses are `serde_json::Value`. There are no typed response structs for the Unraid API — this avoids schema drift issues and keeps the code lean.
+Tests use the `test-support` feature, scenario fixtures, wiremock, and
+apollo-compiler schema validation. Cargo-nextest drives `just test` and the
+main test CI lane. The small `xtask` package has focused automation tests.
+See [development gates](../../../docs/DEVELOPMENT.md).
 
-## Auth: lab-auth
+## Trade-offs and non-goals
 
-Private crate (`git = "https://github.com/jmagar/lab.git"`):
-- `AuthLayer` — tower middleware for bearer token and OAuth JWT validation
-- `AuthContext` — injected into request extensions after auth passes
-- `AuthState` — OAuth state machine (JWKS, RS256 signing, Google flow)
-- Scopes: `unraid:read`, `unraid:admin`
+The server is a live API proxy, not a local copy of the NAS state. Scope and
+confirmation policy permit both reads and writes; it is not monitoring-only.
+Projection changes the client-visible schema, not storage, transport, or the
+execution backend. Keep these boundaries distinct when adding operations.
 
-## Time: chrono
-
-Used for timestamp formatting in CLI output. `features = ["serde"]` for config struct serde.
-
-## Config: toml
-
-`config.toml` parsing for the `[unraid]`, `[mcp]`, and `[mcp.auth]` sections. Env vars override via helpers in `config.rs` (`env_str`, `env_bool`, `env_parse`, `env_list`, `env_opt_str`).
-
-## URL parsing: url
-
-Used in `mcp/rmcp_server.rs` to parse `UNRAID_RMCP_PUBLIC_URL` for allowed host/origin computation.
-
-## Logging: tracing + tracing-subscriber
-
-Structured, span-based logging:
-- `RUST_LOG` directive parsing via `EnvFilter`
-- Logs to stderr (not stdout, which is reserved for stdio MCP transport)
-- `warn` level in stdio/CLI mode; `info` in HTTP server mode
-
-## Error handling: anyhow
-
-`anyhow::Result` throughout:
-- Config loading, GraphQL client, service layer, tool dispatch
-- `context()` for error messages that name the failing operation
-- `bail!` for early returns with descriptive messages
-
-## CORS: tower-http
-
-`CorsLayer` in `routes.rs` allows `POST` and `GET` from configured origins. Allowed origins include loopback by default plus any `UNRAID_RMCP_ALLOWED_ORIGINS` values and the public URL origin.
-
-## Development dependencies
-
-| Crate | Purpose |
-|-------|---------|
-| `tempfile` | Temporary directories for isolated auth state in tests |
-| `tower` | HTTP testing utilities (service call helpers) |
-| `rmcp` (client features) | `transport-child-process` for stdio integration test |
-
-## Design trade-offs
-
-**No typed GraphQL response structs.** All responses are `serde_json::Value`. This avoids a generated GraphQL client, eliminates schema drift failures, and keeps the codebase small. The downside is that field access in formatters is verbose and mistakes surface at runtime. The formatters in `cli.rs` use defensive fallbacks (`unwrap_or`, `unwrap_or_else`) so missing fields produce `"?"` rather than panics.
-
-**No local database.** Every action is a live GraphQL call to the Unraid API. There is no caching, no SQLite, no background tasks. This keeps the binary simple and ensures data is always current, at the cost of latency on every call.
-
-**No write actions.** All 24 actions are read-only. The tool is a monitoring and inspection interface, not a control plane.
-
-## See also
-
-- [ARCH.md](ARCH.md) — architecture overview and request flow
-- [../../README.md](../../README.md) — quickstart and env var reference
-- [../../Cargo.toml](../../Cargo.toml) — exact crate versions
+See [ARCH.md](ARCH.md) for request flow and [README](../../README.md) for usage.

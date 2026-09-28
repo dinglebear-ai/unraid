@@ -31,6 +31,19 @@ if ($case === 'missing-api-key') {
     fwrite(STDERR, "startable config accepted a missing API key" . PHP_EOL);
     exit(1);
 }
+if ($case === 'invalid-projection') {
+    validate_env([
+        'UNRAID_API_URL' => 'http://127.0.0.1/graphql',
+        'UNRAID_RMCP_HOST' => '127.0.0.1',
+        'UNRAID_RMCP_PORT' => '40010',
+        'UNRAID_RMCP_PROJECTION' => 'split',
+        'UNRAID_RMCP_AUTH_MODE' => 'bearer',
+        'UNRAID_RMCP_TOKEN' => 'test-token',
+        'UNRAID_RMCP_DISABLE_HTTP_AUTH' => 'false',
+    ]);
+    fwrite(STDERR, "invalid projection was accepted" . PHP_EOL);
+    exit(1);
+}
 if ($case === 'incomplete-oauth') {
     validate_env([
         'UNRAID_API_URL' => 'http://127.0.0.1/graphql',
@@ -105,6 +118,7 @@ $valid = [
     'UNRAID_API_URL' => 'http://127.0.0.1/graphql',
     'UNRAID_RMCP_HOST' => '127.0.0.1',
     'UNRAID_RMCP_PORT' => '40010',
+    'UNRAID_RMCP_PROJECTION' => 'atomic',
     'UNRAID_RMCP_AUTH_MODE' => 'bearer',
     'UNRAID_RMCP_TOKEN' => 'test-token',
     'UNRAID_API_SKIP_TLS_VERIFY' => 'false',
@@ -141,5 +155,6 @@ expect_same(
     in_array('UNRAID_RMCP_AUTH_ALLOWED_REDIRECT_URIS', ALLOWED_KEYS, true),
     'OAuth redirect allowlist must be configurable from the settings endpoint',
 );
+expect_same(true, in_array('UNRAID_RMCP_PROJECTION', ALLOWED_KEYS, true), 'projection must be persistable by the settings UI');
 
 echo "Unraid MCP config endpoint tests passed\n";

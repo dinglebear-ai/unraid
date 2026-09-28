@@ -8,8 +8,8 @@
 | `just test` | `uv run pytest tests/ -v` | Run all tests |
 | `just lint` | `uv run ruff check .` | Run linter |
 | `just fmt` | `uv run ruff format .` | Format code |
-| `just typecheck` | `uv run pyright` or `mypy` | Type check |
-| `just validate-skills` | Check `skills/*/SKILL.md` | Validate skill files exist |
+| `just typecheck` | `uv run ty check src/` | Type check |
+| `just validate-skills` | Check `../agents/unraid-py/skills/*/SKILL.md` | Validate skill files exist |
 
 ## Docker Compose
 
@@ -27,9 +27,9 @@
 | Recipe | Command | Description |
 |--------|---------|-------------|
 | `just test-live` | `pytest -m live` | Run live integration tests |
-| `just test-http` | `test-http.sh` | HTTP e2e test with auth |
-| `just test-http-no-auth` | `test-http.sh --skip-auth` | HTTP e2e test without auth |
-| `just test-http-remote <url>` | `test-http.sh --url <url>` | HTTP e2e against remote URL |
+| `just test-http` | `bash tests/test_live.sh --mode http` | HTTP e2e test with auth |
+| `just test-http-no-auth` | `bash tests/test_live.sh --mode http --skip-auth` | HTTP e2e test without auth |
+| `just test-http-remote <url>` | `bash tests/test_live.sh --mode http --url <url> --skip-auth` | HTTP e2e against remote URL |
 
 ## Setup
 
@@ -42,7 +42,7 @@
 
 | Recipe | Command | Description |
 |--------|---------|-------------|
-| `just check-contract` | Security check scripts | Docker security, no baked env, ignore files |
+| `just check-contract` | Security check scripts | Version sync, staged environment-file guard, and marketplace structure |
 
 ## Cleanup
 

@@ -2,7 +2,7 @@
 # Vendored Unraid GraphQL schema (SDL) — used ONLY by tests/dev tooling.
 #
 # Source : github.com/unraid/api  → api/generated-schema.graphql
-# Commit : 2679fda1 (2026-07-06)
+# Commit : d0615255 (2026-09-15)
 # Method : copied from a local clone of unraid/api (the repo's own generated SDL;
 #          regenerate upstream with their codegen, do not hand-edit here).
 #
@@ -1209,11 +1209,6 @@ type ArrayMutations {
 
   """Add new disk to array"""
   addDiskToArray(input: ArrayDiskInput!): UnraidArray!
-
-  """
-  Remove existing disk from array. NOTE: The array must be stopped before running this otherwise it'll throw an error.
-  """
-  removeDiskFromArray(input: ArrayDiskInput!): UnraidArray!
 
   """Mount a disk in the array"""
   mountArrayDisk(id: PrefixedID!): ArrayDisk!

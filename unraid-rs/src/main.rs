@@ -399,7 +399,13 @@ async fn shutdown_signal() {
 mod tests {
     use std::collections::BTreeMap;
 
-    use super::{AuthMode, Config, oauth_source_vars};
+    use axum::{
+        body::{Body, to_bytes},
+        http::{Request, StatusCode, header},
+    };
+    use tower::ServiceExt;
+
+    use super::{AuthMode, Config, build_state, mcp, oauth_source_vars};
 
     #[test]
     fn oauth_source_vars_project_configured_redirects_and_preserve_extra_env() {
@@ -452,5 +458,45 @@ mod tests {
             vars.get("UNRAID_RMCP_AUTH_MODE").map(String::as_str),
             Some("oauth")
         );
+    }
+
+    #[tokio::test]
+    async fn hosted_grok_client_registers_with_configured_redirect() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut config = Config::default();
+        config.unraid.api_url = "http://127.0.0.1:1/graphql".into();
+        config.unraid.api_key = "test-key".into();
+        config.mcp.host = "0.0.0.0".into();
+        config.mcp.auth.mode = AuthMode::OAuth;
+        config.mcp.auth.public_url = Some("https://mcp.example.com".into());
+        config.mcp.auth.google_client_id = Some("test-client-id".into());
+        config.mcp.auth.google_client_secret = Some("test-client-secret".into());
+        config.mcp.auth.admin_email = "admin@example.com".into();
+        config.mcp.auth.sqlite_path = dir.path().join("auth.db").display().to_string();
+        config.mcp.auth.key_path = dir.path().join("signing.pem").display().to_string();
+        config.mcp.auth.allowed_client_redirect_uris =
+            vec!["https://grok.com/connectors/oauth/callback".into()];
+
+        let app = mcp::router(build_state(config).await.unwrap());
+        let request = Request::builder()
+            .method("POST")
+            .uri("/register")
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::json!({
+                    "client_name": "Grok",
+                    "redirect_uris": ["https://grok.com/connectors/oauth/callback"],
+                    "token_endpoint_auth_method": "none",
+                    "grant_types": ["authorization_code", "refresh_token"],
+                    "response_types": ["code"]
+                })
+                .to_string(),
+            ))
+            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = to_bytes(response.into_body(), 64 * 1024).await.unwrap();
+        let registration: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert!(registration["client_id"].as_str().is_some());
     }
 }

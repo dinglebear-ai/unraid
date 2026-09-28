@@ -1,161 +1,91 @@
 # Architecture — unraid-rmcp
 
-## Overview
+`unraid-rmcp` exposes Unraid GraphQL queries and mutations through MCP and the
+`runraid` CLI. The canonical operation/scope catalog is
+`src/mcp/schemas.rs::ACTIONS`; consult it instead of maintaining prose counts.
 
-`unraid-rmcp` is a thin GraphQL proxy. It exposes the Unraid GraphQL surface — read queries **and** mutations (see `ACTIONS` in `src/mcp/schemas.rs` for the authoritative list and per-action scope), plus a `status` observability action and `help` — through the Model Context Protocol and an equivalent CLI. Reads require `unraid:read`; mutations require `unraid:admin`. There is no local database, no ingestion pipeline, and no background tasks. All data comes from the Unraid GraphQL API on demand.
+## Request flow
 
-```
-                      ┌─────────────────────────────────────────┐
-  Claude / MCP ◀────▶ │  POST /mcp  (RMCP Streamable HTTP)      │
-  stdio client ◀────▶ │  runraid mcp  (stdio transport)          │
-  shell / CI  ────▶   │  runraid <cmd>  (CLI)                    │
-                      │                                         │
-                      │  Routes layer (axum)                    │
-                      │    /mcp         → RMCP service           │
-                      │    /health      → {"status":"ok"}        │
-                      │    /mcp/.well-known/* → OAuth meta       │
-                      │                                         │
-                      │  Auth layer (lab-auth)                  │
-                      │    LoopbackDev: no-op                   │
-                      │    Mounted:  bearer token or OAuth JWT   │
-                      │                                         │
-                      │  MCP handler (rmcp_server.rs)           │
-                      │    list_tools / call_tool / list_prompts │
-                      │                                         │
-                      │  Tool dispatch (tools.rs)               │
-                      │    match action → service method         │
-                      │                                         │
-                      │  Business layer (app.rs / UnraidService) │
-                      │                                         │
-                      │  GraphQL client (graphql.rs)            │
-                      │    POST UNRAID_API_URL                  │
-                      │    x-api-key: UNRAID_API_KEY            │
-                      └──────────────────┬──────────────────────┘
-                                         │  HTTPS
-                                         ▼
-                        Unraid server GraphQL API
-                        (myunraid.net or LAN address)
+```text
+HTTP MCP -> host/origin/auth middleware -> RMCP handler
+stdio MCP -----------------------------> RMCP handler
+    -> resolve legacy/atomic tool name to canonical action
+    -> enabled-action policy, scope check, argument/confirmation guards
+    -> tools.rs::dispatch_action -> UnraidService -> UnraidClient
+    -> typed cynic operation over reqwest -> Unraid GraphQL API
+    -> typed result -> serde_json::Value -> bounded MCP response
+
+CLI -> src/cli parsing/dispatch -> UnraidService -> same UnraidClient
+    -> typed result -> Value -> human-readable or JSON output
 ```
 
-## Request flow (MCP HTTP)
+`legacy` is the default MCP projection. It exposes `unraid(action=...)`.
+`atomic` exposes focused `unraid_<action>` tools; `both` exposes both.
+Selectors apply to canonical actions before projection, so disabling an
+action cannot be bypassed by choosing the other surface. The shared
+normalization/dispatcher also keeps authorization and confirmation consistent.
 
-```
-MCP client (Claude / curl / MCP inspector)
-    │  POST /mcp  JSON-RPC 2.0
-    ▼
-axum HTTP listener  (bind UNRAID_RMCP_HOST:UNRAID_RMCP_PORT)
-    │
-    ▼
-lab-auth AuthLayer  (bearer token or OAuth JWT, or no-op on loopback)
-    │
-    ▼
-RMCP StreamableHttpService  (stateless JSON-response mode)
-    │  calls ServerHandler methods
-    ▼
-UnraidRmcpServer::call_tool  (rmcp_server.rs)
-    │  scope check: unraid:read required
-    ▼
-execute_tool → dispatch()  (tools.rs)
-    │  match action string
-    ▼
-UnraidService method  (app.rs)
-    │
-    ▼
-UnraidClient::query()  (graphql.rs)
-    │  POST to UNRAID_API_URL with x-api-key header
-    ▼
-Unraid GraphQL API
-    │  JSON {"data": {...}}
-    ▼
-serde_json::Value  returned up the chain
-    │
-    ▼
-JSON-RPC response → MCP client
-```
+## Ownership by module
 
-## Request flow (CLI)
+| Source | Responsibility |
+| --- | --- |
+| `src/main.rs` | Startup, mode selection, auth policy, and non-loopback safety check |
+| `src/config.rs` | TOML/environment configuration and persistence precedence |
+| `src/mcp/schemas.rs` | Canonical actions/scopes and projected tool definitions |
+| `src/mcp/action_params.rs` | Action parameter membership and requirements |
+| `src/mcp/tool_filter.rs` | Canonical enable/disable selectors |
+| `src/mcp/rmcp_server.rs` | Projection normalization, MCP handler, scopes, schema resource |
+| `src/mcp/elicitation.rs` | Destructive-operation confirmation |
+| `src/mcp/tools.rs` | Shared dispatch and response shaping |
+| `src/app.rs` | Thin service delegation |
+| `src/graphql.rs` | HTTP requests, typed operation execution, API-version compatibility |
+| `src/gql_typed.rs` and `build.rs` | Cynic types checked against the vendored schema |
+| `src/cli/` | Commands, parsing, dispatch, and formatting |
+| `src/mock.rs` | Offline scenario-driven upstream behind `test-support` |
 
-```
-runraid <command> [--json]
-    │
-    ▼
-CliCommand::parse()  (cli.rs)
-    │  parse args into enum variant
-    ▼
-UnraidService method  (app.rs)
-    │
-    ▼
-UnraidClient::query()  (graphql.rs)
-    │
-    ▼
-Unraid GraphQL API
-    │
-    ▼
-serde_json::Value
-    │
-    ▼
-fmt_*() formatter  or  serde_json::to_string_pretty()
-    │
-    ▼
-stdout
-```
+Do not place GraphQL business logic in MCP projection or create a parallel
+atomic dispatcher. API-version differences, such as remove-disk operation
+shapes, belong at the client boundary and require regression fixtures/tests.
 
-## Module responsibilities
+## Authentication and safety
 
-| Module | File | Responsibility |
-|--------|------|----------------|
-| Entry point | `src/main.rs` | Mode dispatch: HTTP server / stdio / CLI; tracing init |
-| Config | `src/config.rs` | TOML + env loading, defaults, `Config::load()` |
-| GraphQL client | `src/graphql.rs` | `UnraidClient`: HTTP POST, `x-api-key` auth, error propagation |
-| Business layer | `src/app.rs` | `UnraidService`: one method per action, delegates to client |
-| MCP tools | `src/mcp/tools.rs` | `execute_tool`: action string dispatch, arg extraction |
-| MCP schema | `src/mcp/schemas.rs` | JSON Schema for the `unraid` tool, action enum |
-| MCP server | `src/mcp/rmcp_server.rs` | `ServerHandler` impl, scope checks, resource/prompt defs |
-| HTTP routes | `src/mcp/routes.rs` | `/mcp`, `/health`, OAuth discovery routes, CORS |
-| Prompts | `src/mcp/prompts.rs` | `server_summary` prompt |
-| MCP state | `src/mcp.rs` | `AppState`, `AuthPolicy`, `build_auth_layer` |
-| CLI | `src/cli.rs` | Arg parsing, human-readable formatters for all 24 actions |
-| Library | `src/lib.rs` | Public module exports, `testing` helpers |
+Inbound MCP credentials are distinct from the outbound Unraid API key.
+`main.rs::build_auth_policy` selects loopback development policy using
+`is_loopback_host` or the explicit no-auth setting. A separate startup check
+protects unauthenticated non-loopback HTTP binds. Do not weaken either gate
+for convenience. Stdio is a trusted local pipe; CLI is local execution.
 
-## Authentication
+For authenticated MCP calls, `Scope::Read` requires `unraid:read`,
+`Scope::Write` requires `unraid:admin`, and admin includes read access. Only
+scope-free metadata such as `help` uses `Scope::None`. Unknown actions remain
+denied. Destructive confirmation is separate from scope authorization.
 
-`AuthPolicy` is an enum, not a boolean, so there is no accidental default:
+The health endpoint is unauthenticated and is not evidence that upstream
+operations are working. A live test requires an explicitly chosen disposable
+Unraid target, especially for mutation and package-lifecycle checks.
 
-| Policy | When used | Behaviour |
-|--------|-----------|-----------|
-| `LoopbackDev` | `no_auth=true` or host starts with `127.` | All requests pass; no auth middleware mounted |
-| `Mounted { auth_state: None }` | Static bearer token set | lab-auth checks `Authorization: Bearer <token>` |
-| `Mounted { auth_state: Some(_) }` | OAuth configured | lab-auth validates RS256 JWT; Google OAuth flow available |
+## Typed wire contract and output
 
-Scopes enforced per-action:
-- `unraid:read` — all 24 data actions
-- `unraid:admin` — satisfies `unraid:read`
-- No scope — `help` action only
+Cynic validates operations against `schema/unraid-schema.graphql`; the shared
+reqwest transport sends them with `x-api-key`. Results become JSON Values
+above the wire boundary. Schema-contract tests validate operations/fixtures,
+not every behavior of a deployed API. Preserve nullability/BigInt defenses
+and version compatibility where real servers differ from captured schemas.
 
-`/health` is always unauthenticated.
+MCP list pagination/filtering and response-size bounds are not automatically
+CLI features. `status` is MCP-only; setup/doctor are CLI-only. Keep examples
+explicit about the surface rather than promising perfect CLI/MCP parity.
 
-## Error handling
+## Discovery and errors
 
-| Source | Error | Client sees |
-|--------|-------|-------------|
-| Missing `UNRAID_API_URL` or `UNRAID_API_KEY` | startup panic | process exits with message |
-| Auth: missing/invalid token | 401 HTTP | JSON error body |
-| Auth: insufficient scope | RMCP `invalid_request` | JSON-RPC error |
-| Unknown tool name | RMCP error | JSON-RPC error |
-| Unknown action | `invalid_params` | JSON-RPC error with hint to use `action=help` |
-| Missing required param | `invalid_params` | JSON-RPC error naming the missing param |
-| GraphQL HTTP error | `anyhow::Error` | MCP content text with error message |
-| GraphQL `errors` field present | `anyhow::Error` | MCP content text with error message |
-| TLS error (cert invalid) | `anyhow::Error` | MCP content text; set `UNRAID_API_SKIP_TLS_VERIFY=true` to bypass |
+The `unraid://schema/mcp-tool` resource describes the active projected tool
+catalog; `server_summary` is projection-aware. Update discovery tests whenever
+action filtering or schema generation changes.
 
-## MCP surface
+Configuration failures should fail startup visibly. Invalid tool names,
+arguments, policy, or scopes are rejected at the MCP boundary; upstream HTTP,
+GraphQL, and TLS errors retain contextual diagnostics without leaking
+credentials. Prefer a trusted CA bundle over disabling TLS verification.
 
-- **1 tool**: `unraid` with `action` dispatch (24 read-only data actions + `status` + `help`)
-- **1 resource**: `unraid://schema/mcp-tool` — JSON Schema of the tool (application/json)
-- **1 prompt**: `server_summary` — instructs the model to call `action=info` and summarise
-
-## Cross-references
-
-- [TECH.md](TECH.md) — technology stack and crate selection
-- [../INVENTORY.md](../INVENTORY.md) — full action and CLI inventory
-- [../../README.md](../../README.md) — quickstart and configuration reference
+See [TECH.md](TECH.md), [component guide](../../AGENTS.md), and
+[repository architecture](../../../docs/ARCHITECTURE.md).
