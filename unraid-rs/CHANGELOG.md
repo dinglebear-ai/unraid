@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.5.0...unraid-rs-v0.6.0) (2026-09-28)
+
+
+### Features
+
+* **rmcp:** expose configured actions as atomic MCP tools ([#419](https://github.com/dinglebear-ai/unraid/issues/419)) ([2d75136](https://github.com/dinglebear-ai/unraid/commit/2d75136296fc53e1366521ed3655f34ef5b07fec))
+
+
+### Bug Fixes
+
+* **unraid-rs:** support old and new remove-disk APIs ([#413](https://github.com/dinglebear-ai/unraid/issues/413)) ([3e36c1f](https://github.com/dinglebear-ai/unraid/commit/3e36c1f0e3c0ff8854d51cf9d752a98383cffda1))
+
+
+### Documentation
+
+* clarify typed GraphQL compatibility exceptions ([f5e48ab](https://github.com/dinglebear-ai/unraid/commit/f5e48abfb455e8e524ec56040244de0231949606))
+* unify agent instructions and refresh repository guides ([c07e31c](https://github.com/dinglebear-ai/unraid/commit/c07e31c843be22d69e207ae845f3b4ea453b7afa))
+
 ## [0.5.0](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.4.2...unraid-rs-v0.5.0) (2026-08-15)
 
 
