@@ -5,7 +5,7 @@
 | Marketplace | Identifier | Install method |
 |-------------|-----------|----------------|
 | Claude Plugin Marketplace | `dinglebear-ai/unraid` | `/plugin install unraid-mcp@unraid-mcp` |
-| MCP Registry | `tv.tootie/unraid-mcp` | Auto-discovery by MCP clients |
+| MCP Registry | `tv.nashost/unraid-mcp` | Auto-discovery by MCP clients |
 | PyPI | `unraid-mcp` | `pip install unraid-mcp` or `uvx unraid-mcp` |
 | GitHub Container Registry | `ghcr.io/dinglebear-ai/unraid` | `docker pull ghcr.io/dinglebear-ai/unraid` |
 
@@ -38,11 +38,11 @@ unraid-mcp ships its own Claude Code marketplace manifest at `.claude-plugin/mar
 
 ## MCP Registry
 
-Published via DNS-authenticated `mcp-publisher` using the `tootie.tv` domain.
+Published via DNS-authenticated `mcp-publisher` using the `example.internal` domain.
 
 ### Registry entry (`server.json`)
 
-- **Name**: `tv.tootie/unraid-mcp`
+- **Name**: `tv.nashost/unraid-mcp`
 - **Package**: PyPI `unraid-mcp`
 - **Runtime hint**: `uvx` (no install needed)
 - **Transport**: stdio
@@ -53,7 +53,7 @@ Published via DNS-authenticated `mcp-publisher` using the `tootie.tv` domain.
 Triggered by `publish-pypi.yml` workflow on `v*.*.*` tags:
 1. Build and publish to PyPI
 2. Update version in `server.json`
-3. Authenticate via DNS TXT record on `tootie.tv`
+3. Authenticate via DNS TXT record on `example.internal`
 4. Publish to MCP Registry
 
 ## PyPI

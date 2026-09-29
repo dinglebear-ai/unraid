@@ -22,7 +22,7 @@ cap the response backstop at ~10K tokens.
 - Triaged 7 open issues and 9 open PRs. Reached 0 open issues.
 - Merged 15 PRs this session; closed 8 stale/superseded PRs with contributor thank-yous;
   closed 3 issues as already-fixed and filed 1 follow-up (#48).
-- Live-validated the fixes against the production Unraid (tootie) via mcporter.
+- Live-validated the fixes against the production Unraid (nashost) via mcporter.
 - Ran an output-audit of all 108 subactions and fully remediated it: structured 40 KB
   (~10K token) response backstop, client-side `cap_list` on unbounded lists, field trims,
   single-container `docker/details`, notification clamp.
@@ -36,7 +36,7 @@ cap the response backstop at ~10K tokens.
 3. Dispatched 4 parallel worktree agents for the real fixes (#29, #28, #26, #2) → PRs
    #43/#44/#46/#45; reviewed and merged each.
 4. Added contributor thank-yous on PRs and closed issues.
-5. mcporter live test against tootie: creds load, `disk/shares` no crash, `disk/logs` and
+5. mcporter live test against nashost: creds load, `disk/shares` no crash, `disk/logs` and
    `live/log_tail` severity+context filtering.
 6. Filed #48 (matchedLines naming) and fixed it via agent PR #49.
 7. Ran read-only output-audit agent → ranked findings; user chose "fix everything".

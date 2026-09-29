@@ -12,7 +12,7 @@ def build_ws_url() -> str:
     Converts http(s) scheme to ws(s) and ensures /graphql path suffix.
 
     Returns:
-        The WebSocket URL string (e.g. "wss://10.1.0.2:31337/graphql").
+        The WebSocket URL string (e.g. "wss://192.0.2.2:31337/graphql").
 
     Raises:
         ValueError: If UNRAID_API_URL is not configured or has an unrecognised scheme.

@@ -1,6 +1,6 @@
 # Unraid
 
-<!-- mcp-name: tv.tootie/unraid-mcp -->
+<!-- mcp-name: tv.nashost/unraid-mcp -->
 
 [![PyPI](https://img.shields.io/pypi/v/unraid-mcp)](https://pypi.org/project/unraid-mcp/) [![ghcr.io](https://img.shields.io/badge/ghcr.io-dinglebear--ai%2Funraid--mcp-blue?logo=docker)](https://github.com/dinglebear-ai/unraid/pkgs/container/unraid-mcp)
 

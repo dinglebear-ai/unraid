@@ -79,13 +79,13 @@ The new tag + Release trigger two independently retryable workflows:
 |---------|---------|----------------|
 | PyPI | `unraid-mcp` | `pip install unraid-mcp` or `uvx unraid-mcp` |
 | GHCR release | `ghcr.io/dinglebear-ai/unraid-mcp` | `docker pull ghcr.io/dinglebear-ai/unraid-mcp:latest` |
-| MCP Registry | `tv.tootie/unraid-mcp` | MCP client auto-discovery |
+| MCP Registry | `tv.nashost/unraid-mcp` | MCP client auto-discovery |
 | Claude Plugin | `dinglebear-ai/unraid` | `/plugin install unraid-mcp` |
 | GitHub Release | Source + wheel | Download from releases page |
 
 ## MCP Registry
 
-Published as `tv.tootie/unraid-mcp` using DNS authentication via `tootie.tv`.
+Published as `tv.nashost/unraid-mcp` using DNS authentication via `example.internal`.
 
 The `server.json` defines the registry entry:
 - Package type: `pypi`
