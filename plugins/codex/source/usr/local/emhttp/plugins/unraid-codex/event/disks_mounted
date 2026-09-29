@@ -1,2 +1,22 @@
 #!/bin/bash
-/usr/local/emhttp/plugins/unraid-codex/scripts/start-appserver.sh
+set -u
+
+START_APPSERVER="${CODEX_START_APPSERVER:-/usr/local/emhttp/plugins/unraid-codex/scripts/start-appserver.sh}"
+MAX_ATTEMPTS="${CODEX_START_MAX_ATTEMPTS:-12}"
+RETRY_DELAY_SECONDS="${CODEX_START_RETRY_DELAY_SECONDS:-5}"
+
+for ((attempt = 1; attempt <= MAX_ATTEMPTS; attempt++)); do
+  if "$START_APPSERVER"; then
+    exit 0
+  fi
+
+  logger -t unraid-codex \
+    "Array-start app-server attempt ${attempt}/${MAX_ATTEMPTS} failed"
+  if ((attempt < MAX_ATTEMPTS)); then
+    sleep "$RETRY_DELAY_SECONDS"
+  fi
+done
+
+logger -t unraid-codex \
+  "App-server failed to start after ${MAX_ATTEMPTS} array-start attempts"
+exit 1
