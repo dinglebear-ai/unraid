@@ -88,6 +88,28 @@ export function isValidHttpUrl(value: string, httpsOnly = false): boolean {
   }
 }
 
+export function isValidOAuthRedirectPatterns(value: string): boolean {
+  if (value === "") return true;
+  const redirects = value.split(",").map((entry) => entry.trim()).filter(Boolean);
+  if (redirects.length === 0) return false;
+
+  return redirects.every((entry) => {
+    if (!/^https:\/\//i.test(entry)) return false;
+    try {
+      const url = new URL(entry.replaceAll("*", "wildcard"));
+      if (url.protocol !== "https:" || !url.hostname || url.username || url.password || url.hash) return false;
+
+      const authority = entry.slice(entry.indexOf("://") + 3).split(/[/?#]/, 1)[0];
+      const hostPattern = authority.startsWith("[")
+        ? authority.slice(0, authority.indexOf("]") + 1)
+        : authority.split(":", 1)[0];
+      return !hostPattern.split(".").some((label) => label.includes("*") && label !== "*");
+    } catch {
+      return false;
+    }
+  });
+}
+
 function bracketIpv6(host: string): string {
   const value = host.trim();
   if (value.startsWith("[") && value.endsWith("]")) return value;
