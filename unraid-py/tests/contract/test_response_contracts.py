@@ -594,7 +594,7 @@ class TestInfoOverviewContract:
                     "platform": "linux",
                     "distro": "Unraid",
                     "release": "6.12.0",
-                    "hostname": "tootie",
+                    "hostname": "nashost",
                     "uptime": 86400,
                     "arch": "x64",
                 },
