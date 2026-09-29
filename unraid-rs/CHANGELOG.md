@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.6.0...unraid-rs-v0.6.1) (2026-09-29)
+
+
+### Bug Fixes
+
+* **oauth:** expose hosted DCR redirect allowlist ([#406](https://github.com/dinglebear-ai/unraid/issues/406)) ([3acd667](https://github.com/dinglebear-ai/unraid/commit/3acd667515996e4abe2a1671eadaaedfdf13851e))
+
 ## [0.6.0](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.5.0...unraid-rs-v0.6.0) (2026-09-28)
 
 
