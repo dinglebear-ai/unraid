@@ -117,3 +117,4 @@ node_modules/
 
 # runraid binary staged into the agent plugin by the Justfile install target
 agents/unraid-rs/bin/
+worktrees/

@@ -1,146 +1,109 @@
-# Quickstart — unraid-rmcp
+# Quickstart: unraid-rmcp
 
-Get unraid-rmcp running and make your first MCP call in five minutes.
+Build the local CLI and run a loopback MCP server. Commands below use the
+Rust component, not the zero-member Cargo manifest at the repository root.
+A real API call requires an explicitly selected Unraid target and its API key.
 
-## Prerequisites
-
-- Rust 1.97.1, selected by the checked-in toolchain configuration (`rustup show`)
-- An Unraid server with the API enabled
-- Your Unraid API URL and API key (Settings → API Management in the Unraid web UI)
-
-## 1. Clone and build
+## Build
 
 ```bash
 git clone https://github.com/dinglebear-ai/unraid
-cd unraid-mcp/unraid-rs
-cargo build --release
-# Binary at: target/release/runraid
+cd unraid/unraid-rs
+cargo build --release --locked
+./target/release/runraid --help
 ```
 
-## 2. Configure
+Use the checked-in toolchain and an activated repository environment. The
+binary path changes when `CARGO_TARGET_DIR` is set. Building does not install
+`runraid` onto PATH.
 
-Copy `.env` and edit it, or set environment variables directly:
+## Configure the selected target
+
+Supply these values privately to the process:
 
 ```bash
-export UNRAID_API_URL="https://10-1-0-2.<hash>.myunraid.net:31337/graphql"
-export UNRAID_API_KEY="your-api-key-here"
+export UNRAID_API_URL="https://your-test-server.example/graphql"
+export UNRAID_API_KEY="replace-with-your-test-key"
+export UNRAID_RMCP_HOST=127.0.0.1
 export UNRAID_RMCP_PORT=40010
-export UNRAID_RMCP_DISABLE_HTTP_AUTH=true
-# Optional: expose only selected actions, then subtract explicit denies.
-# export UNRAID_RMCP_ENABLED_TOOLS="array,docker,status,help"
-# export UNRAID_RMCP_DISABLED_TOOLS="unraid.vm_reset"
 ```
 
-If your Unraid API uses a self-signed certificate:
+These are placeholders, not working credentials. For persistence, use
+`<UNRAID_HOME>/.env` when configured, otherwise `~/.unraid/.env` on a host
+or `/data/.env` in a container. An arbitrary checkout-local `.env` is not the
+binary's canonical credential file. Preserve existing configuration.
+
+For a private certificate authority, configure `UNRAID_API_CA_BUNDLE` with
+its readable PEM bundle. Do not disable TLS verification as the normal setup
+step. Nonempty process settings take precedence over the selected env file.
+
+## Start loopback HTTP
+
 ```bash
-export UNRAID_API_SKIP_TLS_VERIFY=true
-```
-
-## 3. Start the server
-
-```bash
-# With cargo (development)
-cargo run -- serve mcp
-
-# With the release binary
 ./target/release/runraid serve mcp
-
-# Or just
-./target/release/runraid
 ```
 
-You should see:
-```
-INFO unraid_rmcp: unraid-rmcp starting bind=0.0.0.0:40010
-INFO unraid_rmcp: MCP HTTP server listening bind=0.0.0.0:40010
-```
+The explicit loopback bind selects development authentication policy. Do not
+combine the default non-loopback host with an auth-disable flag: the startup
+guard rejects that combination unless a separate acknowledgement is supplied.
+`UNRAID_NOAUTH` alone does not turn authentication off. Shared deployments
+should use bearer authentication or OAuth; see the [README](../README.md).
 
-## 4. Verify
+In a second terminal:
 
 ```bash
-curl -sf http://localhost:40010/health | jq .
+curl -fsS http://127.0.0.1:40010/health
 ```
-Expected: `{"status":"ok"}`
 
-## 5. First MCP call
+This proves process liveness, not upstream API access or permission to mutate.
+
+## Read server identity through MCP
+
+With the default `legacy` projection:
 
 ```bash
-# Get server identity
-curl -s -X POST http://localhost:40010/mcp \
+curl -fsS http://127.0.0.1:40010/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "tools/call",
-    "params": {
-      "name": "unraid",
-      "arguments": {"action": "server"}
-    }
-  }' | jq -r '.result.content[0].text' | jq .
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"unraid","arguments":{"action":"server"}}}'
 ```
 
-Expected response (truncated):
-```json
-{
-  "server": {
-    "name": "Tower",
-    "status": "online",
-    "lanip": "10.1.0.2",
-    "localurl": "http://tower/"
-  }
-}
-```
+This is the repository's stateless HTTP call pattern, not a general replacement
+for an MCP client's initialization lifecycle. The response depends on the
+selected Unraid API. In atomic projection, discover `unraid_server` instead;
+selectors and scopes still apply.
 
-## Use with Claude Code (stdio)
+## Stdio and CLI
 
-Add to your Claude Code MCP config (`~/.claude/mcp_servers.json` or project `.mcp.json`):
+A local MCP client should launch the built binary with the `mcp` argument:
 
 ```json
 {
   "mcpServers": {
     "unraid": {
-      "command": "/path/to/runraid",
-      "args": ["mcp"],
-      "env": {
-        "UNRAID_API_URL": "https://10-1-0-2.<hash>.myunraid.net:31337/graphql",
-        "UNRAID_API_KEY": "your-api-key",
-        "RUST_LOG": "warn"
-      }
+      "command": "/absolute/path/to/unraid/unraid-rs/target/release/runraid",
+      "args": ["mcp"]
     }
   }
 }
 ```
 
-Then in Claude: "Use the unraid tool to show me the array status."
+The child process must receive the configuration above through its environment
+or canonical credential file. Stdio does not use HTTP bearer authentication.
+For Claude Code project configuration, the file is `.mcp.json`; use the
+client's own configuration commands for other scopes.
 
-## Try the CLI
+For direct read-only CLI queries:
 
 ```bash
+./target/release/runraid server --json
 ./target/release/runraid array
 ./target/release/runraid docker
-./target/release/runraid metrics
-./target/release/runraid notifications
-./target/release/runraid server --json | jq .server.name
-```
-
-## Get help
-
-```bash
 ./target/release/runraid --help
 ```
 
-Or via MCP:
-```bash
-curl -s -X POST http://localhost:40010/mcp \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json, text/event-stream" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"unraid","arguments":{"action":"help"}}}' \
-  | jq -r '.result.content[0].text' | jq -r .help
-```
+The overall server is not read-only. Other commands can mutate Unraid. MCP
+pagination and selector policy are not automatically CLI features.
 
-## Next steps
-
-- [README.md](../README.md) — full configuration reference, auth options, all actions
-- [docs/INVENTORY.md](INVENTORY.md) — complete action, CLI, and env var inventory
-- [docs/stack/ARCH.md](stack/ARCH.md) — architecture overview
+See the [component guide](../AGENTS.md), [configuration and authentication
+reference](../README.md), and [architecture](stack/ARCH.md).

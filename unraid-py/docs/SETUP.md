@@ -1,146 +1,111 @@
-# Setup Guide -- unraid-mcp
+# Setup guide: unraid-mcp
 
-Step-by-step instructions to get unraid-mcp running locally, in Docker, or as a Claude Code plugin.
+Choose a plugin subprocess, local Python process, or Docker deployment. These
+share server code, not an automatically shared credential store. The Python
+component requires the runtime specified in [pyproject.toml](../pyproject.toml).
+A real API call also requires an enabled Unraid API and a key for that target.
 
-## Prerequisites
+## Client plugin
 
-- Python 3.12+
-- [uv](https://docs.astral.sh/uv/) package manager
-- An Unraid server with the API enabled (Settings > Management Access > API Keys)
-- Docker and Docker Compose (for container deployment)
+In Claude Code:
 
-## Option 1: Claude Code plugin (recommended)
+```text
+/plugin marketplace add dinglebear-ai/unraid
+/plugin install unraid-mcp@unraid-mcp
+```
 
-Configuration is collected by the plugin's config form — no interactive wizard.
+Set the plugin's Unraid API URL and API key. Use the full GraphQL URL, such as
+`https://your-test-server.example/graphql`. The shared
+[.mcp.json](../../agents/unraid-py/.mcp.json) maps these settings directly into
+`uvx unraid-mcp` with stdio transport. There are no SessionStart/ConfigChange
+credential hooks and no automatic persistence for an unrelated shell or Docker
+container. The Codex manifest has its own stdio/environment configuration.
 
-1. Install as a Claude Code plugin:
-   ```bash
-   /plugin marketplace add dinglebear-ai/unraid
-   /plugin install unraid-mcp@unraid-mcp
-   ```
+Restart the plugin process after configuration changes, then request:
 
-2. In the plugin's configuration form, set:
-   - **Unraid GraphQL API URL**: Your Unraid GraphQL endpoint (e.g. `https://10-1-0-2.xxx.myunraid.net:31337`)
-   - **Unraid API Key**: Found in Unraid > Settings > Management Access > API Keys
+```python
+unraid(action="health", subaction="setup")
+unraid(action="health", subaction="test_connection")
+```
 
-3. On the next session start (and whenever you change these fields), a setup hook
-   persists them to `~/.unraid-mcp/.env` with mode 600 — so the server, CLI, and
-   Docker all share one source of truth. No manual file editing required.
+The setup action reports status and may probe the configured endpoint. It does
+not collect, write, or replace credentials. HTTP bearer/OAuth settings are not
+needed for the local stdio connection. See [CONNECT.md](mcp/CONNECT.md) for
+other clients.
 
-4. Check status / get help any time:
-   ```python
-   unraid(action="health", subaction="setup")
-   ```
+## Local development
 
-5. Verify the connection:
-   ```python
-   unraid(action="health", subaction="test_connection")
-   ```
+```bash
+git clone https://github.com/dinglebear-ai/unraid.git
+cd unraid/unraid-py
+uv sync --locked --group dev
+```
 
-## Option 2: Manual .env setup
+Provide `UNRAID_API_URL` and `UNRAID_API_KEY` privately in the process
+environment or the canonical `~/.unraid-mcp/.env`. The directory can be changed
+with `UNRAID_CREDENTIALS_DIR`. Preserve an existing file rather than copying a
+template over it. For a new file, create the directory with mode 0700 and the
+file with mode 0600, then populate the names shown in [.env.example](../.env.example).
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/dinglebear-ai/unraid.git
-   cd unraid-mcp
-   ```
+The loader uses the first eligible non-symlink env file, not a merge of all
+fallbacks. Nonempty process values win; empty plugin placeholders can inherit
+persisted values. See [CONFIG.md](CONFIG.md) for the complete search order.
 
-2. Create the credentials directory and file:
-   ```bash
-   mkdir -p ~/.unraid-mcp
-   cp .env.example ~/.unraid-mcp/.env
-   chmod 700 ~/.unraid-mcp
-   chmod 600 ~/.unraid-mcp/.env
-   ```
+Start from `unraid-py/`:
 
-3. Edit `~/.unraid-mcp/.env` with your credentials:
-   ```bash
-   UNRAID_API_URL=https://your-unraid-server
-   UNRAID_API_KEY=your_api_key
-   ```
+```bash
+uv run unraid-mcp
+```
 
-4. Install dependencies and start:
-   ```bash
-   uv sync
-   uv run unraid-mcp-server
-   ```
+Bare-metal HTTP defaults to loopback. Direct bearer-mode startup generates and
+persists an inbound token when none is configured. Read it privately from the
+reported location and configure your MCP client; do not paste it into a shared
+document. OAuth mode does not generate a static token.
 
-## Option 3: Docker deployment
+## Docker Compose
 
-1. Clone and configure:
-   ```bash
-   git clone https://github.com/dinglebear-ai/unraid.git
-   cd unraid-mcp
-   ```
+Run Compose from `unraid-py/`. The checked-in file publishes its port on
+loopback and expects an **existing external network**. Set `DOCKER_NETWORK`
+in the Compose shell to your intended network; its legacy default is `jakenet`,
+not Docker's default bridge. Inspect the network before starting the stack.
 
-2. Set up credentials (the Docker container reads from `~/.unraid-mcp/.env` via `env_file`):
-   ```bash
-   mkdir -p ~/.unraid-mcp
-   cp .env.example ~/.unraid-mcp/.env
-   chmod 700 ~/.unraid-mcp
-   chmod 600 ~/.unraid-mcp/.env
-   # Edit ~/.unraid-mcp/.env with UNRAID_API_URL and UNRAID_API_KEY.
-   ```
+The Compose `env_file` reads `~/.unraid-mcp/.env` on the Docker host. For
+bearer-mode HTTP, configure `UNRAID_MCP_BEARER_TOKEN` there before launching:
+the container entrypoint rejects a missing token rather than relying on the
+Python startup generator. Alternatively configure Google OAuth, including its
+public URL and identity allowlist, as described in [AUTHENTICATION.md](AUTHENTICATION.md).
 
-3. Start the container:
-   ```bash
-   docker compose up -d
-   ```
+```bash
+docker compose up -d
+curl -fsS http://127.0.0.1:6970/health
+```
 
-4. Verify:
-   ```bash
-   curl http://localhost:6970/health
-   ```
+The named credential volume is separate from the host env file. Compose uses
+`/ready` for container health; `/health` proves only process liveness.
+Do not run multiple replicas or expose an unauthenticated backend directly.
+See [DEPLOY.md](mcp/DEPLOY.md) for storage, resource, and proxy requirements.
 
-## Option 4: PyPI install
+## Published package
+
+With private configuration already supplied:
 
 ```bash
 uvx unraid-mcp
-# or
-pip install unraid-mcp
-unraid-mcp-server
 ```
 
-## Post-setup verification
-
-After any installation method, verify the setup:
-
-```python
-# Test connection
-unraid(action="health", subaction="test_connection")
-
-# Run full health check
-unraid(action="health", subaction="check")
-
-# Get system overview
-unraid(action="system", subaction="overview")
-```
+This defaults to HTTP. A stdio client must set `UNRAID_MCP_TRANSPORT=stdio`.
+The `unraid-mcp-server` entry point is an alias of `unraid-mcp`.
 
 ## Troubleshooting
 
-**"Credentials not configured"**
-- Set the plugin's *Unraid GraphQL API URL* / *Unraid API Key* fields (the setup
-  hook persists them to `~/.unraid-mcp/.env`), then restart the server
-- Or create `~/.unraid-mcp/.env` manually from `.env.example`
-- Run `unraid(action="health", subaction="setup")` to see current status + the exact path
+For missing credentials, inspect `health/setup`, the process environment, and
+the selected credential path without printing secret values. Plugin settings do
+not configure every other installation automatically.
 
-**"Connection refused"**
-- Verify `UNRAID_API_URL` is correct and accessible from the server host
-- Check if Unraid's API is enabled in Settings > Management Access
+For a private CA, set `UNRAID_VERIFY_SSL=/path/to/ca.pem`. Disabling verification
+requires both `UNRAID_VERIFY_SSL=false` and `UNRAID_ALLOW_INSECURE_TLS=true`;
+that exposes the API key to an unverified peer and is not the normal setup path.
 
-**"SSL verification failed"**
-- **Recommended:** point `UNRAID_VERIFY_SSL` at a CA-bundle path
-  (`UNRAID_VERIFY_SSL=/path/to/ca.pem`) to trust a self-signed cert *without* turning off
-  verification.
-- Disabling verification entirely (`UNRAID_VERIFY_SSL=false`) is discouraged: it sends
-  your `UNRAID_API_KEY` to an unverified peer over **both** the GraphQL HTTP client and the
-  WebSocket subscription connection, so a man-in-the-middle can capture the key. If you
-  must, the server requires a second explicit opt-in (`UNRAID_ALLOW_INSECURE_TLS=true`) and
-  it should only ever be used on a fully trusted network.
-
-**"Bearer token required"**
-- The server auto-generates a token on first HTTP startup
-- Check `~/.unraid-mcp/.env` for the generated `UNRAID_MCP_BEARER_TOKEN`
-- Configure your MCP client to send it as `Authorization: Bearer <token>`
-
-See [CONFIG](CONFIG.md) for all environment variables and [mcp/AUTH](mcp/AUTH.md) for authentication details.
+For HTTP authentication failures, distinguish the inbound MCP credential from
+the outbound Unraid key. OAuth plus an explicitly configured static token can
+coexist, but OAuth plus `UNRAID_MCP_DISABLE_HTTP_AUTH=true` is rejected.

@@ -13,8 +13,8 @@ then run `crgx unraid-rmcp -- server --json` -> start loopback HTTP with
 `UNRAID_RMCP_HOST=127.0.0.1 crgx unraid-rmcp -- serve mcp` -> call
 `tools/call` with `{"action":"server"}`.
 
-**Status:** operational RMCP upstream-client server with the full Unraid GraphQL
-query and mutation surface. Read actions require `unraid:read`; writes require
+**Status:** implements the queries and mutations listed in `src/mcp/schemas.rs::ACTIONS`,
+not every operation in the upstream GraphQL schema. Read actions require `unraid:read`; writes require
 `unraid:admin`. Destructive operations use MCP form elicitation and fail closed
 when the client cannot obtain user approval. HTTP MCP supports loopback dev mode,
 static bearer tokens, and Google OAuth through `lab-auth`. Release binaries and
@@ -56,7 +56,7 @@ through MCP tool arguments.
 | Binary / CLI | `runraid` |
 | crates.io package | `unraid-rmcp` |
 | CRGX command | `crgx unraid-rmcp -- <runraid args>` |
-| Legacy npm package | `unraid-rmcp` |
+| Compatibility npm package | `@dinglebear/unraid` |
 | MCP tools | `unraid` (legacy), `unraid_<action>` (atomic) |
 | Config home | `~/.unraid` on hosts, `/data` in containers |
 | Env prefixes | `UNRAID_*`, `UNRAID_RMCP_*` |
@@ -92,7 +92,7 @@ existing deployment config.
 | Release installer | `curl -fsSL https://raw.githubusercontent.com/dinglebear-ai/unraid/main/unraid-rs/scripts/install.sh \| bash` | Host installs without CRGX. | Installs `runraid` for linux/amd64. |
 | Docker / Compose | `docker compose up -d` | Shared HTTP MCP deployments. | Reads `.env` and exposes container port `40010`. |
 | Build from source | `cargo build --release` | Development and audits. | Produces `target/release/runraid`. |
-| Plugin | `claude plugin install agents/unraid-rs` | Claude Code local plugin setup from this checkout. | Ships the skill and local runtime metadata. No hooks — run `runraid setup plugin-hook` once to provision credentials. |
+| Plugin | `/plugin install runraid@unraid-mcp` after `/plugin marketplace add dinglebear-ai/unraid` | Claude Code marketplace integration. | Passes plugin settings directly through `.mcp.json`; no hook or manual credential-persistence step is required. |
 
 ### CRGX / crates.io
 
@@ -115,7 +115,7 @@ installations; new MCP configurations should use CRGX.
 
 ```bash
 git clone https://github.com/dinglebear-ai/unraid
-cd unraid-mcp/unraid-rs
+cd unraid/unraid-rs
 cargo build --release
 ./target/release/runraid --help
 ```
@@ -133,8 +133,9 @@ export UNRAID_API_URL="https://10-1-0-2.<hash>.myunraid.net:31337/graphql"
 export UNRAID_API_KEY="your-api-key-here"
 ```
 
-Set `UNRAID_API_SKIP_TLS_VERIFY=true` only when your Unraid GraphQL endpoint uses
-a certificate your host does not trust.
+For a private CA, set `UNRAID_API_CA_BUNDLE` to its readable PEM bundle.
+`UNRAID_API_SKIP_TLS_VERIFY=true` disables peer verification and is not the
+normal remedy for an untrusted certificate.
 
 ### 2. Run A Safe CLI Call
 
@@ -235,7 +236,7 @@ as action arguments.
 | MCP HTTP | Supported | `runraid serve mcp`, `POST /mcp` | Streamable HTTP MCP for local or shared server deployments. |
 | CLI | Supported | `runraid <command>` | Scriptable parity and debugging. |
 | Prompt | Supported | `server_summary` | Guides a model to call `info` and summarize server state. |
-| Resource | Supported | `unraid://schema/mcp-tool` | JSON schema for the `unraid` tool. |
+| Resource | Supported | `unraid://schema/mcp-tool` | Schema for the enabled tools in the active projection. |
 | Health endpoint | Supported | `GET /health` | Unauthenticated liveness check. |
 | REST API | Not shipped | N/A | Unraid owns the GraphQL API. |
 | Web UI | Not shipped | N/A | Unraid owns the web UI. |
@@ -301,7 +302,8 @@ with `items`, `total`, `limit`, `offset`, `has_more`, and `next_offset`.
 
 ## CLI Reference
 
-All CLI commands accept `--json` for machine-readable output.
+The data and diagnostic commands below support `--json`. Other subcommands
+have their own argument contracts; inspect `runraid <command> --help`.
 
 ```bash
 runraid array [--json]
@@ -359,7 +361,7 @@ inherit persisted `.env` values instead of clearing them. A present but malforme
 | `UNRAID_RMCP_TOKEN` | unset | Static bearer token for HTTP MCP. |
 | `UNRAID_RMCP_NO_AUTH` | `false` | Disable auth only for loopback development. |
 | `UNRAID_RMCP_DISABLE_HTTP_AUTH` | `false` | Compatibility alias for disabling auth. |
-| `UNRAID_NOAUTH` | `false` | Trust an upstream gateway to enforce auth. |
+| `UNRAID_NOAUTH` | `false` | Acknowledge a non-loopback bind when auth is already disabled; does not disable auth by itself. |
 | `UNRAID_RMCP_ALLOWED_HOSTS` | unset | Extra accepted Host header values. |
 | `UNRAID_RMCP_ALLOWED_ORIGINS` | unset | Extra accepted CORS origins. |
 | `UNRAID_RMCP_PUBLIC_URL` | unset | Public URL for OAuth metadata. |
@@ -387,10 +389,10 @@ HTTP MCP auth policy:
 
 | State | Condition | Behavior |
 |---|---|---|
-| Loopback dev | `UNRAID_RMCP_HOST` starts with `127.` or auth is explicitly disabled on loopback | Local unauthenticated development is allowed. |
+| Loopback dev | Parsed loopback IP (`127.0.0.0/8`, `::1`) or `localhost` | The configured loopback bind selects unauthenticated development policy. |
 | Mounted bearer | Non-loopback with `UNRAID_RMCP_TOKEN` | Requires `Authorization: Bearer <token>` and action scopes. |
 | Mounted OAuth | `UNRAID_RMCP_AUTH_MODE=oauth` | Uses Google OAuth/JWT through `lab-auth`. |
-| Trusted gateway | `UNRAID_NOAUTH=true` | Assumes a reverse proxy or gateway already enforced auth. |
+| Trusted gateway | Explicit `UNRAID_RMCP_NO_AUTH=true` (or its alias) plus `UNRAID_NOAUTH=true` for a non-loopback bind | Operator must isolate the backend behind an authenticated gateway. The acknowledgement is not authentication. |
 
 Read actions require `unraid:read`; mutating actions require `unraid:admin`.
 Configured static bearer tokens are operator credentials and receive admin scope.
@@ -416,11 +418,11 @@ OAuth clients receive the scopes granted by the authorization flow.
 ```text
 GraphQL operations (src/graphql.rs)  queries + mutations
         |
-UnraidService (src/app.rs)           action behavior and response shaping
+UnraidService (src/app.rs)           thin client delegation
         |
 MCP scope + elicitation              authorization and destructive approval
         |
-MCP shim      (src/mcp/tools.rs)     JSON args -> service -> Value
+MCP shim      (src/mcp/tools.rs)     JSON args -> service -> bounded Value
 CLI shim      (src/cli.rs)           argv -> service -> stdout
 ```
 
@@ -450,6 +452,8 @@ cargo fmt --check
 cargo test
 cargo clippy -- -D warnings
 cargo build --release
+npm --prefix packages/unraid-rmcp test
+# Linux x64 only: includes executable packed-install smoke
 npm --prefix packages/unraid-rmcp run check
 ```
 
@@ -499,9 +503,10 @@ cp .env.example .env
 docker compose up -d
 ```
 
-When binding to a non-loopback address, configure `UNRAID_RMCP_TOKEN`,
-`UNRAID_RMCP_AUTH_MODE=oauth`, or `UNRAID_NOAUTH=true` behind an authenticated
-gateway.
+For non-loopback HTTP, configure bearer authentication or OAuth. A deliberately
+authenticated-gateway-only deployment must separately disable backend auth and
+set `UNRAID_NOAUTH=true` to acknowledge the bind. That flag alone neither disables
+auth nor protects the backend. Restrict network access to the gateway.
 
 ## Troubleshooting
 
@@ -510,7 +515,7 @@ gateway.
 | `UNRAID_API_URL` or `UNRAID_API_KEY` is missing | Set it in env or `~/.unraid/.env`. |
 | TLS errors against Unraid | Point `UNRAID_API_CA_BUNDLE` at your CA's PEM bundle to keep verification on. Use `UNRAID_API_SKIP_TLS_VERIFY=true` only when you have no bundle. |
 | HTTP `/mcp` returns unauthorized | Set `UNRAID_RMCP_TOKEN` and send `Authorization: Bearer <token>`. |
-| Stdio client hangs or logs JSON errors | Ensure client config runs `unraid-rmcp mcp`, not the default HTTP server mode. |
+| Stdio client hangs or logs JSON errors | Ensure client config runs `runraid mcp`, not the default HTTP server mode. |
 | Large list response is truncated | Use `limit`, `offset`, `name`, or `state` filters on MCP list actions. |
 | `docker_logs` fails | Pass a valid container `id` and optional `tail`. |
 
@@ -532,7 +537,7 @@ gateway.
 
 ## Documentation
 
-- `CLAUDE.md` is the curated local operating guide for contributors and agents.
+- `AGENTS.md` is the canonical contributor guide; `CLAUDE.md` and `GEMINI.md` are aliases.
 - `docs/INVENTORY.md` is the curated/generated inventory for actions, CLI
   commands, env vars, HTTP endpoints, and dependencies.
 - `docs/stack/ARCH.md` is the curated architecture guide.

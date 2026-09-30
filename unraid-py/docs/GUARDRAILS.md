@@ -7,7 +7,9 @@ Safety and security patterns enforced across the unraid-mcp server.
 ### Storage
 
 - Credentials live in `~/.unraid-mcp/.env` (mode 600, directory mode 700)
-- The plugin setup hook writes credentials atomically (tmp file + `os.replace`)
+- Plugin settings are passed directly to the server environment; no automatic
+  credential-setup hooks are shipped. Explicit manual setup and HTTP bearer-token
+  generation are separate write paths, not a consequence of plugin installation.
 - Credentials are never written to `os.environ` after startup -- all internal consumers read from module globals via `from ..config import settings`
 - Bearer tokens are removed from `os.environ` immediately after being applied to prevent subprocess inheritance
 
@@ -29,7 +31,8 @@ The `redact_sensitive()` function in `core/client.py` recursively replaces value
 
 Beyond key-name matching, the function also redacts by **value shape** (`_is_sensitive_value`): any string value that looks like a JWT (`eyJ...` three-segment token), an `sk-`-prefixed API key, or a high-entropy opaque token (>=20 chars, token-charset only, mixing letters and digits) is masked even under an innocuous key name.
 
-All debug logging passes through this function.
+The GraphQL client uses this redactor for its structured request/response logging.
+This is not a guarantee that arbitrary added logging is safe.
 
 ## Destructive action gating
 
@@ -95,9 +98,18 @@ When the MCP client does not support elicitation:
 - Maximum 10,000 unique IPs tracked to prevent memory exhaustion DoS
 - Log throttling: at most one warning per IP per 30 seconds
 
+### Google OAuth and coexistence
+
+The provider replaces bearer middleware when both Google client credentials are
+configured. It requires the public URL and a local identity allowlist unless
+allow-any-user is explicitly selected. An explicitly configured static bearer
+token can also be accepted by the provider fallback; OAuth never generates one.
+OAuth combined with the auth-disable flag is a startup error. See
+[AUTHENTICATION.md](AUTHENTICATION.md) for persistence and configuration.
+
 ### RFC 9728 well-known endpoint
 
-`GET /.well-known/oauth-protected-resource` returns resource metadata with an empty `authorization_servers` list, telling MCP clients to use a pre-shared bearer token (no OAuth flow).
+In bearer mode, `GET /.well-known/oauth-protected-resource` returns resource metadata with an empty `authorization_servers` list, telling MCP clients to use a pre-shared bearer token (no OAuth flow).
 
 ### Health endpoint bypass
 
@@ -140,15 +152,15 @@ responses. It is a backstop; the per-list `cap_list` defaults do the primary bou
 
 Two independent limiters cover two different concerns:
 
-- **Upstream (authoritative):** the httpx **token bucket** in `core/client.py`
-  (`_RateLimiter`: 90 tokens, 9.0 tokens/sec refill, ~9 rps) bounds outbound calls to the
-  Unraid API's hard **100 req / 10 s** limit (with ~10% headroom). Every GraphQL request
-  acquires a token first; 429 responses are retried with backoff. This is the limiter that
-  actually keeps the server within Unraid's burst window.
+- **Upstream:** the httpx token bucket in `core/client.py` has capacity 90 and
+  refills at 9 tokens/second. Requests acquire a token and 429 responses trigger
+  retry/backoff. This controls average rate and burst capacity; it does not
+  guarantee a strict rolling-window limit. Each process has its own bucket.
 - **Inbound (abuse/DoS guard):** `SlidingWindowRateLimitingMiddleware` enforces 540
   requests per 60-second sliding window on the MCP surface. It guards against inbound
   abuse but **cannot** bound Unraid's 10-second burst limit (a 540/min window permits far
-  more than 100 req in any given 10 s) — that job belongs to the token bucket above.
+  more than 100 req in any given 10 s). Neither limiter proves compliance with
+  an arbitrary upstream rolling-window policy.
 
 ### Log content capping
 

@@ -20,7 +20,9 @@ The `BearerAuthMiddleware` (ASGI-level) wraps the entire HTTP stack. It fires be
 
 ### Token management
 
-**Auto-generation**: On first HTTP startup, if no token is configured:
+**Auto-generation**: Direct Python HTTP startup in bearer mode, with auth enabled
+and no configured token, performs these steps. The Docker entrypoint instead
+requires the token before launching this path; OAuth mode never generates one.
 1. Server generates a `secrets.token_urlsafe(32)` token
 2. Writes it to `~/.unraid-mcp/.env` using `dotenv.set_key` (in-place, preserves comments)
 3. Sets file permissions to 600
@@ -78,6 +80,10 @@ Required when OAuth is enabled:
   `UNRAID_MCP_GOOGLE_ALLOWED_DOMAINS`, unless
   `UNRAID_MCP_GOOGLE_ALLOW_ANY_USER=true` is intentionally set.
 
+An explicitly configured `UNRAID_MCP_BEARER_TOKEN` can be accepted alongside
+OAuth through the static-token fallback verifier. It is not auto-generated in
+OAuth mode.
+
 Optional persistence:
 
 - Set both `UNRAID_MCP_GOOGLE_JWT_SIGNING_KEY` and
@@ -130,7 +136,9 @@ x-api-key: <UNRAID_API_KEY>
 
 ### Credential sources
 
-1. **Plugin userConfig**: The plugin config form supplies `CLAUDE_PLUGIN_OPTION_*` env vars; the `setup plugin-hook` (run on SessionStart / ConfigChange) persists them to `~/.unraid-mcp/.env`
+1. **Plugin settings**: the shared `.mcp.json` maps user settings directly to the
+   launched server environment. The Codex manifest also declares its own stdio
+   launch configuration. Neither integration runs credential-setup hooks.
 2. **Environment file**: Loaded from the `.env` priority chain at startup
 3. **Hand-edited `.env`**: Create `~/.unraid-mcp/.env` directly (mode 600); the server reads it at startup
 
@@ -153,11 +161,13 @@ logged when verification is disabled.
 
 | Endpoint | Middleware | Purpose |
 |----------|-----------|---------|
-| `GET /health` | `HealthMiddleware` | Docker/container healthchecks |
+| `GET /health` | `HealthMiddleware` | Process liveness |
+| `GET /ready` from loopback | `ReadinessMiddleware` | Bounded upstream readiness; non-loopback requests remain behind authentication |
 | `GET /.well-known/oauth-protected-resource` | `WellKnownMiddleware` | MCP client OAuth discovery |
 | `GET /.well-known/oauth-protected-resource/mcp` | `WellKnownMiddleware` | MCP-specific OAuth discovery |
 
-These endpoints are handled before `BearerAuthMiddleware` in the ASGI middleware stack.
+These bypasses are handled before bearer authentication. The listed well-known
+metadata describes bearer mode; OAuth mode uses the provider's discovery routes.
 
 ## See Also
 

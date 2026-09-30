@@ -1,7 +1,7 @@
 ---
 title: Release and packaging guide
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-09-28
 ---
 
 # Release and packaging guide
@@ -43,6 +43,11 @@ files as permanently unversioned placeholders. For Rust, npm `version` and
 Python lock metadata must match the release bump so locked CI installation
 continues to work.
 
+The Rust `Justfile` still contains a legacy `publish` recipe that manually bumps
+versions and pushes unprefixed `vX.Y.Z` tags. It is not this release lane and
+must not be used for Rust publication. Use the workflows and component-prefixed
+release-please tags above.
+
 Publishing is not guaranteed merely because a tag exists. Inspect the matching
 workflow run, repository-variable gates, credentials, and uploaded artifacts.
 `crates-publish.yml` gates automated crates.io publication on
@@ -59,8 +64,10 @@ existing CalVer helper and release workflows instead of ad hoc string bumps.
 Check both the `.plg` manifest and release metadata.
 
 Plugin `.txz` archives belong in GitHub release assets, never in Git history.
-The native MCP archive must use a Rust binary whose reported version exactly
-matches the package version.
+The native MCP archive must use a Rust binary whose reported version matches
+the requested Rust semver. Its `.plg` version is a different, epoch-prefixed
+string derived by [plugin-version.sh](../plugins/mcp/scripts/plugin-version.sh);
+do not put raw Rust semver into that manifest.
 
 Incus packaging is an overlay onto a complete, verified previous runtime
 archive, not an archive of tracked `source/` alone. Build the backend and both

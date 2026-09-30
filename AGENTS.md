@@ -1,9 +1,8 @@
 # Unraid tooling monorepo
 
 This is [dinglebear-ai/unraid](https://github.com/dinglebear-ai/unraid), not
-Unraid Core. The Python and Rust MCP servers, OS plugins, and client-agent
-integrations share repository policy, not one application runtime. Read the
-component's guide before changing its implementation.
+Unraid Core. The servers, OS plugins, and client integrations share repository policy,
+not one runtime. Read the component guide before changing its implementation.
 
 ## Component map
 
@@ -28,8 +27,33 @@ confirmation guards, and dispatch. Do not create a second execution path.
 Both servers can mutate Unraid. Keep outbound Unraid API credentials separate
 from inbound MCP bearer/OAuth credentials. Live disk, array, VM, container,
 and plugin tests require an explicitly selected disposable target.
-The component guides own routing, scopes, TLS, and test-patching details;
 [ARCHITECTURE.md](docs/ARCHITECTURE.md) maps execution and trust boundaries.
+
+## Implementation seams
+
+Python mutation handlers must return before their domain query-dictionary lookup.
+Patch `unraid_mcp.core.client.make_graphql_request` in tests; per-tool aliases
+are not the call target. Keep list/event bounds and the response-size backstop;
+never cache the consolidated tool wholesale because it also mutates state.
+
+Rust operations normally use typed cynic definitions in `src/gql_typed.rs`.
+Keep schema-capability probes and cross-version fallbacks in `src/graphql.rs`,
+using the shared transport. Extend catalog, parameters, dispatcher, fixtures,
+and scope/confirmation tests together. MCP pagination/selectors are not CLI
+policy; do not promise identical surfaces or complete upstream API coverage.
+
+## Configuration boundaries
+
+Both client `.mcp.json` files pass settings into the launched process. They do
+not automatically persist credentials for unrelated shells or Docker instances.
+Python's loader uses the first eligible env file, not a merge of every file;
+nonempty process values win. Its home is `~/.unraid-mcp` unless overridden.
+Rust uses `UNRAID_HOME`, container `/data`, or `~/.unraid`; its loader fills
+empty placeholders from the selected env file but rejects malformed files.
+
+Rust `UNRAID_NOAUTH` only acknowledges an unauthenticated non-loopback bind;
+it does not disable authentication. Prefer `UNRAID_API_CA_BUNDLE` for Rust or
+a CA path in Python's `UNRAID_VERIFY_SSL` over disabling TLS verification.
 
 ## Build roots
 
@@ -40,16 +64,18 @@ compatibility floor is separate from the main compiler policy.
 
 [.mise.toml](.mise.toml) selects development tools. Keep its Rust selection,
 both `rust-toolchain.toml` files, workspace metadata, and CI/build pins aligned.
-Check the effective environment when a compiler differs from the manifests.
+Check the effective environment when compiler versions differ.
 
 Run Python commands in `unraid-py/`, which owns `pyproject.toml` and `uv.lock`:
 `uv sync --locked --group dev`. Python and Rust have component-local `Justfile`s;
-Rust `just test` uses cargo-nextest. Each Node subproject owns its build root.
+Rust `just test` uses cargo-nextest. Node build roots are `plugins/mcp/web/`,
+`plugins/codex/web-src/`, and `plugins/incus/unraid-api-plugin-incus/` plus its
+`web/` child. Incus changes may require both resolver decorators and the SDL
+in `src/index.ts`; ship both frontend bundles and every emitted settings chunk.
 
 ## Verification
 
-Run shared documentation/policy gates from the repository root with its
-toolchain active. In a noninteractive shell, use `mise exec -- <command>`.
+Run shared gates from the repository root with its toolchain active. In a noninteractive shell, use `mise exec -- <command>`.
 
 ```bash
 python3 .github/scripts/check_documentation.py --check-index
@@ -83,9 +109,14 @@ Deployed `.plg`/updater URLs sometimes retain the old repository name.
 Changing them is a compatibility/release change, not prose cleanup.
 Plugin `.txz` payloads are release assets, never tracked source blobs.
 Incus packaging requires its complete verified runtime payload and UI chunks.
+Its configured bridge uses deny-list containment, not a complete sandbox.
+Codex state lives in an Incus volume, separately from its container rootfs.
 
 release-please owns Python and Rust versions. Incus and Codex use fixed-width
-`YYYYMMDD.NNN` CalVer; the native MCP plugin follows the Rust release.
+`YYYYMMDD.NNN` CalVer. The native MCP builder executes the Linux x64 binary
+and derives its epoch-prefixed plugin version from matching Rust semver.
+The Rust `just publish` recipe is legacy and uses the wrong tag lane; do not
+use it instead of release-please.
 [RELEASING.md](docs/RELEASING.md) owns release gates and rollback procedures.
 
 External Actions require immutable SHA pins, matching version comments, and

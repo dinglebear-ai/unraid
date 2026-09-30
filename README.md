@@ -18,7 +18,7 @@ OS plugins, plus the Claude/Codex agent integrations that surface them.
 | Path | What it is | Toolchain | Build / test |
 |------|-----------|-----------|--------------|
 | [`unraid-py/`](unraid-py/) | **unraid-mcp** — Python MCP server (GraphQL), the flagship. Published to PyPI as `unraid-mcp`. | Python / uv / hatchling | `cd unraid-py && uv run pytest && uv build --wheel` |
-| [`unraid-rs/`](unraid-rs/) | **runraid** — Rust MCP server + CLI (single static binary). Crate `unraid-rmcp` on crates.io, plus the compatibility npm launcher `@dinglebear/unraid`. | Rust / cargo | `cd unraid-rs && cargo fmt --check && cargo clippy --all-targets --features test-support -- -D warnings && cargo test` |
+| [`unraid-rs/`](unraid-rs/) | **runraid** — Rust MCP server + CLI (single executable). Crate `unraid-rmcp` on crates.io, plus the compatibility npm launcher `@dinglebear/unraid`. | Rust / cargo | `cd unraid-rs && cargo fmt --check && cargo clippy --all-targets --features test-support -- -D warnings && cargo test` |
 | [`plugins/mcp/`](plugins/mcp/) | Unraid OS plugin that ships the Rust `runraid` MCP server onto an Unraid box. | shell `.plg` + Rust + Vue | `bash plugins/mcp/scripts/build-txz.sh <ver> <runraid-binary>` |
 | [`plugins/incus/`](plugins/incus/) | Unraid OS plugin running Incus system containers ("dev containers") firewalled off the LAN. Includes a NestJS/GraphQL `unraid-api` backend. | shell `.plg` + NestJS/Vue | `cd plugins/incus && ./scripts/verify-classic-package.sh && ./tests/classic-contract.sh` |
 | [`plugins/codex/`](plugins/codex/) | Unraid OS plugin embedding a Codex chathead app-server. | shell `.plg` + React | `cd plugins/codex && ./tests/contract.sh` |
@@ -82,7 +82,8 @@ runraid serve mcp                          # MCP HTTP (default :40010; configure
 |---|---|
 | `UNRAID_API_URL` | Unraid GraphQL endpoint (required) |
 | `UNRAID_API_KEY` | `x-api-key` for the Unraid API (required) |
-| `UNRAID_API_SKIP_TLS_VERIFY` | Accept a self-signed Unraid cert (default `false`) |
+| `UNRAID_API_SKIP_TLS_VERIFY` | Disable peer verification (default `false`); prefer a trusted CA bundle |
+| `UNRAID_API_CA_BUNDLE` | Readable PEM CA bundle for a private CA without disabling verification |
 | `UNRAID_RMCP_HOST` / `UNRAID_RMCP_PORT` | MCP bind address (default `0.0.0.0:40010`) |
 | `UNRAID_RMCP_TOKEN` | Static bearer token for `/mcp` |
 | `UNRAID_RMCP_AUTH_MODE` | `bearer` (default) or `oauth` |

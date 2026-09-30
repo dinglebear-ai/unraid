@@ -13,7 +13,10 @@ The canonical configuration file is `~/.unraid-mcp/.env`. The server searches fo
 5. `<project-root>/.env` -- dev fallback
 6. `src/unraid_mcp/.env` -- last resort
 
-Override the credentials directory with `UNRAID_CREDENTIALS_DIR`.
+Override the credentials directory with `UNRAID_CREDENTIALS_DIR`. The loader
+reads only the first eligible non-symlink file; it does not merge every file.
+Nonempty process values win. Empty plugin placeholders are removed before
+loading so persisted values can fill them.
 
 ## Required variables
 
@@ -35,7 +38,7 @@ Override the credentials directory with `UNRAID_CREDENTIALS_DIR`.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `UNRAID_MCP_BEARER_TOKEN` | auto-generated | Bearer token for HTTP auth. Auto-generated on first HTTP startup if absent. Generate manually with `openssl rand -hex 32`. |
+| `UNRAID_MCP_BEARER_TOKEN` | auto-generated | Bearer token for HTTP auth. Direct bearer-mode startup can generate it; the Docker entrypoint requires it up front. OAuth never generates it. |
 | `UNRAID_MCP_DISABLE_HTTP_AUTH` | `false` | Set `true` to disable bearer auth. Only valid behind a trusted fronting gateway — requires `UNRAID_MCP_TRUST_PROXY=true` to bind a public interface (see below). |
 | `UNRAID_MCP_TRUST_PROXY` | `false` | Required second opt-in when auth is disabled (`UNRAID_MCP_DISABLE_HTTP_AUTH=true`) and the server binds a non-loopback interface. Asserts a fronting gateway terminates auth; without it, a public bind with auth disabled is refused. |
 
@@ -44,7 +47,9 @@ Override the credentials directory with `UNRAID_CREDENTIALS_DIR`.
 Google OAuth is optional and mutually exclusive with the Bearer-token middleware. It is
 enabled only when both `UNRAID_MCP_GOOGLE_CLIENT_ID` and
 `UNRAID_MCP_GOOGLE_CLIENT_SECRET` are set. When enabled, HTTP clients authenticate
-through the OAuth browser flow and the static `UNRAID_MCP_BEARER_TOKEN` is not used.
+through the OAuth browser flow. An explicitly configured static
+`UNRAID_MCP_BEARER_TOKEN` is also accepted through the provider's fallback verifier;
+it is never auto-generated in OAuth mode.
 
 | Variable | Default | Description |
 | --- | --- | --- |
@@ -109,7 +114,7 @@ Log files are capped at 10 MB and overwritten to prevent disk space issues.
 | --- | --- | --- |
 | `PUID` | `1000` | User ID for the container process |
 | `PGID` | `1000` | Group ID for the container process |
-| `DOCKER_NETWORK` | -- | External Docker network name. Leave unset for default bridge. |
+| `DOCKER_NETWORK` | `jakenet` | Existing external network required by Compose; set this explicitly for your deployment. It does not fall back to Docker's default bridge. |
 
 ## Timeouts
 
@@ -126,10 +131,11 @@ Configured in code (not via environment variables):
 
 Two independent limiters:
 
-- **Upstream token bucket (authoritative):** `core/client.py` `_RateLimiter` — 90 tokens,
-  9.0 tokens/sec refill (~9 rps), modeling Unraid's hard **100 req / 10 s** limit with
-  ~10% headroom. Every outbound GraphQL call acquires a token first; 429s are retried with
-  backoff. This is what keeps the server inside Unraid's burst window.
+- **Upstream token bucket:** `core/client.py` `_RateLimiter` has capacity 90 and
+  refills at 9 tokens/second. Every outbound GraphQL request acquires a token;
+  429 responses are retried with backoff. This bounds average rate and burst
+  capacity, not every rolling 10-second window. Its state is per process, so
+  multiple replicas do not share one aggregate limit.
 - **Inbound abuse/DoS guard:** `SlidingWindowRateLimitingMiddleware` — 540 requests per
   60-second sliding window on the MCP surface. It does **not** bound Unraid's 10-second
   burst (a per-minute window can't), so it is not the upstream limiter.

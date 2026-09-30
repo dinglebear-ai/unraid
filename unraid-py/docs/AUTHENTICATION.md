@@ -1,6 +1,6 @@
 # Authentication Setup Guide
 
-The unraid-mcp server supports two **mutually exclusive** HTTP auth modes for the
+The unraid-mcp server supports two HTTP authentication paths for the
 `streamable-http` / `sse` transports:
 
 1. **Static Bearer token** (default) — you generate a token once and put it in both
@@ -24,7 +24,9 @@ openssl rand -hex 32
 
 ### 2. Set the token on the server
 
-Add it to `~/.unraid-mcp/.env` (preferred) or the project `.env`:
+Add it to the selected credential file, normally `~/.unraid-mcp/.env`:
+The loader uses the first eligible env file, so a project fallback is not
+merged into an existing canonical file.
 
 ```env
 UNRAID_MCP_BEARER_TOKEN=a3f8c2d1e4b7...
@@ -36,7 +38,7 @@ credential status but does not set the bearer token.)
 
 ### 3. Configure your MCP client
 
-#### Claude Code (`~/.claude/claude.json` or `claude_desktop_config.json`)
+#### Claude Code (project `.mcp.json` format)
 
 ```json
 {
@@ -51,6 +53,9 @@ credential status but does not set the bearer token.)
   }
 }
 ```
+
+Use the client's private/local configuration for the real token; do not commit
+it in a shared `.mcp.json`. Claude Code's [MCP configuration guide](https://code.claude.com/docs/en/mcp) describes the supported scopes.
 
 > **Important:** The value must be `Bearer <token>` (with the `Bearer ` prefix
 > and a space).  Omitting the prefix causes an immediate 401.
@@ -70,7 +75,7 @@ environment:
 | Variable | Default | Description |
 |---|---|---|
 | `UNRAID_MCP_BEARER_TOKEN` | *(none)* | Required for HTTP transport (bearer mode). Generate with `openssl rand -hex 32`. |
-| `UNRAID_MCP_DISABLE_HTTP_AUTH` | `false` | Set `true` to disable auth entirely (testing/trusted-network only). Ignored when Google OAuth is active. |
+| `UNRAID_MCP_DISABLE_HTTP_AUTH` | `false` | Disable bearer auth only on loopback or behind an isolated authenticated gateway. Combining this with Google OAuth is a startup error. |
 | `UNRAID_MCP_TRUST_PROXY` | `false` | Required when auth is disabled and `UNRAID_MCP_HOST` binds a non-loopback interface. Asserts a trusted proxy enforces auth. |
 
 ---
@@ -91,13 +96,10 @@ token is never auto-generated in OAuth mode — setting it is the opt-in.
 
 ### Using with claude.ai custom connectors
 
-claude.ai's custom connector UI only supports OAuth 2.1 with dynamic client
-registration — it cannot send a static bearer token. Enabling Google OAuth mode makes
-the server fully claude.ai-compatible: it serves OAuth discovery metadata
-(`/.well-known/oauth-authorization-server`) and a registration endpoint, so adding
-`https://<your-host>/mcp` as a custom connector walks you through Google sign-in
-(restricted to your allowlist). No client ID needs to be entered in claude.ai's
-connector form.
+The OAuth provider exposes discovery and registration for compatible MCP clients.
+Configure the public URL, Google redirect URI, and local identity allowlist, then
+verify login and a permitted tool call in the intended client. Provider support
+is not proof that every desktop or hosted connector version accepts the setup.
 
 ### Setup
 
@@ -127,8 +129,8 @@ connector form.
 
 ### Token persistence (no Redis required)
 
-By default issued tokens live in memory and are cleared on restart (clients silently
-re-authenticate). To persist them across restarts, set **both**
+By default issued tokens live in memory and are cleared on restart; clients may
+need to authenticate again. To persist them across restarts, set **both**
 `UNRAID_MCP_GOOGLE_JWT_SIGNING_KEY` and `UNRAID_MCP_GOOGLE_ENCRYPTION_KEY`. Tokens are
 then written, encrypted-at-rest, to a `FileTreeStore` on disk — no Redis or other
 service is needed. Setting only one of the two keys is a fatal configuration error.
@@ -155,7 +157,9 @@ handles the rest.
 2. In Bearer-token mode, every request must include `Authorization: Bearer <token>`
    or it gets a `401 Unauthorized` response. In Google OAuth mode, FastMCP's
    `GoogleProvider` serves OAuth discovery and gates requests instead.
-3. `/health` (Docker healthcheck) is always allowed without a token.
+3. `/health` is unauthenticated process liveness. Compose uses `/ready` for a
+   bounded upstream readiness probe; the unauthenticated readiness bypass is
+   loopback-only.
 4. In Bearer-token mode, `/.well-known/oauth-protected-resource` is served without a token so MCP
    clients can discover the auth scheme automatically (RFC 9728).  It returns
    `{"bearer_methods_supported":["header"]}` with no `authorization_servers`,
@@ -187,7 +191,9 @@ received a 401 and surfaced a generic error.  Upgrade to v1.2.1 or later.
 ### Temporarily disable auth for testing
 
 ```env
+UNRAID_MCP_HOST=127.0.0.1
 UNRAID_MCP_DISABLE_HTTP_AUTH=true
 ```
 
-Remove this before exposing the server outside a trusted network.
+Use this only without OAuth on a local test instance. Restore authentication
+before making the endpoint reachable by other machines.
