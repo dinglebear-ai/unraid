@@ -9,14 +9,14 @@
 # usable — see the tradeoff note next.
 #
 # ACCEPTED-RISK TRADEOFF (reviewed): the files listed below hold realistic-looking
-# PLACEHOLDER credentials — docs examples, generated openwiki, and test
+# PLACEHOLDER credentials — docs examples, and test
 # fixtures/test code that exercise request construction with fake keys. gitleaks
 # cannot distinguish a fake fixture key from a real one by content, so without an
 # allowlist these produce false positives and fail CI. Do NOT commit real secrets
 # under them.
 #
 # WHY EXPLICIT FILES, NOT DIRECTORY GLOBS:
-# This list used to be four directory globs — (^|/)docs/, (^|/)openwiki/,
+# This list used to be four directory globs — (^|/)docs/,
 # (^|/)tests/, (^|/)skills/ — written when this repo contained only the Python
 # server. After the monorepo consolidation those same globs also silently blinded
 # unraid-rs/docs/, unraid-rs/tests/, plugins/codex/tests/, agents/*/skills/, and
@@ -47,7 +47,7 @@
 useDefault = true
 
 [allowlist]
-description = "Specific docs, generated wiki, and test files that contain placeholder credentials only"
+description = "Specific docs and test files that contain placeholder credentials only"
 paths = [
   # Frozen vendored copy of lab-auth. Its #[cfg(test)] module carries a
   # TEST_RSA_KEY_PEM keypair used only to sign JWTs in unit tests
@@ -57,7 +57,6 @@ paths = [
   '''(^|/)docs/AUTHENTICATION\.md$''',
   '''(^|/)docs/UNRAID_API_REFERENCE\.md$''',
   '''(^|/)docs/unraid/unraid\-os/system\-administration/advanced\-tools/command\-line\-interface\.md$''',
-  '''(^|/)openwiki/operations/configuration\.md$''',
   '''(^|/)skills/unraid/references/api\-reference\.md$''',
   '''(^|/)tests/fixtures/scenarios/healthy\.json$''',
   '''(^|/)tests/http/test_request_construction\.py$''',

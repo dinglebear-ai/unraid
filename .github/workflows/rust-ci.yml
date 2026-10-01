@@ -169,6 +169,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
           toolchain: "1.90"
+      - name: Set up pinned credentialless Rust cache
+        uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
+        with:
+          version: '0.28.1'
+          github-cache: 'true'
+          max-size: '10GB'
+          pr-comment: 'false'
       - name: Package lab-auth exactly as crates.io will receive it
         run: cargo publish --package lab-auth --locked --dry-run
       - name: Validate unraid-rmcp payload before dependency publication

@@ -77,9 +77,9 @@ jobs:
           targets: x86_64-unknown-linux-gnu
 
       - name: Connect shared MinIO Kache
-        uses: kunobi-ninja/kache-action@a257c055543c2840700a9bbca8f9c3094a421b1b # v0.13.0
+        uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
         with:
-          version: "0.15.1"
+          version: '0.28.1'
           s3-bucket: ${{ vars.KACHE_S3_BUCKET }}
           s3-region: us-east-1
           s3-prefix: ${{ vars.KACHE_S3_PREFIX }}

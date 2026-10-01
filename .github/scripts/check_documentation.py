@@ -180,7 +180,6 @@ def is_maintained_markdown(path: Path) -> bool:
         and path.name not in LOCAL_INSTRUCTION_NAMES
         and path.name.upper() != "CHANGELOG.MD"
         and "/docs/sessions/" not in "/" + name
-        and "/openwiki/" not in "/" + name
         and not name.startswith(EXCLUDED_TREES)
     )
 

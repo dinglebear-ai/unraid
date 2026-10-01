@@ -5,7 +5,7 @@ name: CI
 # of which component changed. Push runs remain path-scoped to avoid duplicate work.
 # unraid-py/tests/ also owns REPO-WIDE policy suites, not just Python tests:
 #   * test_supply_chain_policy.py globs ALL .github/workflows/*.yml and enforces
-#     SHA-pinned actions, the openwiki job/permission split, and release pinning.
+#     SHA-pinned actions and release pinning.
 #   * test_schema_drift_workflow.py asserts on the drift workflows.
 #   * the version-sync job reads agents/unraid-py/{.claude,.codex}-plugin/plugin.json.
 # Those gates only run when this workflow runs. Every pull request therefore runs

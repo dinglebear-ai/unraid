@@ -60,6 +60,13 @@ jobs:
       # for both crates, then two `cargo install` builds from crates.io). The
       # registry index + downloaded sources dominate that, and rust-cache restores
       # both alongside the unraid-rs target dir.
+      - name: Set up pinned credentialless Rust cache
+        uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
+        with:
+          version: '0.28.1'
+          github-cache: 'true'
+          max-size: '10GB'
+          pr-comment: 'false'
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
         with:
           workspaces: unraid-rs
