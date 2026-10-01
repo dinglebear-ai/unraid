@@ -232,10 +232,14 @@ jobs:
       - name: Install npm with trusted-publishing support
         run: npm install --global npm@11.5.1
 
-      - name: Validate npm publication identity
+      - name: Validate npm token identity when configured
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm whoami >/dev/null
+        run: |
+          if [[ -n "${NODE_AUTH_TOKEN:-}" ]]; then
+            npm whoami >/dev/null
+          fi
+          # Without a token, npm publish authenticates through GitHub OIDC.
 
       - name: Verify npm package version matches release tag
         id: npm-version
