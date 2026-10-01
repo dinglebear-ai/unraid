@@ -11,7 +11,6 @@ manifest-exclude = ["unraid-rs/Cargo.toml", "unraid-rs/**/Cargo.toml"]
 frontmatter-exclude = [
   "unraid-py/docs/sessions/**",
   "unraid-py/docs/unraid/**",
-  "unraid-py/openwiki/**",
   "unraid-rs/docs/sessions/**",
   "plugins/**/docs/sessions/**",
   "plugins/incus/docs/unraid/**",
