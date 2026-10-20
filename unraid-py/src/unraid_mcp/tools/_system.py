@@ -6,6 +6,7 @@ server_details, servers, network_access_urls, flash, ups_devices, ups_device,
 ups_config, server_time, timezones, network_interfaces (25 subactions).
 """
 
+from math import isfinite
 from typing import Any
 
 from ..config.logging import logger
@@ -177,6 +178,10 @@ _SYSTEM_QUERIES: dict[str, str] = {
     """,
 }
 
+_ARRAY_CAPACITY_THRESHOLDS_QUERY = (
+    "query GetArrayCapacityThresholds { display { warning critical } }"
+)
+
 # Root owner.url is non-null in the schema but omitted for signed-in owners on
 # Unraid 7.3.x. The local server profile exposes a stable empty-string URL, but
 # that root requires the separate SERVERS permission. Fetch it opportunistically
@@ -229,7 +234,20 @@ def _required_direct_root(data: dict[str, Any], subaction: str) -> dict[str, Any
     return root
 
 
-def _analyze_disk_health(disks: list[dict[str, Any]]) -> dict[str, int]:
+def _capacity_number(value: Any) -> float | None:
+    """Accept API numeric values, including serialized BigInts, without NaN/bools."""
+    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+        return None
+    try:
+        number = float(value)
+    except (ValueError, OverflowError):
+        return None
+    return number if isfinite(number) else None
+
+
+def _analyze_disk_health(
+    disks: list[dict[str, Any]], display: dict[str, Any] | None = None
+) -> dict[str, int]:
     counts = {
         "healthy": 0,
         "failed": 0,
@@ -241,13 +259,29 @@ def _analyze_disk_health(disks: list[dict[str, Any]]) -> dict[str, int]:
     }
     for disk in disks:
         status = disk.get("status", "").upper()
-        warning = disk.get("warning")
-        critical = disk.get("critical")
         if status == "DISK_OK":
-            counts["critical" if critical else "warning" if warning else "healthy"] += 1
-        elif status in ("DISK_DSBL", "DISK_INVALID"):
+            # Thresholds configure percent used; they are not health flags.
+            # Parity/unmounted disks have no usable filesystem metrics, so keep
+            # their device-status classification without inventing capacity data.
+            size = _capacity_number(disk.get("fsSize"))
+            used = _capacity_number(disk.get("fsUsed"))
+            severity = "healthy"
+            if size is not None and size > 0 and used is not None and 0 <= used <= size:
+                for level in ("critical", "warning"):
+                    threshold = _capacity_number(disk.get(level))
+                    if threshold is None or threshold == 0:
+                        threshold = _capacity_number((display or {}).get(level))
+                    if (
+                        threshold is not None
+                        and 0 < threshold <= 100
+                        and used * 100 >= size * threshold
+                    ):
+                        severity = level
+                        break
+            counts[severity] += 1
+        elif status in ("DISK_DSBL", "DISK_INVALID", "DISK_WRONG", "DISK_DSBL_NEW"):
             counts["failed"] += 1
-        elif status == "DISK_NP":
+        elif status in ("DISK_NP", "DISK_NP_MISSING", "DISK_NP_DSBL"):
             counts["missing"] += 1
         elif status == "DISK_NEW":
             counts["new"] += 1
@@ -346,6 +380,36 @@ async def _handle_system(subaction: str, device_id: str | None, limit: int = 20)
             summary["num_parity_disks"] = len(raw.get("parities", []))
             summary["num_data_disks"] = len(raw.get("disks", []))
             summary["num_cache_pools"] = len(raw.get("caches", []))
+            display: dict[str, Any] = {}
+            # Global defaults require DISPLAY permission, while the array query
+            # only requires ARRAY. Keep optional enrichment out of that query.
+            needs_defaults = any(
+                disk.get("status", "").upper() == "DISK_OK"
+                and _capacity_number(disk.get("fsSize")) not in (None, 0)
+                and _capacity_number(disk.get("fsUsed")) is not None
+                and any(
+                    _capacity_number(disk.get(level)) in (None, 0)
+                    for level in ("warning", "critical")
+                )
+                for key in ("parities", "disks", "caches")
+                for disk in raw.get(key, [])
+            )
+            if needs_defaults:
+                try:
+                    display_data = await _client.make_graphql_request(
+                        _ARRAY_CAPACITY_THRESHOLDS_QUERY
+                    )
+                    display = display_data.get("display") or {}
+                except ToolError as exc:
+                    logger.warning("Global capacity thresholds unavailable: %s", exc)
+                if any(
+                    _capacity_number(display.get(level)) is None
+                    for level in ("warning", "critical")
+                ):
+                    summary["capacity_warnings"] = [
+                        "Global capacity thresholds unavailable; inherited capacity thresholds could not be "
+                        "assessed. Disks without usable thresholds were assessed by device status only."
+                    ]
             health: dict[str, Any] = {}
             for key, label in [
                 ("parities", "parity_health"),
@@ -353,7 +417,7 @@ async def _handle_system(subaction: str, device_id: str | None, limit: int = 20)
                 ("caches", "cache_health"),
             ]:
                 if raw.get(key):
-                    health[label] = _analyze_disk_health(raw[key])
+                    health[label] = _analyze_disk_health(raw[key], display)
             total_failed = sum(h.get("failed", 0) for h in health.values())
             total_critical = sum(h.get("critical", 0) for h in health.values())
             total_missing = sum(h.get("missing", 0) for h in health.values())

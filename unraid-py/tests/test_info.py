@@ -25,23 +25,78 @@ class TestAnalyzeDiskHealth:
         assert result["failed"] == 2
 
     def test_counts_warning_disks(self) -> None:
-        disks = [{"status": "DISK_OK", "warning": 45}]
+        disks = [{"status": "DISK_OK", "warning": 45, "fsSize": 100, "fsUsed": 45}]
         result = _analyze_disk_health(disks)
         assert result["warning"] == 1
         assert result["critical"] == 0
 
     def test_counts_critical_disks(self) -> None:
-        disks = [{"status": "DISK_OK", "critical": 55}]
+        disks = [{"status": "DISK_OK", "critical": 55, "fsSize": 100, "fsUsed": 55}]
         result = _analyze_disk_health(disks)
         assert result["critical"] == 1
         assert result["warning"] == 0
         assert result["healthy"] == 0
 
     def test_critical_takes_precedence_over_warning(self) -> None:
-        disks = [{"status": "DISK_OK", "warning": 45, "critical": 55}]
+        disks = [{"status": "DISK_OK", "warning": 45, "critical": 55, "fsSize": 100, "fsUsed": 55}]
         result = _analyze_disk_health(disks)
         assert result["critical"] == 1
         assert result["warning"] == 0
+
+    @pytest.mark.parametrize(
+        ("used", "expected"),
+        [
+            (0, "healthy"),
+            (28, "healthy"),
+            (69, "healthy"),
+            (70, "warning"),
+            (89, "warning"),
+            (90, "critical"),
+            (100, "critical"),
+        ],
+    )
+    def test_capacity_threshold_boundaries(self, used: int, expected: str) -> None:
+        disk = {
+            "status": "DISK_OK",
+            "warning": 70,
+            "critical": 90,
+            "fsSize": "100",
+            "fsUsed": str(used),
+        }
+        assert _analyze_disk_health([disk])[expected] == 1
+
+    @pytest.mark.parametrize("threshold", [29, 58])
+    def test_exact_capacity_threshold_does_not_round_below_boundary(self, threshold: int) -> None:
+        disk = {
+            "status": "DISK_OK",
+            "warning": 20,
+            "critical": threshold,
+            "fsSize": "100",
+            "fsUsed": str(threshold),
+        }
+        assert _analyze_disk_health([disk])["critical"] == 1
+
+    @pytest.mark.parametrize(
+        ("size", "used"),
+        [
+            (None, None),
+            (0, 0),
+            ("0", "0"),
+            (-1, 0),
+            (100, None),
+            ("bad", "20"),
+            (100, "bad"),
+            (100, -1),
+            (100, 101),
+            (100, "NaN"),
+            ("Infinity", 20),
+            (True, 0),
+            (100, True),
+        ],
+    )
+    def test_unavailable_capacity_keeps_disk_status(self, size, used) -> None:
+        disk = {"status": "DISK_OK", "warning": 70, "critical": 90, "fsSize": size, "fsUsed": used}
+        assert _analyze_disk_health([disk])["healthy"] == 1
 
     def test_counts_missing_disks(self) -> None:
         disks = [{"status": "DISK_NP"}]
@@ -119,6 +174,88 @@ class TestUnraidInfoTool:
         assert "details" not in result
         assert result["summary"]["state"] == "STARTED"
         assert result["summary"]["overall_health"] == "HEALTHY"
+
+    @pytest.mark.parametrize(
+        ("disk_warning", "disk_critical", "used", "expected"),
+        [
+            (None, None, "28", "HEALTHY"),
+            (None, None, "70", "WARNING"),
+            (0, 0, "90", "CRITICAL"),
+            (80, 95, "75", "HEALTHY"),
+            (80, 95, "95", "CRITICAL"),
+        ],
+    )
+    async def test_array_inherits_capacity_thresholds(
+        self, _mock_graphql: AsyncMock, disk_warning, disk_critical, used, expected
+    ) -> None:
+        _mock_graphql.return_value = {
+            "display": {"warning": 70, "critical": 90},
+            "array": {
+                "state": "STARTED",
+                "caches": [
+                    {
+                        "status": "DISK_OK",
+                        "fsSize": "100",
+                        "fsUsed": used,
+                        "warning": disk_warning,
+                        "critical": disk_critical,
+                    }
+                ],
+            },
+        }
+        result = await _make_tool()(action="system", subaction="array")
+        assert result["summary"]["overall_health"] == expected
+
+    async def test_array_still_reports_status_without_display_permission(
+        self, _mock_graphql: AsyncMock
+    ) -> None:
+        async def array_only(query, variables=None):
+            if "display {" in query:
+                raise ToolError("DISPLAY permission denied")
+            return {
+                "array": {
+                    "state": "STARTED",
+                    "disks": [{"status": "DISK_OK", "fsSize": "100", "fsUsed": "28"}],
+                }
+            }
+
+        _mock_graphql.side_effect = array_only
+        result = await _make_tool()(action="system", subaction="array")
+        assert result["summary"]["overall_health"] == "HEALTHY"
+        assert result["summary"]["health_summary"]["data_health"]["healthy"] == 1
+        assert "device status only" in result["summary"]["capacity_warnings"][0]
+
+    async def test_zero_global_capacity_thresholds_disable_alerts(
+        self, _mock_graphql: AsyncMock
+    ) -> None:
+        _mock_graphql.return_value = {
+            "display": {"warning": 0, "critical": 0},
+            "array": {
+                "state": "STARTED",
+                "disks": [{"status": "DISK_OK", "fsSize": 100, "fsUsed": 100}],
+            },
+        }
+        result = await _make_tool()(action="system", subaction="array")
+        assert result["summary"]["overall_health"] == "HEALTHY"
+
+    @pytest.mark.parametrize(
+        ("status", "category", "overall"),
+        [
+            ("DISK_NP_MISSING", "missing", "DEGRADED"),
+            ("DISK_NP_DSBL", "missing", "DEGRADED"),
+            ("DISK_WRONG", "failed", "CRITICAL"),
+            ("DISK_DSBL_NEW", "failed", "CRITICAL"),
+        ],
+    )
+    async def test_unavailable_array_members_escalate_health(
+        self, _mock_graphql: AsyncMock, status: str, category: str, overall: str
+    ) -> None:
+        _mock_graphql.return_value = {"array": {"state": "STARTED", "disks": [{"status": status}]}}
+        result = await _make_tool()(action="system", subaction="array")
+        summary = result["summary"]
+        assert summary["overall_health"] == overall
+        assert summary["health_summary"]["data_health"][category] == 1
+        assert summary["health_summary"]["data_health"]["unknown"] == 0
 
     async def test_timezones_capped_with_meta(self, _mock_graphql: AsyncMock) -> None:
         """timezones is capped to the limit and surfaces truncation meta."""
