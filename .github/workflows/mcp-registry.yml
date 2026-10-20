@@ -29,7 +29,9 @@ permissions:
 
 jobs:
   publish-unraid-rs:
-    if: (github.event_name == 'workflow_dispatch' && inputs.component == 'unraid-rs') || startsWith(github.event.release.tag_name, 'unraid-rs-v')
+    # Automatic Rust publication belongs after the npm job in rust-release.yml.
+    # A release event alone does not establish that its npm package exists.
+    if: github.event_name == 'workflow_dispatch' && inputs.component == 'unraid-rs'
     uses: dinglebear-ai/workflows/.github/workflows/mcp-registry-publish.yml@befa67c7b7f976235bf3fbced6ede93293a7f405 # fleet-2026-08-04
     with:
       checkout-ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.event.release.tag_name }}

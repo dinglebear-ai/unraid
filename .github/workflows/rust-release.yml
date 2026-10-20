@@ -269,6 +269,18 @@ jobs:
             npm publish --provenance --access public ./packages/unraid-rmcp
           fi
 
+  mcp-registry:
+    needs: npm
+    if: always() && needs.npm.result == 'success'
+    uses: dinglebear-ai/workflows/.github/workflows/mcp-registry-publish.yml@befa67c7b7f976235bf3fbced6ede93293a7f405 # fleet-2026-08-04
+    with:
+      checkout-ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || github.event.release.tag_name }}
+      expected-version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
+      manifest-path: unraid-rs/server.json
+      version-prefix: unraid-rs-v
+    secrets:
+      MCP_PRIVATE_KEY: ${{ secrets.MCP_PRIVATE_KEY }}
+
   docker:
     needs: build
     if: >-
