@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.3](https://github.com/dinglebear-ai/unraid/compare/v2.10.2...v2.10.3) (2026-10-20)
+
+
+### Bug Fixes
+
+* **unraid:** correct disk health and release publication ([7ff236f](https://github.com/dinglebear-ai/unraid/commit/7ff236f23f448447158cb105874c21f3fc229845))
+
 ## [2.10.2](https://github.com/dinglebear-ai/unraid/compare/v2.10.1...v2.10.2) (2026-09-28)
 
 
