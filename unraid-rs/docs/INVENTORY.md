@@ -34,6 +34,10 @@ metadata operations, and admin-scoped mutations.
 | `shares` | User shares: name, size, used, free, cache, allocator, LUKS status |
 | `notifications` | Active warnings/alerts with overview counts (unread by type) |
 
+Data-disk read/write counters in `array` responses can be zero because of an
+upstream API defect. See [API data limitations](../../docs/API_LIMITATIONS.md)
+before interpreting these counters as activity or throughput.
+
 ### System actions
 
 | Action | Description |

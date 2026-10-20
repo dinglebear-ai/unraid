@@ -2,6 +2,9 @@
 
 Complete listing of all plugin components.
 
+See [API data limitations](../../docs/API_LIMITATIONS.md) for the scope of
+`system/array` health, optional capacity defaults, and upstream I/O counters.
+
 ## MCP tools
 
 | Tool | Type | Module | Description |

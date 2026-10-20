@@ -4,6 +4,36 @@ Packages the Rust `runraid` MCP server as a classic Unraid plugin (`.plg` plus
 Slackware `.txz`) with bearer/OAuth authentication, a webGUI settings page,
 automatic credential bootstrap, service controls, and log rotation.
 
+## Install on Unraid
+
+Requires Unraid **7.0.0 or newer** on x86-64. In the Unraid webGUI, open
+**Plugins → Install Plugin**, paste this published manifest URL, and install:
+
+```text
+https://github.com/dinglebear-ai/unraid/releases/download/unraid-plugin-latest/unraid-mcp.plg
+```
+
+Use the release asset above. The `unraid-mcp.plg` file in this source directory
+is a **build template**, including unresolved version and checksum placeholders;
+its raw GitHub URL cannot install the packaged plugin. The published manifest
+contains concrete values and downloads the matching versioned `.txz` release
+asset automatically.
+
+After installation, open **Settings → Unraid MCP**, check the API connection
+settings, and enable the service. A fresh installation leaves the service
+disabled until you enable it. Use the configured port and authentication details
+when connecting your MCP client.
+
+This repository includes Community Applications metadata, but that alone does
+not establish approval or availability in its live catalog. If the plugin does
+not appear in Apps, use the published manifest URL above.
+
+If installation fails, include the exact manifest URL, your Unraid version,
+and the complete installer output in a [support issue](https://github.com/dinglebear-ai/unraid/issues).
+Remove API keys and tokens before posting. A download failure, checksum failure,
+and service startup failure need different investigation; include the failing
+URL or error message rather than only reporting that installation failed.
+
 ## Package layout
 
 - `unraid-mcp.plg` is the manifest template. The package build substitutes the

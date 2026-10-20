@@ -11,6 +11,8 @@ and [AGENTS.md](../AGENTS.md) for authoritative contributor instructions.
 | [AGENT_INSTRUCTIONS.md](AGENT_INSTRUCTIONS.md) | Shared instruction symlinks, private overrides, precedence, and migration |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Component boundaries, execution paths, configuration, and trust |
 | [RELEASING.md](RELEASING.md) | Release ownership, tags, packaging gates, and rollback evidence |
+| [API_LIMITATIONS.md](API_LIMITATIONS.md) | Upstream disk I/O counter limitations and affected client outputs |
+| [MCP_REGISTRY.md](MCP_REGISTRY.md) | Registry identities, publication order, and missing-entry recovery |
 | [Python docs](../unraid-py/docs/README.md) | Python installation, auth, configuration, tools, and subscriptions |
 | [Rust README](../unraid-rs/README.md) | Rust CLI/MCP usage, projection modes, and configuration |
 | [Incus guide](../plugins/incus/AGENTS.md) | Classic packaging, API backend, Vue UI, and isolation gates |
