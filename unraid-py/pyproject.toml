@@ -78,8 +78,8 @@ dependencies = [
     "anyio>=4.10.0,<5",
     "starlette>=0.46.0,<2",
     "pydantic-core>=2.33.0,<3",
-    # Floor raised to 1.27.2 to pull in the fix for CVE-2026-52870 (present in 1.26.0).
-    "mcp>=1.27.2,<2",
+    # Floor includes the fixes for CVE-2026-52870 and CVE-2026-59951.
+    "mcp>=1.30.0,<2",
     "uvicorn[standard]>=0.35.0",
     "websockets>=15.0.1,<18.0.0",
     "rich>=14.1.0",
