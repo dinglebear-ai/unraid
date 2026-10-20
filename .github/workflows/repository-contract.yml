@@ -14,7 +14,7 @@ permissions: {}
 
 jobs:
   contract:
-    runs-on: ci-pool-ops
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -44,7 +44,7 @@ jobs:
     name: Repository Contract
     if: always()
     needs: [contract]
-    runs-on: ci-pool-ops
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions: {}
     steps:

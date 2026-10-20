@@ -1,3 +1,9 @@
+---
+title: Unraid API data limitations
+created: 2026-10-19
+updated: 2026-10-20
+---
+
 # Unraid API data limitations
 
 The Python and Rust servers depend on the Unraid GraphQL API. A declared schema

@@ -1,3 +1,9 @@
+---
+title: MCP Registry publication
+created: 2026-10-19
+updated: 2026-10-20
+---
+
 # MCP Registry publication
 
 This repository declares two separate MCP Registry entries:
