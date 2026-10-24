@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.3](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.6.2...unraid-rs-v0.6.3) (2026-10-24)
+
+
+### Dependencies
+
+* **deps:** bump the minor-and-patch group across 1 directory with 14 updates ([#458](https://github.com/dinglebear-ai/unraid/issues/458)) ([32976f2](https://github.com/dinglebear-ai/unraid/commit/32976f266db28c3331b859e72bf05f2f1318eaa4))
+
 ## [0.6.2](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.6.1...unraid-rs-v0.6.2) (2026-10-20)
 
 
