@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: dinglebear-ai/workflows
-          ref: d1a41a7af9c41189e0f1062234364f5814bda99d
+          ref: e04c7ee5b494b376372023194cb418200761c722
           path: workflow-library
           persist-credentials: false
       - name: Validate fleet and AGENTS-canonical repository contracts

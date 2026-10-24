@@ -2,14 +2,14 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "unraid-codex">
   <!ENTITY author    "Dinglebear AI">
-  <!ENTITY version   "20260928.001"> <!-- managed by .github/scripts/plugin_calver.py -->
+  <!ENTITY version   "20261024.001"> <!-- managed by .github/scripts/plugin_calver.py -->
   <!ENTITY launch    "Settings/CodexSettings">
   <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/codex">
   <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/codex-v&version;/&txz;">
   <!ENTITY pluginURL "&gitURL;/unraid-codex.plg">
-  <!ENTITY txz       "unraid-codex-20260928.001-x86_64-36.txz">
-  <!ENTITY md5       "bf9d677099c3ed5b7c2e1ae26254ed00">
-  <!ENTITY sha256    "045c1a9668df7cede94d111646b197b65c42d26a67d634c0cdbb434945c69e36">
+  <!ENTITY txz       "unraid-codex-20261024.001-x86_64-37.txz">
+  <!ENTITY md5       "9bc21fdfef0d1361a3f56b5871ee4e4a">
+  <!ENTITY sha256    "c4bee5999e73844d2c8e1e87af313fa3718a9c014ea4377886359f91857c9496">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -17,6 +17,10 @@
 <PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="7.0.0" support="https://github.com/dinglebear-ai/unraid/issues">
 
 <CHANGES>
+###2026.10.24
+- Build 37 refreshes the Codex browser dependencies and build tools, including
+  security fixes and TypeScript 7 compatibility.
+
 ###2026.09.28
 - Build 36 retries Codex app-server startup during array mount, verifies the
   effective Unix-socket service command, and publishes the browser route only

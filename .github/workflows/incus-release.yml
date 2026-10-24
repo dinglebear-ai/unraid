@@ -34,9 +34,12 @@ jobs:
       TAG: ${{ github.event.release.tag_name }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
+      - name: Use the validated npm resolver
+        run: npm install --global npm@11.9.0
+
       - name: Install build + validation tooling
         run: sudo apt-get update && sudo apt-get install -y jq xz-utils libxml2-utils shellcheck
 
@@ -44,10 +47,7 @@ jobs:
         working-directory: plugins/incus/unraid-api-plugin-incus
         run: |
           set -euo pipefail
-          npm install --no-save --no-package-lock \
-            @nestjs/common@11.1.28 @nestjs/config@4.0.4 @nestjs/graphql@13.4.2 \
-            class-transformer@0.5.1 class-validator@0.15.1 \
-            @unraid/shared@file:.ci-stubs/unraid-shared
+          npm ci
           npm audit --omit=dev --audit-level=high
           npx tsc --noEmit
           npm test

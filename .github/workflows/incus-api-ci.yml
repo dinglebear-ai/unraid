@@ -40,25 +40,17 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
 
-      # peerDependencies (@nestjs/*, class-validator, class-transformer) are
-      # normally provided by the real unraid-api host at deploy time — this
-      # repo never vendors them. For CI we install the real published NestJS
-      # packages (best-effort proxy for whatever version the actual host
-      # runs; re-pin here if that's ever confirmed) so the typecheck exercises
-      # real APIs, plus a local stub for @unraid/shared, the one peer with no
-      # public npm package (it's Unraid's internal, private monorepo).
-      # --no-save: peerDependencies stay peer — CI installing them shouldn't
-      # change what this package declares it needs from its host.
-      - name: Install peer dependencies for typecheck (host-provided at real deploy time)
-        run: |
-          npm install --no-save --no-package-lock \
-            @nestjs/common@11.1.28 @nestjs/config@4.0.4 @nestjs/graphql@13.4.2 \
-            class-transformer@0.5.1 class-validator@0.15.1 \
-            @unraid/shared@file:.ci-stubs/unraid-shared
+      # Pin npm's resolver: npm 10 crashes while constructing this host-peer graph.
+      - name: Use the validated npm resolver
+        run: npm install --global npm@11.9.0
+
+      # Runtime peers remain host-provided; pinned dev proxies and the shared
+      # fixture make clean-checkout typechecking reproducible through the lock.
+      - run: npm ci
 
       - name: Audit packaged backend dependencies
         run: npm audit --omit=dev --audit-level=high
@@ -102,7 +94,7 @@ jobs:
           done
 
       - name: Upload dist/
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: unraid-api-plugin-incus-dist
           path: plugins/incus/unraid-api-plugin-incus/dist/
@@ -121,11 +113,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: plugins/incus/unraid-api-plugin-incus/web/package-lock.json
+
+      - name: Use the validated npm resolver
+        run: npm install --global npm@11.9.0
 
       - run: npm ci
 
@@ -153,7 +148,7 @@ jobs:
             ../../source/usr/local/emhttp/plugins/incus/web/incus-dashboard.js
 
       - name: Upload incus-settings bundle
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: incus-settings-bundle
           path: plugins/incus/unraid-api-plugin-incus/dist-web/
@@ -164,7 +159,7 @@ jobs:
           retention-days: 3
 
       - name: Upload incus-dashboard bundle
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: incus-dashboard-bundle
           path: plugins/incus/unraid-api-plugin-incus/dist-web-dashboard/

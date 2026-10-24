@@ -48,7 +48,7 @@ from .utils import build_connection_init
 
 if TYPE_CHECKING:
     import ssl as _ssl
-    from collections.abc import AsyncIterator
+    from collections.abc import AsyncGenerator, AsyncIterator
 
 
 # Subprotocols offered to the server, most-preferred first. The negotiated
@@ -242,7 +242,7 @@ async def graphql_ws_session(
     ping_interval: float = _WS_PING_INTERVAL,
     ping_timeout: float = _WS_PING_TIMEOUT,
     close_timeout: float | None = None,
-) -> AsyncIterator[GraphqlWsSession]:
+) -> AsyncGenerator[GraphqlWsSession]:
     """Connect, authenticate, and subscribe over a graphql-ws WebSocket.
 
     Yields a live :class:`GraphqlWsSession` once ``connection_ack`` has been

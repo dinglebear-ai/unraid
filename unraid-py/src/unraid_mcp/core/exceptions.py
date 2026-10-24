@@ -6,7 +6,7 @@ throughout the application, with proper integration to FastMCP's error system.
 
 import contextlib
 import logging
-from collections.abc import Iterator
+from collections.abc import Generator
 
 import httpx
 from fastmcp.exceptions import ToolError as FastMCPToolError
@@ -56,7 +56,7 @@ def tool_error_handler(
     tool_name: str,
     action: str,
     logger: logging.Logger,
-) -> Iterator[None]:
+) -> Generator[None]:
     """Context manager that standardizes tool error handling.
 
     Re-raises ToolError as-is. Converts CredentialsNotConfiguredError to a ToolError

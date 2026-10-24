@@ -10,7 +10,7 @@ import os
 import secrets
 import sys
 import warnings
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -149,7 +149,7 @@ _response_limiter = StructuredResponseLimitingMiddleware(max_size=UNRAID_MCP_MAX
 
 
 @asynccontextmanager
-async def lifespan(_server: "FastMCP") -> AsyncIterator[None]:
+async def lifespan(_server: "FastMCP") -> AsyncGenerator[None]:
     """Server lifespan: run shutdown cleanup inside the server's own event loop.
 
     FastMCP enters this context manager on startup (before the transport begins
