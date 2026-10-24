@@ -37,7 +37,13 @@
     "@types/ws": "^8.5.13",
     "@vitest/coverage-v8": "^4.1.10",
     "typescript": "^5.6.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "@nestjs/common": "11.1.28",
+    "@nestjs/config": "4.0.4",
+    "@nestjs/graphql": "13.4.2",
+    "@unraid/shared": "file:.ci-stubs/unraid-shared",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.15.1"
   },
   "overrides": {
     "qs": "^6.15.3"

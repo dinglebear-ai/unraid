@@ -125,6 +125,19 @@ Single source of truth for both the shell init and the API plugin. Current defau
 - **Exec/terminal** — in-container shell access over GraphQL subscriptions
   (`graphql-ws` on the same `/graphql` endpoint as the rest of the API).
 
+## Development dependencies
+
+Use Node.js 22.22.2 or newer in the 22.x line and npm 11.9.0 for the
+locked backend and frontend installs (`npm ci` in each package). Backend
+runtime framework dependencies remain peers supplied by Unraid; pinned
+development proxies and the local `@unraid/shared` fixture make typechecking
+reproducible without a sibling host checkout.
+
+The frontend retains TypeScript 5: vue-tsc 3.3.13 still loads
+`typescript/lib/tsc`, which TypeScript 7.0.2 does not export. Upgrade that
+compiler only when Vue's typechecker supports its package layout. Vitest and
+its coverage provider must move together at matching versions.
+
 ## Install and compatibility
 
 The classic `.plg` and the `unraid-api-plugin-incus` backend are separate host
