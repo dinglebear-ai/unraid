@@ -9,7 +9,7 @@ use std::{
 use rmcp::{
     ClientHandler, ErrorData,
     model::{
-        CallToolRequestParams, ClientCapabilities, ClientInfo, ElicitRequestParams, ElicitResult,
+        CallToolRequestParams, ClientCapabilities, ClientConfig, ElicitRequestParams, ElicitResult,
         ElicitationAction, GetPromptRequestParams, Implementation, ReadResourceRequestParams,
     },
     service::{RequestContext, RoleClient, RunningService, ServiceExt},
@@ -112,8 +112,8 @@ impl ElicitingClient {
 }
 
 impl ClientHandler for ElicitingClient {
-    fn get_info(&self) -> ClientInfo {
-        ClientInfo::new(
+    fn get_info(&self) -> ClientConfig {
+        ClientConfig::new(
             ClientCapabilities::builder()
                 .enable_elicitation()
                 .enable_elicitation_schema_validation()

@@ -35,7 +35,7 @@ use rmcp::{
     ErrorData, RoleServer, ServerHandler,
     model::{
         CallToolRequestParams, CallToolResponse, CallToolResult, ContentBlock, ListToolsResult,
-        PaginatedRequestParams, ServerCapabilities, ServerInfo, Tool,
+        PaginatedRequestParams, ServerCapabilities, ServerConfig, Tool,
     },
     service::RequestContext,
     transport::streamable_http_server::{
@@ -117,8 +117,8 @@ impl ServerHandler for SpikeServer {
         .into())
     }
 
-    fn get_info(&self) -> ServerInfo {
-        ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
+    fn get_info(&self) -> ServerConfig {
+        ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
     }
 }
 
