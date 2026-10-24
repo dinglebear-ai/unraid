@@ -43,7 +43,14 @@ incus </dev/null storage show "$STORAGE_POOL_NAME" >/dev/null 2>&1 || fail "Incu
 incus </dev/null profile show "$JAIL_PROFILE" >/dev/null 2>&1 || fail "Incus profile '$JAIL_PROFILE' is not initialized"
 if ! incus </dev/null info "$CONTAINER" >/dev/null 2>&1; then
   workspace="${JAIL_WORKSPACE_ROOT%/}/$CONTAINER"
-  case "$workspace" in /srv/*|/mnt/*) ;; /tmp/*) [[ "${CODEX_TEST_ALLOW_TMP:-0}" = 1 ]] || fail "Codex workspace must remain beneath /srv or /mnt" ;; *) fail "Codex workspace must remain beneath /srv or /mnt" ;; esac
+  temporary_root="${TMPDIR:-/tmp}"
+  case "$workspace" in
+    /srv/*|/mnt/*) ;;
+    /tmp/*|"${temporary_root%/}"/*)
+      [[ "${CODEX_TEST_ALLOW_TMP:-0}" = 1 ]] || fail "Codex workspace must remain beneath /srv or /mnt"
+      ;;
+    *) fail "Codex workspace must remain beneath /srv or /mnt" ;;
+  esac
   install -d -o "$JAIL_AGENT_UID" -g "$JAIL_AGENT_GID" -m 0750 "$workspace"
   log "Creating dedicated Incus container $CONTAINER from $JAIL_IMAGE"
   incus </dev/null init "$JAIL_IMAGE" "$CONTAINER" --profile default --profile "$JAIL_PROFILE"
