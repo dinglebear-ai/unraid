@@ -125,7 +125,7 @@ printf '%s  %s
 ' "$sha256" "$archive" | sha256sum -c - >/dev/null ||
   fail "cached Codex archive failed SHA-256 verification"
 
-extract_dir="$(mktemp -d /tmp/unraid-codex-install.XXXXXX)"
+extract_dir="$(mktemp -d "${TMPDIR:-/tmp}/unraid-codex-install.XXXXXX")"
 dest_tmp="$(dirname "$CODEX_DEST")/.codex.new.$$"
 cleanup_install() { rm -rf "$extract_dir" "$dest_tmp"; }
 trap 'cleanup_install; cleanup_metadata' EXIT INT TERM

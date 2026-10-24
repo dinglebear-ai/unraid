@@ -69,7 +69,7 @@ shellcheck \
 
 package="$plugin_dir/dist/unraid-codex-$version-x86_64-$build.txz"
 SOURCE_DATE_EPOCH=0 "$plugin_dir/scripts/build-package.sh" "$version" "$build" >/dev/null
-first_copy="$(mktemp /tmp/unraid-codex-package.XXXXXX.txz)"
+first_copy="$(mktemp "${TMPDIR:-/tmp}/unraid-codex-package.XXXXXX.txz")"
 trap 'rm -f "$first_copy"' EXIT
 cp "$package" "$first_copy"
 SOURCE_DATE_EPOCH=0 "$plugin_dir/scripts/build-package.sh" "$version" "$build" >/dev/null
