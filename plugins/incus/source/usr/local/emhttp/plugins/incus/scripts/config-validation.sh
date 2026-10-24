@@ -6,7 +6,7 @@
 path_is_safe_storage() {
   case "$1" in
     /srv/*|/mnt/*) return 0 ;;
-    /tmp/*) [ "${INCUS_TEST_ALLOW_TMP:-0}" = "1" ] && return 0 ;;
+    /tmp/*|"${TMPDIR:-/tmp}"/*) [ "${INCUS_TEST_ALLOW_TMP:-0}" = "1" ] && return 0 ;;
   esac
   return 1
 }
