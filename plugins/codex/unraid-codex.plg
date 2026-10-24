@@ -8,8 +8,8 @@
   <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/codex-v&version;/&txz;">
   <!ENTITY pluginURL "&gitURL;/unraid-codex.plg">
   <!ENTITY txz       "unraid-codex-20260928.001-x86_64-36.txz">
-  <!ENTITY md5       "bf9d677099c3ed5b7c2e1ae26254ed00">
-  <!ENTITY sha256    "045c1a9668df7cede94d111646b197b65c42d26a67d634c0cdbb434945c69e36">
+  <!ENTITY md5       "60fdbe0c4c02a66076a994aaf3483a06">
+  <!ENTITY sha256    "6e874ebefe9b744ef3ef18a51ba23530cc766d7a671fefacc38775bf91c0ee95">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
