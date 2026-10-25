@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.4](https://github.com/dinglebear-ai/unraid/compare/v2.10.3...v2.10.4) (2026-10-25)
+
+
+### Bug Fixes
+
+* **deps:** consolidate and qualify Dependabot backlog ([#473](https://github.com/dinglebear-ai/unraid/issues/473)) ([aeee28a](https://github.com/dinglebear-ai/unraid/commit/aeee28acd28aa16e0d9a6bfb9fe12af12b109aef))
+
 ## [2.10.3](https://github.com/dinglebear-ai/unraid/compare/v2.10.2...v2.10.3) (2026-10-20)
 
 
