@@ -5,7 +5,7 @@
 # below the MSRV, and bump deliberately — CI uses floating `stable`, so this pin is
 # the one fixed Rust version in the build matrix.
 # TODO: digest-pin (rust:1.90-slim-bookworm@sha256:...) for fully reproducible builds.
-FROM rust:1.97-slim-bookworm AS builder
+FROM rust:1.98-slim-bookworm AS builder
 
 WORKDIR /app
 RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
