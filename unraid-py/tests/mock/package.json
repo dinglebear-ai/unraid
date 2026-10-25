@@ -8,8 +8,8 @@
     "start": "node mock-server.mjs"
   },
   "dependencies": {
-    "@graphql-tools/mock": "^9.1.12",
-    "@graphql-tools/schema": "^10.0.0",
+    "@graphql-tools/mock": "^10.0.4",
+    "@graphql-tools/schema": "^11.0.4",
     "graphql": "^17.0.2",
     "graphql-ws": "^6.2.0",
     "graphql-yoga": "^6.0.1",
