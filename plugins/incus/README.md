@@ -54,9 +54,10 @@ type, `JAIL_*` config keys, `launchJail`/`deleteJail` mutations) still say
 
 2. **`incus-init.sh` (config-driven preseed)** — Runs on every array start
    (and via the settings page's Apply button). Reads `incus.cfg` and
-   idempotently ensures the storage pool, the `agent-block-lan` network ACL,
-   the `agentbr0` bridge, and the `agent-jail` profile all exist and match
-   config. Safe to re-run (check-then-create); never hardcodes policy.
+   ensures the storage pool, the `agent-block-lan` network ACL, the
+   `agentbr0` bridge, and the `agent-jail` profile all exist and match
+   config. Intended to be re-run: missing objects are created, and the ACL and
+   profile bodies are re-applied every run. Never hardcodes policy.
 
 3. **`unraid-api-plugin-incus/`** — NestJS/GraphQL plugin for Unraid's newer
    `unraid-api` system, plus a `web/` Vue 3 frontend compiled to a custom
@@ -177,10 +178,16 @@ install it transactionally; older/classic-only artifacts do not. Requirements:
    /usr/local/emhttp/plugins/incus/scripts/incus-init.sh`).
 6. Preflight gates the daemon. Check `/var/log/incusd.log` and
    `$INCUS_DIR/plugin-health`; failed startup rolls back partial daemon/lxcfs
-   state. At array start, a failed `incus-init.sh` is retried with backoff. If
-   it still fails, the daemon and its instances stay up with the last
-   reconciled network state, `plugin-health` reports `status=degraded` with the
-   failing step, and syslog has the `incus-init` line and command that failed.
+   state. At array start, a failed `incus-init.sh` is retried with backoff and a
+   time limit; a rejected `incus.cfg` is not retried. If it still fails, the
+   daemon stays up with the network state stored in the Incus database, which
+   can include steps a failed attempt already applied. `plugin-health` then
+   reports `status=degraded` with the last line `incus-init.sh` printed, an
+   Unraid alert is raised, and syslog has the full output under the
+   `incus-init` and `incus-init-output` tags: a `FATAL:` message for a
+   rejected config, or `FAILED (exit N) at line L: <command>` for an
+   unexpected failure. A later `rc.incus start` or `status` resets
+   `plugin-health` to `ready` before init runs, so check syslog too.
    Config Apply restores `incus.cfg.known-good` on reconciliation failure.
 
 To uninstall, use the Unraid plugin manager. It stops Incus, removes the API

@@ -69,11 +69,13 @@ tar -tvJf packages/incus-unraid-7.0.0-57-x86_64-1.txz
   `/mnt`, or the plugin's dedicated curated-config directory.
 - `rc.incus` rolls back partial startup, rotates `/var/log/incusd.log`, records
   health in `$INCUS_DIR/plugin-health`, validates PIDs, and starts a bounded
-  watchdog. Array start retries environment reconciliation with backoff and,
-  on final failure, keeps the daemon running and records `status=degraded`
-  instead of stopping it under running instances. `incus-init.sh` logs the
-  line and command of any unexpected failure. Array shutdown aggregates
-  instance and daemon stop failures.
+  watchdog. Array shutdown aggregates instance and daemon stop failures.
+- `event/disks_mounted` retries environment reconciliation with backoff and
+  a time limit. On final failure it keeps the daemon running, records
+  `status=degraded`, and raises an alert instead of stopping the daemon under
+  attached workloads. `incus-init.sh` logs the line and command of any
+  unexpected failure, and the status of any failed exit, under the
+  `incus-init` syslog tag.
 - Config Apply uses `/boot/config/plugins/incus/incus.cfg.known-good` and
   restores it if reconciliation fails.
 - The installer verifies SHA-256 before `upgradepkg`, retains one previous

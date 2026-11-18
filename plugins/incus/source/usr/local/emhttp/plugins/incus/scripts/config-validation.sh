@@ -114,6 +114,18 @@ validate_containment_config() {
     return 1
   }
 
+  # Mirrors the API's cidrList pattern so a hand-edited incus.cfg is rejected
+  # here instead of failing inside `incus network acl edit` on every attempt.
+  local cidr_list='^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}(,[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2})*$'
+  for item in ACL_BLOCK ACL_ALLOW; do
+    host="${!item:-}"
+    host="${host// /}"
+    [ -z "$host" ] || [[ "$host" =~ $cidr_list ]] || {
+      echo "${item} must be a comma-separated list of IPv4 CIDRs: ${!item}" >&2
+      return 1
+    }
+  done
+
   [ -z "${JAIL_BIND_MOUNTS:-}" ] && return 0
   config_root="$(readlink -m /boot/config/plugins/incus/bind-mounts)" || return 1
   old_ifs="$IFS"

@@ -3,8 +3,9 @@
 # incus.cfg has been rewritten. A plain `rc.incus restart` alone is not
 # enough: it only brings the raw daemon up, it does not re-apply the
 # storage pool/ACL/bridge/profile environment for the (possibly new)
-# INCUS_DIR/config — that's incus-init.sh's job. Mirrors the same
-# start-then-init sequence the array-start event script uses.
+# INCUS_DIR/config — that's incus-init.sh's job. Uses the same
+# start-then-init sequence as the array-start hook, but restarts the daemon,
+# does not retry, and rolls back to the known-good config on failure.
 set -uo pipefail
 
 CFG="/boot/config/plugins/incus/incus.cfg"
