@@ -2,11 +2,21 @@
 # incus-init.sh — idempotently apply the jail environment from incus.cfg.
 # Runs on every array start (after incusd is up). Safe to re-run: every step is
 # check-then-create. Nothing here is destructive.
-set -euo pipefail
+set -Eeuo pipefail
 
-CFG="/boot/config/plugins/incus/incus.cfg"
+# Name the failing line and command. Without this, an unexpected failure under
+# set -e exits with no log line and no way to tell which step failed.
+on_error() {
+  local status="$1" line="$2" command="$3" message
+  message="FAILED (exit ${status}) at line ${line}: ${command}"
+  logger -t incus-init "$message" 2>/dev/null || true
+  echo "incus-init: ${message}" >&2
+}
+trap 'on_error "$?" "$LINENO" "$BASH_COMMAND"' ERR
+
+CFG="${INCUS_CONFIG:-/boot/config/plugins/incus/incus.cfg}"
 PREFIX="/usr/local/incus"
-EMHTTP="/usr/local/emhttp/plugins/incus"
+EMHTTP="${INCUS_EMHTTP:-/usr/local/emhttp/plugins/incus}"
 if [ ! -f "${EMHTTP}/scripts/incus-env.sh" ]; then
   echo "incus-init: FATAL — ${EMHTTP}/scripts/incus-env.sh not found" >&2; exit 1
 fi
@@ -15,11 +25,11 @@ if [ ! -f "$CFG" ]; then
   echo "incus-init: FATAL — $CFG not found" >&2; exit 1
 fi
 . "$CFG"
-INCUS="${PREFIX}/bin/incus"
+INCUS="${INCUS_BIN:-${PREFIX}/bin/incus}"
 log() { logger -t incus-init "$*"; echo "incus-init: $*"; }
 
 # ---------- L6: Prevent concurrent execution ----------
-LOCKFILE="/var/run/incus-init.lock"
+LOCKFILE="${INCUS_INIT_LOCK_FILE:-/var/run/incus-init.lock}"
 exec 200>"$LOCKFILE"
 flock -n 200 || { log "Another instance is already running. Exiting."; exit 0; }
 
@@ -67,7 +77,7 @@ fi
 # container start fails with "Failed to prepare rootfs storage". Real
 # Debian/Ubuntu lxc packages ship it via liblxc-common; we don't package
 # liblxc through apt, so it never gets created otherwise.
-mkdir -p /usr/lib/x86_64-linux-gnu/lxc/rootfs
+mkdir -p "${INCUS_LXC_ROOTFS_DIR:-/usr/lib/x86_64-linux-gnu/lxc/rootfs}"
 
 # ---------- 1. daemon first-run init (storage pool + core), guarded ----------
 # Gate on the storage pool actually existing, not on database/global/db.bin —

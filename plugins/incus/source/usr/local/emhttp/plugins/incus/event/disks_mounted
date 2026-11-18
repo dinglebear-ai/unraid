@@ -1,24 +1,55 @@
 #!/bin/bash
 # Fires when the array comes up. Start incusd (state lives on the array, so we
 # must wait until now) then apply the jail environment from incus.cfg.
-CFG="/boot/config/plugins/incus/incus.cfg"
+CFG="${INCUS_CONFIG:-/boot/config/plugins/incus/incus.cfg}"
+RC_INCUS="${INCUS_RC:-/etc/rc.d/rc.incus}"
+EMHTTP="${INCUS_EMHTTP:-/usr/local/emhttp/plugins/incus}"
+INIT="${EMHTTP}/scripts/incus-init.sh"
+INIT_ATTEMPTS="${INCUS_INIT_ATTEMPTS:-4}"
+INIT_BACKOFF="${INCUS_INIT_BACKOFF:-5}"
 [ -f "$CFG" ] || exit 0
 . "$CFG"
 [ "${SERVICE:-disabled}" = "enabled" ] || exit 0
+. "${EMHTTP}/scripts/incus-env.sh"   # INCUS_DIR default, matching rc.incus
+
+PLUGIN_BUILD="$(head -n 1 "${EMHTTP}/build-id" 2>/dev/null || printf 'unknown')"
+HEALTH_FILE="${INCUS_DIR:-/mnt/user/appdata/incus}/plugin-health"
+health() {
+  mkdir -p "${HEALTH_FILE%/*}" 2>/dev/null || true
+  printf 'status=%s\ntime=%s\nbuild=%s\nmessage=%s\n' "$1" "$(date -Is)" "$PLUGIN_BUILD" "$2" \
+    >"${HEALTH_FILE}.tmp" 2>/dev/null && mv -f "${HEALTH_FILE}.tmp" "$HEALTH_FILE" 2>/dev/null
+}
 
 logger -t incus "array up: starting incusd"
 attempt=1
-while ! /etc/rc.d/rc.incus start; do
+while ! "$RC_INCUS" start; do
   logger -t incus "incusd failed to start (attempt ${attempt}/3)"
   [ "$attempt" -ge 3 ] && exit 1
   attempt=$((attempt + 1))
   sleep 2
 done
 
-# Apply storage/ACL/bridge/profile idempotently.
-if ! /usr/local/emhttp/plugins/incus/scripts/incus-init.sh; then
-  logger -t incus "daemon started but environment reconciliation failed"
-  /etc/rc.d/rc.incus stop || true
-  exit 1
-fi
+# Apply storage/ACL/bridge/profile idempotently. Under heavy boot load a step
+# can fail transiently, so retry with doubling backoff.
+attempt=1
+delay="$INIT_BACKOFF"
+while ! output="$("$INIT" 2>&1)"; do
+  reason="$(printf '%s\n' "$output" | grep -v '^[[:space:]]*$' | tail -n 1)"
+  reason="${reason:-incus-init.sh exited without output}"
+  logger -t incus "environment reconciliation failed (attempt ${attempt}/${INIT_ATTEMPTS}): ${reason}"
+  if [ "$attempt" -ge "$INIT_ATTEMPTS" ]; then
+    # Do NOT stop the daemon. Stopping it tears down the managed bridges and
+    # their dnsmasq while instances and attached Docker containers keep
+    # running, which leaves them without DNS or egress. The daemon keeps the
+    # last reconciled network, ACL, and profile state from its database.
+    message="environment reconciliation failed after ${INIT_ATTEMPTS} attempts: ${reason}"
+    health degraded "$message" ||
+      logger -t incus "could not write ${HEALTH_FILE}"
+    logger -t incus "array up: daemon left running in degraded state; ${message}"
+    exit 1
+  fi
+  sleep "$delay"
+  attempt=$((attempt + 1))
+  delay=$((delay * 2))
+done
 logger -t incus "array up: daemon and containment environment ready"

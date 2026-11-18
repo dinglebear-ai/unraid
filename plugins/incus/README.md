@@ -177,7 +177,11 @@ install it transactionally; older/classic-only artifacts do not. Requirements:
    /usr/local/emhttp/plugins/incus/scripts/incus-init.sh`).
 6. Preflight gates the daemon. Check `/var/log/incusd.log` and
    `$INCUS_DIR/plugin-health`; failed startup rolls back partial daemon/lxcfs
-   state. Config Apply restores `incus.cfg.known-good` on reconciliation failure.
+   state. At array start, a failed `incus-init.sh` is retried with backoff. If
+   it still fails, the daemon and its instances stay up with the last
+   reconciled network state, `plugin-health` reports `status=degraded` with the
+   failing step, and syslog has the `incus-init` line and command that failed.
+   Config Apply restores `incus.cfg.known-good` on reconciliation failure.
 
 To uninstall, use the Unraid plugin manager. It stops Incus, removes the API
 backend and reloads `unraid-api`, then removes the classic package while leaving

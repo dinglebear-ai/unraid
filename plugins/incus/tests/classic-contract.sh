@@ -26,6 +26,8 @@ done
 "$ROOT/tests/ca-metadata.sh"
 "$ROOT/tests/package-directory-modes.sh"
 "$ROOT/tests/start-instance.sh"
+"$ROOT/tests/disks-mounted.sh"
+"$ROOT/tests/incus-init-errors.sh"
 
 grep -Eq 'ACL_BLOCK=.*100\.64\.0\.0/10' "$CFG"
 grep -Fq 'Block host bridge and peer containers' "$INIT"
