@@ -16,6 +16,13 @@ HEALTH="/var/log/incus-apply.log"
 . /usr/local/emhttp/plugins/incus/scripts/config-validation.sh
 
 record() { printf '%s %s\n' "$(date -Is)" "$*" >>"$HEALTH"; logger -t incus-apply "$*"; }
+# The API runs this script with a 90 s timeout, which also covers the daemon
+# restart, so wait only briefly for a concurrent reconciliation's lock.
+EX_LOCKED=75
+run_init() {
+  INCUS_INIT_LOCK_TIMEOUT="${INCUS_APPLY_LOCK_TIMEOUT:-20}" \
+    /usr/local/emhttp/plugins/incus/scripts/incus-init.sh
+}
 restore_known_good() {
   local reconcile="${1:-true}"
   [ -f "$ROLLBACK" ] || { record "apply failed and no known-good config exists"; return 1; }
@@ -25,7 +32,7 @@ restore_known_good() {
   record "restored known-good config after failed apply"
   [ "$reconcile" = "true" ] || return 0
   if [ "${SERVICE:-disabled}" = "enabled" ]; then
-    /etc/rc.d/rc.incus restart && /usr/local/emhttp/plugins/incus/scripts/incus-init.sh
+    /etc/rc.d/rc.incus restart && run_init
   else
     /etc/rc.d/rc.incus stop
   fi
@@ -55,11 +62,24 @@ if [ "${SERVICE:-disabled}" != "enabled" ]; then
   exit 0
 fi
 
-if /etc/rc.d/rc.incus restart && /usr/local/emhttp/plugins/incus/scripts/incus-init.sh; then
+if ! /etc/rc.d/rc.incus restart; then
+  record "candidate configuration failed: daemon restart failed; attempting rollback"
+  restore_known_good || true
+  exit 1
+fi
+run_init
+init_status=$?
+if [ "$init_status" -eq 0 ]; then
   cp -p "$CFG" "$ROLLBACK"
   chmod 600 "$ROLLBACK"
   record "configuration applied and reconciled successfully"
   exit 0
+fi
+if [ "$init_status" -eq "$EX_LOCKED" ]; then
+  # A busy lock says nothing about the candidate. Keep it in place; the
+  # running reconciliation or the next Apply applies it.
+  record "another reconciliation is running; candidate kept but not yet reconciled, retry Apply"
+  exit 1
 fi
 
 record "candidate configuration failed; attempting rollback"

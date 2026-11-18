@@ -114,16 +114,21 @@ validate_containment_config() {
     return 1
   }
 
-  # Mirrors the API's cidrList pattern so a hand-edited incus.cfg is rejected
-  # here instead of failing inside `incus network acl edit` on every attempt.
-  local cidr_list='^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}(,[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2})*$'
+  # Reject ACL entries that are not addresses, so a hand-edited typo fails
+  # here instead of inside `incus network acl edit` on every attempt. Accept
+  # every form Incus takes: a CIDR, a bare address, or an address range.
+  local address='[0-9A-Fa-f:.]+' entries entry
   for item in ACL_BLOCK ACL_ALLOW; do
     host="${!item:-}"
     host="${host// /}"
-    [ -z "$host" ] || [[ "$host" =~ $cidr_list ]] || {
-      echo "${item} must be a comma-separated list of IPv4 CIDRs: ${!item}" >&2
-      return 1
-    }
+    [ -n "$host" ] || continue
+    IFS=, read -ra entries <<<"$host"
+    for entry in "${entries[@]}"; do
+      [[ "$entry" =~ ^${address}(/[0-9]{1,3})?$ || "$entry" =~ ^${address}-${address}$ ]] || {
+        echo "${item} entries must be addresses, CIDRs, or address ranges: '${entry}' in ${!item}" >&2
+        return 1
+      }
+    done
   done
 
   [ -z "${JAIL_BIND_MOUNTS:-}" ] && return 0

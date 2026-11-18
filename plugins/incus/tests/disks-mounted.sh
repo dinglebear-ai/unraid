@@ -140,11 +140,13 @@ fi
 grep -Fq 'another incus-init.sh run held the lock' "$health" || fail "lock timeout not recorded"
 ! grep -Fq 'environment ready' "$state/log" || fail "lock timeout reported as ready"
 
-# A hung init is killed and recorded instead of blocking array start forever.
+# A hung init is killed, recorded and not retried, so it cannot hold up the
+# rest of array start for several timeouts.
 state="$tmp/hung"
-if run_hook "$state" MOCK_INIT_HANG=1 INCUS_INIT_ATTEMPTS=1 INCUS_INIT_TIMEOUT=1; then
+if run_hook "$state" MOCK_INIT_HANG=1 INCUS_INIT_TIMEOUT=1; then
   fail "hung init should exit non-zero"
 fi
+[[ "$(cat "$state/init-count")" = 1 ]] || fail "hung init was retried"
 grep -Fq 'message=environment reconciliation failed after 1 attempts: timed out after 1s; last output: incus-init: waiting on incusd' "$health" ||
   { cat "$health" >&2; fail "timeout not recorded"; }
 

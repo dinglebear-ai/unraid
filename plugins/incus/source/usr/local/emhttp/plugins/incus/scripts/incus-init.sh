@@ -246,7 +246,7 @@ if bridge_info="$("$INCUS" network show "$JAIL_BRIDGE" </dev/null 2>&1)"; then
     ip link delete "$JAIL_BRIDGE" 2>/dev/null || true
     create_bridge=true
   fi
-elif grep -qi 'not found' <<<"$bridge_info"; then
+elif grep -qx 'Error: Network not found' <<<"$bridge_info"; then
   create_bridge=true
 else
   log "cannot query bridge ${JAIL_BRIDGE}: ${bridge_info//$'\n'/ }"

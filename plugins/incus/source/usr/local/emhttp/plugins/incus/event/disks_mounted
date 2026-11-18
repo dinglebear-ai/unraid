@@ -70,7 +70,8 @@ done
 
 # Apply storage/ACL/bridge/profile. Under heavy boot load a step can fail
 # transiently, so retry with doubling backoff. A rejected configuration fails
-# the same way every time, so it is not retried.
+# the same way every time, and a hang usually means a missing helper that
+# makes incusd hang rather than fail, so neither is retried.
 attempt=1
 delay="$INIT_BACKOFF"
 while :; do
@@ -81,7 +82,8 @@ while :; do
   printf '%s\n' "$output" | grep -v '^[[:space:]]*$' | logger -t incus-init-output
   reason="$(failure_reason "$output" "$status")"
   logger -t incus "environment reconciliation failed (attempt ${attempt}/${INIT_ATTEMPTS}, status ${status}): ${reason}"
-  if [ "$status" -eq "$EX_CONFIG" ] || [ "$attempt" -ge "$INIT_ATTEMPTS" ]; then
+  case "$status" in "$EX_CONFIG"|124|137) final=true ;; *) final=false ;; esac
+  if [ "$final" = true ] || [ "$attempt" -ge "$INIT_ATTEMPTS" ]; then
     if [ "$status" -eq "$EX_CONFIG" ]; then
       message="incus.cfg rejected: ${reason}"
     elif [ "$status" -eq "$EX_LOCKED" ]; then

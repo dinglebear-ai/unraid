@@ -28,6 +28,11 @@ done
 "$ROOT/tests/start-instance.sh"
 "$ROOT/tests/disks-mounted.sh"
 "$ROOT/tests/incus-init.sh"
+# Apply runs under the API's 90 s timeout: it must wait only briefly for the
+# init lock and must not roll back a candidate because the lock was busy.
+grep -Fq 'INCUS_INIT_LOCK_TIMEOUT="${INCUS_APPLY_LOCK_TIMEOUT:-20}"' "$APPLY"
+grep -Fq 'if [ "$init_status" -eq "$EX_LOCKED" ]; then' "$APPLY"
+grep -Fq 'timeout: 90_000' "$ROOT/unraid-api-plugin-incus/src/incus.resolver.ts"
 
 grep -Eq 'ACL_BLOCK=.*100\.64\.0\.0/10' "$CFG"
 grep -Fq 'Block host bridge and peer containers' "$INIT"

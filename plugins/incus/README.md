@@ -182,11 +182,12 @@ install it transactionally; older/classic-only artifacts do not. Requirements:
    time limit; a rejected `incus.cfg` is not retried. If it still fails, the
    daemon stays up with the network state stored in the Incus database, which
    can include steps a failed attempt already applied. `plugin-health` then
-   reports `status=degraded` with the last line `incus-init.sh` printed, an
+   reports `status=degraded` with a one-line reason: the failing command and
+   its Incus error, a timeout, or the last line `incus-init.sh` printed. A
+   rejected config is reported as `incus.cfg rejected:` and is not retried;
+   other `FATAL:` lines, such as a missing storage pool, are retried. An
    Unraid alert is raised, and syslog has the full output under the
-   `incus-init` and `incus-init-output` tags: a `FATAL:` message for a
-   rejected config, or `FAILED (exit N) at line L: <command>` for an
-   unexpected failure. A later `rc.incus start` or `status` resets
+   `incus-init` and `incus-init-output` tags. A later `rc.incus start` or `status` resets
    `plugin-health` to `ready` before init runs, so check syslog too.
    Config Apply restores `incus.cfg.known-good` on reconciliation failure.
 

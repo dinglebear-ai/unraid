@@ -22,7 +22,8 @@ cat >"$emhttp/scripts/config-validation.sh" <<STUB
 prepare_storage_config() { return 0; }
 STUB
 
-# MOCK_MODE: existing (default) | first-run | bridge-busy | bridge-unmanaged
+# MOCK_MODE: existing (default) | first-run | bridge-busy | bridge-other |
+# bridge-unmanaged
 # MOCK_FAIL_ON: acl-edit | network-set ; MOCK_HANG=1 hangs every call.
 cat >"$bin/incus" <<'EOF'
 #!/bin/bash
@@ -47,6 +48,7 @@ case "$args" in
     case "$mode" in
       first-run) echo "Error: Network not found" >&2; exit 1 ;;
       bridge-busy) echo "Error: database is locked" >&2; exit 1 ;;
+      bridge-other) echo "Error: Project not found" >&2; exit 1 ;;
       bridge-unmanaged) echo "managed: false" ;;
       *) echo "managed: true" ;;
     esac
@@ -135,6 +137,9 @@ if run_init busy MOCK_MODE=bridge-busy; then fail "busy bridge query should fail
 ! grep -q '^ip link delete' "$tmp/busy/calls" || fail "busy query deleted the live bridge"
 ! grep -q '^network create' "$tmp/busy/calls" || fail "busy query recreated the bridge"
 grep -Fq 'cannot query bridge agentbr0: Error: database is locked' "$tmp/busy/log" || fail "busy query not logged"
+# Only Incus's exact missing-network error means the bridge does not exist.
+if run_init other MOCK_MODE=bridge-other; then fail "unrelated not-found error should fail"; fi
+! grep -q '^network create' "$tmp/other/calls" || fail "unrelated not-found error created the bridge"
 
 # A same-named interface Incus reports as unmanaged is replaced.
 run_init unmanaged MOCK_MODE=bridge-unmanaged || fail "unmanaged interface should be replaced"
@@ -167,6 +172,10 @@ if CFG_EXTRA='JAIL_CPU="2|x"' run_init render; then fail "render failure should 
 grep -Fq 'FATAL: could not render profile agent-jail' "$tmp/render/log" || fail "render failure not logged"
 ! grep -Fq 'profile edit' "$tmp/render/calls" || fail "profile edit ran after a failed render"
 no_trap_lines render
+
+# Every ACL address form Incus accepts still passes validation.
+CFG_EXTRA='ACL_ALLOW="192.168.1.50, 10.0.0.1-10.0.0.5,fd00::/8"' run_init acl-forms ||
+  { cat "$tmp/acl-forms/log" >&2; fail "valid ACL address forms were rejected"; }
 
 # Configuration errors exit 78 so the array-start hook does not retry them.
 for cfg in 'JAIL_IPV6=auto' 'ACL_BLOCK="10.0.0.0/8;reboot"' 'ACL_ALLOW="example.com"'; do
