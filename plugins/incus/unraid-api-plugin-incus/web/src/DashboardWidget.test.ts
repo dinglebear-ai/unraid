@@ -23,4 +23,26 @@ describe("DashboardWidget", () => {
     await vi.advanceTimersByTimeAsync(60_000);
     expect(gqlMock).toHaveBeenCalledTimes(calls);
   });
+
+  it("flags a degraded containment environment with its reason", async () => {
+    gqlMock.mockResolvedValue({
+      incusHealthy: true,
+      incusPluginHealth: { status: "degraded", message: "environment reconciliation failed after 4 attempts" },
+      jails: [],
+    });
+    const wrapper = mount(DashboardWidget);
+    await flushPromises();
+    const line = wrapper.get(".incus-tile-degraded");
+    expect(line.text()).toContain("Environment setup incomplete");
+    expect(line.attributes("title")).toBe("environment reconciliation failed after 4 attempts");
+    wrapper.unmount();
+  });
+
+  it("shows no degraded line for a reconciled environment", async () => {
+    gqlMock.mockResolvedValue({ incusHealthy: true, incusPluginHealth: { status: "ready", message: "ok" }, jails: [] });
+    const wrapper = mount(DashboardWidget);
+    await flushPromises();
+    expect(wrapper.find(".incus-tile-degraded").exists()).toBe(false);
+    wrapper.unmount();
+  });
 });

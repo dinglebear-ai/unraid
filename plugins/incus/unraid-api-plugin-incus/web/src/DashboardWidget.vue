@@ -16,13 +16,21 @@ interface Jail {
 const healthy = ref<boolean | null>(null);
 const jails = ref<Jail[]>([]);
 const error = ref<string | null>(null);
+// "degraded" plugin-health: incusd answers but the containment environment
+// (ACL, bridge, profile) was not reconciled.
+const degradedReason = ref<string | null>(null);
 
-const STATUS_QUERY = `query { incusHealthy jails { name status } }`;
+const STATUS_QUERY = `query { incusHealthy incusPluginHealth { status message } jails { name status } }`;
 
 async function refresh() {
   try {
-    const data = await gql<{ incusHealthy: boolean; jails: Jail[] }>(STATUS_QUERY);
+    const data = await gql<{
+      incusHealthy: boolean;
+      incusPluginHealth: { status: string; message: string } | null;
+      jails: Jail[];
+    }>(STATUS_QUERY);
     healthy.value = data.incusHealthy;
+    degradedReason.value = data.incusPluginHealth?.status === "degraded" ? data.incusPluginHealth.message : null;
     jails.value = data.jails;
     error.value = null;
   } catch (e) {
@@ -55,6 +63,9 @@ onUnmounted(() => poller?.stop());
       (<span class="incus-tile-running">{{ running }} running</span>,
       <span class="incus-tile-stopped">{{ stopped }} stopped</span>
       <template v-if="other > 0">, <span class="incus-tile-other">{{ other }} other</span></template>)
+    </div>
+    <div v-if="healthy && degradedReason !== null" class="incus-tile-other incus-tile-degraded" :title="degradedReason">
+      Environment setup incomplete; see Settings › Incus
     </div>
   </div>
 </template>

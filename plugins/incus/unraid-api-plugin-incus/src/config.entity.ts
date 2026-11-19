@@ -269,6 +269,17 @@ export class IncusConfigInput {
   @Field(() => Boolean, { nullable: true }) @IsOptional() @IsBoolean() dashboardWidgetEnable?: boolean;
 }
 
+@ObjectType({ description: "Classic plugin health from $INCUS_DIR/plugin-health" })
+export class IncusPluginHealth {
+  @Field(() => String, {
+    description: "ready, degraded (daemon up but the jail environment is not reconciled), failed, or stopped",
+  })
+  status!: string;
+  @Field(() => String, { description: "Why the plugin is in this state" }) message!: string;
+  @Field(() => String, { nullable: true, description: "ISO 8601 time of the last write" }) time?: string;
+  @Field(() => String, { nullable: true, description: "Classic plugin build that wrote it" }) build?: string;
+}
+
 @ObjectType()
 export class Jail {
   @Field(() => String) name!: string;

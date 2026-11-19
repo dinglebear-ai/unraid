@@ -1,10 +1,10 @@
-import { $ as e, A as t, B as n, C as r, D as i, E as a, F as o, G as s, H as c, I as l, J as u, K as d, L as f, M as p, N as m, O as h, P as g, Q as _, R as v, S as ee, T as te, U as y, V as ne, W as b, X as re, Y as ie, Z as x, _ as S, a as ae, at as oe, b as se, c as ce, ct as le, d as C, dt as w, et as ue, f as T, ft as de, g as E, h as fe, i as pe, it as me, j as he, k as ge, l as D, lt as _e, m as ve, n as ye, nt as be, o as O, ot as xe, p as k, pt as Se, q as Ce, r as A, rt as we, s as Te, st as Ee, t as j, tt as De, u as M, ut as Oe, v as ke, w as N, x as Ae, y as P, z as F } from "./incus-settings-graphql-client-LuoElzcT.js";
+import { $ as e, A as t, B as n, C as r, D as i, E as a, F as o, G as s, H as c, I as l, J as u, K as d, L as f, M as p, N as m, O as h, P as g, Q as _, R as v, S as y, T as ee, U as b, V as te, W as x, X as ne, Y as re, Z as S, _ as C, a as ie, at as w, b as ae, c as oe, ct as se, d as T, dt as E, et as ce, f as D, ft as le, g as O, h as ue, i as de, it as fe, j as pe, k as me, l as k, lt as he, m as ge, n as _e, nt as ve, o as A, ot as ye, p as j, pt as be, q as xe, r as M, rt as Se, s as Ce, st as we, t as N, tt as Te, u as P, ut as Ee, v as De, w as Oe, x as ke, y as F, z as Ae } from "./incus-settings-graphql-client-LuoElzcT.js";
 // node_modules/@vue/runtime-dom/dist/runtime-dom.esm-bundler.js
-var je = void 0, Me = typeof window < "u" && window.trustedTypes;
-if (Me) try {
-	je = /* @__PURE__ */ Me.createPolicy("vue", { createHTML: (e) => e });
+var je = void 0, I = typeof window < "u" && window.trustedTypes;
+if (I) try {
+	je = /* @__PURE__ */ I.createPolicy("vue", { createHTML: (e) => e });
 } catch {}
-var Ne = je ? (e) => je.createHTML(e) : (e) => e, Pe = "http://www.w3.org/2000/svg", Fe = "http://www.w3.org/1998/Math/MathML", I = typeof document < "u" ? document : null, L = I && /* @__PURE__ */ I.createElement("template"), R = {
+var Me = je ? (e) => je.createHTML(e) : (e) => e, Ne = "http://www.w3.org/2000/svg", Pe = "http://www.w3.org/1998/Math/MathML", L = typeof document < "u" ? document : null, Fe = L && /* @__PURE__ */ L.createElement("template"), Ie = {
 	insert: (e, t, n) => {
 		t.insertBefore(e, n || null);
 	},
@@ -13,11 +13,11 @@ var Ne = je ? (e) => je.createHTML(e) : (e) => e, Pe = "http://www.w3.org/2000/s
 		t && t.removeChild(e);
 	},
 	createElement: (e, t, n, r) => {
-		let i = t === "svg" ? I.createElementNS(Pe, e) : t === "mathml" ? I.createElementNS(Fe, e) : n ? I.createElement(e, { is: n }) : I.createElement(e);
+		let i = t === "svg" ? L.createElementNS(Ne, e) : t === "mathml" ? L.createElementNS(Pe, e) : n ? L.createElement(e, { is: n }) : L.createElement(e);
 		return e === "select" && r && r.multiple != null && i.setAttribute("multiple", r.multiple), i;
 	},
-	createText: (e) => I.createTextNode(e),
-	createComment: (e) => I.createComment(e),
+	createText: (e) => L.createTextNode(e),
+	createComment: (e) => L.createComment(e),
 	setText: (e, t) => {
 		e.nodeValue = t;
 	},
@@ -26,7 +26,7 @@ var Ne = je ? (e) => je.createHTML(e) : (e) => e, Pe = "http://www.w3.org/2000/s
 	},
 	parentNode: (e) => e.parentNode,
 	nextSibling: (e) => e.nextSibling,
-	querySelector: (e) => I.querySelector(e),
+	querySelector: (e) => L.querySelector(e),
 	setScopeId(e, t) {
 		e.setAttribute(t, "");
 	},
@@ -34,8 +34,8 @@ var Ne = je ? (e) => je.createHTML(e) : (e) => e, Pe = "http://www.w3.org/2000/s
 		let o = n ? n.previousSibling : t.lastChild;
 		if (i && (i === a || i.nextSibling)) for (; t.insertBefore(i.cloneNode(!0), n), i !== a && (i = i.nextSibling););
 		else {
-			L.innerHTML = Ne(r === "svg" ? `<svg>${e}</svg>` : r === "mathml" ? `<math>${e}</math>` : e);
-			let i = L.content;
+			Fe.innerHTML = Me(r === "svg" ? `<svg>${e}</svg>` : r === "mathml" ? `<math>${e}</math>` : e);
+			let i = Fe.content;
 			if (r === "svg" || r === "mathml") {
 				let e = i.firstChild;
 				for (; e.firstChild;) i.appendChild(e.firstChild);
@@ -45,17 +45,17 @@ var Ne = je ? (e) => je.createHTML(e) : (e) => e, Pe = "http://www.w3.org/2000/s
 		}
 		return [o ? o.nextSibling : t.firstChild, n ? n.previousSibling : t.lastChild];
 	}
-}, z = /* @__PURE__ */ Symbol("_vtc");
-function Ie(e, t, n) {
-	let r = e[z];
+}, R = /* @__PURE__ */ Symbol("_vtc");
+function z(e, t, n) {
+	let r = e[R];
 	r && (t = (t ? [t, ...r] : [...r]).join(" ")), t == null ? e.removeAttribute("class") : n ? e.setAttribute("class", t) : e.className = t;
 }
-var B = /* @__PURE__ */ Symbol("_vod"), Le = /* @__PURE__ */ Symbol("_vsh"), Re = /* @__PURE__ */ Symbol(""), ze = /(?:^|;)\s*display\s*:/;
-function Be(e, t, n) {
-	let r = e.style, i = me(n), a = !1;
+var B = /* @__PURE__ */ Symbol("_vod"), Le = /* @__PURE__ */ Symbol("_vsh"), V = /* @__PURE__ */ Symbol(""), Re = /(?:^|;)\s*display\s*:/;
+function ze(e, t, n) {
+	let r = e.style, i = fe(n), a = !1;
 	if (n && !i) {
 		if (t) {
-			if (me(t)) for (let e of t.split(";")) {
+			if (fe(t)) for (let e of t.split(";")) {
 				let t = e.slice(0, e.indexOf(":")).trim();
 				n[t] ?? Ve(r, t, "");
 			}
@@ -64,23 +64,23 @@ function Be(e, t, n) {
 		for (let i in n) {
 			i === "display" && (a = !0);
 			let o = n[i];
-			o == null ? Ve(r, i, "") : Ge(e, i, !me(t) && t ? t[i] : void 0, o) || Ve(r, i, o);
+			o == null ? Ve(r, i, "") : Ge(e, i, !fe(t) && t ? t[i] : void 0, o) || Ve(r, i, o);
 		}
 	} else if (i) {
 		if (t !== n) {
-			let e = r[Re];
-			e && (n += ";" + e), r.cssText = n, a = ze.test(n);
+			let e = r[V];
+			e && (n += ";" + e), r.cssText = n, a = Re.test(n);
 		}
 	} else t && e.removeAttribute("style");
 	B in e && (i && t === n || (e[B] = a ? r.display : ""), e[Le] && (r.display = "none"));
 }
-var V = /\s*!important$/;
+var Be = /\s*!important$/;
 function Ve(e, t, n) {
-	if (x(n)) n.forEach((n) => Ve(e, t, n));
-	else if (n ??= "", t.startsWith("--")) V.test(n) ? e.setProperty(t, n.replace(V, ""), "important") : e.setProperty(t, n);
+	if (S(n)) n.forEach((n) => Ve(e, t, n));
+	else if (n ??= "", t.startsWith("--")) Be.test(n) ? e.setProperty(t, n.replace(Be, ""), "important") : e.setProperty(t, n);
 	else {
 		let r = We(e, t);
-		V.test(n) ? e.setProperty(u(r), n.replace(V, ""), "important") : e[r] = n;
+		Be.test(n) ? e.setProperty(u(r), n.replace(Be, ""), "important") : e[r] = n;
 	}
 }
 var He = [
@@ -91,7 +91,7 @@ var He = [
 function We(e, t) {
 	let n = Ue[t];
 	if (n) return n;
-	let r = b(t);
+	let r = x(t);
 	if (r !== "filter" && r in e) return Ue[t] = r;
 	r = s(r);
 	for (let n = 0; n < He.length; n++) {
@@ -101,15 +101,15 @@ function We(e, t) {
 	return t;
 }
 function Ge(e, t, n, r) {
-	return e.tagName === "TEXTAREA" && (t === "width" || t === "height") && me(r) && n === r;
+	return e.tagName === "TEXTAREA" && (t === "width" || t === "height") && fe(r) && n === r;
 }
 var Ke = "http://www.w3.org/1999/xlink";
-function qe(e, t, n, r, i, a = we(t)) {
-	r && t.startsWith("xlink:") ? n == null ? e.removeAttributeNS(Ke, t.slice(6, t.length)) : e.setAttributeNS(Ke, t, n) : n == null || a && !ie(n) ? e.removeAttribute(t) : e.setAttribute(t, a ? "" : oe(n) ? String(n) : n);
+function qe(e, t, n, r, i, a = Se(t)) {
+	r && t.startsWith("xlink:") ? n == null ? e.removeAttributeNS(Ke, t.slice(6, t.length)) : e.setAttributeNS(Ke, t, n) : n == null || a && !re(n) ? e.removeAttribute(t) : e.setAttribute(t, a ? "" : w(n) ? String(n) : n);
 }
 function Je(e, t, n, r, i) {
 	if (t === "innerHTML" || t === "textContent") {
-		n != null && (e[t] = t === "innerHTML" ? Ne(n) : n);
+		n != null && (e[t] = t === "innerHTML" ? Me(n) : n);
 		return;
 	}
 	let a = e.tagName;
@@ -121,7 +121,7 @@ function Je(e, t, n, r, i) {
 	let o = !1;
 	if (n === "" || n == null) {
 		let r = typeof e[t];
-		r === "boolean" ? n = ie(n) : n == null && r === "string" ? (n = "", o = !0) : r === "number" && (n = 0, o = !0);
+		r === "boolean" ? n = re(n) : n == null && r === "string" ? (n = "", o = !0) : r === "number" && (n = 0, o = !0);
 	}
 	try {
 		e[t] = n;
@@ -155,7 +155,7 @@ function it(e, t) {
 		if (!e._vts) e._vts = Date.now();
 		else if (e._vts <= n.attached) return;
 		let r = n.value;
-		if (x(r)) {
+		if (S(r)) {
 			let n = e.stopImmediatePropagation;
 			e.stopImmediatePropagation = () => {
 				n.call(e), e._stopped = !0;
@@ -163,36 +163,36 @@ function it(e, t) {
 			let i = r.slice(), a = [e];
 			for (let n = 0; n < i.length && !e._stopped; n++) {
 				let e = i[n];
-				e && Te(e, t, 5, a);
+				e && Ce(e, t, 5, a);
 			}
-		} else Te(r, t, 5, [e]);
+		} else Ce(r, t, 5, [e]);
 	};
 	return n.value = e, n.attached = rt(), n;
 }
-var U = (e) => e.charCodeAt(0) === 111 && e.charCodeAt(1) === 110 && e.charCodeAt(2) > 96 && e.charCodeAt(2) < 123, at = (t, n, r, i, a, o) => {
+var at = (e) => e.charCodeAt(0) === 111 && e.charCodeAt(1) === 110 && e.charCodeAt(2) > 96 && e.charCodeAt(2) < 123, ot = (t, n, r, i, a, o) => {
 	let s = a === "svg";
-	n === "class" ? Ie(t, i, s) : n === "style" ? Be(t, r, i) : ue(n) ? e(n) || Ze(t, n, r, i, o) : (n[0] === "." ? (n = n.slice(1), 1) : n[0] === "^" ? (n = n.slice(1), 0) : ot(t, n, i, s)) ? (Je(t, n, i), t.tagName.includes("-") || n !== "value" && n !== "checked" && n !== "selected" || qe(t, n, i, s, o, n !== "value")) : t._isVueCE && (st(t, n) || t._def.__asyncLoader && (/[A-Z]/.test(n) || !me(i))) ? Je(t, b(n), i, o, n) : (n === "true-value" ? t._trueValue = i : n === "false-value" && (t._falseValue = i), qe(t, n, i, s));
+	n === "class" ? z(t, i, s) : n === "style" ? ze(t, r, i) : ce(n) ? e(n) || Ze(t, n, r, i, o) : (n[0] === "." ? (n = n.slice(1), 1) : n[0] === "^" ? (n = n.slice(1), 0) : U(t, n, i, s)) ? (Je(t, n, i), t.tagName.includes("-") || n !== "value" && n !== "checked" && n !== "selected" || qe(t, n, i, s, o, n !== "value")) : t._isVueCE && (st(t, n) || t._def.__asyncLoader && (/[A-Z]/.test(n) || !fe(i))) ? Je(t, x(n), i, o, n) : (n === "true-value" ? t._trueValue = i : n === "false-value" && (t._falseValue = i), qe(t, n, i, s));
 };
-function ot(e, t, n, r) {
-	if (r) return !!(t === "innerHTML" || t === "textContent" || t in e && U(t) && _(n));
+function U(e, t, n, r) {
+	if (r) return !!(t === "innerHTML" || t === "textContent" || t in e && at(t) && _(n));
 	if (t === "spellcheck" || t === "draggable" || t === "translate" || t === "autocorrect" || t === "sandbox" && e.tagName === "IFRAME" || t === "form" || t === "list" && e.tagName === "INPUT" || t === "type" && e.tagName === "TEXTAREA") return !1;
 	if (t === "width" || t === "height") {
 		let t = e.tagName;
 		if (t === "IMG" || t === "VIDEO" || t === "CANVAS" || t === "SOURCE") return !1;
 	}
-	return U(t) && me(n) ? !1 : t in e;
+	return at(t) && fe(n) ? !1 : t in e;
 }
 function st(e, t) {
 	let n = e._def.props;
 	if (!n) return !1;
-	let r = b(t);
-	return Array.isArray(n) ? n.some((e) => b(e) === r) : Object.keys(n).some((e) => b(e) === r);
+	let r = x(t);
+	return Array.isArray(n) ? n.some((e) => x(e) === r) : Object.keys(n).some((e) => x(e) === r);
 }
 var ct = {};
 // @__NO_SIDE_EFFECTS__
 function lt(e, t, n) {
-	let r = P(e, t);
-	De(r) && (r = d({}, r, t));
+	let r = F(e, t);
+	Te(r) && (r = d({}, r, t));
 	class i extends dt {
 		constructor(e) {
 			super(r, e, n);
@@ -223,7 +223,7 @@ var ut = typeof HTMLElement < "u" ? HTMLElement : class {}, dt = class e extends
 		e && this._app && Object.setPrototypeOf(this._app._context.provides, e._instance.provides);
 	}
 	disconnectedCallback() {
-		this._connected = !1, N(() => {
+		this._connected = !1, Oe(() => {
 			this._connected || (this._ob &&= (this._ob.disconnect(), null), this._app && this._app.unmount(), this._instance && (this._instance.ce = void 0), this._app = this._instance = null, this._teleportTargets &&= (this._teleportTargets.clear(), void 0));
 		});
 	}
@@ -237,9 +237,9 @@ var ut = typeof HTMLElement < "u" ? HTMLElement : class {}, dt = class e extends
 		let e = (e, t = !1) => {
 			this._resolved = !0, this._pendingResolve = void 0;
 			let { props: n, styles: r } = e, i;
-			if (n && !x(n)) for (let e in n) {
+			if (n && !S(n)) for (let e in n) {
 				let t = n[e];
-				(t === Number || t && t.type === Number) && (e in this._props && (this._props[e] = Se(this._props[e])), (i ||= /* @__PURE__ */ Object.create(null))[b(e)] = !0);
+				(t === Number || t && t.type === Number) && (e in this._props && (this._props[e] = be(this._props[e])), (i ||= /* @__PURE__ */ Object.create(null))[x(e)] = !0);
 			}
 			this._numberProps = i, this._resolveProps(e), this.shadowRoot && this._applyStyles(r), this._connected && this._mount(e);
 		}, t = this._def.__asyncLoader;
@@ -251,12 +251,12 @@ var ut = typeof HTMLElement < "u" ? HTMLElement : class {}, dt = class e extends
 	_mount(e) {
 		this._app = this._createApp(e), this._inheritParentContext(), e.configureApp && e.configureApp(this._app), this._app._ceVNode = this._createVNode(), this._app.mount(this._root);
 		let t = this._instance && this._instance.exposed;
-		if (t) for (let e in t) Ce(this, e) || Object.defineProperty(this, e, { get: () => y(t[e]) });
+		if (t) for (let e in t) xe(this, e) || Object.defineProperty(this, e, { get: () => b(t[e]) });
 	}
 	_resolveProps(e) {
-		let { props: t } = e, n = x(t) ? t : Object.keys(t || {});
+		let { props: t } = e, n = S(t) ? t : Object.keys(t || {});
 		for (let e of Object.keys(this)) e[0] !== "_" && n.includes(e) && this._setProp(e, this[e]);
-		for (let e of n.map(b)) Object.defineProperty(this, e, {
+		for (let e of n.map(x)) Object.defineProperty(this, e, {
 			get() {
 				return this._getProp(e);
 			},
@@ -267,8 +267,8 @@ var ut = typeof HTMLElement < "u" ? HTMLElement : class {}, dt = class e extends
 	}
 	_setAttr(e) {
 		if (e.startsWith("data-v-")) return;
-		let t = this.hasAttribute(e), n = t ? this.getAttribute(e) : ct, r = b(e);
-		t && this._numberProps && this._numberProps[r] && (n = Se(n)), this._setProp(r, n, !1, !0);
+		let t = this.hasAttribute(e), n = t ? this.getAttribute(e) : ct, r = x(e);
+		t && this._numberProps && this._numberProps[r] && (n = be(n)), this._setProp(r, n, !1, !0);
 	}
 	_getProp(e) {
 		return this._props[e];
@@ -281,16 +281,16 @@ var ut = typeof HTMLElement < "u" ? HTMLElement : class {}, dt = class e extends
 	}
 	_update() {
 		let e = this._createVNode();
-		this._app && (e.appContext = this._app._context), G(e, this._root);
+		this._app && (e.appContext = this._app._context), It(e, this._root);
 	}
 	_createVNode() {
 		let e = {};
 		this.shadowRoot || (e.onVnodeMounted = e.onVnodeUpdated = this._renderSlots.bind(this));
-		let t = S(this._def, d(e, this._props));
+		let t = C(this._def, d(e, this._props));
 		return this._instance || (t.ce = (e) => {
 			this._instance = e, e.ce = this, e.isCE = !0;
 			let t = (e, t) => {
-				this.dispatchEvent(new CustomEvent(e, De(t[0]) ? d({ detail: t }, t[0]) : { detail: t }));
+				this.dispatchEvent(new CustomEvent(e, Te(t[0]) ? d({ detail: t }, t[0]) : { detail: t }));
 			};
 			e.emit = (e, ...n) => {
 				t(e, n), u(e) !== e && t(u(e), n);
@@ -370,7 +370,7 @@ var ut = typeof HTMLElement < "u" ? HTMLElement : class {}, dt = class e extends
 	_removeChildStyle(e) {}
 }, ft = (e) => {
 	let t = e.props["onUpdate:modelValue"] || !1;
-	return x(t) ? (e) => re(t, e) : t;
+	return S(t) ? (e) => ne(t, e) : t;
 };
 function pt(e) {
 	e.target.composing = !0;
@@ -381,7 +381,7 @@ function mt(e) {
 }
 var W = /* @__PURE__ */ Symbol("_assign"), ht = /* @__PURE__ */ Symbol("_initialValue");
 function gt(e, t, n) {
-	return t && (e = e.trim()), n && (e = le(e)), e;
+	return t && (e = e.trim()), n && (e = se(e)), e;
 }
 var _t = {
 	created(e, { modifiers: { lazy: t, trim: n, number: r } }, i) {
@@ -399,7 +399,7 @@ var _t = {
 	},
 	beforeUpdate(e, { value: t, oldValue: n, modifiers: { lazy: r, trim: i, number: a } }, o) {
 		if (e[W] = ft(o), e.composing) return;
-		let s = (a || e.type === "number") && !/^0\d/.test(e.value) ? le(e.value) : e.value, c = t ?? "";
+		let s = (a || e.type === "number") && !/^0\d/.test(e.value) ? se(e.value) : e.value, c = t ?? "";
 		if (s === c) return;
 		let l = e.getRootNode();
 		(l instanceof Document || l instanceof ShadowRoot) && l.activeElement === e && e.type !== "range" && (r && t === n || i && e.value.trim() === c) || (e.value = c);
@@ -408,18 +408,18 @@ var _t = {
 	deep: !0,
 	created(e, t, n) {
 		e[W] = ft(n), H(e, "change", () => {
-			let t = e._modelValue, n = wt(e), r = e.checked, i = e[W];
-			if (x(t)) {
-				let e = Ee(t, n), a = e !== -1;
+			let t = e._modelValue, n = G(e), r = e.checked, i = e[W];
+			if (S(t)) {
+				let e = we(t, n), a = e !== -1;
 				if (r && !a) i(t.concat(n));
 				else if (!r && a) {
 					let n = [...t];
 					n.splice(e, 1), i(n);
 				}
-			} else if (be(t)) {
+			} else if (ve(t)) {
 				let e = new Set(t);
 				r ? e.add(n) : e.delete(n), i(e);
-			} else i(Tt(e, r));
+			} else i(wt(e, r));
 		});
 	},
 	mounted: yt,
@@ -430,32 +430,32 @@ var _t = {
 function yt(e, { value: t, oldValue: n }, r) {
 	e._modelValue = t;
 	let i;
-	if (x(t)) i = Ee(t, r.props.value) > -1;
-	else if (be(t)) i = t.has(r.props.value);
+	if (S(t)) i = we(t, r.props.value) > -1;
+	else if (ve(t)) i = t.has(r.props.value);
 	else {
 		if (t === n) return;
-		i = xe(t, Tt(e, !0));
+		i = ye(t, wt(e, !0));
 	}
 	e.checked !== i && (e.checked = i);
 }
 var bt = {
 	created(e, { value: t }, n) {
-		e.checked = xe(t, n.props.value), e[W] = ft(n), H(e, "change", () => {
-			e[W](wt(e));
+		e.checked = ye(t, n.props.value), e[W] = ft(n), H(e, "change", () => {
+			e[W](G(e));
 		});
 	},
 	beforeUpdate(e, { value: t, oldValue: n }, r) {
-		e[W] = ft(r), t !== n && (e.checked = xe(t, r.props.value));
+		e[W] = ft(r), t !== n && (e.checked = ye(t, r.props.value));
 	}
 }, xt = {
 	deep: !0,
 	created(e, { value: t, modifiers: { number: n } }, r) {
 		e._modelValue = t, H(e, "change", () => {
-			let t = Array.prototype.filter.call(e.options, (e) => e.selected).map((e) => n ? le(wt(e)) : wt(e)), r = e.multiple, i = r ? be(e._modelValue) ? new Set(t) : t : t[0], a = e._pendingValue = [r, r ? x(i) ? t.slice() : t : i];
+			let t = Array.prototype.filter.call(e.options, (e) => e.selected).map((e) => n ? se(G(e)) : G(e)), r = e.multiple, i = r ? ve(e._modelValue) ? new Set(t) : t : t[0], a = e._pendingValue = [r, r ? S(i) ? t.slice() : t : i];
 			try {
 				e[W](i);
 			} finally {
-				N(() => {
+				Oe(() => {
 					e._pendingValue === a && (e._pendingValue = void 0);
 				});
 			}
@@ -473,8 +473,8 @@ var bt = {
 	}
 };
 function St(e, t, n) {
-	if (!n || x(e)) return xe(e, t);
-	if (be(e)) {
+	if (!n || S(e)) return ye(e, t);
+	if (ve(e)) {
 		if (e.size !== t.length) return !1;
 		for (let n of t) if (!e.has(n)) return !1;
 		return !0;
@@ -482,16 +482,16 @@ function St(e, t, n) {
 	return !1;
 }
 function Ct(e, t) {
-	let n = e.multiple, r = x(t);
-	if (!n || r || be(t)) {
+	let n = e.multiple, r = S(t);
+	if (!n || r || ve(t)) {
 		for (let i = 0, a = e.options.length; i < a; i++) {
-			let a = e.options[i], o = wt(a);
+			let a = e.options[i], o = G(a);
 			if (n) {
 				if (r) {
 					let e = typeof o;
-					a.selected = e === "string" || e === "number" ? t.some((e) => String(e) === String(o)) : Ee(t, o) > -1;
+					a.selected = e === "string" || e === "number" ? t.some((e) => String(e) === String(o)) : we(t, o) > -1;
 				} else a.selected = t.has(o);
-			} else if (xe(wt(a), t)) {
+			} else if (ye(G(a), t)) {
 				e.selectedIndex !== i && (e.selectedIndex = i);
 				return;
 			}
@@ -499,28 +499,28 @@ function Ct(e, t) {
 		!n && e.selectedIndex !== -1 && (e.selectedIndex = -1);
 	}
 }
-function wt(e) {
+function G(e) {
 	return "_value" in e ? e._value : e.value;
 }
-function Tt(e, t) {
+function wt(e, t) {
 	let n = t ? "_trueValue" : "_falseValue";
 	return n in e ? e[n] : t;
 }
-var Et = {
+var Tt = {
 	created(e, t, n) {
-		Ot(e, t, n, null, "created");
+		Dt(e, t, n, null, "created");
 	},
 	mounted(e, t, n) {
-		Ot(e, t, n, null, "mounted");
+		Dt(e, t, n, null, "mounted");
 	},
 	beforeUpdate(e, t, n, r) {
-		Ot(e, t, n, r, "beforeUpdate");
+		Dt(e, t, n, r, "beforeUpdate");
 	},
 	updated(e, t, n, r) {
-		Ot(e, t, n, r, "updated");
+		Dt(e, t, n, r, "updated");
 	}
 };
-function Dt(e, t) {
+function Et(e, t) {
 	switch (e) {
 		case "SELECT": return xt;
 		case "TEXTAREA": return _t;
@@ -531,16 +531,16 @@ function Dt(e, t) {
 		}
 	}
 }
-function Ot(e, t, n, r, i) {
-	let a = Dt(e.tagName, n.props && n.props.type)[i];
+function Dt(e, t, n, r, i) {
+	let a = Et(e.tagName, n.props && n.props.type)[i];
 	a && a(e, t, n, r);
 }
-var kt = [
+var Ot = [
 	"ctrl",
 	"shift",
 	"alt",
 	"meta"
-], At = {
+], kt = {
 	stop: (e) => e.stopPropagation(),
 	prevent: (e) => e.preventDefault(),
 	self: (e) => e.target !== e.currentTarget,
@@ -551,18 +551,18 @@ var kt = [
 	left: (e) => "button" in e && e.button !== 0,
 	middle: (e) => "button" in e && e.button !== 1,
 	right: (e) => "button" in e && e.button !== 2,
-	exact: (e, t) => kt.some((n) => e[`${n}Key`] && !t.includes(n))
-}, jt = (e, t) => {
+	exact: (e, t) => Ot.some((n) => e[`${n}Key`] && !t.includes(n))
+}, At = (e, t) => {
 	if (!e) return e;
 	let n = e._withMods ||= {}, r = t.join(".");
 	return n[r] || (n[r] = ((n, ...r) => {
 		for (let e = 0; e < t.length; e++) {
-			let r = At[t[e]];
+			let r = kt[t[e]];
 			if (r && r(n, t)) return;
 		}
 		return e(n, ...r);
 	}));
-}, Mt = {
+}, jt = {
 	esc: "escape",
 	space: " ",
 	up: "arrow-up",
@@ -570,53 +570,53 @@ var kt = [
 	right: "arrow-right",
 	down: "arrow-down",
 	delete: "backspace"
-}, Nt = (e, t) => {
+}, Mt = (e, t) => {
 	let n = e._withKeys ||= {}, r = t.join(".");
 	return n[r] || (n[r] = ((n) => {
 		if (!("key" in n)) return;
 		let r = u(n.key);
-		if (t.some((e) => e === r || Mt[e] === r)) return e(n);
+		if (t.some((e) => e === r || jt[e] === r)) return e(n);
 	}));
-}, Pt = /* @__PURE__ */ d({ patchProp: at }, R), Ft;
-function It() {
-	return Ft ||= ve(Pt);
+}, Nt = /* @__PURE__ */ d({ patchProp: ot }, Ie), Pt;
+function Ft() {
+	return Pt ||= ge(Nt);
 }
-var G = ((...e) => {
-	It().render(...e);
+var It = ((...e) => {
+	Ft().render(...e);
 }), Lt = ((...e) => {
-	let t = It().createApp(...e), { mount: n } = t;
+	let t = Ft().createApp(...e), { mount: n } = t;
 	return t.mount = (e) => {
-		let r = q(e);
+		let r = zt(e);
 		if (!r) return;
 		let i = t._component;
 		_(i) || i.render || i.template || (i.template = r.innerHTML), r.nodeType === 1 && (r.textContent = "");
-		let a = n(r, !1, K(r));
+		let a = n(r, !1, Rt(r));
 		return r instanceof Element && (r.removeAttribute("v-cloak"), r.setAttribute("data-v-app", "")), a;
 	}, t;
 });
-function K(e) {
+function Rt(e) {
 	if (e instanceof SVGElement) return "svg";
 	if (typeof MathMLElement == "function" && e instanceof MathMLElement) return "mathml";
 }
-function q(e) {
-	return me(e) ? document.querySelector(e) : e;
+function zt(e) {
+	return fe(e) ? document.querySelector(e) : e;
 }
 // node_modules/reka-ui/dist/shared/createContext.js
-function Rt(e, t) {
+function K(e, t) {
 	let n = typeof e == "string" && !t ? `${e}Context` : t, r = Symbol(n);
 	return [(t) => {
-		let n = ee(r, t);
+		let n = y(r, t);
 		if (n || n === null) return n;
 		throw Error(`Injection \`${r.toString()}\` not found. Component must be used within ${Array.isArray(e) ? `one of the following components: ${e.join(", ")}` : `\`${e}\``}`);
-	}, (e) => (ge(r, e), e)];
+	}, (e) => (me(r, e), e)];
 }
 // node_modules/reka-ui/node_modules/@vueuse/shared/dist/index.js
-var J = typeof window < "u" && typeof document < "u";
+var q = typeof window < "u" && typeof document < "u";
 typeof WorkerGlobalScope < "u" && globalThis instanceof WorkerGlobalScope;
-var zt = (e) => e !== void 0;
-J && window.document, J && window.navigator, J && window.location;
-function Bt(e) {
-	let t = ne(e);
+var Bt = (e) => e !== void 0;
+q && window.document, q && window.navigator, q && window.location;
+function J(e) {
+	let t = te(e);
 	return t?.$el ?? t;
 }
 function Vt(e) {
@@ -624,51 +624,51 @@ function Vt(e) {
 }
 function Ht(e, t, n, r = {}) {
 	var i, a;
-	let { clone: o = !1, passive: s = !1, eventName: c, deep: l = !1, defaultValue: u, shouldEmit: d } = r, f = se(), p = n || f?.emit || (f == null || (i = f.$emit) == null ? void 0 : i.bind(f)) || (f == null || (a = f.proxy) == null || (a = a.$emit) == null ? void 0 : a.bind(f?.proxy)), h = c;
+	let { clone: o = !1, passive: s = !1, eventName: c, deep: l = !1, defaultValue: u, shouldEmit: d } = r, f = ae(), p = n || f?.emit || (f == null || (i = f.$emit) == null ? void 0 : i.bind(f)) || (f == null || (a = f.proxy) == null || (a = a.$emit) == null ? void 0 : a.bind(f?.proxy)), h = c;
 	t ||= "modelValue", h ||= `update:${t.toString()}`;
-	let g = (e) => o ? typeof o == "function" ? o(e) : Vt(e) : e, _ = () => zt(e[t]) ? g(e[t]) : u, ee = (e) => {
+	let g = (e) => o ? typeof o == "function" ? o(e) : Vt(e) : e, _ = () => Bt(e[t]) ? g(e[t]) : u, y = (e) => {
 		d ? d(e) && p(h, e) : p(h, e);
 	};
 	if (s) {
 		let n = v(_()), r = !1;
 		return m(() => e[t], (e) => {
-			r || (r = !0, n.value = g(e), N(() => r = !1));
+			r || (r = !0, n.value = g(e), Oe(() => r = !1));
 		}), m(n, (n) => {
-			!r && (n !== e[t] || l) && ee(n);
+			!r && (n !== e[t] || l) && y(n);
 		}, { deep: l }), n;
 	}
-	return D({
+	return k({
 		get() {
 			return _();
 		},
 		set(e) {
-			ee(e);
+			y(e);
 		}
 	});
 }
 // node_modules/reka-ui/dist/shared/renderSlotFragments.js
 function Ut(e) {
-	return e ? e.flatMap((e) => e.type === O ? Ut(e.children) : [e]) : [];
+	return e ? e.flatMap((e) => e.type === A ? Ut(e.children) : [e]) : [];
 }
 // node_modules/reka-ui/dist/shared/useEmitAsProps.js
 function Wt(e) {
-	let t = se(), n = t?.type.emits, r = {};
+	let t = ae(), n = t?.type.emits, r = {};
 	return n?.length || console.warn(`No emitted event found. Please check component: ${t?.type.__name}`), n?.forEach((t) => {
-		r[de(b(t))] = (...n) => e(t, ...n);
+		r[le(x(t))] = (...n) => e(t, ...n);
 	}), r;
 }
 // node_modules/reka-ui/dist/shared/useFormControl.js
 function Gt(e) {
-	return D(() => !ne(e) || !!Bt(e)?.closest("form"));
+	return k(() => !te(e) || !!J(e)?.closest("form"));
 }
 // node_modules/reka-ui/dist/shared/useForwardExpose.js
 function Kt() {
-	let e = se(), t = v(), n = D(() => r());
+	let e = ae(), t = v(), n = k(() => r());
 	i(() => {
 		n.value !== r() && c(t);
 	});
 	function r() {
-		return t.value && "$el" in t.value && ["#text", "#comment"].includes(t.value.$el.nodeName) ? t.value.$el.nextElementSibling : Bt(t);
+		return t.value && "$el" in t.value && ["#text", "#comment"].includes(t.value.$el.nodeName) ? t.value.$el.nextElementSibling : J(t);
 	}
 	let a = Object.assign({}, e.exposed), o = {};
 	for (let t in e.props) Object.defineProperty(o, t, {
@@ -709,14 +709,14 @@ function Kt() {
 }
 // node_modules/reka-ui/dist/shared/useForwardProps.js
 function qt(e) {
-	let t = se(), n = Object.keys(t?.type.props ?? {}).reduce((e, n) => {
+	let t = ae(), n = Object.keys(t?.type.props ?? {}).reduce((e, n) => {
 		let r = (t?.type.props[n]).default;
 		return r !== void 0 && (e[n] = r), e;
-	}, {}), r = F(e);
-	return D(() => {
+	}, {}), r = Ae(e);
+	return k(() => {
 		let e = {}, i = t?.vnode.props ?? {};
 		return Object.keys(i).forEach((t) => {
-			e[b(t)] = i[t];
+			e[x(t)] = i[t];
 		}), Object.keys({
 			...n,
 			...e
@@ -726,28 +726,28 @@ function qt(e) {
 // node_modules/reka-ui/dist/shared/useForwardPropsEmits.js
 function Jt(e, t) {
 	let n = qt(e), r = t ? Wt(t) : {};
-	return D(() => ({
+	return k(() => ({
 		...n.value,
 		...r
 	}));
 }
 // node_modules/reka-ui/dist/shared/useForwardScopeId.js
 function Yt() {
-	let e = se()?.vnode?.scopeId;
+	let e = ae()?.vnode?.scopeId;
 	return e ? { [e]: "" } : {};
 }
 // node_modules/reka-ui/dist/Primitive/Slot.js
-var Xt = /*#__PURE__*/ P({
+var Xt = /*#__PURE__*/ F({
 	name: "PrimitiveSlot",
 	inheritAttrs: !1,
 	setup(e, { attrs: t, slots: n }) {
 		return () => {
 			if (!n.default) return null;
-			let e = Ut(n.default()), i = e.findIndex((e) => e.type !== ae);
+			let e = Ut(n.default()), i = e.findIndex((e) => e.type !== ie);
 			if (i === -1) return e;
 			let a = e[i];
 			delete a.props?.ref;
-			let o = a.props ? r(t, a.props) : t, s = ce({
+			let o = a.props ? r(t, a.props) : t, s = oe({
 				...a,
 				props: {}
 			}, o);
@@ -758,7 +758,7 @@ var Xt = /*#__PURE__*/ P({
 	"area",
 	"img",
 	"input"
-], Qt = /*#__PURE__*/ P({
+], Qt = /*#__PURE__*/ F({
 	name: "Primitive",
 	inheritAttrs: !1,
 	props: {
@@ -773,7 +773,7 @@ var Xt = /*#__PURE__*/ P({
 	},
 	setup(e, { attrs: t, slots: n }) {
 		let r = e.asChild ? "template" : e.as;
-		return typeof r == "string" && Zt.includes(r) ? () => Ae(r, t) : r === "template" ? () => Ae(Xt, t, { default: n.default }) : () => Ae(e.as, t, { default: n.default });
+		return typeof r == "string" && Zt.includes(r) ? () => ke(r, t) : r === "template" ? () => ke(Xt, t, { default: n.default }) : () => ke(e.as, t, { default: n.default });
 	}
 });
 // node_modules/reka-ui/dist/Primitive/usePrimitiveElement.js
@@ -781,11 +781,11 @@ function $t() {
 	let e = v();
 	return {
 		primitiveElement: e,
-		currentElement: D(() => ["#text", "#comment"].includes(e.value?.$el.nodeName) ? e.value?.$el.nextElementSibling : Bt(e))
+		currentElement: k(() => ["#text", "#comment"].includes(e.value?.$el.nodeName) ? e.value?.$el.nextElementSibling : J(e))
 	};
 }
 // node_modules/reka-ui/dist/VisuallyHidden/VisuallyHidden.js
-var en = /* @__PURE__ */ P({
+var en = /* @__PURE__ */ F({
 	__name: "VisuallyHidden",
 	props: {
 		feature: {
@@ -804,7 +804,7 @@ var en = /* @__PURE__ */ P({
 		}
 	},
 	setup(e) {
-		return (t, n) => (h(), C(y(Qt), {
+		return (t, n) => (h(), T(b(Qt), {
 			as: e.as,
 			"as-child": e.asChild,
 			"aria-hidden": e.feature === "fully-hidden" ? "true" : void 0,
@@ -826,7 +826,7 @@ var en = /* @__PURE__ */ P({
 				left: "-1px"
 			}
 		}, {
-			default: g(() => [he(t.$slots, "default")]),
+			default: g(() => [pe(t.$slots, "default")]),
 			_: 3
 		}, 8, [
 			"as",
@@ -836,7 +836,7 @@ var en = /* @__PURE__ */ P({
 			"tabindex"
 		]));
 	}
-}), tn = /* @__PURE__ */ P({
+}), tn = /* @__PURE__ */ F({
 	inheritAttrs: !1,
 	__name: "VisuallyHiddenInputBubble",
 	props: {
@@ -868,7 +868,7 @@ var en = /* @__PURE__ */ P({
 		}
 	},
 	setup(e) {
-		let t = e, { primitiveElement: n, currentElement: i } = $t(), a = D(() => t.checked ?? t.value);
+		let t = e, { primitiveElement: n, currentElement: i } = $t(), a = k(() => t.checked ?? t.value);
 		return m(a, (e, t) => {
 			if (!i.value) return;
 			let n = i.value, r = window.HTMLInputElement.prototype, a = Object.getOwnPropertyDescriptor(r, "value").set;
@@ -876,7 +876,7 @@ var en = /* @__PURE__ */ P({
 				let t = new Event("input", { bubbles: !0 }), r = new Event("change", { bubbles: !0 });
 				a.call(n, e), n.dispatchEvent(t), n.dispatchEvent(r);
 			}
-		}), (e, i) => (h(), C(en, r({
+		}), (e, i) => (h(), T(en, r({
 			ref_key: "primitiveElement",
 			ref: n
 		}, {
@@ -884,7 +884,7 @@ var en = /* @__PURE__ */ P({
 			...e.$attrs
 		}, { as: "input" }), null, 16));
 	}
-}), nn = /* @__PURE__ */ P({
+}), nn = /* @__PURE__ */ F({
 	inheritAttrs: !1,
 	__name: "VisuallyHiddenInput",
 	props: {
@@ -916,7 +916,7 @@ var en = /* @__PURE__ */ P({
 		}
 	},
 	setup(e) {
-		let n = e, i = D(() => typeof n.value == "object" && Array.isArray(n.value) && n.value.length === 0 && n.required), a = D(() => typeof n.value == "string" || typeof n.value == "number" || typeof n.value == "boolean" || n.value === null || n.value === void 0 ? [{
+		let n = e, i = k(() => typeof n.value == "object" && Array.isArray(n.value) && n.value.length === 0 && n.required), a = k(() => typeof n.value == "string" || typeof n.value == "number" || typeof n.value == "boolean" || n.value === null || n.value === void 0 ? [{
 			name: n.name,
 			value: n.value
 		}] : typeof n.value == "object" && Array.isArray(n.value) ? n.value.flatMap((e, t) => typeof e == "object" ? Object.entries(e).map(([e, r]) => ({
@@ -929,13 +929,13 @@ var en = /* @__PURE__ */ P({
 			name: `${n.name}[${e}]`,
 			value: t
 		})) : []);
-		return (o, s) => (h(), k(O, null, [T(" We render single input if it's required "), i.value ? (h(), C(tn, r({ key: e.name }, {
+		return (o, s) => (h(), j(A, null, [D(" We render single input if it's required "), i.value ? (h(), T(tn, r({ key: e.name }, {
 			...n,
 			...o.$attrs
 		}, {
 			name: e.name,
 			value: e.value
-		}), null, 16, ["name", "value"])) : (h(!0), k(O, { key: 1 }, t(a.value, (e) => (h(), C(tn, r({ key: e.name }, { ref_for: !0 }, {
+		}), null, 16, ["name", "value"])) : (h(!0), j(A, { key: 1 }, t(a.value, (e) => (h(), T(tn, r({ key: e.name }, { ref_for: !0 }, {
 			...n,
 			...o.$attrs
 		}, {
@@ -943,7 +943,7 @@ var en = /* @__PURE__ */ P({
 			value: e.value
 		}), null, 16, ["name", "value"]))), 128))], 2112));
 	}
-}), [rn, an] = /*#__PURE__*/ Rt("SwitchRoot"), on = /* @__PURE__ */ P({
+}), [rn, an] = /*#__PURE__*/ K("SwitchRoot"), on = /* @__PURE__ */ F({
 	inheritAttrs: !1,
 	__name: "SwitchRoot",
 	props: {
@@ -1002,18 +1002,18 @@ var en = /* @__PURE__ */ P({
 		let i = e, a = t, { disabled: o } = n(i), s = Ht(i, "modelValue", a, {
 			defaultValue: i.defaultValue ?? i.falseValue,
 			passive: i.modelValue === void 0
-		}), c = D(() => s.value === i.trueValue);
+		}), c = k(() => s.value === i.trueValue);
 		function l() {
 			o.value || (s.value = c.value ? i.falseValue : i.trueValue);
 		}
-		let { forwardRef: u, currentElement: d } = Kt(), f = Gt(d), p = Yt(), m = D(() => i.id && d.value ? document.querySelector(`[for="${i.id}"]`)?.innerText : void 0);
+		let { forwardRef: u, currentElement: d } = Kt(), f = Gt(d), p = Yt(), m = k(() => i.id && d.value ? document.querySelector(`[for="${i.id}"]`)?.innerText : void 0);
 		return an({
 			checked: c,
 			toggleCheck: l,
 			disabled: o
-		}), (t, n) => (h(), k(O, null, [S(y(Qt), r({
+		}), (t, n) => (h(), j(A, null, [C(b(Qt), r({
 			id: e.id,
-			ref: y(u),
+			ref: b(u),
 			role: "switch",
 			type: e.as === "button" ? "button" : void 0,
 			value: e.value,
@@ -1021,19 +1021,19 @@ var en = /* @__PURE__ */ P({
 			"aria-checked": c.value,
 			"aria-required": e.required,
 			"data-state": c.value ? "checked" : "unchecked",
-			"data-disabled": y(o) ? "" : void 0,
+			"data-disabled": b(o) ? "" : void 0,
 			"as-child": e.asChild,
 			as: e.as,
-			disabled: y(o)
+			disabled: b(o)
 		}, {
-			...y(p),
+			...b(p),
 			...t.$attrs
 		}, {
 			onClick: l,
-			onKeydown: Nt(jt(l, ["prevent"]), ["enter"])
+			onKeydown: Mt(At(l, ["prevent"]), ["enter"])
 		}), {
-			default: g(() => [he(t.$slots, "default", {
-				modelValue: y(s),
+			default: g(() => [pe(t.$slots, "default", {
+				modelValue: b(s),
 				checked: c.value
 			})]),
 			_: 3
@@ -1050,23 +1050,23 @@ var en = /* @__PURE__ */ P({
 			"as",
 			"disabled",
 			"onKeydown"
-		]), y(f) && e.name ? (h(), C(y(nn), r({
+		]), b(f) && e.name ? (h(), T(b(nn), r({
 			key: 0,
 			type: "checkbox",
 			name: e.name,
-			disabled: y(o),
+			disabled: b(o),
 			required: e.required,
 			value: e.value,
 			checked: c.value
-		}, y(p)), null, 16, [
+		}, b(p)), null, 16, [
 			"name",
 			"disabled",
 			"required",
 			"value",
 			"checked"
-		])) : T("v-if", !0)], 64));
+		])) : D("v-if", !0)], 64));
 	}
-}), Y = /* @__PURE__ */ P({
+}), sn = /* @__PURE__ */ F({
 	__name: "SwitchThumb",
 	props: {
 		asChild: {
@@ -1081,13 +1081,13 @@ var en = /* @__PURE__ */ P({
 	},
 	setup(e) {
 		let t = rn();
-		return Kt(), (n, r) => (h(), C(y(Qt), {
-			"data-state": y(t).checked.value ? "checked" : "unchecked",
-			"data-disabled": y(t).disabled.value ? "" : void 0,
+		return Kt(), (n, r) => (h(), T(b(Qt), {
+			"data-state": b(t).checked.value ? "checked" : "unchecked",
+			"data-disabled": b(t).disabled.value ? "" : void 0,
 			"as-child": e.asChild,
 			as: e.as
 		}, {
-			default: g(() => [he(n.$slots, "default")]),
+			default: g(() => [pe(n.$slots, "default")]),
 			_: 3
 		}, 8, [
 			"data-state",
@@ -1096,7 +1096,7 @@ var en = /* @__PURE__ */ P({
 			"as"
 		]));
 	}
-}), sn = /* @__PURE__ */ P({
+}), cn = /* @__PURE__ */ F({
 	__name: "Switch",
 	props: {
 		defaultValue: { type: null },
@@ -1114,53 +1114,53 @@ var en = /* @__PURE__ */ P({
 	},
 	emits: ["update:modelValue"],
 	setup(e, { emit: t }) {
-		let n = e, i = t, a = Jt(D(() => {
+		let n = e, i = t, a = Jt(k(() => {
 			let { class: e, ...t } = n;
 			return t;
 		}), i);
-		return (e, t) => (h(), C(y(on), r(y(a), {
+		return (e, t) => (h(), T(b(on), r(b(a), {
 			as: "button",
 			type: "button",
-			class: y(pe)("peer focus-visible:ring-ring focus-visible:ring-offset-background data-[state=checked]:bg-primary data-[state=unchecked]:bg-input inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50", n.class)
+			class: b(de)("peer focus-visible:ring-ring focus-visible:ring-offset-background data-[state=checked]:bg-primary data-[state=unchecked]:bg-input inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50", n.class)
 		}), {
-			default: g(() => [S(y(Y), { class: "bg-background pointer-events-none block h-5 w-5 rounded-full shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0" })]),
+			default: g(() => [C(b(sn), { class: "bg-background pointer-events-none block h-5 w-5 rounded-full shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0" })]),
 			_: 1
 		}, 16, ["class"]));
 	}
-}), X = typeof window < "u" && typeof document < "u";
+}), ln = typeof window < "u" && typeof document < "u";
 typeof WorkerGlobalScope < "u" && globalThis instanceof WorkerGlobalScope;
-var cn = (e) => e !== void 0;
-X && window.document, X && window.navigator, X && window.location;
-function ln(e) {
+var Y = (e) => e !== void 0;
+ln && window.document, ln && window.navigator, ln && window.location;
+function X(e) {
 	return JSON.parse(JSON.stringify(e));
 }
 /* @__NO_SIDE_EFFECTS__ */
 function un(e, t, n, r = {}) {
 	var i, a;
-	let { clone: o = !1, passive: s = !1, eventName: c, deep: l = !1, defaultValue: u, shouldEmit: d } = r, f = se(), p = n || f?.emit || (f == null || (i = f.$emit) == null ? void 0 : i.bind(f)) || (f == null || (a = f.proxy) == null || (a = a.$emit) == null ? void 0 : a.bind(f?.proxy)), h = c;
+	let { clone: o = !1, passive: s = !1, eventName: c, deep: l = !1, defaultValue: u, shouldEmit: d } = r, f = ae(), p = n || f?.emit || (f == null || (i = f.$emit) == null ? void 0 : i.bind(f)) || (f == null || (a = f.proxy) == null || (a = a.$emit) == null ? void 0 : a.bind(f?.proxy)), h = c;
 	t ||= "modelValue", h ||= `update:${t.toString()}`;
-	let g = (e) => o ? typeof o == "function" ? o(e) : ln(e) : e, _ = () => cn(e[t]) ? g(e[t]) : u, ee = (e) => {
+	let g = (e) => o ? typeof o == "function" ? o(e) : X(e) : e, _ = () => Y(e[t]) ? g(e[t]) : u, y = (e) => {
 		d ? d(e) && p(h, e) : p(h, e);
 	};
 	if (s) {
 		let n = _(), r = v(n), i = !1;
 		return m(() => e[t], (e) => {
-			i || (i = !0, r.value = g(e), N(() => i = !1));
+			i || (i = !0, r.value = g(e), Oe(() => i = !1));
 		}), m(r, (n) => {
-			!i && (n !== e[t] || l) && ee(n);
+			!i && (n !== e[t] || l) && y(n);
 		}, { deep: l }), r;
 	}
-	return D({
+	return k({
 		get() {
 			return _();
 		},
 		set(e) {
-			ee(e);
+			y(e);
 		}
 	});
 }
 // src/components/ui/Input.vue?vue&type=script&setup=true&lang.ts
-var dn = ["type", "placeholder"], Z = /* @__PURE__ */ P({
+var dn = ["type", "placeholder"], Z = /* @__PURE__ */ F({
 	__name: "Input",
 	props: {
 		defaultValue: { type: [String, Number] },
@@ -1175,14 +1175,14 @@ var dn = ["type", "placeholder"], Z = /* @__PURE__ */ P({
 			passive: !0,
 			defaultValue: n.defaultValue
 		});
-		return (t, i) => o((h(), k("input", {
+		return (t, i) => o((h(), j("input", {
 			"onUpdate:modelValue": i[0] ||= (e) => l(r) ? r.value = e : null,
 			type: e.type ?? "text",
 			placeholder: e.placeholder,
-			class: _e(y(pe)("border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50", n.class))
-		}, null, 10, dn)), [[Et, y(r)]]);
+			class: he(b(de)("border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50", n.class))
+		}, null, 10, dn)), [[Tt, b(r)]]);
 	}
-}), fn = ["id", "disabled"], pn = /* @__PURE__ */ P({
+}), fn = ["id", "disabled"], pn = /* @__PURE__ */ F({
 	__name: "Select",
 	props: {
 		modelValue: { type: String },
@@ -1193,19 +1193,19 @@ var dn = ["type", "placeholder"], Z = /* @__PURE__ */ P({
 	emits: ["update:modelValue"],
 	setup(e, { emit: t }) {
 		let n = e, r = /* @__PURE__ */ un(n, "modelValue", t, { passive: !0 });
-		return (t, i) => (h(), k("div", { class: _e(y(pe)("relative inline-block", n.class)) }, [o(M("select", {
+		return (t, i) => (h(), j("div", { class: he(b(de)("relative inline-block", n.class)) }, [o(P("select", {
 			id: e.id,
 			"onUpdate:modelValue": i[0] ||= (e) => l(r) ? r.value = e : null,
 			disabled: e.disabled,
 			class: "border-input bg-background ring-offset-background focus-visible:ring-ring h-10 w-full cursor-pointer appearance-none rounded-md border py-2 pr-8 pl-3 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
-		}, [he(t.$slots, "default")], 8, fn), [[xt, y(r)]]), i[1] ||= M("svg", {
+		}, [pe(t.$slots, "default")], 8, fn), [[xt, b(r)]]), i[1] ||= P("svg", {
 			class: "text-muted-foreground pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2",
 			width: "10",
 			height: "6",
 			viewBox: "0 0 10 6",
 			fill: "none",
 			"aria-hidden": "true"
-		}, [M("path", {
+		}, [P("path", {
 			d: "M1 1L5 5L9 1",
 			stroke: "currentColor",
 			"stroke-width": "1.5",
@@ -1213,22 +1213,22 @@ var dn = ["type", "placeholder"], Z = /* @__PURE__ */ P({
 			"stroke-linejoin": "round"
 		})], -1)], 2));
 	}
-}), mn = ["for"], Q = /* @__PURE__ */ P({
+}), mn = ["for"], Q = /* @__PURE__ */ F({
 	__name: "Label",
 	props: {
 		for: { type: String },
 		class: { type: String }
 	},
 	setup(e) {
-		return (e, t) => (h(), k("label", {
+		return (e, t) => (h(), j("label", {
 			for: e.$props.for,
-			class: _e(["text-sm leading-none font-medium", e.$props.class])
-		}, [he(e.$slots, "default")], 10, mn));
+			class: he(["text-sm leading-none font-medium", e.$props.class])
+		}, [pe(e.$slots, "default")], 10, mn));
 	}
-}), hn = { class: "inline_help" }, $ = /* @__PURE__ */ P({
+}), hn = { class: "inline_help" }, $ = /* @__PURE__ */ F({
 	__name: "HelpText",
 	setup(e) {
-		return (e, t) => (h(), k("blockquote", hn, [he(e.$slots, "default")]));
+		return (e, t) => (h(), j("blockquote", hn, [pe(e.$slots, "default")]));
 	}
 }), gn = {
 	role: "tablist",
@@ -1241,7 +1241,7 @@ var dn = ["type", "placeholder"], Z = /* @__PURE__ */ P({
 	"tabindex",
 	"onClick",
 	"onKeydown"
-], vn = /* @__PURE__ */ P({
+], vn = /* @__PURE__ */ F({
 	__name: "TabNavigation",
 	props: {
 		modelValue: { required: !0 },
@@ -1267,7 +1267,7 @@ var dn = ["type", "placeholder"], Z = /* @__PURE__ */ P({
 			let i = r.findIndex((e) => e.id === t), a = null;
 			e.key === "ArrowRight" ? a = (i + 1) % r.length : e.key === "ArrowLeft" ? a = (i - 1 + r.length) % r.length : e.key === "Home" ? a = 0 : e.key === "End" && (a = r.length - 1), a !== null && (e.preventDefault(), n.value = r[a].id, document.getElementById(`incus-tab-${r[a].id}`)?.focus());
 		}
-		return (e, a) => (h(), k("div", gn, [(h(), k(O, null, t(r, (e) => M("button", {
+		return (e, a) => (h(), j("div", gn, [(h(), j(A, null, t(r, (e) => P("button", {
 			id: `incus-tab-${e.id}`,
 			key: e.id,
 			role: "tab",
@@ -1275,10 +1275,10 @@ var dn = ["type", "placeholder"], Z = /* @__PURE__ */ P({
 			"aria-selected": n.value === e.id,
 			"aria-controls": `incus-panel-${e.id}`,
 			tabindex: n.value === e.id ? 0 : -1,
-			class: _e(["-mb-px cursor-pointer border-b-[3px] px-4 py-2 text-xs font-semibold tracking-[0.08em] uppercase transition-colors", n.value === e.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"]),
+			class: he(["-mb-px cursor-pointer border-b-[3px] px-4 py-2 text-xs font-semibold tracking-[0.08em] uppercase transition-colors", n.value === e.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"]),
 			onClick: (t) => n.value = e.id,
 			onKeydown: (t) => i(t, e.id)
-		}, w(e.label), 43, _n)), 64))]));
+		}, E(e.label), 43, _n)), 64))]));
 	}
 }), yn = 2e3;
 function bn(e, t, n = {}) {
@@ -1324,7 +1324,7 @@ function xn(e, t) {
 }
 // src/composables/useResourceMetrics.ts
 function Sn(e, t) {
-	let n = f(/* @__PURE__ */ new Map()), r = f(/* @__PURE__ */ new Map()), i = v([]), a = f(/* @__PURE__ */ new Map()), o = D(() => e.value.filter((e) => e.status.toLowerCase() === "running")), s = D(() => e.value.length - o.value.length), c = D(() => o.value.reduce((e, t) => e + Number(t.memoryUsageBytes ?? 0), 0)), l = D(() => o.value.reduce((e, t) => e + BigInt(t.cpuUsageNs ?? "0"), 0n));
+	let n = f(/* @__PURE__ */ new Map()), r = f(/* @__PURE__ */ new Map()), i = v([]), a = f(/* @__PURE__ */ new Map()), o = k(() => e.value.filter((e) => e.status.toLowerCase() === "running")), s = k(() => e.value.length - o.value.length), c = k(() => o.value.reduce((e, t) => e + Number(t.memoryUsageBytes ?? 0), 0)), l = k(() => o.value.reduce((e, t) => e + BigInt(t.cpuUsageNs ?? "0"), 0n));
 	function u(e) {
 		if (e == null) return "—";
 		let t = Math.floor(e / 1e9), n = Math.floor(t / 3600), r = Math.floor(t % 3600 / 60), i = t % 60;
@@ -1417,7 +1417,7 @@ function Sn(e, t) {
 	};
 }
 // src/graphql/operations.ts
-var Cn = "query { incusConfig {\n  enabled stateDir storageDriver storageSource storagePoolName jailBridge jailSubnet jailNat jailIpv6\n  aclName aclBlock aclAllow aclDefaultEgress aclDefaultIngress jailProfile jailImage jailNesting jailCpu jailMemory\n  jailWorkspaceRoot jailAgentUid jailAgentGid jailBindMounts tsAuthKeyConfigured dashboardWidgetEnable\n} }", wn = "query { incusHealthy jails { name status ipv4 cpuUsageNs memoryUsageBytes memoryTotalBytes } }", Tn = "mutation($input: IncusConfigInput!) { updateIncusConfig(input: $input) { enabled } }", En = "mutation($name: String!, $action: JailAction!) { setJailState(name: $name, action: $action) }", Dn = "mutation($name: String!) { deleteJail(name: $name) }", On = "mutation($name: String!, $image: String, $allowSudo: Boolean) { launchJail(name: $name, image: $image, allowSudo: $allowSudo) }", kn = "query($name: String!) { jailDetail(name: $name) { name profiles imageOs imageRelease imageDescription storagePool networkBridge cpuLimit cpuLimitIsOverride memoryLimit memoryLimitIsOverride workspaceHostPath workspaceIsOverride sudoEnabled } }", An = "mutation($name: String!) { grantJailSudo(name: $name) }", jn = "mutation($name: String!, $command: String!) { startPrivilegedCommand(name: $name, command: $command) }", Mn = "query($id: String!) { privilegedCommandStatus(id: $id) { id command status exitCode stdout stderr message } }", Nn = "mutation($name: String!, $hostPath: String!) { setJailWorkspace(name: $name, hostPath: $hostPath) }", Pn = "mutation($name: String!) { clearJailWorkspace(name: $name) }", Fn = "mutation($name: String!, $cpu: String, $memory: String) { setJailLimits(name: $name, cpu: $cpu, memory: $memory) }", In = "mutation($distro: String!, $release: String!, $packages: [String!]!, $alias: String!, $basedOn: String, $postInstallCommands: [String!]) { buildJailImage(distro: $distro, release: $release, packages: $packages, alias: $alias, basedOn: $basedOn, postInstallCommands: $postInstallCommands) }", Ln = "mutation($alias: String!) { deleteJailImage(alias: $alias) }", Rn = "query($query: String!, $distro: String, $release: String) { searchAllPackages(query: $query, distro: $distro, release: $release) { results { ecosystem name description version } errors { ecosystem message } } }", zn = "query($buildId: String!) { jailImageBuildStatus(buildId: $buildId) { id status alias distro release packages logTail error } }", Bn = "query { builderPresets { name distro release packages } }", Vn = "mutation($input: BuilderPresetInput!) { saveBuilderPreset(input: $input) { name } }", Hn = "mutation($name: String!) { deleteBuilderPreset(name: $name) }", Un = "query { jailImages { alias distro release packages isMaster basedOn createdAt } }", Wn = "mutation($alias: String!, $isMaster: Boolean!) { setMasterImage(alias: $alias, isMaster: $isMaster) { alias isMaster } }", Gn = "mutation { pruneStaleImageRecords }", Kn = "mutation($name: String!) { migrateJailWorkspace(name: $name) }", qn = "mutation($name: String!, $formula: String!) { installHomebrewFormula(name: $name, formula: $formula) }", Jn = "query($id: String!) { homebrewInstallStatus(id: $id) { id formula status message } }";
+var Cn = "query { incusConfig {\n  enabled stateDir storageDriver storageSource storagePoolName jailBridge jailSubnet jailNat jailIpv6\n  aclName aclBlock aclAllow aclDefaultEgress aclDefaultIngress jailProfile jailImage jailNesting jailCpu jailMemory\n  jailWorkspaceRoot jailAgentUid jailAgentGid jailBindMounts tsAuthKeyConfigured dashboardWidgetEnable\n} }", wn = "query { incusHealthy incusPluginHealth { status message } jails { name status ipv4 cpuUsageNs memoryUsageBytes memoryTotalBytes } }", Tn = "mutation($input: IncusConfigInput!) { updateIncusConfig(input: $input) { enabled } }", En = "mutation($name: String!, $action: JailAction!) { setJailState(name: $name, action: $action) }", Dn = "mutation($name: String!) { deleteJail(name: $name) }", On = "mutation($name: String!, $image: String, $allowSudo: Boolean) { launchJail(name: $name, image: $image, allowSudo: $allowSudo) }", kn = "query($name: String!) { jailDetail(name: $name) { name profiles imageOs imageRelease imageDescription storagePool networkBridge cpuLimit cpuLimitIsOverride memoryLimit memoryLimitIsOverride workspaceHostPath workspaceIsOverride sudoEnabled } }", An = "mutation($name: String!) { grantJailSudo(name: $name) }", jn = "mutation($name: String!, $command: String!) { startPrivilegedCommand(name: $name, command: $command) }", Mn = "query($id: String!) { privilegedCommandStatus(id: $id) { id command status exitCode stdout stderr message } }", Nn = "mutation($name: String!, $hostPath: String!) { setJailWorkspace(name: $name, hostPath: $hostPath) }", Pn = "mutation($name: String!) { clearJailWorkspace(name: $name) }", Fn = "mutation($name: String!, $cpu: String, $memory: String) { setJailLimits(name: $name, cpu: $cpu, memory: $memory) }", In = "mutation($distro: String!, $release: String!, $packages: [String!]!, $alias: String!, $basedOn: String, $postInstallCommands: [String!]) { buildJailImage(distro: $distro, release: $release, packages: $packages, alias: $alias, basedOn: $basedOn, postInstallCommands: $postInstallCommands) }", Ln = "mutation($alias: String!) { deleteJailImage(alias: $alias) }", Rn = "query($query: String!, $distro: String, $release: String) { searchAllPackages(query: $query, distro: $distro, release: $release) { results { ecosystem name description version } errors { ecosystem message } } }", zn = "query($buildId: String!) { jailImageBuildStatus(buildId: $buildId) { id status alias distro release packages logTail error } }", Bn = "query { builderPresets { name distro release packages } }", Vn = "mutation($input: BuilderPresetInput!) { saveBuilderPreset(input: $input) { name } }", Hn = "mutation($name: String!) { deleteBuilderPreset(name: $name) }", Un = "query { jailImages { alias distro release packages isMaster basedOn createdAt } }", Wn = "mutation($alias: String!, $isMaster: Boolean!) { setMasterImage(alias: $alias, isMaster: $isMaster) { alias isMaster } }", Gn = "mutation { pruneStaleImageRecords }", Kn = "mutation($name: String!) { migrateJailWorkspace(name: $name) }", qn = "mutation($name: String!, $formula: String!) { installHomebrewFormula(name: $name, formula: $formula) }", Jn = "query($id: String!) { homebrewInstallStatus(id: $id) { id formula status message } }";
 // src/composables/useJailDetail.ts
 function Yn(e) {
 	let t = v(null), n = v(null), r = v(!1), i = v(""), a = v(""), o = v(""), s = v(""), c = 0;
@@ -1428,7 +1428,7 @@ function Yn(e) {
 		let l = ++c;
 		r.value = !0, i.value = "";
 		try {
-			let r = await j(kn, { name: e });
+			let r = await N(kn, { name: e });
 			if (l !== c || t.value !== e) return;
 			n.value = r.jailDetail, a.value = r.jailDetail.cpuLimit ?? "", o.value = r.jailDetail.memoryLimit ?? "", s.value = r.jailDetail.workspaceHostPath ?? "";
 		} catch (n) {
@@ -1458,198 +1458,203 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 	key: 0,
 	role: "alert",
 	class: "mb-4 rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-}, $n = { class: "mb-6 flex items-center gap-3 border-b border-border pb-4" }, er = { class: "ml-auto flex items-center gap-3" }, tr = {
+}, $n = {
 	key: 1,
+	role: "alert",
+	"data-testid": "incus-degraded",
+	class: "mb-4 rounded-md border border-orange bg-orange/10 px-4 py-3 text-sm"
+}, er = { class: "mt-1" }, tr = { class: "mb-6 flex items-center gap-3 border-b border-border pb-4" }, nr = { class: "ml-auto flex items-center gap-3" }, rr = {
+	key: 2,
 	id: "incus-panel-builder",
 	role: "tabpanel",
 	"aria-labelledby": "incus-tab-builder",
 	tabindex: "0"
-}, nr = { class: "grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]" }, rr = { class: "mb-6 rounded-lg border border-border bg-card p-4 xl:mb-0" }, ir = {
+}, ir = { class: "grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]" }, ar = { class: "mb-6 rounded-lg border border-border bg-card p-4 xl:mb-0" }, or = {
 	key: 0,
 	class: "mb-3 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive"
-}, ar = {
+}, sr = {
 	key: 1,
 	class: "text-sm text-muted-foreground"
-}, or = {
+}, cr = {
 	key: 2,
 	class: "mb-3 flex flex-wrap gap-2"
-}, sr = ["onClick"], cr = { class: "font-mono text-muted-foreground" }, lr = ["onClick"], ur = { class: "flex gap-2" }, dr = { class: "mt-5 border-t border-border pt-4" }, fr = { class: "mb-2 flex items-center justify-between gap-3" }, pr = {
+}, lr = ["onClick"], ur = { class: "font-mono text-muted-foreground" }, dr = ["onClick"], fr = { class: "flex gap-2" }, pr = { class: "mt-5 border-t border-border pt-4" }, mr = { class: "mb-2 flex items-center justify-between gap-3" }, hr = {
 	key: 0,
 	class: "mb-3 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive"
-}, mr = {
+}, gr = {
 	key: 1,
 	class: "mb-3 rounded-md border border-border bg-muted/50 px-3 py-2 text-xs"
-}, hr = {
+}, _r = {
 	key: 2,
 	class: "text-sm text-muted-foreground"
-}, gr = {
+}, vr = {
 	key: 3,
 	class: "flex flex-col gap-2"
-}, _r = { class: "min-w-0 flex-1" }, vr = { class: "flex items-center gap-2" }, yr = { class: "font-mono text-[13px] font-medium" }, br = { class: "text-xs text-muted-foreground" }, xr = { class: "mt-0.5 truncate text-xs text-muted-foreground" }, Sr = { class: "mt-5 border-t border-border pt-4" }, Cr = ["aria-expanded"], wr = {
+}, yr = { class: "min-w-0 flex-1" }, br = { class: "flex items-center gap-2" }, xr = { class: "font-mono text-[13px] font-medium" }, Sr = { class: "text-xs text-muted-foreground" }, Cr = { class: "mt-0.5 truncate text-xs text-muted-foreground" }, wr = { class: "mt-5 border-t border-border pt-4" }, Tr = ["aria-expanded"], Er = {
 	key: 0,
 	id: "config-import-panel",
 	class: "mt-3 flex flex-col gap-4"
-}, Tr = {
-	key: 0,
-	class: "mt-2 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive"
-}, Er = {
-	key: 1,
-	class: "mt-2 rounded-md border border-border bg-muted/50 px-3 py-2 text-xs"
 }, Dr = {
 	key: 0,
-	class: "text-foreground"
+	class: "mt-2 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive"
 }, Or = {
 	key: 1,
+	class: "mt-2 rounded-md border border-border bg-muted/50 px-3 py-2 text-xs"
+}, kr = {
+	key: 0,
+	class: "text-foreground"
+}, Ar = {
+	key: 1,
 	class: "mt-1"
-}, kr = { class: "font-mono" }, Ar = {
+}, jr = { class: "font-mono" }, Mr = {
 	key: 2,
 	class: "mt-1"
-}, jr = {
+}, Nr = {
 	key: 3,
 	class: "mt-1"
-}, Mr = { class: "ml-4 list-disc text-muted-foreground" }, Nr = { class: "border-t border-border pt-4" }, Pr = { class: "flex gap-2" }, Fr = {
+}, Pr = { class: "ml-4 list-disc text-muted-foreground" }, Fr = { class: "border-t border-border pt-4" }, Ir = { class: "flex gap-2" }, Lr = {
 	key: 0,
 	class: "mt-2 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive"
-}, Ir = {
+}, Rr = {
 	key: 1,
 	class: "mt-2 rounded-md border border-border bg-muted/50 px-3 py-2 text-xs"
-}, Lr = { class: "font-mono" }, Rr = { class: "border-t border-border pt-4" }, zr = { class: "flex flex-wrap gap-2" }, Br = { class: "mb-6 rounded-lg border border-border bg-card p-4" }, Vr = {
+}, zr = { class: "font-mono" }, Br = { class: "border-t border-border pt-4" }, Vr = { class: "flex flex-wrap gap-2" }, Hr = { class: "mb-6 rounded-lg border border-border bg-card p-4" }, Ur = {
 	key: 0,
 	class: "mb-4 rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-}, Hr = {
+}, Wr = {
 	key: 1,
 	class: "mb-4 flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-xs"
-}, Ur = { class: "font-mono font-medium" }, Wr = { class: "grid max-w-xl grid-cols-[1fr_auto] items-center gap-y-4" }, Gr = { class: "flex justify-self-end gap-2" }, Kr = ["value"], qr = { class: "flex justify-self-end gap-2" }, Jr = ["value"], Yr = { class: "mt-5 border-t border-border pt-4" }, Xr = {
+}, Gr = { class: "font-mono font-medium" }, Kr = { class: "grid max-w-xl grid-cols-[1fr_auto] items-center gap-y-4" }, qr = { class: "flex justify-self-end gap-2" }, Jr = ["value"], Yr = { class: "flex justify-self-end gap-2" }, Xr = ["value"], Zr = { class: "mt-5 border-t border-border pt-4" }, Qr = {
 	key: 0,
 	class: "mt-2 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive"
-}, Zr = {
+}, $r = {
 	key: 1,
 	class: "mt-2 rounded-md border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground"
-}, Qr = {
+}, ei = {
 	key: 2,
 	class: "mt-2 text-xs text-muted-foreground"
-}, $r = {
+}, ti = {
 	key: 3,
 	class: "mt-2 flex max-h-64 flex-col gap-1 overflow-y-auto"
-}, ei = { class: "min-w-0 flex-1" }, ti = { class: "font-mono font-medium" }, ni = {
+}, ni = { class: "min-w-0 flex-1" }, ri = { class: "font-mono font-medium" }, ii = {
 	key: 0,
 	class: "ml-1.5 font-mono text-muted-foreground"
-}, ri = {
+}, ai = {
 	key: 1,
 	class: "truncate text-muted-foreground"
-}, ii = {
+}, oi = {
 	key: 1,
 	class: "shrink-0 text-muted-foreground"
-}, ai = {
+}, si = {
 	key: 4,
 	class: "mt-2 text-xs text-muted-foreground"
-}, oi = {
+}, ci = {
 	key: 5,
 	class: "mt-3"
-}, si = { class: "flex flex-wrap gap-1.5" }, ci = ["aria-label", "onClick"], li = {
+}, li = { class: "flex flex-wrap gap-1.5" }, ui = ["aria-label", "onClick"], di = {
 	key: 6,
 	class: "mt-3"
-}, ui = { class: "flex flex-col gap-1" }, di = { class: "flex-1" }, fi = ["aria-label", "onClick"], pi = { class: "mt-4" }, mi = { class: "mt-4 flex justify-end" }, hi = { class: "rounded-lg border border-border bg-card p-4" }, gi = {
+}, fi = { class: "flex flex-col gap-1" }, pi = { class: "flex-1" }, mi = ["aria-label", "onClick"], hi = { class: "mt-4" }, gi = { class: "mt-4 flex justify-end" }, _i = { class: "rounded-lg border border-border bg-card p-4" }, vi = {
 	key: 0,
 	class: "flex items-center gap-2 rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2.5"
-}, _i = {
+}, yi = {
 	key: 1,
 	class: "flex flex-col gap-4"
-}, vi = { class: "mb-2 flex items-center justify-between gap-3" }, yi = { class: "flex items-center gap-2" }, bi = { class: "text-sm font-medium" }, xi = { class: "text-xs text-muted-foreground" }, Si = {
+}, bi = { class: "mb-2 flex items-center justify-between gap-3" }, xi = { class: "flex items-center gap-2" }, Si = { class: "text-sm font-medium" }, Ci = { class: "text-xs text-muted-foreground" }, wi = {
 	key: 0,
 	class: "mb-2 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive"
-}, Ci = { class: "flex items-center gap-2 rounded-t-md border border-b-0 border-neutral-800 bg-neutral-950 px-3 py-1.5" }, wi = { class: "font-mono text-[11px] text-neutral-400" }, Ti = { class: "max-h-48 overflow-auto rounded-b-md border border-neutral-800 bg-neutral-950 p-2.5 text-xs font-mono whitespace-pre-wrap text-neutral-200" }, Ei = {
-	key: 2,
+}, Ti = { class: "flex items-center gap-2 rounded-t-md border border-b-0 border-neutral-800 bg-neutral-950 px-3 py-1.5" }, Ei = { class: "font-mono text-[11px] text-neutral-400" }, Di = { class: "max-h-48 overflow-auto rounded-b-md border border-neutral-800 bg-neutral-950 p-2.5 text-xs font-mono whitespace-pre-wrap text-neutral-200" }, Oi = {
+	key: 3,
 	id: "incus-panel-jails",
 	role: "tabpanel",
 	"aria-labelledby": "incus-tab-jails",
 	tabindex: "0"
-}, Di = { class: "mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6" }, Oi = { class: "rounded-lg border border-border bg-card p-3" }, ki = { class: "mt-1 font-mono text-xl" }, Ai = { class: "rounded-lg border border-border bg-card p-3" }, ji = { class: "mt-1 font-mono text-xl" }, Mi = { class: "rounded-lg border border-border bg-card p-3" }, Ni = { class: "mt-1 font-mono text-xl" }, Pi = { class: "rounded-lg border border-border bg-card p-3" }, Fi = { class: "mt-1.5" }, Ii = { class: "rounded-lg border border-border bg-card p-3" }, Li = { class: "mt-1 font-mono text-xl" }, Ri = { class: "rounded-lg border border-border bg-card p-3" }, zi = { class: "mt-1 font-mono text-xl" }, Bi = {
+}, ki = { class: "mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6" }, Ai = { class: "rounded-lg border border-border bg-card p-3" }, ji = { class: "mt-1 font-mono text-xl" }, Mi = { class: "rounded-lg border border-border bg-card p-3" }, Ni = { class: "mt-1 font-mono text-xl" }, Pi = { class: "rounded-lg border border-border bg-card p-3" }, Fi = { class: "mt-1 font-mono text-xl" }, Ii = { class: "rounded-lg border border-border bg-card p-3" }, Li = { class: "mt-1.5" }, Ri = { class: "rounded-lg border border-border bg-card p-3" }, zi = { class: "mt-1 font-mono text-xl" }, Bi = { class: "rounded-lg border border-border bg-card p-3" }, Vi = { class: "mt-1 font-mono text-xl" }, Hi = {
 	key: 0,
 	viewBox: "0 0 80 24",
 	width: "80",
 	height: "24",
 	class: "mt-1 text-primary",
 	preserveAspectRatio: "none"
-}, Vi = ["points"], Hi = { class: "mb-6 grid grid-cols-1 items-start gap-4 xl:grid-cols-2" }, Ui = { class: "rounded-lg border border-border bg-card p-4" }, Wi = { class: "grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3" }, Gi = { class: "mt-1 font-mono text-sm" }, Ki = { class: "mt-1 font-mono text-sm" }, qi = { class: "mt-1 font-mono text-sm" }, Ji = { class: "mt-1 font-mono text-sm" }, Yi = { class: "mt-1 font-mono text-sm" }, Xi = { class: "rounded-lg border border-border bg-card p-4" }, Zi = { class: "flex flex-col gap-3 sm:flex-row sm:items-end" }, Qi = { class: "flex-1" }, $i = { class: "flex-1" }, ea = { value: "" }, ta = ["value"], na = {
+}, Ui = ["points"], Wi = { class: "mb-6 grid grid-cols-1 items-start gap-4 xl:grid-cols-2" }, Gi = { class: "rounded-lg border border-border bg-card p-4" }, Ki = { class: "grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3" }, qi = { class: "mt-1 font-mono text-sm" }, Ji = { class: "mt-1 font-mono text-sm" }, Yi = { class: "mt-1 font-mono text-sm" }, Xi = { class: "mt-1 font-mono text-sm" }, Zi = { class: "mt-1 font-mono text-sm" }, Qi = { class: "rounded-lg border border-border bg-card p-4" }, $i = { class: "flex flex-col gap-3 sm:flex-row sm:items-end" }, ea = { class: "flex-1" }, ta = { class: "flex-1" }, na = { value: "" }, ra = ["value"], ia = {
 	key: 0,
 	class: "mt-2 text-xs text-destructive"
-}, ra = { class: "mt-3 flex items-center gap-2.5" }, ia = { class: "rounded-lg border border-border bg-card p-4" }, aa = { class: "mb-4 flex items-center justify-between gap-3" }, oa = {
+}, aa = { class: "mt-3 flex items-center gap-2.5" }, oa = { class: "rounded-lg border border-border bg-card p-4" }, sa = { class: "mb-4 flex items-center justify-between gap-3" }, ca = {
 	key: 0,
 	class: "text-sm text-muted-foreground"
-}, sa = { class: "mb-3 text-xs text-muted-foreground" }, ca = { class: "grid grid-cols-1 gap-4 xl:grid-cols-2" }, la = { class: "flex flex-wrap items-center justify-between gap-2" }, ua = { class: "flex min-w-0 items-center gap-2" }, da = { class: "truncate font-mono text-[13px] font-medium" }, fa = {
+}, la = { class: "mb-3 text-xs text-muted-foreground" }, ua = { class: "grid grid-cols-1 gap-4 xl:grid-cols-2" }, da = { class: "flex flex-wrap items-center justify-between gap-2" }, fa = { class: "flex min-w-0 items-center gap-2" }, pa = { class: "truncate font-mono text-[13px] font-medium" }, ma = {
 	key: 0,
 	class: "shrink-0 inline-flex items-center rounded-full bg-unraid-green-200 px-1.5 py-0.5 text-[10px] font-semibold text-unraid-green-800",
 	title: "This container's IPv4 falls within the configured subnet."
-}, pa = { class: "shrink-0 font-mono text-xs text-muted-foreground" }, ma = { class: "mt-3 grid grid-cols-2 gap-3" }, ha = ["title"], ga = { class: "mt-1 flex items-center gap-2" }, _a = { class: "h-1.5 w-16 overflow-hidden rounded-full bg-muted" }, va = { class: "font-mono text-[13px]" }, ya = {
+}, ha = { class: "shrink-0 font-mono text-xs text-muted-foreground" }, ga = { class: "mt-3 grid grid-cols-2 gap-3" }, _a = ["title"], va = { class: "mt-1 flex items-center gap-2" }, ya = { class: "h-1.5 w-16 overflow-hidden rounded-full bg-muted" }, ba = { class: "font-mono text-[13px]" }, xa = {
 	key: 0,
 	viewBox: "0 0 80 24",
 	width: "60",
 	height: "18",
 	class: "text-primary",
 	preserveAspectRatio: "none"
-}, ba = ["points"], xa = { class: "mt-1 flex items-center gap-2" }, Sa = { class: "font-mono text-[13px]" }, Ca = {
+}, Sa = ["points"], Ca = { class: "mt-1 flex items-center gap-2" }, wa = { class: "font-mono text-[13px]" }, Ta = {
 	key: 0,
 	viewBox: "0 0 80 24",
 	width: "60",
 	height: "18",
 	class: "text-primary",
 	preserveAspectRatio: "none"
-}, wa = ["points"], Ta = {
+}, Ea = ["points"], Da = {
 	key: 0,
 	class: "mt-1 h-1 w-20 overflow-hidden rounded-full bg-muted"
-}, Ea = { class: "mt-3 flex flex-wrap gap-2" }, Da = {
+}, Oa = { class: "mt-3 flex flex-wrap gap-2" }, ka = {
 	key: 0,
 	class: "mt-3 rounded-md border border-border bg-muted/30 p-3"
-}, Oa = {
+}, Aa = {
 	key: 0,
 	class: "text-xs text-muted-foreground"
-}, ka = { class: "grid grid-cols-2 gap-3 sm:grid-cols-4" }, Aa = { class: "mt-1 font-mono text-xs" }, ja = { class: "mt-1 font-mono text-xs" }, Ma = { class: "mt-1 font-mono text-xs" }, Na = { class: "mt-1 font-mono text-xs" }, Pa = { class: "mt-4 grid grid-cols-1 gap-3 border-t border-border pt-3 sm:grid-cols-2" }, Fa = { class: "flex flex-wrap items-end gap-2" }, Ia = { class: "flex gap-1.5" }, La = { class: "flex gap-1.5" }, Ra = { class: "flex gap-2" }, za = {
+}, ja = { class: "grid grid-cols-2 gap-3 sm:grid-cols-4" }, Ma = { class: "mt-1 font-mono text-xs" }, Na = { class: "mt-1 font-mono text-xs" }, Pa = { class: "mt-1 font-mono text-xs" }, Fa = { class: "mt-1 font-mono text-xs" }, Ia = { class: "mt-4 grid grid-cols-1 gap-3 border-t border-border pt-3 sm:grid-cols-2" }, La = { class: "flex flex-wrap items-end gap-2" }, Ra = { class: "flex gap-1.5" }, za = { class: "flex gap-1.5" }, Ba = { class: "flex gap-2" }, Va = {
 	key: 0,
 	class: "mt-3 flex flex-wrap items-center gap-3 rounded-md border border-orange-500/40 bg-orange-500/10 px-3 py-2 text-xs"
-}, Ba = {
+}, Ha = {
 	key: 1,
 	class: "mt-2 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive"
-}, Va = { class: "mt-4 border-t border-border pt-3" }, Ha = { class: "mb-1 flex items-center gap-1.5 text-xs font-medium" }, Ua = { class: "mt-4 border-t border-border pt-3" }, Wa = { class: "flex flex-wrap gap-2" }, Ga = {
+}, Ua = { class: "mt-4 border-t border-border pt-3" }, Wa = { class: "mb-1 flex items-center gap-1.5 text-xs font-medium" }, Ga = { class: "mt-4 border-t border-border pt-3" }, Ka = { class: "flex flex-wrap gap-2" }, qa = {
 	key: 0,
 	class: "mt-1.5 text-xs text-unraid-green-800"
-}, Ka = {
+}, Ja = {
 	key: 1,
 	class: "mt-1.5 text-xs text-destructive"
-}, qa = { class: "mt-4 border-t border-border pt-3" }, Ja = { class: "flex flex-wrap gap-2" }, Ya = {
+}, Ya = { class: "mt-4 border-t border-border pt-3" }, Xa = { class: "flex flex-wrap gap-2" }, Za = {
 	key: 0,
 	class: "mt-2"
-}, Xa = {
+}, Qa = {
 	key: 0,
 	class: "mt-1 max-h-40 overflow-auto rounded-md border border-neutral-800 bg-neutral-950 p-2 text-[11px] whitespace-pre-wrap text-neutral-200"
-}, Za = {
-	key: 3,
+}, $a = {
+	key: 4,
 	id: "incus-panel-config",
 	role: "tabpanel",
 	"aria-labelledby": "incus-tab-config",
 	tabindex: "0"
-}, Qa = { class: "columns-1 gap-4 xl:columns-2" }, $a = { class: "mb-4 break-inside-avoid rounded-lg border border-border bg-card p-4" }, eo = { class: "grid max-w-xl grid-cols-[1fr_auto] items-center gap-y-4" }, to = { class: "mt-4 border-t border-border pt-4" }, no = { class: "grid max-w-xl grid-cols-[1fr_auto] items-center gap-y-4" }, ro = { class: "mb-4 break-inside-avoid rounded-lg border border-border bg-card p-4" }, io = { class: "grid max-w-xl grid-cols-[1fr_auto] items-center gap-y-4" }, ao = { class: "mt-4 border-t border-border pt-4" }, oo = {
+}, eo = { class: "columns-1 gap-4 xl:columns-2" }, to = { class: "mb-4 break-inside-avoid rounded-lg border border-border bg-card p-4" }, no = { class: "grid max-w-xl grid-cols-[1fr_auto] items-center gap-y-4" }, ro = { class: "mt-4 border-t border-border pt-4" }, io = { class: "grid max-w-xl grid-cols-[1fr_auto] items-center gap-y-4" }, ao = { class: "mb-4 break-inside-avoid rounded-lg border border-border bg-card p-4" }, oo = { class: "grid max-w-xl grid-cols-[1fr_auto] items-center gap-y-4" }, so = { class: "mt-4 border-t border-border pt-4" }, co = {
 	key: 0,
 	class: "mb-2 flex flex-wrap gap-1.5"
-}, so = ["aria-label", "onClick"], co = { class: "flex gap-2" }, lo = {
+}, lo = ["aria-label", "onClick"], uo = { class: "flex gap-2" }, fo = {
 	key: 1,
 	class: "mt-1.5 text-xs text-destructive"
-}, uo = { class: "mt-4" }, fo = {
+}, po = { class: "mt-4" }, mo = {
 	key: 0,
 	class: "mb-2 flex flex-wrap gap-1.5"
-}, po = ["aria-label", "onClick"], mo = { class: "flex gap-2" }, ho = {
+}, ho = ["aria-label", "onClick"], go = { class: "flex gap-2" }, _o = {
 	key: 1,
 	class: "mt-1.5 text-xs text-destructive"
-}, go = { class: "mt-4 border-t border-border pt-4" }, _o = { class: "grid max-w-xl grid-cols-[1fr_auto] items-center gap-y-4" }, vo = { class: "flex justify-self-end gap-2" }, yo = { class: "mb-4 break-inside-avoid rounded-lg border border-border bg-card p-4" }, bo = { class: "grid max-w-xl grid-cols-[1fr_auto] items-center gap-y-4" }, xo = {
+}, vo = { class: "mt-4 border-t border-border pt-4" }, yo = { class: "grid max-w-xl grid-cols-[1fr_auto] items-center gap-y-4" }, bo = { class: "flex justify-self-end gap-2" }, xo = { class: "mb-4 break-inside-avoid rounded-lg border border-border bg-card p-4" }, So = { class: "grid max-w-xl grid-cols-[1fr_auto] items-center gap-y-4" }, Co = {
 	key: 0,
 	class: "col-span-2 -mt-2 text-xs text-destructive"
-}, So = {
+}, wo = {
 	key: 1,
 	class: "col-span-2 -mt-2 text-xs text-destructive"
-}, Co = { class: "mt-4 border-t border-border pt-4" }, wo = { class: "mb-8 flex justify-end" }, To = 5e3, Eo = "__other__", Do = "__other__", Oo = 400, ko = /* @__PURE__ */ lt(/* @__PURE__ */ P({
+}, To = { class: "mt-4 border-t border-border pt-4" }, Eo = { class: "mb-8 flex justify-end" }, Do = 5e3, Oo = "__other__", ko = "__other__", Ao = 400, jo = /* @__PURE__ */ lt(/* @__PURE__ */ F({
 	__name: "App",
 	setup(e) {
-		let n = ke(() => import("./incus-settings-Terminal-DLA3-l2Z.js")), r = v("jails"), i = v(!0), s = v(!1), c = v(null), u = v(!1), d = v([]), p = v(""), _ = D(() => gt(p.value)), ee = D(() => W(x.jailCpu)), ne = D(() => ht(x.jailMemory)), b = v(""), re = v(!1), ie = v(null), x = f({
+		let n = De(() => import("./incus-settings-Terminal-DLA3-l2Z.js")), r = v("jails"), i = v(!0), s = v(!1), c = v(null), u = v(!1), d = v(null), p = k(() => u.value && d.value?.status === "degraded"), _ = v([]), y = v(""), te = k(() => yt(y.value)), x = k(() => gt(w.jailCpu)), ne = k(() => vt(w.jailMemory)), re = v(""), S = v(!1), ie = v(null), w = f({
 			enabled: !1,
 			stateDir: "",
 			storageDriver: "dir",
@@ -1675,305 +1680,305 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 			jailBindMounts: "",
 			tsAuthKeyConfigured: !1,
 			dashboardWidgetEnable: !0
-		}), { runningJails: ae, stoppedJailsCount: oe, totalMemoryUsageBytes: se, totalCpuUsageNs: ce, fleetHistory: le, formatDuration: ue, formatBytes: de, formatMemory: pe, memoryFillPct: me, updateCpuSamplesAndHistory: he, cpuRateLabel: ge, cpuRatePct: ve, cpuRateSuffix: be, jailCpuHistory: xe, totalCpuRateLabel: Se, sparklinePoints: Ce } = Sn(d, () => x.jailCpu), we = D(() => x.storageDriver === "zfs"), Te = v(!1), Ee = v(""), De = v(!1), N = !1;
+		}), { runningJails: ae, stoppedJailsCount: oe, totalMemoryUsageBytes: se, totalCpuUsageNs: ce, fleetHistory: le, formatDuration: de, formatBytes: fe, formatMemory: pe, memoryFillPct: me, updateCpuSamplesAndHistory: ge, cpuRateLabel: ve, cpuRatePct: ye, cpuRateSuffix: be, jailCpuHistory: xe, totalCpuRateLabel: Se, sparklinePoints: Ce } = Sn(_, () => w.jailCpu), we = k(() => w.storageDriver === "zfs"), Te = v(!1), Oe = v(""), ke = v(!1), F = !1;
 		async function Ae() {
-			let e = await j(Cn);
-			N && (Object.assign(x, e.incusConfig), x.jailIpv6 = "none");
+			let e = await N(Cn);
+			F && (Object.assign(w, e.incusConfig), w.jailIpv6 = "none");
 		}
-		let P = 0;
-		async function F() {
-			let e = ++P;
+		let je = 0;
+		async function I() {
+			let e = ++je;
 			try {
-				let t = await j(wn);
-				if (e !== P) return;
-				u.value = t.incusHealthy, d.value = t.jails, he();
+				let t = await N(wn);
+				if (e !== je) return;
+				u.value = t.incusHealthy, d.value = t.incusPluginHealth ?? null, _.value = t.jails, ge();
 			} catch {
-				if (e !== P) return;
-				u.value = !1;
+				if (e !== je) return;
+				u.value = !1, d.value = null;
 			}
 		}
 		a(async () => {
-			N = !0;
+			F = !0;
 			try {
-				if (await Ae(), !N || (await F(), !N)) return;
-				await Promise.all([os(), ps()]);
+				if (await Ae(), !F || (await I(), !F)) return;
+				await Promise.all([us(), _s()]);
 			} catch (e) {
-				if (!N) return;
+				if (!F) return;
 				c.value = e instanceof Error ? e.message : String(e);
 			} finally {
-				N && (i.value = !1);
+				F && (i.value = !1);
 			}
-			N && r.value === "jails" && Pt();
+			F && r.value === "jails" && Ft();
 		}), m(r, (e) => {
-			e === "jails" ? (F(), Pt()) : Ft();
+			e === "jails" ? (I(), Ft()) : It();
 		});
-		async function je() {
+		async function Me() {
 			s.value = !0, c.value = null;
 			try {
-				let e = xn(x, {
-					replacement: Ee.value,
-					clear: De.value
+				let e = xn(w, {
+					replacement: Oe.value,
+					clear: ke.value
 				});
-				await j(Tn, { input: e }), (De.value || Ee.value) && (x.tsAuthKeyConfigured = !De.value, Ee.value = "", De.value = !1), await F();
+				await N(Tn, { input: e }), (ke.value || Oe.value) && (w.tsAuthKeyConfigured = !ke.value, Oe.value = "", ke.value = !1), await I();
 			} catch (e) {
 				c.value = e instanceof Error ? e.message : String(e);
 			} finally {
 				s.value = !1;
 			}
 		}
-		async function Me(e, t) {
+		async function Ne(e, t) {
 			c.value = null;
 			try {
-				await j(En, {
+				await N(En, {
 					name: e,
 					action: t
-				}), await F();
+				}), await I();
 			} catch (e) {
 				c.value = e instanceof Error ? e.message : String(e);
 			}
 		}
-		async function Ne(e) {
+		async function Pe(e) {
 			if (confirm(`Delete container "${e}"? This cannot be undone.`)) {
 				c.value = null;
 				try {
-					await j(Dn, { name: e }), await F();
+					await N(Dn, { name: e }), await I();
 				} catch (e) {
 					c.value = e instanceof Error ? e.message : String(e);
 				}
 			}
 		}
-		let Pe = v(!1);
+		let L = v(!1);
 		async function Fe() {
 			if (confirm("Delete every stopped container? Running containers are never touched. This cannot be undone.")) {
-				Pe.value = !0, c.value = null;
+				L.value = !0, c.value = null;
 				try {
-					(await j("mutation { deleteStoppedJails }")).deleteStoppedJails.length === 0 && (c.value = "No stopped containers to delete."), await F();
+					(await N("mutation { deleteStoppedJails }")).deleteStoppedJails.length === 0 && (c.value = "No stopped containers to delete."), await I();
 				} catch (e) {
 					c.value = e instanceof Error ? e.message : String(e);
 				} finally {
-					Pe.value = !1;
+					L.value = !1;
 				}
 			}
 		}
-		async function I() {
-			if (p.value.trim() && !_.value) {
+		async function Ie() {
+			if (y.value.trim() && !te.value) {
 				c.value = null;
 				try {
-					await j(On, {
-						name: p.value.trim(),
-						image: b.value || null,
-						allowSudo: re.value
-					}), p.value = "", re.value = !1, await F();
+					await N(On, {
+						name: y.value.trim(),
+						image: re.value || null,
+						allowSudo: S.value
+					}), y.value = "", S.value = !1, await I();
 				} catch (e) {
 					c.value = e instanceof Error ? e.message : String(e);
 				}
 			}
 		}
-		let L = v(!1), { detailsJailName: R, jailDetail: z, detailLoading: Ie, detailError: B, editCpuLimit: Le, editMemoryLimit: Re, editWorkspacePath: ze, toggleJailDetails: Be, loadJailDetail: V } = Yn(() => {
-			$e(), Ye.value = !1, ot(), it.value = !1, H.value = "", Xe.value = "", Ze.value = "", rt.value = "", U.value = null;
+		let R = v(!1), { detailsJailName: z, jailDetail: B, detailLoading: Le, detailError: V, editCpuLimit: Re, editMemoryLimit: ze, editWorkspacePath: Be, toggleJailDetails: Ve, loadJailDetail: He } = Yn(() => {
+			tt(), Ze.value = !1, ct(), ot.value = !1, Xe.value = "", Qe.value = "", $e.value = "", at.value = "", U.value = null;
 		});
-		async function Ve() {
-			if (!R.value) return;
-			let e = W(Le.value);
-			if (e) B.value = e;
-			else {
-				L.value = !0, B.value = "";
-				try {
-					await j(Fn, {
-						name: R.value,
-						cpu: Le.value.trim()
-					}), await V(R.value);
-				} catch (e) {
-					B.value = e instanceof Error ? e.message : String(e);
-				} finally {
-					L.value = !1;
-				}
-			}
-		}
-		async function He() {
-			if (!R.value) return;
-			let e = ht(Re.value);
-			if (e) B.value = e;
-			else {
-				L.value = !0, B.value = "";
-				try {
-					await j(Fn, {
-						name: R.value,
-						memory: Re.value.trim()
-					}), await V(R.value);
-				} catch (e) {
-					B.value = e instanceof Error ? e.message : String(e);
-				} finally {
-					L.value = !1;
-				}
-			}
-		}
 		async function Ue() {
-			if (R.value) {
-				Le.value = "", Re.value = "", L.value = !0, B.value = "";
+			if (!z.value) return;
+			let e = gt(Re.value);
+			if (e) V.value = e;
+			else {
+				R.value = !0, V.value = "";
 				try {
-					await j(Fn, {
-						name: R.value,
-						cpu: "",
-						memory: ""
-					}), await V(R.value);
+					await N(Fn, {
+						name: z.value,
+						cpu: Re.value.trim()
+					}), await He(z.value);
 				} catch (e) {
-					B.value = e instanceof Error ? e.message : String(e);
+					V.value = e instanceof Error ? e.message : String(e);
 				} finally {
-					L.value = !1;
+					R.value = !1;
 				}
 			}
 		}
 		async function We() {
-			if (R.value && ze.value.trim()) {
-				L.value = !0, B.value = "";
+			if (!z.value) return;
+			let e = vt(ze.value);
+			if (e) V.value = e;
+			else {
+				R.value = !0, V.value = "";
 				try {
-					await j(Nn, {
-						name: R.value,
-						hostPath: ze.value.trim()
-					}), await V(R.value);
+					await N(Fn, {
+						name: z.value,
+						memory: ze.value.trim()
+					}), await He(z.value);
 				} catch (e) {
-					B.value = e instanceof Error ? e.message : String(e);
+					V.value = e instanceof Error ? e.message : String(e);
 				} finally {
-					L.value = !1;
+					R.value = !1;
 				}
 			}
 		}
 		async function Ge() {
-			if (R.value) {
-				L.value = !0, B.value = "";
+			if (z.value) {
+				Re.value = "", ze.value = "", R.value = !0, V.value = "";
 				try {
-					await j(Pn, { name: R.value }), await V(R.value);
+					await N(Fn, {
+						name: z.value,
+						cpu: "",
+						memory: ""
+					}), await He(z.value);
 				} catch (e) {
-					B.value = e instanceof Error ? e.message : String(e);
+					V.value = e instanceof Error ? e.message : String(e);
 				} finally {
-					L.value = !1;
+					R.value = !1;
 				}
 			}
 		}
-		function Ke(e) {
+		async function Ke() {
+			if (z.value && Be.value.trim()) {
+				R.value = !0, V.value = "";
+				try {
+					await N(Nn, {
+						name: z.value,
+						hostPath: Be.value.trim()
+					}), await He(z.value);
+				} catch (e) {
+					V.value = e instanceof Error ? e.message : String(e);
+				} finally {
+					R.value = !1;
+				}
+			}
+		}
+		async function qe() {
+			if (z.value) {
+				R.value = !0, V.value = "";
+				try {
+					await N(Pn, { name: z.value }), await He(z.value);
+				} catch (e) {
+					V.value = e instanceof Error ? e.message : String(e);
+				} finally {
+					R.value = !1;
+				}
+			}
+		}
+		function Je(e) {
 			return !e.workspaceIsOverride && !!e.workspaceHostPath?.endsWith("/default-workspace");
 		}
-		let qe = v(!1);
-		async function Je() {
-			if (R.value) {
-				qe.value = !0, B.value = "";
+		let H = v(!1);
+		async function Ye() {
+			if (z.value) {
+				H.value = !0, V.value = "";
 				try {
-					await j(Kn, { name: R.value }), await V(R.value);
+					await N(Kn, { name: z.value }), await He(z.value);
 				} catch (e) {
-					B.value = e instanceof Error ? e.message : String(e);
+					V.value = e instanceof Error ? e.message : String(e);
 				} finally {
-					qe.value = !1;
+					H.value = !1;
 				}
 			}
 		}
-		let H = v(""), Ye = v(!1), Xe = v(""), Ze = v(""), Qe = null;
-		function $e() {
-			Qe !== null && (Qe.stop(), Qe = null);
+		let Xe = v(""), Ze = v(!1), Qe = v(""), $e = v(""), et = null;
+		function tt() {
+			et !== null && (et.stop(), et = null);
 		}
-		async function et() {
-			if (!R.value || !H.value.trim()) return;
-			let e = R.value;
-			$e(), Ye.value = !0, Xe.value = "", Ze.value = "";
+		async function nt() {
+			if (!z.value || !Xe.value.trim()) return;
+			let e = z.value;
+			tt(), Ze.value = !0, Qe.value = "", $e.value = "";
 			try {
-				let t = (await j(qn, {
+				let t = (await N(qn, {
 					name: e,
-					formula: H.value.trim()
+					formula: Xe.value.trim()
 				})).installHomebrewFormula;
-				Qe = bn(async (n) => {
+				et = bn(async (n) => {
 					try {
-						let r = await j(Jn, { id: t });
-						if (!n.isActive() || R.value !== e) return;
+						let r = await N(Jn, { id: t });
+						if (!n.isActive() || z.value !== e) return;
 						let i = r.homebrewInstallStatus;
 						if (!i || i.status === "running") return;
-						$e(), Ye.value = !1, i.status === "success" ? (Xe.value = i.message, H.value = "") : Ze.value = i.message;
+						tt(), Ze.value = !1, i.status === "success" ? (Qe.value = i.message, Xe.value = "") : $e.value = i.message;
 					} catch (t) {
-						if (!n.isActive() || R.value !== e) return;
-						$e(), Ye.value = !1, Ze.value = t instanceof Error ? t.message : String(t);
+						if (!n.isActive() || z.value !== e) return;
+						tt(), Ze.value = !1, $e.value = t instanceof Error ? t.message : String(t);
 					}
 				}, yn);
 			} catch (e) {
-				Ze.value = e instanceof Error ? e.message : String(e), Ye.value = !1;
+				$e.value = e instanceof Error ? e.message : String(e), Ze.value = !1;
 			}
 		}
-		let tt = v(!1);
-		async function nt() {
-			if (R.value) {
-				tt.value = !0, B.value = "";
+		let rt = v(!1);
+		async function it() {
+			if (z.value) {
+				rt.value = !0, V.value = "";
 				try {
-					await j(An, { name: R.value }), await V(R.value);
+					await N(An, { name: z.value }), await He(z.value);
 				} catch (e) {
-					B.value = e instanceof Error ? e.message : String(e);
+					V.value = e instanceof Error ? e.message : String(e);
 				} finally {
-					tt.value = !1;
+					rt.value = !1;
 				}
 			}
 		}
-		let rt = v(""), it = v(!1), U = v(null), at = null;
-		function ot() {
-			at !== null && (at.stop(), at = null);
+		let at = v(""), ot = v(!1), U = v(null), st = null;
+		function ct() {
+			st !== null && (st.stop(), st = null);
 		}
-		async function st() {
-			if (R.value && rt.value.trim()) {
-				ot(), it.value = !0, U.value = null, B.value = "";
+		async function lt() {
+			if (z.value && at.value.trim()) {
+				ct(), ot.value = !0, U.value = null, V.value = "";
 				try {
-					let e = (await j(jn, {
-						name: R.value,
-						command: rt.value.trim()
-					})).startPrivilegedCommand, t = R.value;
-					at = bn(async (n) => {
+					let e = (await N(jn, {
+						name: z.value,
+						command: at.value.trim()
+					})).startPrivilegedCommand, t = z.value;
+					st = bn(async (n) => {
 						try {
-							let r = await j(Mn, { id: e });
-							if (!n.isActive() || R.value !== t) return;
+							let r = await N(Mn, { id: e });
+							if (!n.isActive() || z.value !== t) return;
 							let i = r.privilegedCommandStatus;
 							if (!i || i.status === "running") return;
-							ot(), it.value = !1, U.value = i;
+							ct(), ot.value = !1, U.value = i;
 						} catch (e) {
-							if (!n.isActive() || R.value !== t) return;
-							ot(), it.value = !1, B.value = e instanceof Error ? e.message : String(e);
+							if (!n.isActive() || z.value !== t) return;
+							ct(), ot.value = !1, V.value = e instanceof Error ? e.message : String(e);
 						}
 					}, yn);
 				} catch (e) {
-					B.value = e instanceof Error ? e.message : String(e), it.value = !1;
+					V.value = e instanceof Error ? e.message : String(e), ot.value = !1;
 				}
 			}
 		}
-		function ct(e) {
+		function ut(e) {
 			let t = e.toLowerCase();
 			return t === "running" ? "green" : t === "stopped" ? "gray" : "orange";
 		}
-		function lt(e) {
+		function dt(e) {
 			return e.split(",").map((e) => e.trim()).filter((e) => e.length > 0);
 		}
-		function ut() {
-			return lt(x.aclBlock).length;
+		function ft() {
+			return dt(w.aclBlock).length;
 		}
-		let dt = /^[0-9a-fA-F:.]+\/\d{1,3}$/, ft = /^\d+(-\d+)?(,\d+(-\d+)?)*$/, pt = /^\d+(\.\d+)?(B|KB|MB|GB|TB|PB|KiB|MiB|GiB|TiB|PiB)?$/i, mt = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
-		function W(e) {
-			return e.trim() ? ft.test(e.trim()) ? "" : `"${e}" doesn't look like a CPU limit — expected a core count (e.g. 2) or a set/range (e.g. 0-3).` : "";
-		}
-		function ht(e) {
-			return e.trim() ? pt.test(e.trim()) ? "" : `"${e}" doesn't look like a memory limit — expected a byte count with an optional unit (e.g. 4GiB).` : "";
-		}
+		let pt = /^[0-9a-fA-F:.]+\/\d{1,3}$/, mt = /^\d+(-\d+)?(,\d+(-\d+)?)*$/, W = /^\d+(\.\d+)?(B|KB|MB|GB|TB|PB|KiB|MiB|GiB|TiB|PiB)?$/i, ht = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
 		function gt(e) {
-			return e.trim() ? mt.test(e.trim()) ? "" : `"${e}" isn't a valid container name — letters, digits, and hyphens only, can't start or end with a hyphen.` : "";
+			return e.trim() ? mt.test(e.trim()) ? "" : `"${e}" doesn't look like a CPU limit — expected a core count (e.g. 2) or a set/range (e.g. 0-3).` : "";
 		}
-		let vt = D(() => lt(x.aclBlock)), yt = D(() => lt(x.aclAllow)), bt = v(""), xt = v(""), St = v(""), Ct = v("");
-		function wt() {
-			let e = bt.value.trim();
-			St.value = "", e && (dt.test(e) ? vt.value.includes(e) ? St.value = `${e} is already in the list.` : (x.aclBlock = [...vt.value, e].join(","), bt.value = "") : St.value = `"${e}" doesn't look like a CIDR — expected e.g. 10.0.0.0/8 or fd00::/8.`);
+		function vt(e) {
+			return e.trim() ? W.test(e.trim()) ? "" : `"${e}" doesn't look like a memory limit — expected a byte count with an optional unit (e.g. 4GiB).` : "";
 		}
-		function Tt(e) {
-			x.aclBlock = vt.value.filter((t) => t !== e).join(",");
+		function yt(e) {
+			return e.trim() ? ht.test(e.trim()) ? "" : `"${e}" isn't a valid container name — letters, digits, and hyphens only, can't start or end with a hyphen.` : "";
 		}
-		function Et() {
-			let e = xt.value.trim();
-			Ct.value = "", e && (dt.test(e) ? yt.value.includes(e) ? Ct.value = `${e} is already in the list.` : (x.aclAllow = [...yt.value, e].join(","), xt.value = "") : Ct.value = `"${e}" doesn't look like a CIDR — expected e.g. 100.64.0.0/10 or fd00::/8.`);
+		let bt = k(() => dt(w.aclBlock)), xt = k(() => dt(w.aclAllow)), St = v(""), Ct = v(""), G = v(""), wt = v("");
+		function Tt() {
+			let e = St.value.trim();
+			G.value = "", e && (pt.test(e) ? bt.value.includes(e) ? G.value = `${e} is already in the list.` : (w.aclBlock = [...bt.value, e].join(","), St.value = "") : G.value = `"${e}" doesn't look like a CIDR — expected e.g. 10.0.0.0/8 or fd00::/8.`);
 		}
-		function Dt(e) {
-			x.aclAllow = yt.value.filter((t) => t !== e).join(",");
+		function Et(e) {
+			w.aclBlock = bt.value.filter((t) => t !== e).join(",");
+		}
+		function Dt() {
+			let e = Ct.value.trim();
+			wt.value = "", e && (pt.test(e) ? xt.value.includes(e) ? wt.value = `${e} is already in the list.` : (w.aclAllow = [...xt.value, e].join(","), Ct.value = "") : wt.value = `"${e}" doesn't look like a CIDR — expected e.g. 100.64.0.0/10 or fd00::/8.`);
 		}
 		function Ot(e) {
+			w.aclAllow = xt.value.filter((t) => t !== e).join(",");
+		}
+		function kt(e) {
 			let t = e.split(".");
 			if (t.length !== 4) return null;
 			let n = 0;
@@ -1985,28 +1990,28 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 			}
 			return n >>> 0;
 		}
-		function kt(e, t) {
+		function jt(e, t) {
 			let [n, r] = t.split("/");
 			if (!n || r === void 0) return !1;
 			let i = Number(r);
 			if (!Number.isInteger(i) || i < 0 || i > 32) return !1;
-			let a = Ot(e), o = Ot(n);
+			let a = kt(e), o = kt(n);
 			if (a === null || o === null) return !1;
 			if (i === 0) return !0;
 			let s = 4294967295 << 32 - i >>> 0;
 			return (a & s) === (o & s);
 		}
-		function At(e) {
-			return !e.ipv4 || !x.jailSubnet || e.status.toLowerCase() !== "running" ? !1 : kt(e.ipv4, x.jailSubnet);
+		function Nt(e) {
+			return !e.ipv4 || !w.jailSubnet || e.status.toLowerCase() !== "running" ? !1 : jt(e.ipv4, w.jailSubnet);
 		}
-		let Mt = null;
-		function Pt() {
-			Ft(), Mt = bn(F, To);
-		}
+		let Pt = null;
 		function Ft() {
-			Mt !== null && (Mt.stop(), Mt = null);
+			It(), Pt = bn(I, Do);
 		}
-		let It = [
+		function It() {
+			Pt !== null && (Pt.stop(), Pt = null);
+		}
+		let Lt = [
 			{
 				value: "debian",
 				label: "Debian"
@@ -2031,7 +2036,7 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 				value: "fedora",
 				label: "Fedora"
 			}
-		], G = {
+		], Rt = {
 			debian: [
 				{
 					value: "bookworm",
@@ -2103,7 +2108,7 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 				value: "44",
 				label: "44 (latest)"
 			}]
-		}, Lt = {
+		}, zt = {
 			debian: [
 				{
 					key: "build-tools",
@@ -2356,100 +2361,100 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 					packages: ["ca-certificates"]
 				}
 			]
-		}, K = v("debian"), q = v(""), Rt = v(""), J = v(""), zt = D(() => K.value === Eo), Bt = D(() => q.value === Do), Vt = D(() => zt.value ? Rt.value : K.value), Ht = D(() => Bt.value ? J.value : q.value), Ut = D(() => G[K.value] ?? []);
+		}, K = v("debian"), q = v(""), Bt = v(""), J = v(""), Vt = k(() => K.value === Oo), Ht = k(() => q.value === ko), Ut = k(() => Vt.value ? Bt.value : K.value), Wt = k(() => Ht.value ? J.value : q.value), Gt = k(() => Rt[K.value] ?? []);
 		m(K, () => {
-			let e = G[K.value];
-			q.value = e && e.length > 0 ? e[0].value : Do, J.value = "";
+			let e = Rt[K.value];
+			q.value = e && e.length > 0 ? e[0].value : ko, J.value = "";
 		});
 		{
-			let e = G[K.value];
-			q.value = e && e.length > 0 ? e[0].value : Do;
+			let e = Rt[K.value];
+			q.value = e && e.length > 0 ? e[0].value : ko;
 		}
-		let Wt = v(""), Gt = v(""), Kt = v(!1), qt = v(null), Jt = v([]), Yt = v(null), Xt = v(!1);
-		function Zt(e) {
+		let Kt = v(""), qt = v(""), Jt = v(!1), Yt = v(null), Xt = v([]), Zt = v(null), Qt = v(!1);
+		function $t(e) {
 			return e.split(/[\n,]/).map((e) => e.trim()).filter((e) => e.length > 0);
 		}
-		function Qt() {
-			let e = Zt(Wt.value);
+		function en() {
+			let e = $t(Kt.value);
 			return Array.from(/* @__PURE__ */ new Set([...Array.from(Y), ...e]));
 		}
-		let $t = v(""), en = v([]), tn = v([]), nn = v(!1), rn = v(null), an = null, on = 0, Y = f(/* @__PURE__ */ new Set()), X = f(/* @__PURE__ */ new Map()), cn = {
+		let tn = v(""), nn = v([]), rn = v([]), an = v(!1), on = v(null), sn = null, ln = 0, Y = f(/* @__PURE__ */ new Set()), X = f(/* @__PURE__ */ new Map()), un = {
 			apt: "apt",
 			npm: "npm",
 			pypi: "PyPI",
 			brew: "brew"
 		};
-		function ln() {
-			an && clearTimeout(an), an = null, ++on, $t.value.trim().length < 2 ? (en.value = [], tn.value = [], rn.value = null) : an = setTimeout(un, Oo);
+		function dn() {
+			sn && clearTimeout(sn), sn = null, ++ln, tn.value.trim().length < 2 ? (nn.value = [], rn.value = [], on.value = null) : sn = setTimeout(fn, Ao);
 		}
-		m($t, ln), m(K, () => {
-			Y.clear(), X.clear(), ln();
+		m(tn, dn), m(K, () => {
+			Y.clear(), X.clear(), dn();
 		});
-		async function un() {
-			let e = $t.value.trim();
+		async function fn() {
+			let e = tn.value.trim();
 			if (e.length < 2) return;
-			let t = on;
-			nn.value = !0, rn.value = null;
+			let t = ln;
+			an.value = !0, on.value = null;
 			try {
-				let n = await j(Rn, {
+				let n = await N(Rn, {
 					query: e,
-					distro: Vt.value,
-					release: Ht.value
+					distro: Ut.value,
+					release: Wt.value
 				});
-				if (t !== on) return;
-				en.value = n.searchAllPackages.results, tn.value = n.searchAllPackages.errors;
+				if (t !== ln) return;
+				nn.value = n.searchAllPackages.results, rn.value = n.searchAllPackages.errors;
 			} catch (e) {
-				if (t !== on) return;
-				rn.value = e instanceof Error ? e.message : String(e), en.value = [], tn.value = [];
+				if (t !== ln) return;
+				on.value = e instanceof Error ? e.message : String(e), nn.value = [], rn.value = [];
 			} finally {
-				t === on && (nn.value = !1);
+				t === ln && (an.value = !1);
 			}
 		}
-		function dn(e) {
+		function mn(e) {
 			Y.add(e.name);
 		}
-		function fn(e) {
+		function hn(e) {
 			Y.delete(e);
 		}
-		function mn(e) {
-			let t = Lt[K.value]?.find((t) => t.key === e);
+		function gn(e) {
+			let t = zt[K.value]?.find((t) => t.key === e);
 			if (t) for (let e of t.packages) Y.add(e);
 		}
-		function hn(e) {
-			mn("nodejs"), X.set(`npm:${e.name}`, `npm install -g ${e.name}`);
-		}
-		function gn(e) {
-			mn("python3"), X.set(`pypi:${e.name}`, `pip3 install ${e.name}`);
-		}
 		function _n(e) {
-			X.delete(e);
+			gn("nodejs"), X.set(`npm:${e.name}`, `npm install -g ${e.name}`);
 		}
 		function kn(e) {
-			e.ecosystem === "apt" ? dn(e) : e.ecosystem === "npm" ? hn(e) : e.ecosystem === "pypi" && gn(e);
+			gn("python3"), X.set(`pypi:${e.name}`, `pip3 install ${e.name}`);
 		}
-		function ko(e) {
-			return e.ecosystem === "apt" ? Y.has(e.name) : e.ecosystem === "npm" ? X.has(`npm:${e.name}`) : e.ecosystem === "pypi" && X.has(`pypi:${e.name}`);
-		}
-		function Ao(e, t) {
-			It.some((t) => t.value === e) ? (K.value = e, (G[e] ?? []).some((e) => e.value === t) ? (q.value = t, J.value = "") : (q.value = Do, J.value = t)) : (K.value = Eo, Rt.value = e, q.value = Do, J.value = t);
-		}
-		function jo() {
-			Yt.value = null;
+		function jo(e) {
+			X.delete(e);
 		}
 		function Mo(e) {
+			e.ecosystem === "apt" ? mn(e) : e.ecosystem === "npm" ? _n(e) : e.ecosystem === "pypi" && kn(e);
+		}
+		function No(e) {
+			return e.ecosystem === "apt" ? Y.has(e.name) : e.ecosystem === "npm" ? X.has(`npm:${e.name}`) : e.ecosystem === "pypi" && X.has(`pypi:${e.name}`);
+		}
+		function Po(e, t) {
+			Lt.some((t) => t.value === e) ? (K.value = e, (Rt[e] ?? []).some((e) => e.value === t) ? (q.value = t, J.value = "") : (q.value = ko, J.value = t)) : (K.value = Oo, Bt.value = e, q.value = ko, J.value = t);
+		}
+		function Fo() {
+			Zt.value = null;
+		}
+		function Io(e) {
 			let t = e.toLowerCase(), n = (e) => e.find((e) => t.includes(e));
 			if (t.includes("alpine")) {
 				let e = t.match(/(\d+\.\d+)/)?.[1];
 				return {
 					distro: "alpinelinux",
-					release: e && G.alpinelinux.some((t) => t.value === e) ? e : "3.24"
+					release: e && Rt.alpinelinux.some((t) => t.value === e) ? e : "3.24"
 				};
 			}
 			if (t.includes("fedora")) {
 				let e = t.match(/fedora[:\-](\d+)/)?.[1];
 				return {
 					distro: "fedora",
-					release: e && G.fedora.some((t) => t.value === e) ? e : "44"
+					release: e && Rt.fedora.some((t) => t.value === e) ? e : "44"
 				};
 			}
 			if (t.includes("rockylinux") || t.includes("rocky")) {
@@ -2475,7 +2480,7 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 			]);
 			if (t.includes("ubuntu") || r) return {
 				distro: "ubuntu",
-				release: r && G.ubuntu.some((e) => e.value === r) ? r : "noble"
+				release: r && Rt.ubuntu.some((e) => e.value === r) ? r : "noble"
 			};
 			let i = n([
 				"bookworm",
@@ -2486,28 +2491,28 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 			]);
 			return t.includes("debian") || i || t.startsWith("node:") || t.startsWith("python:") || t.includes("/node") || t.includes("/python") ? {
 				distro: "debian",
-				release: i && G.debian.some((e) => e.value === i) ? i : "bookworm"
+				release: i && Rt.debian.some((e) => e.value === i) ? i : "bookworm"
 			} : null;
 		}
-		function No(e) {
+		function Lo(e) {
 			let t = e.toLowerCase();
 			return t.includes("/node") ? "nodejs" : t.includes("/python") ? "python3" : null;
 		}
-		function Po(e) {
-			let t = JSON.parse(Fo(e)), n = {
+		function Ro(e) {
+			let t = JSON.parse(zo(e)), n = {
 				distroSet: !1,
 				packagesAdded: [],
 				commandsAdded: [],
 				skipped: []
 			};
-			if (jo(), Y.clear(), X.clear(), Wt.value = "", typeof t.image == "string") {
-				let e = Mo(t.image);
-				e ? (Ao(e.distro, e.release), n.distroSet = !0) : n.skipped.push(`image "${t.image}" — couldn't infer a matching distro/release, pick manually`);
+			if (Fo(), Y.clear(), X.clear(), Kt.value = "", typeof t.image == "string") {
+				let e = Io(t.image);
+				e ? (Po(e.distro, e.release), n.distroSet = !0) : n.skipped.push(`image "${t.image}" — couldn't infer a matching distro/release, pick manually`);
 			} else t.build && n.skipped.push("\"build.dockerfile\" — Dockerfile-based devcontainers aren't translated, pick a distro/release manually");
 			if (t.features && typeof t.features == "object") for (let e of Object.keys(t.features)) {
-				let t = No(e);
+				let t = Lo(e);
 				if (t) {
-					let e = Lt[K.value]?.find((e) => e.key === t);
+					let e = zt[K.value]?.find((e) => e.key === t);
 					if (e) {
 						for (let t of e.packages) Y.has(t) || (Y.add(t), n.packagesAdded.push(t));
 						continue;
@@ -2528,29 +2533,29 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 			});
 			return (t.remoteUser || t.containerUser) && n.skipped.push(`remoteUser/containerUser "${t.remoteUser ?? t.containerUser}" — not mapped, this plugin uses one fixed agent user (Config → Jail Defaults)`), (t.forwardPorts || t.mounts || t.workspaceFolder) && n.skipped.push("forwardPorts/mounts/workspaceFolder — IDE/runtime concerns, not applicable to image building"), n;
 		}
-		function Fo(e) {
+		function zo(e) {
 			return e.replace(/\/\/.*$/gm, "").replace(/,(\s*[}\]])/g, "$1");
 		}
-		let Io = v(null), Lo = v(null), Ro = v(null);
-		function zo() {
-			Ro.value?.click();
+		let Bo = v(null), Vo = v(null), Ho = v(null);
+		function Uo() {
+			Ho.value?.click();
 		}
-		function Bo(e) {
+		function Wo(e) {
 			let t = e.target.files?.[0];
 			if (!t) return;
-			Io.value = null, Lo.value = null;
+			Bo.value = null, Vo.value = null;
 			let n = new FileReader();
 			n.onload = () => {
 				try {
-					Lo.value = Po(String(n.result));
+					Vo.value = Ro(String(n.result));
 				} catch (e) {
-					Io.value = e instanceof Error ? e.message : String(e);
+					Bo.value = e instanceof Error ? e.message : String(e);
 				}
 			}, n.onerror = () => {
-				Io.value = "Failed to read the file.";
+				Bo.value = "Failed to read the file.";
 			}, n.readAsText(t), e.target.value = "";
 		}
-		function Vo(e) {
+		function Go(e) {
 			let t = e?.tools;
 			if (!t || typeof t != "object") return [];
 			let n = [];
@@ -2566,7 +2571,7 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 			});
 			return n;
 		}
-		function Ho(e) {
+		function Ko(e) {
 			let t = [];
 			for (let n of e.split("\n")) {
 				let e = n.split("#")[0].trim();
@@ -2579,180 +2584,180 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 			}
 			return t;
 		}
-		function Uo() {
-			mn("build-tools"), Y.has("curl") || Y.add("curl"), Y.has("ca-certificates") || Y.add("ca-certificates"), X.set("mise:env", "export MISE_DATA_DIR=/opt/mise MISE_CONFIG_DIR=/etc/mise"), X.set("mise:install", "curl https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise sh"), X.set("mise:profile", "printf 'export MISE_DATA_DIR=/opt/mise MISE_CONFIG_DIR=/etc/mise\\neval \"$(/usr/local/bin/mise activate bash)\"\\n' > /etc/profile.d/mise.sh && chmod +x /etc/profile.d/mise.sh");
+		function qo() {
+			gn("build-tools"), Y.has("curl") || Y.add("curl"), Y.has("ca-certificates") || Y.add("ca-certificates"), X.set("mise:env", "export MISE_DATA_DIR=/opt/mise MISE_CONFIG_DIR=/etc/mise"), X.set("mise:install", "curl https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise sh"), X.set("mise:profile", "printf 'export MISE_DATA_DIR=/opt/mise MISE_CONFIG_DIR=/etc/mise\\neval \"$(/usr/local/bin/mise activate bash)\"\\n' > /etc/profile.d/mise.sh && chmod +x /etc/profile.d/mise.sh");
 		}
-		function Wo(e) {
+		function Jo(e) {
 			if (e.length === 0) return [];
-			Uo();
+			qo();
 			let t = e.map((e) => `${e.tool}@${e.version}`);
 			return X.set("mise:use-tools", `mise use -g ${t.join(" ")}`), t;
 		}
-		async function Go(e) {
-			let t = Vo((await import("./incus-settings-dist-D2zpBM3p.js")).parse(e));
+		async function Yo(e) {
+			let t = Go((await import("./incus-settings-dist-D2zpBM3p.js")).parse(e));
 			if (t.length === 0) throw Error("No [tools] entries found in this mise.toml.");
-			return { toolsAdded: Wo(t) };
+			return { toolsAdded: Jo(t) };
 		}
-		function Ko(e) {
-			let t = Ho(e);
+		function Xo(e) {
+			let t = Ko(e);
 			if (t.length === 0) throw Error("No tool/version lines found in this .tool-versions file.");
-			return { toolsAdded: Wo(t) };
+			return { toolsAdded: Jo(t) };
 		}
-		let qo = v(null), Jo = v(null), Yo = v(null), Xo = v(null);
-		function Zo(e, t) {
+		let Zo = v(null), Qo = v(null), $o = v(null), es = v(null);
+		function ts(e, t) {
 			let n = e.target.files?.[0];
 			if (!n) return;
-			qo.value = null, Jo.value = null;
+			Zo.value = null, Qo.value = null;
 			let r = new FileReader();
 			r.onload = async () => {
 				try {
-					let e = t === "toml" ? await Go(String(r.result)) : Ko(String(r.result));
-					Jo.value = e.toolsAdded;
+					let e = t === "toml" ? await Yo(String(r.result)) : Xo(String(r.result));
+					Qo.value = e.toolsAdded;
 				} catch (e) {
-					qo.value = e instanceof Error ? e.message : String(e);
+					Zo.value = e instanceof Error ? e.message : String(e);
 				}
 			}, r.onerror = () => {
-				qo.value = "Failed to read the file.";
+				Zo.value = "Failed to read the file.";
 			}, r.readAsText(n), e.target.value = "";
 		}
-		let Qo = v(""), $o = v("");
-		function es() {
-			let e = Qo.value.trim();
+		let ns = v(""), rs = v("");
+		function is() {
+			let e = ns.value.trim();
 			if (!e) return;
-			Uo(), Y.has("git") || Y.add("git");
-			let t = $o.value.trim(), n = t ? `git clone --depth 1 --branch ${t} ${e} /opt/dotfiles-src` : `git clone --depth 1 ${e} /opt/dotfiles-src`;
+			qo(), Y.has("git") || Y.add("git");
+			let t = rs.value.trim(), n = t ? `git clone --depth 1 --branch ${t} ${e} /opt/dotfiles-src` : `git clone --depth 1 ${e} /opt/dotfiles-src`;
 			X.set("mise:dotfiles-clone", n), X.set("mise:dotfiles-bootstrap", "cp /opt/dotfiles-src/mise.toml /opt/dotfiles-src/.mise.toml /etc/mise/config.d/dotfiles.toml 2>/dev/null; MISE_EXPERIMENTAL=1 mise bootstrap --yes || true");
 		}
-		function ts() {
-			X.delete("mise:dotfiles-clone"), X.delete("mise:dotfiles-bootstrap"), Qo.value = "", $o.value = "";
+		function as() {
+			X.delete("mise:dotfiles-clone"), X.delete("mise:dotfiles-bootstrap"), ns.value = "", rs.value = "";
 		}
-		let ns = v([]), rs = v(""), is = v(!1), as = v(null);
-		async function os() {
-			let e = await j(Bn);
-			N && (ns.value = e.builderPresets);
+		let os = v([]), ss = v(""), cs = v(!1), ls = v(null);
+		async function us() {
+			let e = await N(Bn);
+			F && (os.value = e.builderPresets);
 		}
-		async function ss() {
-			let e = rs.value.trim();
+		async function ds() {
+			let e = ss.value.trim();
 			if (e) {
-				as.value = null, is.value = !0;
+				ls.value = null, cs.value = !0;
 				try {
-					await j(Vn, { input: {
+					await N(Vn, { input: {
 						name: e,
-						distro: Vt.value.trim(),
-						release: Ht.value.trim(),
-						packages: Qt()
-					} }), rs.value = "", await os();
+						distro: Ut.value.trim(),
+						release: Wt.value.trim(),
+						packages: en()
+					} }), ss.value = "", await us();
 				} catch (e) {
-					as.value = e instanceof Error ? e.message : String(e);
+					ls.value = e instanceof Error ? e.message : String(e);
 				} finally {
-					is.value = !1;
+					cs.value = !1;
 				}
 			}
 		}
-		function cs(e) {
-			Ao(e.distro, e.release), Wt.value = e.packages.join("\n"), Gt.value = "", jo();
+		function fs(e) {
+			Po(e.distro, e.release), Kt.value = e.packages.join("\n"), qt.value = "", Fo();
 		}
-		async function ls(e) {
-			as.value = null;
+		async function ps(e) {
+			ls.value = null;
 			try {
-				await j(Hn, { name: e }), await os();
+				await N(Hn, { name: e }), await us();
 			} catch (e) {
-				as.value = e instanceof Error ? e.message : String(e);
+				ls.value = e instanceof Error ? e.message : String(e);
 			}
 		}
-		let us = v([]), ds = v(null), fs = v(null);
-		async function ps() {
-			let e = await j(Un);
-			N && (us.value = e.jailImages);
+		let ms = v([]), hs = v(null), gs = v(null);
+		async function _s() {
+			let e = await N(Un);
+			F && (ms.value = e.jailImages);
 		}
-		async function ms(e) {
+		async function vs(e) {
 			if (e.isMaster) return;
-			ds.value = null, fs.value = e.alias;
-			let t = us.value.find((e) => e.isMaster)?.alias ?? null;
+			hs.value = null, gs.value = e.alias;
+			let t = ms.value.find((e) => e.isMaster)?.alias ?? null;
 			try {
-				await j(Wn, {
+				await N(Wn, {
 					alias: e.alias,
 					isMaster: !0
-				}), await j(Tn, { input: { jailImage: e.alias } }), await Promise.all([ps(), Ae()]);
+				}), await N(Tn, { input: { jailImage: e.alias } }), await Promise.all([_s(), Ae()]);
 			} catch (n) {
-				await Promise.allSettled([t ? j(Wn, {
+				await Promise.allSettled([t ? N(Wn, {
 					alias: t,
 					isMaster: !0
-				}) : j(Wn, {
+				}) : N(Wn, {
 					alias: e.alias,
 					isMaster: !1
-				})]), await Promise.allSettled([ps(), Ae()]), ds.value = n instanceof Error ? n.message : String(n);
+				})]), await Promise.allSettled([_s(), Ae()]), hs.value = n instanceof Error ? n.message : String(n);
 			} finally {
-				fs.value = null;
+				gs.value = null;
 			}
 		}
-		function hs(e) {
-			Ao(e.distro, e.release), Wt.value = e.packages.join("\n"), Gt.value = "", Yt.value = e.alias;
+		function ys(e) {
+			Po(e.distro, e.release), Kt.value = e.packages.join("\n"), qt.value = "", Zt.value = e.alias;
 		}
-		let gs = v(null);
-		async function _s(e) {
+		let bs = v(null);
+		async function xs(e) {
 			if (confirm(`Delete image "${e.alias}"? This removes it from Incus and cannot be undone.`)) {
-				ds.value = null, gs.value = e.alias;
+				hs.value = null, bs.value = e.alias;
 				try {
-					await j(Ln, { alias: e.alias }), us.value = us.value.filter((t) => t.alias !== e.alias), Yt.value === e.alias && jo();
+					await N(Ln, { alias: e.alias }), ms.value = ms.value.filter((t) => t.alias !== e.alias), Zt.value === e.alias && Fo();
 				} catch (e) {
-					ds.value = e instanceof Error ? e.message : String(e);
+					hs.value = e instanceof Error ? e.message : String(e);
 				} finally {
-					gs.value = null;
+					bs.value = null;
 				}
-			}
-		}
-		function vs(e) {
-			return e.length === 0 ? "no packages" : e.join(", ");
-		}
-		let ys = v(!1), bs = v("");
-		async function xs() {
-			ys.value = !0, ds.value = null, bs.value = "";
-			try {
-				let e = await j(Gn);
-				e.pruneStaleImageRecords.length === 0 ? bs.value = "Nothing to prune — every saved image still exists in Incus." : (bs.value = `Untracked ${e.pruneStaleImageRecords.length}: ${e.pruneStaleImageRecords.join(", ")}`, us.value = us.value.filter((t) => !e.pruneStaleImageRecords.includes(t.alias)));
-			} catch (e) {
-				ds.value = e instanceof Error ? e.message : String(e);
-			} finally {
-				ys.value = !1;
 			}
 		}
 		function Ss(e) {
+			return e.length === 0 ? "no packages" : e.join(", ");
+		}
+		let Cs = v(!1), ws = v("");
+		async function Ts() {
+			Cs.value = !0, hs.value = null, ws.value = "";
+			try {
+				let e = await N(Gn);
+				e.pruneStaleImageRecords.length === 0 ? ws.value = "Nothing to prune — every saved image still exists in Incus." : (ws.value = `Untracked ${e.pruneStaleImageRecords.length}: ${e.pruneStaleImageRecords.join(", ")}`, ms.value = ms.value.filter((t) => !e.pruneStaleImageRecords.includes(t.alias)));
+			} catch (e) {
+				hs.value = e instanceof Error ? e.message : String(e);
+			} finally {
+				Cs.value = !1;
+			}
+		}
+		function Es(e) {
 			e.intervalId !== null && (e.intervalId.stop(), e.intervalId = null);
 		}
-		function Cs(e) {
+		function Ds(e) {
 			e.intervalId = bn(async (t) => {
 				try {
-					let n = await j(zn, { buildId: e.buildId });
+					let n = await N(zn, { buildId: e.buildId });
 					if (!t.isActive()) return;
 					if (e.status = n.jailImageBuildStatus, e.status?.status === "success") {
-						Ss(e);
+						Es(e);
 						try {
-							await ps();
+							await _s();
 						} catch (e) {
-							ds.value = e instanceof Error ? e.message : String(e);
+							hs.value = e instanceof Error ? e.message : String(e);
 						}
-					} else e.status?.status === "failed" && Ss(e);
+					} else e.status?.status === "failed" && Es(e);
 				} catch (n) {
 					if (!t.isActive()) return;
-					e.error = n instanceof Error ? n.message : String(n), Ss(e);
+					e.error = n instanceof Error ? n.message : String(n), Es(e);
 				}
 			}, yn);
 		}
-		async function ws() {
-			qt.value = null;
-			let e = Vt.value.trim(), t = Ht.value.trim(), n = Gt.value.trim(), r = Qt();
-			if (!e || !t || !n) qt.value = "Distro, release, and alias are required.";
+		async function Os() {
+			Yt.value = null;
+			let e = Ut.value.trim(), t = Wt.value.trim(), n = qt.value.trim(), r = en();
+			if (!e || !t || !n) Yt.value = "Distro, release, and alias are required.";
 			else {
-				Kt.value = !0;
+				Jt.value = !0;
 				try {
 					let i = {
-						buildId: (await j(In, {
+						buildId: (await N(In, {
 							distro: e,
 							release: t,
 							packages: r,
 							alias: n,
-							basedOn: Yt.value || null,
+							basedOn: Zt.value || null,
 							postInstallCommands: Array.from(X.values())
 						})).buildJailImage,
 						distro: e,
@@ -2762,17 +2767,17 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 						error: null,
 						intervalId: null
 					};
-					Jt.value.unshift(i), Cs(Jt.value[0]);
-					let a = G[K.value];
-					q.value = a && a.length > 0 ? a[0].value : Do, J.value = "", Gt.value = "", Wt.value = "", Y.clear(), X.clear(), en.value = [], $t.value = "", Jo.value = null, qo.value = null, Qo.value = "", $o.value = "", jo();
+					Xt.value.unshift(i), Ds(Xt.value[0]);
+					let a = Rt[K.value];
+					q.value = a && a.length > 0 ? a[0].value : ko, J.value = "", qt.value = "", Kt.value = "", Y.clear(), X.clear(), nn.value = [], tn.value = "", Qo.value = null, Zo.value = null, ns.value = "", rs.value = "", Fo();
 				} catch (e) {
-					qt.value = e instanceof Error ? e.message : String(e);
+					Yt.value = e instanceof Error ? e.message : String(e);
 				} finally {
-					Kt.value = !1;
+					Jt.value = !1;
 				}
 			}
 		}
-		function Ts(e) {
+		function ks(e) {
 			switch (e) {
 				case "success": return "green";
 				case "failed": return "red";
@@ -2780,329 +2785,334 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 				default: return "gray";
 			}
 		}
-		return te(() => {
-			N = !1, ++P, ++on;
-			for (let e of Jt.value) Ss(e);
-			Ft(), $e(), ot(), an && clearTimeout(an);
-		}), (e, a) => (h(), k("div", Xn, [i.value ? (h(), k("div", Zn, "Loading incus configuration…")) : (h(), k(O, { key: 1 }, [
-			c.value ? (h(), k("div", Qn, w(c.value), 1)) : T("", !0),
-			M("header", $n, [a[52] ||= fe("<svg width=\"14\" height=\"20\" viewBox=\"0 0 10 14\" fill=\"none\" aria-hidden=\"true\" class=\"shrink-0 text-foreground\"><path d=\"M5 0L9 2.5L5 5L1 2.5Z\" fill=\"currentColor\" opacity=\"0.95\"></path><path d=\"M5 3L9 5.5L5 8L1 5.5Z\" fill=\"currentColor\" opacity=\"0.7\"></path><path d=\"M5 6L9 8.5L5 11L1 8.5Z\" fill=\"currentColor\" opacity=\"0.45\"></path><path d=\"M5 9L9 11.5L5 14L1 11.5Z\" fill=\"currentColor\" opacity=\"0.25\"></path></svg><span class=\"text-sm font-semibold tracking-[0.14em] uppercase\">Incus</span><span class=\"text-xs text-muted-foreground\">dev containers</span>", 3), M("div", er, [S(y(ye), { variant: u.value ? "green" : "red" }, {
-				default: g(() => [E(w(u.value ? "Reachable" : "Not running"), 1)]),
+		return ee(() => {
+			F = !1, ++je, ++ln;
+			for (let e of Xt.value) Es(e);
+			It(), tt(), ct(), sn && clearTimeout(sn);
+		}), (e, a) => (h(), j("div", Xn, [i.value ? (h(), j("div", Zn, "Loading incus configuration…")) : (h(), j(A, { key: 1 }, [
+			c.value ? (h(), j("div", Qn, E(c.value), 1)) : D("", !0),
+			p.value ? (h(), j("div", $n, [
+				a[51] ||= P("p", { class: "font-semibold" }, "Container environment setup did not finish.", -1),
+				P("p", er, E(d.value?.message), 1),
+				a[52] ||= P("p", { class: "mt-1 text-muted-foreground" }, " Running containers keep the network, firewall and profile settings last applied, and recent changes to incus.cfg may not be in force. Fix the cause, then press Apply on the Config tab. ", -1)
+			])) : D("", !0),
+			P("header", tr, [a[54] ||= ue("<svg width=\"14\" height=\"20\" viewBox=\"0 0 10 14\" fill=\"none\" aria-hidden=\"true\" class=\"shrink-0 text-foreground\"><path d=\"M5 0L9 2.5L5 5L1 2.5Z\" fill=\"currentColor\" opacity=\"0.95\"></path><path d=\"M5 3L9 5.5L5 8L1 5.5Z\" fill=\"currentColor\" opacity=\"0.7\"></path><path d=\"M5 6L9 8.5L5 11L1 8.5Z\" fill=\"currentColor\" opacity=\"0.45\"></path><path d=\"M5 9L9 11.5L5 14L1 11.5Z\" fill=\"currentColor\" opacity=\"0.25\"></path></svg><span class=\"text-sm font-semibold tracking-[0.14em] uppercase\">Incus</span><span class=\"text-xs text-muted-foreground\">dev containers</span>", 3), P("div", nr, [C(b(_e), { variant: p.value ? "orange" : u.value ? "green" : "red" }, {
+				default: g(() => [O(E(p.value ? "Degraded" : u.value ? "Reachable" : "Not running"), 1)]),
 				_: 1
-			}, 8, ["variant"]), S(y(A), {
+			}, 8, ["variant"]), C(b(M), {
 				size: "sm",
 				variant: "outline",
-				onClick: F
+				onClick: I
 			}, {
-				default: g(() => [...a[51] ||= [E("Refresh", -1)]]),
+				default: g(() => [...a[53] ||= [O("Refresh", -1)]]),
 				_: 1
 			})])]),
-			S(vn, {
+			C(vn, {
 				modelValue: r.value,
 				"onUpdate:modelValue": a[0] ||= (e) => r.value = e
 			}, null, 8, ["modelValue"]),
-			r.value === "builder" ? (h(), k("section", tr, [
-				M("div", nr, [M("div", null, [a[77] ||= M("p", { class: "mb-2 text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Starting points", -1), M("div", rr, [
-					a[76] ||= M("h3", { class: "mb-2 text-sm font-semibold" }, "Presets", -1),
-					as.value ? (h(), k("p", ir, w(as.value), 1)) : T("", !0),
-					ns.value.length === 0 ? (h(), k("p", ar, "Save the form below as a preset to reuse it later.")) : (h(), k("div", or, [(h(!0), k(O, null, t(ns.value, (e) => (h(), k("div", {
+			r.value === "builder" ? (h(), j("section", rr, [
+				P("div", ir, [P("div", null, [a[79] ||= P("p", { class: "mb-2 text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Starting points", -1), P("div", ar, [
+					a[78] ||= P("h3", { class: "mb-2 text-sm font-semibold" }, "Presets", -1),
+					ls.value ? (h(), j("p", or, E(ls.value), 1)) : D("", !0),
+					os.value.length === 0 ? (h(), j("p", sr, "Save the form below as a preset to reuse it later.")) : (h(), j("div", cr, [(h(!0), j(A, null, t(os.value, (e) => (h(), j("div", {
 						key: e.name,
 						class: "flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5 text-xs"
 					}, [
-						M("button", {
+						P("button", {
 							type: "button",
 							class: "cursor-pointer font-medium hover:text-primary",
-							onClick: (t) => cs(e)
-						}, w(e.name), 9, sr),
-						M("span", cr, w(e.distro) + "/" + w(e.release), 1),
-						M("button", {
+							onClick: (t) => fs(e)
+						}, E(e.name), 9, lr),
+						P("span", ur, E(e.distro) + "/" + E(e.release), 1),
+						P("button", {
 							type: "button",
 							class: "cursor-pointer text-muted-foreground hover:text-destructive",
 							"aria-label": "Delete preset",
-							onClick: (t) => ls(e.name)
-						}, "✕", 8, lr)
+							onClick: (t) => ps(e.name)
+						}, "✕", 8, dr)
 					]))), 128))])),
-					M("div", ur, [
-						S(y(Q), {
+					P("div", fr, [
+						C(b(Q), {
 							for: "new-preset-name",
 							class: "sr-only"
 						}, {
-							default: g(() => [...a[53] ||= [E("Preset name", -1)]]),
+							default: g(() => [...a[55] ||= [O("Preset name", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "new-preset-name",
-							modelValue: rs.value,
-							"onUpdate:modelValue": a[1] ||= (e) => rs.value = e,
+							modelValue: ss.value,
+							"onUpdate:modelValue": a[1] ||= (e) => ss.value = e,
 							placeholder: "Preset name",
 							class: "w-56"
 						}, null, 8, ["modelValue"]),
-						S(y(A), {
+						C(b(M), {
 							size: "sm",
 							variant: "outline",
-							disabled: is.value || !rs.value.trim(),
-							onClick: ss
+							disabled: cs.value || !ss.value.trim(),
+							onClick: ds
 						}, {
-							default: g(() => [E(w(is.value ? "Saving…" : "Save as preset"), 1)]),
+							default: g(() => [O(E(cs.value ? "Saving…" : "Save as preset"), 1)]),
 							_: 1
 						}, 8, ["disabled"])
 					]),
-					S(y($), null, {
-						default: g(() => [...a[54] ||= [E(" Saves distro, release, and the current package/tool list — not the alias, since that should stay unique per build. Saving under a name that already exists overwrites it. ", -1)]]),
+					C(b($), null, {
+						default: g(() => [...a[56] ||= [O(" Saves distro, release, and the current package/tool list — not the alias, since that should stay unique per build. Saving under a name that already exists overwrites it. ", -1)]]),
 						_: 1
 					}),
-					M("div", dr, [
-						M("div", fr, [a[55] ||= M("h3", { class: "text-sm font-semibold" }, "Saved images", -1), us.value.length > 0 ? (h(), C(y(A), {
+					P("div", pr, [
+						P("div", mr, [a[57] ||= P("h3", { class: "text-sm font-semibold" }, "Saved images", -1), ms.value.length > 0 ? (h(), T(b(M), {
 							key: 0,
 							size: "sm",
 							variant: "outline",
-							disabled: ys.value,
-							onClick: xs
+							disabled: Cs.value,
+							onClick: Ts
 						}, {
-							default: g(() => [E(w(ys.value ? "Checking…" : "Prune stale records"), 1)]),
+							default: g(() => [O(E(Cs.value ? "Checking…" : "Prune stale records"), 1)]),
 							_: 1
-						}, 8, ["disabled"])) : T("", !0)]),
-						ds.value ? (h(), k("p", pr, w(ds.value), 1)) : T("", !0),
-						bs.value ? (h(), k("p", mr, w(bs.value), 1)) : T("", !0),
-						us.value.length === 0 ? (h(), k("p", hr, " No images built yet — the first one you build can become the golden master. ")) : (h(), k("div", gr, [(h(!0), k(O, null, t([...us.value].sort((e, t) => +!!t.isMaster - !!e.isMaster), (e) => (h(), k("div", {
+						}, 8, ["disabled"])) : D("", !0)]),
+						hs.value ? (h(), j("p", hr, E(hs.value), 1)) : D("", !0),
+						ws.value ? (h(), j("p", gr, E(ws.value), 1)) : D("", !0),
+						ms.value.length === 0 ? (h(), j("p", _r, " No images built yet — the first one you build can become the golden master. ")) : (h(), j("div", vr, [(h(!0), j(A, null, t([...ms.value].sort((e, t) => +!!t.isMaster - !!e.isMaster), (e) => (h(), j("div", {
 							key: e.alias,
-							class: _e(["flex items-center gap-3 rounded-md border px-3 py-2", e.isMaster ? "border-primary bg-primary/5" : "border-border"])
+							class: he(["flex items-center gap-3 rounded-md border px-3 py-2", e.isMaster ? "border-primary bg-primary/5" : "border-border"])
 						}, [
-							M("div", _r, [M("div", vr, [
-								M("span", yr, w(e.alias), 1),
-								e.isMaster ? (h(), C(y(ye), {
+							P("div", yr, [P("div", br, [
+								P("span", xr, E(e.alias), 1),
+								e.isMaster ? (h(), T(b(_e), {
 									key: 0,
 									variant: "orange"
 								}, {
-									default: g(() => [...a[56] ||= [E("Golden master", -1)]]),
+									default: g(() => [...a[58] ||= [O("Golden master", -1)]]),
 									_: 1
-								})) : T("", !0),
-								M("span", br, w(e.distro) + "/" + w(e.release), 1)
-							]), M("p", xr, w(vs(e.packages)), 1)]),
-							S(y(A), {
+								})) : D("", !0),
+								P("span", Sr, E(e.distro) + "/" + E(e.release), 1)
+							]), P("p", Cr, E(Ss(e.packages)), 1)]),
+							C(b(M), {
 								size: "sm",
 								variant: "outline",
-								disabled: e.isMaster || fs.value === e.alias,
-								onClick: (t) => ms(e),
+								disabled: e.isMaster || gs.value === e.alias,
+								onClick: (t) => vs(e),
 								title: e.isMaster ? "Current launch default; choose another image to replace it" : "New containers launch from this image by default"
 							}, {
-								default: g(() => [E(w(e.isMaster ? "Default" : "Set as default"), 1)]),
+								default: g(() => [O(E(e.isMaster ? "Default" : "Set as default"), 1)]),
 								_: 2
 							}, 1032, [
 								"disabled",
 								"onClick",
 								"title"
 							]),
-							S(y(A), {
+							C(b(M), {
 								size: "sm",
 								variant: "secondary",
-								onClick: (t) => hs(e)
+								onClick: (t) => ys(e)
 							}, {
-								default: g(() => [...a[57] ||= [E("Build variant", -1)]]),
+								default: g(() => [...a[59] ||= [O("Build variant", -1)]]),
 								_: 1
 							}, 8, ["onClick"]),
-							S(y(A), {
+							C(b(M), {
 								size: "sm",
 								variant: "destructive",
-								disabled: gs.value === e.alias,
-								onClick: (t) => _s(e)
+								disabled: bs.value === e.alias,
+								onClick: (t) => xs(e)
 							}, {
-								default: g(() => [...a[58] ||= [E("Delete", -1)]]),
+								default: g(() => [...a[60] ||= [O("Delete", -1)]]),
 								_: 1
 							}, 8, ["disabled", "onClick"])
 						], 2))), 128))])),
-						S(y($), null, {
-							default: g(() => [...a[59] ||= [E(" Only one image can be the golden master at a time — marking a new one unmarks the previous. Marking it also sets it as the default image new containers launch from (Config → Container Defaults), so this is more than a label. \"Build variant\" pre-fills the form from that image's distro/release/packages so you can edit, extend, or strip it down before building a new one. \"Prune stale records\" checks every saved image still actually exists in Incus and untracks any that don't — useful if one was deleted directly via the incus CLI instead of through here. ", -1)]]),
+						C(b($), null, {
+							default: g(() => [...a[61] ||= [O(" Only one image can be the golden master at a time — marking a new one unmarks the previous. Marking it also sets it as the default image new containers launch from (Config → Container Defaults), so this is more than a label. \"Build variant\" pre-fills the form from that image's distro/release/packages so you can edit, extend, or strip it down before building a new one. \"Prune stale records\" checks every saved image still actually exists in Incus and untracks any that don't — useful if one was deleted directly via the incus CLI instead of through here. ", -1)]]),
 							_: 1
 						})
 					]),
-					M("div", Sr, [M("button", {
+					P("div", wr, [P("button", {
 						type: "button",
-						"aria-expanded": Xt.value,
+						"aria-expanded": Qt.value,
 						"aria-controls": "config-import-panel",
 						class: "flex w-full cursor-pointer items-center gap-1.5 text-left text-sm font-semibold",
-						onClick: a[2] ||= (e) => Xt.value = !Xt.value
+						onClick: a[2] ||= (e) => Qt.value = !Qt.value
 					}, [
-						M("span", { class: _e(["text-muted-foreground transition-transform", Xt.value ? "rotate-90" : ""]) }, "▸", 2),
-						a[60] ||= E(" Import from a config file ", -1),
-						a[61] ||= M("span", { class: "font-normal text-xs text-muted-foreground" }, "devcontainer.json, mise.toml, .tool-versions", -1)
-					], 8, Cr), Xt.value ? (h(), k("div", wr, [
-						M("div", null, [
-							a[66] ||= M("p", { class: "mb-2 text-xs text-muted-foreground" }, " devcontainer.json — maps the base image and recognized features to real packages; anything that isn't applicable to image building is reported, not silently dropped. ", -1),
-							M("input", {
+						P("span", { class: he(["text-muted-foreground transition-transform", Qt.value ? "rotate-90" : ""]) }, "▸", 2),
+						a[62] ||= O(" Import from a config file ", -1),
+						a[63] ||= P("span", { class: "font-normal text-xs text-muted-foreground" }, "devcontainer.json, mise.toml, .tool-versions", -1)
+					], 8, Tr), Qt.value ? (h(), j("div", Er, [
+						P("div", null, [
+							a[68] ||= P("p", { class: "mb-2 text-xs text-muted-foreground" }, " devcontainer.json — maps the base image and recognized features to real packages; anything that isn't applicable to image building is reported, not silently dropped. ", -1),
+							P("input", {
 								ref_key: "devcontainerFileInput",
-								ref: Ro,
+								ref: Ho,
 								type: "file",
 								accept: ".json,application/json",
 								class: "hidden",
-								onChange: Bo
+								onChange: Wo
 							}, null, 544),
-							S(y(A), {
+							C(b(M), {
 								size: "sm",
 								variant: "outline",
-								onClick: zo
+								onClick: Uo
 							}, {
-								default: g(() => [...a[62] ||= [E("Choose devcontainer.json…", -1)]]),
+								default: g(() => [...a[64] ||= [O("Choose devcontainer.json…", -1)]]),
 								_: 1
 							}),
-							Io.value ? (h(), k("p", Tr, w(Io.value), 1)) : T("", !0),
-							Lo.value ? (h(), k("div", Er, [
-								Lo.value.distroSet ? (h(), k("p", Dr, [...a[63] ||= [
-									E("Distro/release set from ", -1),
-									M("span", { class: "font-mono" }, "image", -1),
-									E(".", -1)
-								]])) : T("", !0),
-								Lo.value.packagesAdded.length > 0 ? (h(), k("p", Or, [a[64] ||= E(" Packages added: ", -1), M("span", kr, w(Lo.value.packagesAdded.join(", ")), 1)])) : T("", !0),
-								Lo.value.commandsAdded.length > 0 ? (h(), k("p", Ar, w(Lo.value.commandsAdded.length) + " lifecycle command(s) added below — review before building. ", 1)) : T("", !0),
-								Lo.value.skipped.length > 0 ? (h(), k("div", jr, [a[65] ||= M("p", { class: "text-muted-foreground" }, "Skipped (review manually):", -1), M("ul", Mr, [(h(!0), k(O, null, t(Lo.value.skipped, (e) => (h(), k("li", { key: e }, w(e), 1))), 128))])])) : T("", !0)
-							])) : T("", !0)
+							Bo.value ? (h(), j("p", Dr, E(Bo.value), 1)) : D("", !0),
+							Vo.value ? (h(), j("div", Or, [
+								Vo.value.distroSet ? (h(), j("p", kr, [...a[65] ||= [
+									O("Distro/release set from ", -1),
+									P("span", { class: "font-mono" }, "image", -1),
+									O(".", -1)
+								]])) : D("", !0),
+								Vo.value.packagesAdded.length > 0 ? (h(), j("p", Ar, [a[66] ||= O(" Packages added: ", -1), P("span", jr, E(Vo.value.packagesAdded.join(", ")), 1)])) : D("", !0),
+								Vo.value.commandsAdded.length > 0 ? (h(), j("p", Mr, E(Vo.value.commandsAdded.length) + " lifecycle command(s) added below — review before building. ", 1)) : D("", !0),
+								Vo.value.skipped.length > 0 ? (h(), j("div", Nr, [a[67] ||= P("p", { class: "text-muted-foreground" }, "Skipped (review manually):", -1), P("ul", Pr, [(h(!0), j(A, null, t(Vo.value.skipped, (e) => (h(), j("li", { key: e }, E(e), 1))), 128))])])) : D("", !0)
+							])) : D("", !0)
 						]),
-						M("div", Nr, [
-							a[71] ||= M("p", { class: "mb-2 text-xs text-muted-foreground" }, [
-								E(" mise.toml / .tool-versions — pins exact tool versions by baking in "),
-								M("span", { class: "font-mono" }, "mise"),
-								E(" itself as a post-install step, wired system-wide so the container's actual runtime user can use the tools too. ")
+						P("div", Fr, [
+							a[73] ||= P("p", { class: "mb-2 text-xs text-muted-foreground" }, [
+								O(" mise.toml / .tool-versions — pins exact tool versions by baking in "),
+								P("span", { class: "font-mono" }, "mise"),
+								O(" itself as a post-install step, wired system-wide so the container's actual runtime user can use the tools too. ")
 							], -1),
-							M("input", {
+							P("input", {
 								ref_key: "miseTomlFileInput",
-								ref: Yo,
+								ref: $o,
 								type: "file",
 								accept: ".toml,application/toml",
 								class: "hidden",
-								onChange: a[3] ||= (e) => Zo(e, "toml")
+								onChange: a[3] ||= (e) => ts(e, "toml")
 							}, null, 544),
-							M("input", {
+							P("input", {
 								ref_key: "toolVersionsFileInput",
-								ref: Xo,
+								ref: es,
 								type: "file",
 								accept: ".tool-versions,text/plain",
 								class: "hidden",
-								onChange: a[4] ||= (e) => Zo(e, "tool-versions")
+								onChange: a[4] ||= (e) => ts(e, "tool-versions")
 							}, null, 544),
-							M("div", Pr, [S(y(A), {
+							P("div", Ir, [C(b(M), {
 								size: "sm",
 								variant: "outline",
-								onClick: a[5] ||= (e) => Yo.value?.click()
+								onClick: a[5] ||= (e) => $o.value?.click()
 							}, {
-								default: g(() => [...a[67] ||= [E("Choose mise.toml…", -1)]]),
+								default: g(() => [...a[69] ||= [O("Choose mise.toml…", -1)]]),
 								_: 1
-							}), S(y(A), {
+							}), C(b(M), {
 								size: "sm",
 								variant: "outline",
-								onClick: a[6] ||= (e) => Xo.value?.click()
+								onClick: a[6] ||= (e) => es.value?.click()
 							}, {
-								default: g(() => [...a[68] ||= [E("Choose .tool-versions…", -1)]]),
+								default: g(() => [...a[70] ||= [O("Choose .tool-versions…", -1)]]),
 								_: 1
 							})]),
-							qo.value ? (h(), k("p", Fr, w(qo.value), 1)) : T("", !0),
-							Jo.value ? (h(), k("p", Ir, [
-								a[69] ||= E(" Tools pinned: ", -1),
-								M("span", Lr, w(Jo.value.join(", ")), 1),
-								a[70] ||= E(" — see the setup commands below. ", -1)
-							])) : T("", !0)
+							Zo.value ? (h(), j("p", Lr, E(Zo.value), 1)) : D("", !0),
+							Qo.value ? (h(), j("p", Rr, [
+								a[71] ||= O(" Tools pinned: ", -1),
+								P("span", zr, E(Qo.value.join(", ")), 1),
+								a[72] ||= O(" — see the setup commands below. ", -1)
+							])) : D("", !0)
 						]),
-						M("div", Rr, [
-							S(y(Q), {
+						P("div", Br, [
+							C(b(Q), {
 								for: "dotfiles-repo",
 								class: "mb-1 block"
 							}, {
-								default: g(() => [...a[72] ||= [E("Bootstrap dotfiles from a repo", -1)]]),
+								default: g(() => [...a[74] ||= [O("Bootstrap dotfiles from a repo", -1)]]),
 								_: 1
 							}),
-							a[75] ||= M("p", { class: "mb-2 text-xs text-muted-foreground" }, [
-								E(" Experimental — clones the repo and hands off to "),
-								M("span", { class: "font-mono" }, "mise bootstrap"),
-								E(", which only applies dotfiles if that repo's own mise config declares them. ")
+							a[77] ||= P("p", { class: "mb-2 text-xs text-muted-foreground" }, [
+								O(" Experimental — clones the repo and hands off to "),
+								P("span", { class: "font-mono" }, "mise bootstrap"),
+								O(", which only applies dotfiles if that repo's own mise config declares them. ")
 							], -1),
-							M("div", zr, [
-								S(y(Z), {
+							P("div", Vr, [
+								C(b(Z), {
 									id: "dotfiles-repo",
-									modelValue: Qo.value,
-									"onUpdate:modelValue": a[7] ||= (e) => Qo.value = e,
+									modelValue: ns.value,
+									"onUpdate:modelValue": a[7] ||= (e) => ns.value = e,
 									class: "w-72 font-mono",
 									placeholder: "git@github.com:you/dotfiles.git"
 								}, null, 8, ["modelValue"]),
-								S(y(Z), {
-									modelValue: $o.value,
-									"onUpdate:modelValue": a[8] ||= (e) => $o.value = e,
+								C(b(Z), {
+									modelValue: rs.value,
+									"onUpdate:modelValue": a[8] ||= (e) => rs.value = e,
 									"aria-label": "Dotfiles branch or tag (optional)",
 									class: "w-32 font-mono",
 									placeholder: "branch (optional)"
 								}, null, 8, ["modelValue"]),
-								S(y(A), {
+								C(b(M), {
 									size: "sm",
 									variant: "outline",
-									disabled: !Qo.value.trim(),
-									onClick: es
+									disabled: !ns.value.trim(),
+									onClick: is
 								}, {
-									default: g(() => [...a[73] ||= [E("Add bootstrap", -1)]]),
+									default: g(() => [...a[75] ||= [O("Add bootstrap", -1)]]),
 									_: 1
 								}, 8, ["disabled"]),
-								X.has("mise:dotfiles-clone") ? (h(), C(y(A), {
+								X.has("mise:dotfiles-clone") ? (h(), T(b(M), {
 									key: 0,
 									size: "sm",
 									variant: "outline",
-									onClick: ts
+									onClick: as
 								}, {
-									default: g(() => [...a[74] ||= [E("Remove", -1)]]),
+									default: g(() => [...a[76] ||= [O("Remove", -1)]]),
 									_: 1
-								})) : T("", !0)
+								})) : D("", !0)
 							])
 						])
-					])) : T("", !0)])
-				])]), M("div", null, [a[94] ||= M("p", { class: "mb-2 text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Build", -1), M("div", Br, [
-					a[93] ||= M("h3", { class: "mb-4 text-base font-semibold" }, "Build container image", -1),
-					qt.value ? (h(), k("div", Vr, w(qt.value), 1)) : T("", !0),
-					Yt.value ? (h(), k("div", Hr, [M("span", null, [a[78] ||= E("Building variant of: ", -1), M("span", Ur, w(Yt.value), 1)]), M("button", {
+					])) : D("", !0)])
+				])]), P("div", null, [a[96] ||= P("p", { class: "mb-2 text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Build", -1), P("div", Hr, [
+					a[95] ||= P("h3", { class: "mb-4 text-base font-semibold" }, "Build container image", -1),
+					Yt.value ? (h(), j("div", Ur, E(Yt.value), 1)) : D("", !0),
+					Zt.value ? (h(), j("div", Wr, [P("span", null, [a[80] ||= O("Building variant of: ", -1), P("span", Gr, E(Zt.value), 1)]), P("button", {
 						type: "button",
 						class: "ml-auto cursor-pointer text-muted-foreground hover:text-foreground",
-						onClick: jo
-					}, " ✕ Clear ")])) : T("", !0),
-					M("div", Wr, [
-						S(y(Q), { for: "builder-distro" }, {
-							default: g(() => [...a[79] ||= [E("Distro", -1)]]),
+						onClick: Fo
+					}, " ✕ Clear ")])) : D("", !0),
+					P("div", Kr, [
+						C(b(Q), { for: "builder-distro" }, {
+							default: g(() => [...a[81] ||= [O("Distro", -1)]]),
 							_: 1
 						}),
-						M("div", Gr, [S(y(pn), {
+						P("div", qr, [C(b(pn), {
 							id: "builder-distro",
 							modelValue: K.value,
 							"onUpdate:modelValue": a[9] ||= (e) => K.value = e,
 							class: "w-48"
 						}, {
-							default: g(() => [(h(), k(O, null, t(It, (e) => M("option", {
+							default: g(() => [(h(), j(A, null, t(Lt, (e) => P("option", {
 								key: e.value,
 								value: e.value
-							}, w(e.label), 9, Kr)), 64)), M("option", { value: Eo }, "Other… (custom)")]),
+							}, E(e.label), 9, Jr)), 64)), P("option", { value: Oo }, "Other… (custom)")]),
 							_: 1
-						}, 8, ["modelValue"]), zt.value ? (h(), C(y(Z), {
+						}, 8, ["modelValue"]), Vt.value ? (h(), T(b(Z), {
 							key: 0,
 							id: "builder-custom-distro",
 							"aria-label": "Custom distro",
-							modelValue: Rt.value,
-							"onUpdate:modelValue": a[10] ||= (e) => Rt.value = e,
+							modelValue: Bt.value,
+							"onUpdate:modelValue": a[10] ||= (e) => Bt.value = e,
 							class: "w-40 font-mono",
 							placeholder: "e.g. archlinux"
-						}, null, 8, ["modelValue"])) : T("", !0)]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[80] ||= [E(" The curated list is verified against distrobuilder's own real image definitions — pick \"Other\" for anything else it supports; distrobuilder covers more than this list captures. ", -1)]]),
+						}, null, 8, ["modelValue"])) : D("", !0)]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[82] ||= [O(" The curated list is verified against distrobuilder's own real image definitions — pick \"Other\" for anything else it supports; distrobuilder covers more than this list captures. ", -1)]]),
 							_: 1
 						}),
-						S(y(Q), { for: "builder-release" }, {
-							default: g(() => [...a[81] ||= [E("Release", -1)]]),
+						C(b(Q), { for: "builder-release" }, {
+							default: g(() => [...a[83] ||= [O("Release", -1)]]),
 							_: 1
 						}),
-						M("div", qr, [S(y(pn), {
+						P("div", Yr, [C(b(pn), {
 							id: "builder-release",
 							modelValue: q.value,
 							"onUpdate:modelValue": a[11] ||= (e) => q.value = e,
 							class: "w-48"
 						}, {
-							default: g(() => [(h(!0), k(O, null, t(Ut.value, (e) => (h(), k("option", {
+							default: g(() => [(h(!0), j(A, null, t(Gt.value, (e) => (h(), j("option", {
 								key: e.value,
 								value: e.value
-							}, w(e.label), 9, Jr))), 128)), M("option", { value: Do }, "Other… (custom)")]),
+							}, E(e.label), 9, Xr))), 128)), P("option", { value: ko }, "Other… (custom)")]),
 							_: 1
-						}, 8, ["modelValue"]), Bt.value ? (h(), C(y(Z), {
+						}, 8, ["modelValue"]), Ht.value ? (h(), T(b(Z), {
 							key: 0,
 							id: "builder-custom-release",
 							"aria-label": "Custom release",
@@ -3110,719 +3120,719 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 							"onUpdate:modelValue": a[12] ||= (e) => J.value = e,
 							class: "w-40 font-mono",
 							placeholder: "e.g. rolling"
-						}, null, 8, ["modelValue"])) : T("", !0)]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[82] ||= [E("Options change with the distro above — a custom distro always shows the free-text field here too.", -1)]]),
+						}, null, 8, ["modelValue"])) : D("", !0)]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[84] ||= [O("Options change with the distro above — a custom distro always shows the free-text field here too.", -1)]]),
 							_: 1
 						}),
-						S(y(Q), { for: "builder-alias" }, {
-							default: g(() => [...a[83] ||= [E("Alias", -1)]]),
+						C(b(Q), { for: "builder-alias" }, {
+							default: g(() => [...a[85] ||= [O("Alias", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "builder-alias",
-							modelValue: Gt.value,
-							"onUpdate:modelValue": a[13] ||= (e) => Gt.value = e,
+							modelValue: qt.value,
+							"onUpdate:modelValue": a[13] ||= (e) => qt.value = e,
 							class: "w-96 justify-self-end",
 							placeholder: "my-custom-image"
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[84] ||= [E(" Becomes the image's name in Incus once the build succeeds — other containers (and \"build variant\") reference it by this alias, so it must be unique. Not required to match the container's own name. ", -1)]]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[86] ||= [O(" Becomes the image's name in Incus once the build succeeds — other containers (and \"build variant\") reference it by this alias, so it must be unique. Not required to match the container's own name. ", -1)]]),
 							_: 1
 						})
 					]),
-					M("div", Yr, [
-						a[90] ||= M("p", { class: "mb-2 text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Packages & tools", -1),
-						S(y(Q), {
+					P("div", Zr, [
+						a[92] ||= P("p", { class: "mb-2 text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Packages & tools", -1),
+						C(b(Q), {
 							for: "package-search",
 							class: "sr-only"
 						}, {
-							default: g(() => [...a[85] ||= [E("Search packages and tools", -1)]]),
+							default: g(() => [...a[87] ||= [O("Search packages and tools", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "package-search",
-							modelValue: $t.value,
-							"onUpdate:modelValue": a[14] ||= (e) => $t.value = e,
+							modelValue: tn.value,
+							"onUpdate:modelValue": a[14] ||= (e) => tn.value = e,
 							class: "w-full font-mono",
 							placeholder: "Search apt, npm, PyPI, Homebrew…"
 						}, null, 8, ["modelValue"]),
-						S(y($), null, {
-							default: g(() => [...a[86] ||= [E(" apt only searches when Debian or Ubuntu is selected above. npm and PyPI results aren't OS packages — adding one adds a setup command that runs after packages install, and auto-adds the Node.js or Python packages it needs. Homebrew results show for browsing but can't be added yet — there's no way to bootstrap Homebrew itself inside an image build. ", -1)]]),
+						C(b($), null, {
+							default: g(() => [...a[88] ||= [O(" apt only searches when Debian or Ubuntu is selected above. npm and PyPI results aren't OS packages — adding one adds a setup command that runs after packages install, and auto-adds the Node.js or Python packages it needs. Homebrew results show for browsing but can't be added yet — there's no way to bootstrap Homebrew itself inside an image build. ", -1)]]),
 							_: 1
 						}),
-						rn.value ? (h(), k("p", Xr, w(rn.value), 1)) : T("", !0),
-						tn.value.length > 0 ? (h(), k("p", Zr, [a[87] ||= E(" Some sources are unavailable right now, showing results from the rest: ", -1), (h(!0), k(O, null, t(tn.value, (e, t) => (h(), k("span", { key: e.ecosystem }, [E(w(t > 0 ? ", " : " "), 1), M("strong", null, w(cn[e.ecosystem]), 1)]))), 128))])) : T("", !0),
-						nn.value ? (h(), k("p", Qr, "Searching…")) : en.value.length > 0 ? (h(), k("div", $r, [(h(!0), k(O, null, t(en.value, (e) => (h(), k("div", {
+						on.value ? (h(), j("p", Qr, E(on.value), 1)) : D("", !0),
+						rn.value.length > 0 ? (h(), j("p", $r, [a[89] ||= O(" Some sources are unavailable right now, showing results from the rest: ", -1), (h(!0), j(A, null, t(rn.value, (e, t) => (h(), j("span", { key: e.ecosystem }, [O(E(t > 0 ? ", " : " "), 1), P("strong", null, E(un[e.ecosystem]), 1)]))), 128))])) : D("", !0),
+						an.value ? (h(), j("p", ei, "Searching…")) : nn.value.length > 0 ? (h(), j("div", ti, [(h(!0), j(A, null, t(nn.value, (e) => (h(), j("div", {
 							key: `${e.ecosystem}:${e.name}`,
 							class: "flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5 text-xs"
 						}, [
-							M("span", { class: _e(["shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase", e.ecosystem === "apt" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"]) }, w(cn[e.ecosystem]), 3),
-							M("div", ei, [
-								M("span", ti, w(e.name), 1),
-								e.version ? (h(), k("span", ni, w(e.version), 1)) : T("", !0),
-								e.description ? (h(), k("p", ri, w(e.description), 1)) : T("", !0)
+							P("span", { class: he(["shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase", e.ecosystem === "apt" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"]) }, E(un[e.ecosystem]), 3),
+							P("div", ni, [
+								P("span", ri, E(e.name), 1),
+								e.version ? (h(), j("span", ii, E(e.version), 1)) : D("", !0),
+								e.description ? (h(), j("p", ai, E(e.description), 1)) : D("", !0)
 							]),
-							e.ecosystem === "brew" ? (h(), k("span", ii, "not build-time yet")) : (h(), C(y(A), {
+							e.ecosystem === "brew" ? (h(), j("span", oi, "not build-time yet")) : (h(), T(b(M), {
 								key: 0,
 								size: "sm",
 								variant: "outline",
-								disabled: ko(e),
-								onClick: (t) => kn(e)
+								disabled: No(e),
+								onClick: (t) => Mo(e)
 							}, {
-								default: g(() => [E(w(ko(e) ? "Added" : "+ Add"), 1)]),
+								default: g(() => [O(E(No(e) ? "Added" : "+ Add"), 1)]),
 								_: 2
 							}, 1032, ["disabled", "onClick"]))
-						]))), 128))])) : $t.value.trim().length >= 2 ? (h(), k("p", ai, "No matches.")) : T("", !0),
-						Y.size > 0 ? (h(), k("div", oi, [a[88] ||= M("p", { class: "mb-1.5 block text-xs font-medium" }, "Added from apt search", -1), M("div", si, [(h(!0), k(O, null, t(Y, (e) => (h(), k("span", {
+						]))), 128))])) : tn.value.trim().length >= 2 ? (h(), j("p", si, "No matches.")) : D("", !0),
+						Y.size > 0 ? (h(), j("div", ci, [a[90] ||= P("p", { class: "mb-1.5 block text-xs font-medium" }, "Added from apt search", -1), P("div", li, [(h(!0), j(A, null, t(Y, (e) => (h(), j("span", {
 							key: e,
 							class: "flex items-center gap-1.5 rounded-md border border-border px-2 py-1 font-mono text-xs"
-						}, [E(w(e) + " ", 1), M("button", {
+						}, [O(E(e) + " ", 1), P("button", {
 							type: "button",
 							"aria-label": `Remove apt package ${e}`,
 							class: "cursor-pointer text-muted-foreground hover:text-destructive",
-							onClick: (t) => fn(e)
-						}, "✕", 8, ci)]))), 128))])])) : T("", !0),
-						X.size > 0 ? (h(), k("div", li, [a[89] ||= M("p", { class: "mb-1.5 block text-xs font-medium" }, "Extra setup commands (run after packages install)", -1), M("div", ui, [(h(!0), k(O, null, t(X, ([e, t]) => (h(), k("div", {
+							onClick: (t) => hn(e)
+						}, "✕", 8, ui)]))), 128))])])) : D("", !0),
+						X.size > 0 ? (h(), j("div", di, [a[91] ||= P("p", { class: "mb-1.5 block text-xs font-medium" }, "Extra setup commands (run after packages install)", -1), P("div", fi, [(h(!0), j(A, null, t(X, ([e, t]) => (h(), j("div", {
 							key: e,
 							class: "flex items-center gap-2 rounded-md border border-border px-2 py-1 font-mono text-xs"
-						}, [M("span", di, w(t), 1), M("button", {
+						}, [P("span", pi, E(t), 1), P("button", {
 							type: "button",
 							"aria-label": `Remove setup command ${e}`,
 							class: "cursor-pointer text-muted-foreground hover:text-destructive",
-							onClick: (t) => _n(e)
-						}, "✕", 8, fi)]))), 128))])])) : T("", !0)
+							onClick: (t) => jo(e)
+						}, "✕", 8, mi)]))), 128))])])) : D("", !0)
 					]),
-					M("div", pi, [
-						S(y(Q), {
+					P("div", hi, [
+						C(b(Q), {
 							for: "builder-extra-packages",
 							class: "mb-1.5 block text-xs text-muted-foreground"
 						}, {
-							default: g(() => [...a[91] ||= [E("Anything else? (one per line, or comma-separated)", -1)]]),
+							default: g(() => [...a[93] ||= [O("Anything else? (one per line, or comma-separated)", -1)]]),
 							_: 1
 						}),
-						o(M("textarea", {
+						o(P("textarea", {
 							id: "builder-extra-packages",
-							"onUpdate:modelValue": a[15] ||= (e) => Wt.value = e,
+							"onUpdate:modelValue": a[15] ||= (e) => Kt.value = e,
 							rows: "2",
 							class: "border-input bg-background w-full rounded-md border px-3 py-2 text-sm font-mono",
 							placeholder: "e.g. htop"
-						}, null, 512), [[_t, Wt.value]]),
-						S(y($), null, {
-							default: g(() => [...a[92] ||= [E(" Exact OS package names for the selected distro's package manager — merged with anything added from search above, duplicates removed. Use this for anything search didn't turn up. ", -1)]]),
+						}, null, 512), [[_t, Kt.value]]),
+						C(b($), null, {
+							default: g(() => [...a[94] ||= [O(" Exact OS package names for the selected distro's package manager — merged with anything added from search above, duplicates removed. Use this for anything search didn't turn up. ", -1)]]),
 							_: 1
 						})
 					]),
-					M("div", mi, [S(y(A), {
-						disabled: Kt.value,
-						onClick: ws
+					P("div", gi, [C(b(M), {
+						disabled: Jt.value,
+						onClick: Os
 					}, {
-						default: g(() => [E(w(Kt.value ? "Starting…" : "Build"), 1)]),
+						default: g(() => [O(E(Jt.value ? "Starting…" : "Build"), 1)]),
 						_: 1
 					}, 8, ["disabled"])])
 				])])]),
-				a[98] ||= M("p", { class: "mb-2 text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Results", -1),
-				M("div", hi, [
-					a[97] ||= M("h3", { class: "mb-4 text-base font-semibold" }, "Builds", -1),
-					S(y($), null, {
-						default: g(() => [...a[95] ||= [E(" Live distrobuilder log output, streamed while a build runs. This list is client-side only and resets on page reload — successful builds still land in Saved images above, but the log history itself isn't persisted. ", -1)]]),
+				a[100] ||= P("p", { class: "mb-2 text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Results", -1),
+				P("div", _i, [
+					a[99] ||= P("h3", { class: "mb-4 text-base font-semibold" }, "Builds", -1),
+					C(b($), null, {
+						default: g(() => [...a[97] ||= [O(" Live distrobuilder log output, streamed while a build runs. This list is client-side only and resets on page reload — successful builds still land in Saved images above, but the log history itself isn't persisted. ", -1)]]),
 						_: 1
 					}),
-					Jt.value.length === 0 ? (h(), k("div", gi, [...a[96] ||= [M("span", { class: "h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-700" }, null, -1), M("span", { class: "font-mono text-[11px] text-neutral-500" }, [E(" Pick a distro and release above, then hit Build — progress and logs stream in here."), M("span", { class: "motion-safe:animate-pulse" }, "_")], -1)]])) : (h(), k("div", _i, [(h(!0), k(O, null, t(Jt.value, (e) => (h(), k("div", {
+					Xt.value.length === 0 ? (h(), j("div", vi, [...a[98] ||= [P("span", { class: "h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-700" }, null, -1), P("span", { class: "font-mono text-[11px] text-neutral-500" }, [O(" Pick a distro and release above, then hit Build — progress and logs stream in here."), P("span", { class: "motion-safe:animate-pulse" }, "_")], -1)]])) : (h(), j("div", yi, [(h(!0), j(A, null, t(Xt.value, (e) => (h(), j("div", {
 						key: e.buildId,
 						class: "rounded-md border border-border p-3"
 					}, [
-						M("div", vi, [M("div", yi, [M("span", bi, w(e.alias), 1), M("span", xi, w(e.distro) + " / " + w(e.release), 1)]), S(y(ye), { variant: Ts(e.status?.status) }, {
-							default: g(() => [E(w(e.status?.status ?? "queued"), 1)]),
+						P("div", bi, [P("div", xi, [P("span", Si, E(e.alias), 1), P("span", Ci, E(e.distro) + " / " + E(e.release), 1)]), C(b(_e), { variant: ks(e.status?.status) }, {
+							default: g(() => [O(E(e.status?.status ?? "queued"), 1)]),
 							_: 2
 						}, 1032, ["variant"])]),
-						e.status?.error || e.error ? (h(), k("div", Si, w(e.status?.error || e.error), 1)) : T("", !0),
-						M("div", Ci, [M("span", { class: _e(["h-1.5 w-1.5 shrink-0 rounded-full", {
+						e.status?.error || e.error ? (h(), j("div", wi, E(e.status?.error || e.error), 1)) : D("", !0),
+						P("div", Ti, [P("span", { class: he(["h-1.5 w-1.5 shrink-0 rounded-full", {
 							"bg-emerald-500": e.status?.status === "success",
 							"bg-red-500": e.status?.status === "failed",
 							"bg-amber-500": e.status?.status === "running" || !e.status
-						}]) }, null, 2), M("span", wi, "distrobuilder · " + w(e.buildId.slice(0, 8)), 1)]),
-						M("pre", Ti, w(e.status?.logTail || "Waiting for log output…"), 1)
+						}]) }, null, 2), P("span", Ei, "distrobuilder · " + E(e.buildId.slice(0, 8)), 1)]),
+						P("pre", Di, E(e.status?.logTail || "Waiting for log output…"), 1)
 					]))), 128))]))
 				])
-			])) : r.value === "jails" ? (h(), k("section", Ei, [
-				a[151] ||= M("p", { class: "mb-2 text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Dashboard", -1),
-				M("div", Di, [
-					M("div", Oi, [a[99] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Total Containers", -1), M("p", ki, w(d.value.length), 1)]),
-					M("div", Ai, [a[100] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Running", -1), M("p", ji, w(y(ae).length), 1)]),
-					M("div", Mi, [a[101] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Stopped", -1), M("p", Ni, w(y(oe)), 1)]),
-					M("div", Pi, [a[102] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Daemon", -1), M("div", Fi, [S(y(ye), { variant: u.value ? "green" : "red" }, {
-						default: g(() => [E(w(u.value ? "Reachable" : "Not running"), 1)]),
+			])) : r.value === "jails" ? (h(), j("section", Oi, [
+				a[153] ||= P("p", { class: "mb-2 text-xs font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Dashboard", -1),
+				P("div", ki, [
+					P("div", Ai, [a[101] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Total Containers", -1), P("p", ji, E(_.value.length), 1)]),
+					P("div", Mi, [a[102] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Running", -1), P("p", Ni, E(b(ae).length), 1)]),
+					P("div", Pi, [a[103] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Stopped", -1), P("p", Fi, E(b(oe)), 1)]),
+					P("div", Ii, [a[104] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Daemon", -1), P("div", Li, [C(b(_e), { variant: p.value ? "orange" : u.value ? "green" : "red" }, {
+						default: g(() => [O(E(p.value ? "Degraded" : u.value ? "Reachable" : "Not running"), 1)]),
 						_: 1
 					}, 8, ["variant"])])]),
-					M("div", Ii, [a[103] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Memory In Use", -1), M("p", Li, w(y(de)(y(se))), 1)]),
-					M("div", Ri, [
-						a[104] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Total CPU (live)", -1),
-						M("p", zi, w(y(Se)()), 1),
-						y(le).length >= 2 ? (h(), k("svg", Bi, [M("polyline", {
-							points: y(Ce)(y(le), "cpuPct"),
+					P("div", Ri, [a[105] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Memory In Use", -1), P("p", zi, E(b(fe)(b(se))), 1)]),
+					P("div", Bi, [
+						a[106] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Total CPU (live)", -1),
+						P("p", Vi, E(b(Se)()), 1),
+						b(le).length >= 2 ? (h(), j("svg", Hi, [P("polyline", {
+							points: b(Ce)(b(le), "cpuPct"),
 							fill: "none",
 							stroke: "currentColor",
 							"stroke-width": "1.5"
-						}, null, 8, Vi)])) : T("", !0),
-						a[105] ||= M("p", { class: "mt-0.5 text-[10px] text-muted-foreground" }, "last ~2 min, sum of running containers", -1)
+						}, null, 8, Ui)])) : D("", !0),
+						a[107] ||= P("p", { class: "mt-0.5 text-[10px] text-muted-foreground" }, "last ~2 min, sum of running containers", -1)
 					])
 				]),
-				S(y($), { class: "mb-6" }, {
-					default: g(() => [...a[106] ||= [E(" CPU shown here is a live rate (% of one core), computed from the change in cumulative CPU time between polls every 5 seconds — not the raw counter Incus reports, which only ever goes up. The sparkline is a rolling client-side window that resets on page reload; nothing is persisted server-side. ", -1)]]),
+				C(b($), { class: "mb-6" }, {
+					default: g(() => [...a[108] ||= [O(" CPU shown here is a live rate (% of one core), computed from the change in cumulative CPU time between polls every 5 seconds — not the raw counter Incus reports, which only ever goes up. The sparkline is a rolling client-side window that resets on page reload; nothing is persisted server-side. ", -1)]]),
 					_: 1
 				}),
-				M("div", Hi, [M("div", Ui, [
-					a[112] ||= M("h3", { class: "mb-1 text-base font-semibold" }, "Network & ACL", -1),
-					a[113] ||= M("p", { class: "mb-3 text-xs text-muted-foreground" }, " The policy currently configured for every container on this bridge (from saved config, not a live probe). ", -1),
-					M("div", Wi, [
-						M("div", null, [a[107] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Bridge", -1), M("p", Gi, w(x.jailBridge || "—"), 1)]),
-						M("div", null, [a[108] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Subnet", -1), M("p", Ki, w(x.jailSubnet || "—"), 1)]),
-						M("div", null, [a[109] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "ACL Name", -1), M("p", qi, w(x.aclName || "—"), 1)]),
-						M("div", null, [a[110] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Blocked Ranges", -1), M("p", Ji, w(ut()) + " blocked", 1)]),
-						M("div", null, [a[111] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Default Egress / Ingress", -1), M("p", Yi, w(x.aclDefaultEgress) + " / " + w(x.aclDefaultIngress), 1)])
+				P("div", Wi, [P("div", Gi, [
+					a[114] ||= P("h3", { class: "mb-1 text-base font-semibold" }, "Network & ACL", -1),
+					a[115] ||= P("p", { class: "mb-3 text-xs text-muted-foreground" }, " The policy currently configured for every container on this bridge (from saved config, not a live probe). ", -1),
+					P("div", Ki, [
+						P("div", null, [a[109] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Bridge", -1), P("p", qi, E(w.jailBridge || "—"), 1)]),
+						P("div", null, [a[110] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Subnet", -1), P("p", Ji, E(w.jailSubnet || "—"), 1)]),
+						P("div", null, [a[111] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "ACL Name", -1), P("p", Yi, E(w.aclName || "—"), 1)]),
+						P("div", null, [a[112] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Blocked Ranges", -1), P("p", Xi, E(ft()) + " blocked", 1)]),
+						P("div", null, [a[113] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Default Egress / Ingress", -1), P("p", Zi, E(w.aclDefaultEgress) + " / " + E(w.aclDefaultIngress), 1)])
 					])
-				]), M("div", Xi, [
-					a[119] ||= M("h3", { class: "mb-1 text-base font-semibold" }, "Launch Container", -1),
-					a[120] ||= M("p", { class: "mb-3 text-xs text-muted-foreground" }, " Applies the Container Defaults profile — no build step. Each container gets its own independent root filesystem and workspace even when launched from the same image. ", -1),
-					M("div", Zi, [
-						M("div", Qi, [S(y(Q), {
+				]), P("div", Qi, [
+					a[121] ||= P("h3", { class: "mb-1 text-base font-semibold" }, "Launch Container", -1),
+					a[122] ||= P("p", { class: "mb-3 text-xs text-muted-foreground" }, " Applies the Container Defaults profile — no build step. Each container gets its own independent root filesystem and workspace even when launched from the same image. ", -1),
+					P("div", $i, [
+						P("div", ea, [C(b(Q), {
 							for: "new-container-name",
 							class: "mb-2 block"
 						}, {
-							default: g(() => [...a[114] ||= [E("Container name", -1)]]),
+							default: g(() => [...a[116] ||= [O("Container name", -1)]]),
 							_: 1
-						}), S(y(Z), {
+						}), C(b(Z), {
 							id: "new-container-name",
-							modelValue: p.value,
-							"onUpdate:modelValue": a[16] ||= (e) => p.value = e,
+							modelValue: y.value,
+							"onUpdate:modelValue": a[16] ||= (e) => y.value = e,
 							placeholder: "new-container-name",
 							class: "w-full font-mono"
 						}, null, 8, ["modelValue"])]),
-						M("div", $i, [S(y(Q), {
+						P("div", ta, [C(b(Q), {
 							for: "launch-image",
 							class: "mb-2 block"
 						}, {
-							default: g(() => [...a[115] ||= [E("Image", -1)]]),
+							default: g(() => [...a[117] ||= [O("Image", -1)]]),
 							_: 1
-						}), S(y(pn), {
+						}), C(b(pn), {
 							id: "launch-image",
-							modelValue: b.value,
-							"onUpdate:modelValue": a[17] ||= (e) => b.value = e,
+							modelValue: re.value,
+							"onUpdate:modelValue": a[17] ||= (e) => re.value = e,
 							class: "w-full"
 						}, {
-							default: g(() => [M("option", ea, "Default (" + w(x.jailImage || "—") + ")", 1), (h(!0), k(O, null, t(us.value, (e) => (h(), k("option", {
+							default: g(() => [P("option", na, "Default (" + E(w.jailImage || "—") + ")", 1), (h(!0), j(A, null, t(ms.value, (e) => (h(), j("option", {
 								key: e.alias,
 								value: e.alias
-							}, w(e.alias) + w(e.isMaster ? " (golden master)" : "") + " — " + w(e.distro) + "/" + w(e.release), 9, ta))), 128))]),
+							}, E(e.alias) + E(e.isMaster ? " (golden master)" : "") + " — " + E(e.distro) + "/" + E(e.release), 9, ra))), 128))]),
 							_: 1
 						}, 8, ["modelValue"])]),
-						S(y(A), {
+						C(b(M), {
 							size: "sm",
 							variant: "secondary",
-							disabled: !!_.value,
-							onClick: I
+							disabled: !!te.value,
+							onClick: Ie
 						}, {
-							default: g(() => [...a[116] ||= [E("Launch", -1)]]),
+							default: g(() => [...a[118] ||= [O("Launch", -1)]]),
 							_: 1
 						}, 8, ["disabled"])
 					]),
-					p.value && _.value ? (h(), k("p", na, w(_.value), 1)) : T("", !0),
-					M("div", ra, [S(y(sn), {
+					y.value && te.value ? (h(), j("p", ia, E(te.value), 1)) : D("", !0),
+					P("div", aa, [C(b(cn), {
 						id: "launch-allow-sudo",
-						modelValue: re.value,
-						"onUpdate:modelValue": a[18] ||= (e) => re.value = e
-					}, null, 8, ["modelValue"]), a[117] ||= M("label", {
+						modelValue: S.value,
+						"onUpdate:modelValue": a[18] ||= (e) => S.value = e
+					}, null, 8, ["modelValue"]), a[119] ||= P("label", {
 						for: "launch-allow-sudo",
 						class: "cursor-pointer text-xs"
 					}, " Allow sudo (NOPASSWD) for the agent user ", -1)]),
-					S(y($), null, {
-						default: g(() => [...a[118] ||= [E(" \"Default\" launches from Config → Container Defaults' image (the golden master, if one is set). Picking a specific image here launches from that image instead, just for this container — it doesn't change the default. Every launch, from any image, gets its own independent root filesystem; nothing is shared between containers built from the same source image. Sudo is off by default on purpose — the agent user having no path to root is what keeps a compromised dependency from escalating inside the container. Turning it on trades that away for convenience; you can also grant or check it later, per-container, from its Details panel. ", -1)]]),
+					C(b($), null, {
+						default: g(() => [...a[120] ||= [O(" \"Default\" launches from Config → Container Defaults' image (the golden master, if one is set). Picking a specific image here launches from that image instead, just for this container — it doesn't change the default. Every launch, from any image, gets its own independent root filesystem; nothing is shared between containers built from the same source image. Sudo is off by default on purpose — the agent user having no path to root is what keeps a compromised dependency from escalating inside the container. Turning it on trades that away for convenience; you can also grant or check it later, per-container, from its Details panel. ", -1)]]),
 						_: 1
 					})
 				])]),
-				M("div", ia, [
-					M("div", aa, [a[121] ||= M("h3", { class: "text-base font-semibold" }, "Containers", -1), y(oe) > 0 ? (h(), C(y(A), {
+				P("div", oa, [
+					P("div", sa, [a[123] ||= P("h3", { class: "text-base font-semibold" }, "Containers", -1), b(oe) > 0 ? (h(), T(b(M), {
 						key: 0,
 						size: "sm",
 						variant: "outline",
-						disabled: Pe.value,
+						disabled: L.value,
 						onClick: Fe
 					}, {
-						default: g(() => [E(w(Pe.value ? "Deleting…" : `Delete ${y(oe)} stopped`), 1)]),
+						default: g(() => [O(E(L.value ? "Deleting…" : `Delete ${b(oe)} stopped`), 1)]),
 						_: 1
-					}, 8, ["disabled"])) : T("", !0)]),
-					S(y($), null, {
-						default: g(() => [...a[122] ||= [E(" \"On bridge\" means this container's address falls inside the configured subnet — a real check, not a claim that the LAN-ban ACL is actively enforced for it specifically (that's a daemon-level policy on the whole bridge, shown above under Network & ACL). Each row's mini charts are the same rolling client-side window as the summary cards above. ", -1)]]),
+					}, 8, ["disabled"])) : D("", !0)]),
+					C(b($), null, {
+						default: g(() => [...a[124] ||= [O(" \"On bridge\" means this container's address falls inside the configured subnet — a real check, not a claim that the LAN-ban ACL is actively enforced for it specifically (that's a daemon-level policy on the whole bridge, shown above under Network & ACL). Each row's mini charts are the same rolling client-side window as the summary cards above. ", -1)]]),
 						_: 1
 					}),
-					d.value.length === 0 ? (h(), k("p", oa, " No containers yet — launch one above to get started. ")) : (h(), k(O, { key: 1 }, [M("p", sa, " Total: " + w(y(ae).length) + " container" + w(y(ae).length === 1 ? "" : "s") + " running, " + w(y(de)(y(se))) + " memory, CPU time " + w(y(ue)(Number(y(ce)))), 1), M("div", ca, [(h(!0), k(O, null, t(d.value, (e) => (h(), k("div", {
+					_.value.length === 0 ? (h(), j("p", ca, " No containers yet — launch one above to get started. ")) : (h(), j(A, { key: 1 }, [P("p", la, " Total: " + E(b(ae).length) + " container" + E(b(ae).length === 1 ? "" : "s") + " running, " + E(b(fe)(b(se))) + " memory, CPU time " + E(b(de)(Number(b(ce)))), 1), P("div", ua, [(h(!0), j(A, null, t(_.value, (e) => (h(), j("div", {
 						key: e.name,
-						class: _e(["rounded-lg border border-border p-3", y(R) === e.name ? "border-primary/50" : "border-border"])
+						class: he(["rounded-lg border border-border p-3", b(z) === e.name ? "border-primary/50" : "border-border"])
 					}, [
-						M("div", la, [M("div", ua, [
-							M("span", da, w(e.name), 1),
-							At(e) ? (h(), k("span", fa, "on bridge")) : T("", !0),
-							S(y(ye), { variant: ct(e.status) }, {
-								default: g(() => [E(w(e.status), 1)]),
+						P("div", da, [P("div", fa, [
+							P("span", pa, E(e.name), 1),
+							Nt(e) ? (h(), j("span", ma, "on bridge")) : D("", !0),
+							C(b(_e), { variant: ut(e.status) }, {
+								default: g(() => [O(E(e.status), 1)]),
 								_: 2
 							}, 1032, ["variant"])
-						]), M("span", pa, w(e.ipv4 || "—"), 1)]),
-						M("div", ma, [M("div", null, [M("p", {
+						]), P("span", ha, E(e.ipv4 || "—"), 1)]),
+						P("div", ga, [P("div", null, [P("p", {
 							class: "text-[10px] font-semibold tracking-[0.06em] uppercase text-muted-foreground",
-							title: `Live rate, % ${y(be)()}`
-						}, "CPU", 8, ha), M("div", ga, [
-							M("div", _a, [y(ve)(e) === null ? T("", !0) : (h(), k("div", {
+							title: `Live rate, % ${b(be)()}`
+						}, "CPU", 8, _a), P("div", va, [
+							P("div", ya, [b(ye)(e) === null ? D("", !0) : (h(), j("div", {
 								key: 0,
 								class: "h-full rounded-full bg-primary",
-								style: Oe({ width: y(ve)(e) + "%" })
+								style: Ee({ width: b(ye)(e) + "%" })
 							}, null, 4))]),
-							M("span", va, w(y(ge)(e)), 1),
-							y(xe)(e.name).length >= 2 ? (h(), k("svg", ya, [M("polyline", {
-								points: y(Ce)(y(xe)(e.name), "cpuPct"),
+							P("span", ba, E(b(ve)(e)), 1),
+							b(xe)(e.name).length >= 2 ? (h(), j("svg", xa, [P("polyline", {
+								points: b(Ce)(b(xe)(e.name), "cpuPct"),
 								fill: "none",
 								stroke: "currentColor",
 								"stroke-width": "1.5"
-							}, null, 8, ba)])) : T("", !0)
-						])]), M("div", null, [
-							a[123] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.06em] uppercase text-muted-foreground" }, "Memory", -1),
-							M("div", xa, [M("span", Sa, w(y(pe)(e)), 1), y(xe)(e.name).length >= 2 ? (h(), k("svg", Ca, [M("polyline", {
-								points: y(Ce)(y(xe)(e.name), "memPct"),
+							}, null, 8, Sa)])) : D("", !0)
+						])]), P("div", null, [
+							a[125] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.06em] uppercase text-muted-foreground" }, "Memory", -1),
+							P("div", Ca, [P("span", wa, E(b(pe)(e)), 1), b(xe)(e.name).length >= 2 ? (h(), j("svg", Ta, [P("polyline", {
+								points: b(Ce)(b(xe)(e.name), "memPct"),
 								fill: "none",
 								stroke: "currentColor",
 								"stroke-width": "1.5"
-							}, null, 8, wa)])) : T("", !0)]),
-							y(me)(e) === null ? T("", !0) : (h(), k("div", Ta, [M("div", {
+							}, null, 8, Ea)])) : D("", !0)]),
+							b(me)(e) === null ? D("", !0) : (h(), j("div", Da, [P("div", {
 								class: "h-full rounded-full bg-primary",
-								style: Oe({ width: y(me)(e) + "%" })
+								style: Ee({ width: b(me)(e) + "%" })
 							}, null, 4)]))
 						])]),
-						M("div", Ea, [
-							S(y(A), {
+						P("div", Oa, [
+							C(b(M), {
 								size: "sm",
 								variant: "outline",
-								onClick: (t) => Me(e.name, "start")
+								onClick: (t) => Ne(e.name, "start")
 							}, {
-								default: g(() => [...a[124] ||= [E("Start", -1)]]),
+								default: g(() => [...a[126] ||= [O("Start", -1)]]),
 								_: 1
 							}, 8, ["onClick"]),
-							S(y(A), {
+							C(b(M), {
 								size: "sm",
 								variant: "outline",
-								onClick: (t) => Me(e.name, "stop")
+								onClick: (t) => Ne(e.name, "stop")
 							}, {
-								default: g(() => [...a[125] ||= [E("Stop", -1)]]),
+								default: g(() => [...a[127] ||= [O("Stop", -1)]]),
 								_: 1
 							}, 8, ["onClick"]),
-							S(y(A), {
+							C(b(M), {
 								size: "sm",
 								variant: "secondary",
 								disabled: e.status.toLowerCase() !== "running",
 								onClick: (t) => ie.value = e.name
 							}, {
-								default: g(() => [...a[126] ||= [E("Console", -1)]]),
+								default: g(() => [...a[128] ||= [O("Console", -1)]]),
 								_: 1
 							}, 8, ["disabled", "onClick"]),
-							S(y(A), {
+							C(b(M), {
 								size: "sm",
 								variant: "outline",
-								onClick: (t) => y(Be)(e.name)
+								onClick: (t) => b(Ve)(e.name)
 							}, {
-								default: g(() => [E(w(y(R) === e.name ? "Hide manage" : "Manage"), 1)]),
+								default: g(() => [O(E(b(z) === e.name ? "Hide manage" : "Manage"), 1)]),
 								_: 2
 							}, 1032, ["onClick"]),
-							S(y(A), {
+							C(b(M), {
 								size: "sm",
 								variant: "destructive",
-								onClick: (t) => Ne(e.name)
+								onClick: (t) => Pe(e.name)
 							}, {
-								default: g(() => [...a[127] ||= [E("Delete", -1)]]),
+								default: g(() => [...a[129] ||= [O("Delete", -1)]]),
 								_: 1
 							}, 8, ["onClick"])
 						]),
-						y(R) === e.name ? (h(), k("div", Da, [y(Ie) ? (h(), k("p", Oa, "Loading…")) : y(z) ? (h(), k(O, { key: 1 }, [
-							M("div", ka, [
-								M("div", null, [a[128] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Image", -1), M("p", Aa, w(y(z).imageOs || "—") + " " + w(y(z).imageRelease || ""), 1)]),
-								M("div", null, [a[129] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Profiles", -1), M("p", ja, w(y(z).profiles.join(", ")), 1)]),
-								M("div", null, [a[130] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Storage pool", -1), M("p", Ma, w(y(z).storagePool || "—"), 1)]),
-								M("div", null, [a[131] ||= M("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Bridge", -1), M("p", Na, w(y(z).networkBridge || "—"), 1)])
+						b(z) === e.name ? (h(), j("div", ka, [b(Le) ? (h(), j("p", Aa, "Loading…")) : b(B) ? (h(), j(A, { key: 1 }, [
+							P("div", ja, [
+								P("div", null, [a[130] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Image", -1), P("p", Ma, E(b(B).imageOs || "—") + " " + E(b(B).imageRelease || ""), 1)]),
+								P("div", null, [a[131] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Profiles", -1), P("p", Na, E(b(B).profiles.join(", ")), 1)]),
+								P("div", null, [a[132] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Storage pool", -1), P("p", Pa, E(b(B).storagePool || "—"), 1)]),
+								P("div", null, [a[133] ||= P("p", { class: "text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Bridge", -1), P("p", Fa, E(b(B).networkBridge || "—"), 1)])
 							]),
-							M("div", Pa, [M("div", Fa, [
-								M("div", null, [S(y(Q), {
+							P("div", Ia, [P("div", La, [
+								P("div", null, [C(b(Q), {
 									for: "detail-cpu-limit",
 									class: "mb-1 flex items-center gap-1.5 text-xs"
 								}, {
-									default: g(() => [a[133] ||= E(" CPU limit ", -1), y(z).cpuLimitIsOverride ? (h(), C(y(ye), {
+									default: g(() => [a[135] ||= O(" CPU limit ", -1), b(B).cpuLimitIsOverride ? (h(), T(b(_e), {
 										key: 0,
 										variant: "orange"
 									}, {
-										default: g(() => [...a[132] ||= [E("override", -1)]]),
+										default: g(() => [...a[134] ||= [O("override", -1)]]),
 										_: 1
-									})) : T("", !0)]),
+									})) : D("", !0)]),
 									_: 1
-								}), M("div", Ia, [S(y(Z), {
+								}), P("div", Ra, [C(b(Z), {
 									id: "detail-cpu-limit",
-									modelValue: y(Le),
-									"onUpdate:modelValue": a[19] ||= (e) => l(Le) ? Le.value = e : null,
+									modelValue: b(Re),
+									"onUpdate:modelValue": a[19] ||= (e) => l(Re) ? Re.value = e : null,
 									class: "w-24 font-mono",
 									placeholder: "e.g. 2"
-								}, null, 8, ["modelValue"]), S(y(A), {
+								}, null, 8, ["modelValue"]), C(b(M), {
 									size: "sm",
 									variant: "outline",
-									disabled: L.value,
-									onClick: Ve
+									disabled: R.value,
+									onClick: Ue
 								}, {
-									default: g(() => [...a[134] ||= [E("Apply", -1)]]),
+									default: g(() => [...a[136] ||= [O("Apply", -1)]]),
 									_: 1
 								}, 8, ["disabled"])])]),
-								M("div", null, [S(y(Q), {
+								P("div", null, [C(b(Q), {
 									for: "detail-memory-limit",
 									class: "mb-1 flex items-center gap-1.5 text-xs"
 								}, {
-									default: g(() => [a[136] ||= E(" Memory limit ", -1), y(z).memoryLimitIsOverride ? (h(), C(y(ye), {
+									default: g(() => [a[138] ||= O(" Memory limit ", -1), b(B).memoryLimitIsOverride ? (h(), T(b(_e), {
 										key: 0,
 										variant: "orange"
 									}, {
-										default: g(() => [...a[135] ||= [E("override", -1)]]),
+										default: g(() => [...a[137] ||= [O("override", -1)]]),
 										_: 1
-									})) : T("", !0)]),
+									})) : D("", !0)]),
 									_: 1
-								}), M("div", La, [S(y(Z), {
+								}), P("div", za, [C(b(Z), {
 									id: "detail-memory-limit",
-									modelValue: y(Re),
-									"onUpdate:modelValue": a[20] ||= (e) => l(Re) ? Re.value = e : null,
+									modelValue: b(ze),
+									"onUpdate:modelValue": a[20] ||= (e) => l(ze) ? ze.value = e : null,
 									class: "w-24 font-mono",
 									placeholder: "e.g. 4GiB"
-								}, null, 8, ["modelValue"]), S(y(A), {
+								}, null, 8, ["modelValue"]), C(b(M), {
 									size: "sm",
 									variant: "outline",
-									disabled: L.value,
-									onClick: He
+									disabled: R.value,
+									onClick: We
 								}, {
-									default: g(() => [...a[137] ||= [E("Apply", -1)]]),
+									default: g(() => [...a[139] ||= [O("Apply", -1)]]),
 									_: 1
 								}, 8, ["disabled"])])]),
-								y(z).cpuLimitIsOverride || y(z).memoryLimitIsOverride ? (h(), C(y(A), {
+								b(B).cpuLimitIsOverride || b(B).memoryLimitIsOverride ? (h(), T(b(M), {
 									key: 0,
 									size: "sm",
 									variant: "outline",
-									disabled: L.value,
-									onClick: Ue
+									disabled: R.value,
+									onClick: Ge
 								}, {
-									default: g(() => [...a[138] ||= [E("Use profile default", -1)]]),
+									default: g(() => [...a[140] ||= [O("Use profile default", -1)]]),
 									_: 1
-								}, 8, ["disabled"])) : T("", !0)
-							]), M("div", null, [S(y(Q), {
+								}, 8, ["disabled"])) : D("", !0)
+							]), P("div", null, [C(b(Q), {
 								for: "detail-workspace",
 								class: "mb-1 flex items-center gap-1.5 text-xs"
 							}, {
-								default: g(() => [a[140] ||= E(" Workspace host path (/workspace) ", -1), y(z).workspaceIsOverride ? (h(), C(y(ye), {
+								default: g(() => [a[142] ||= O(" Workspace host path (/workspace) ", -1), b(B).workspaceIsOverride ? (h(), T(b(_e), {
 									key: 0,
 									variant: "orange"
 								}, {
-									default: g(() => [...a[139] ||= [E("override", -1)]]),
+									default: g(() => [...a[141] ||= [O("override", -1)]]),
 									_: 1
-								})) : T("", !0)]),
+								})) : D("", !0)]),
 								_: 1
-							}), M("div", Ra, [
-								S(y(Z), {
+							}), P("div", Ba, [
+								C(b(Z), {
 									id: "detail-workspace",
-									modelValue: y(ze),
-									"onUpdate:modelValue": a[21] ||= (e) => l(ze) ? ze.value = e : null,
+									modelValue: b(Be),
+									"onUpdate:modelValue": a[21] ||= (e) => l(Be) ? Be.value = e : null,
 									class: "flex-1 font-mono"
 								}, null, 8, ["modelValue"]),
-								S(y(A), {
+								C(b(M), {
 									size: "sm",
 									variant: "outline",
-									disabled: L.value,
-									onClick: We
+									disabled: R.value,
+									onClick: Ke
 								}, {
-									default: g(() => [...a[141] ||= [E("Apply", -1)]]),
+									default: g(() => [...a[143] ||= [O("Apply", -1)]]),
 									_: 1
 								}, 8, ["disabled"]),
-								y(z).workspaceIsOverride ? (h(), C(y(A), {
+								b(B).workspaceIsOverride ? (h(), T(b(M), {
 									key: 0,
 									size: "sm",
 									variant: "outline",
-									disabled: L.value,
-									onClick: Ge
+									disabled: R.value,
+									onClick: qe
 								}, {
-									default: g(() => [...a[142] ||= [E("Use profile default", -1)]]),
+									default: g(() => [...a[144] ||= [O("Use profile default", -1)]]),
 									_: 1
-								}, 8, ["disabled"])) : T("", !0)
+								}, 8, ["disabled"])) : D("", !0)
 							])])]),
-							Ke(y(z)) ? (h(), k("div", za, [a[143] ||= M("span", null, [
-								E(" This container shares "),
-								M("span", { class: "font-mono" }, "/workspace"),
-								E(" with every other container still on the profile's default — file writes are live-visible between them. ")
-							], -1), S(y(A), {
+							Je(b(B)) ? (h(), j("div", Va, [a[145] ||= P("span", null, [
+								O(" This container shares "),
+								P("span", { class: "font-mono" }, "/workspace"),
+								O(" with every other container still on the profile's default — file writes are live-visible between them. ")
+							], -1), C(b(M), {
 								size: "sm",
 								variant: "outline",
-								disabled: qe.value,
-								onClick: Je
+								disabled: H.value,
+								onClick: Ye
 							}, {
-								default: g(() => [E(w(qe.value ? "Isolating…" : "Isolate this container's workspace"), 1)]),
+								default: g(() => [O(E(H.value ? "Isolating…" : "Isolate this container's workspace"), 1)]),
 								_: 1
-							}, 8, ["disabled"])])) : T("", !0),
-							y(B) ? (h(), k("p", Ba, w(y(B)), 1)) : T("", !0),
-							S(y($), null, {
-								default: g(() => [...a[144] ||= [E(" Values without an \"override\" badge are inherited straight from the container's profile and apply to every container using it. Applying here overrides just this one instance — it won't touch the profile or any other container. Memory limit changes need a restart of this container to actually take effect on a running instance (verified: clearing an override alone doesn't shrink an already-larger live cgroup limit back down). Isolating a shared workspace points it at a new, empty per-container directory — it does not copy any files already sitting in the old shared one. ", -1)]]),
+							}, 8, ["disabled"])])) : D("", !0),
+							b(V) ? (h(), j("p", Ha, E(b(V)), 1)) : D("", !0),
+							C(b($), null, {
+								default: g(() => [...a[146] ||= [O(" Values without an \"override\" badge are inherited straight from the container's profile and apply to every container using it. Applying here overrides just this one instance — it won't touch the profile or any other container. Memory limit changes need a restart of this container to actually take effect on a running instance (verified: clearing an override alone doesn't shrink an already-larger live cgroup limit back down). Isolating a shared workspace points it at a new, empty per-container directory — it does not copy any files already sitting in the old shared one. ", -1)]]),
 								_: 1
 							}),
-							M("div", Va, [
-								M("p", Ha, [a[145] ||= E(" Sudo (agent user) ", -1), S(y(ye), { variant: y(z).sudoEnabled ? "green" : "gray" }, {
-									default: g(() => [E(w(y(z).sudoEnabled ? "enabled" : "disabled"), 1)]),
+							P("div", Ua, [
+								P("p", Wa, [a[147] ||= O(" Sudo (agent user) ", -1), C(b(_e), { variant: b(B).sudoEnabled ? "green" : "gray" }, {
+									default: g(() => [O(E(b(B).sudoEnabled ? "enabled" : "disabled"), 1)]),
 									_: 1
 								}, 8, ["variant"])]),
-								y(z).sudoEnabled ? T("", !0) : (h(), C(y(A), {
+								b(B).sudoEnabled ? D("", !0) : (h(), T(b(M), {
 									key: 0,
 									size: "sm",
 									variant: "outline",
-									disabled: tt.value,
-									onClick: nt
+									disabled: rt.value,
+									onClick: it
 								}, {
-									default: g(() => [E(w(tt.value ? "Granting…" : "Grant sudo (NOPASSWD)"), 1)]),
+									default: g(() => [O(E(rt.value ? "Granting…" : "Grant sudo (NOPASSWD)"), 1)]),
 									_: 1
 								}, 8, ["disabled"])),
-								S(y($), null, {
-									default: g(() => [...a[146] ||= [
-										E(" Off by default on purpose — this is what keeps a compromised dependency from escalating to root inside the container. Granting sudo here applies immediately to the running container and can't be un-granted from this panel (remove ", -1),
-										M("span", { class: "font-mono" }, "/etc/sudoers.d/agent", -1),
-										E(" manually, or via the privileged command box below, if you need to revoke it). ", -1)
+								C(b($), null, {
+									default: g(() => [...a[148] ||= [
+										O(" Off by default on purpose — this is what keeps a compromised dependency from escalating to root inside the container. Granting sudo here applies immediately to the running container and can't be un-granted from this panel (remove ", -1),
+										P("span", { class: "font-mono" }, "/etc/sudoers.d/agent", -1),
+										O(" manually, or via the privileged command box below, if you need to revoke it). ", -1)
 									]]),
 									_: 1
 								})
 							]),
-							M("div", Ua, [
-								S(y(Q), {
+							P("div", Ga, [
+								C(b(Q), {
 									for: "homebrew-formula",
 									class: "mb-1 block text-xs"
 								}, {
-									default: g(() => [...a[147] ||= [E("Install a package (Homebrew)", -1)]]),
+									default: g(() => [...a[149] ||= [O("Install a package (Homebrew)", -1)]]),
 									_: 1
 								}),
-								M("div", Wa, [S(y(Z), {
+								P("div", Ka, [C(b(Z), {
 									id: "homebrew-formula",
-									modelValue: H.value,
-									"onUpdate:modelValue": a[22] ||= (e) => H.value = e,
+									modelValue: Xe.value,
+									"onUpdate:modelValue": a[22] ||= (e) => Xe.value = e,
 									class: "w-48 font-mono",
 									placeholder: "e.g. wget",
-									onKeydown: Nt(jt(et, ["prevent"]), ["enter"])
-								}, null, 8, ["modelValue", "onKeydown"]), S(y(A), {
+									onKeydown: Mt(At(nt, ["prevent"]), ["enter"])
+								}, null, 8, ["modelValue", "onKeydown"]), C(b(M), {
 									size: "sm",
 									variant: "outline",
-									disabled: !H.value.trim() || Ye.value,
-									onClick: et
+									disabled: !Xe.value.trim() || Ze.value,
+									onClick: nt
 								}, {
-									default: g(() => [E(w(Ye.value ? "Installing…" : "Install"), 1)]),
+									default: g(() => [O(E(Ze.value ? "Installing…" : "Install"), 1)]),
 									_: 1
 								}, 8, ["disabled"])]),
-								Xe.value ? (h(), k("p", Ga, w(Xe.value), 1)) : T("", !0),
-								Ze.value ? (h(), k("p", Ka, w(Ze.value), 1)) : T("", !0),
-								S(y($), null, {
-									default: g(() => [...a[148] ||= [
-										E(" Best-effort: bootstraps Homebrew itself under this container's non-root \"agent\" user if it isn't already present (needs bash and git inside the container), installing to ", -1),
-										M("span", { class: "font-mono" }, "~/.linuxbrew", -1),
-										E(" rather than Homebrew's usual shared system path — the official installer needs ", -1),
-										M("span", { class: "font-mono" }, "sudo", -1),
-										E(" for that path, and \"agent\" deliberately has none inside these containers. This runs against the LIVE container over exec — it isn't baked into the image, so a rebuilt or replacement container won't have it. ", -1)
+								Qe.value ? (h(), j("p", qa, E(Qe.value), 1)) : D("", !0),
+								$e.value ? (h(), j("p", Ja, E($e.value), 1)) : D("", !0),
+								C(b($), null, {
+									default: g(() => [...a[150] ||= [
+										O(" Best-effort: bootstraps Homebrew itself under this container's non-root \"agent\" user if it isn't already present (needs bash and git inside the container), installing to ", -1),
+										P("span", { class: "font-mono" }, "~/.linuxbrew", -1),
+										O(" rather than Homebrew's usual shared system path — the official installer needs ", -1),
+										P("span", { class: "font-mono" }, "sudo", -1),
+										O(" for that path, and \"agent\" deliberately has none inside these containers. This runs against the LIVE container over exec — it isn't baked into the image, so a rebuilt or replacement container won't have it. ", -1)
 									]]),
 									_: 1
 								})
 							]),
-							M("div", qa, [
-								S(y(Q), {
+							P("div", Ya, [
+								C(b(Q), {
 									for: "privileged-command",
 									class: "mb-1 block text-xs"
 								}, {
-									default: g(() => [...a[149] ||= [E("Run a privileged command", -1)]]),
+									default: g(() => [...a[151] ||= [O("Run a privileged command", -1)]]),
 									_: 1
 								}),
-								M("div", Ja, [S(y(Z), {
+								P("div", Xa, [C(b(Z), {
 									id: "privileged-command",
-									modelValue: rt.value,
-									"onUpdate:modelValue": a[23] ||= (e) => rt.value = e,
+									modelValue: at.value,
+									"onUpdate:modelValue": a[23] ||= (e) => at.value = e,
 									class: "flex-1 font-mono",
 									placeholder: "e.g. apt-get install -y htop",
-									onKeydown: Nt(jt(st, ["prevent"]), ["enter"])
-								}, null, 8, ["modelValue", "onKeydown"]), S(y(A), {
+									onKeydown: Mt(At(lt, ["prevent"]), ["enter"])
+								}, null, 8, ["modelValue", "onKeydown"]), C(b(M), {
 									size: "sm",
 									variant: "outline",
-									disabled: !rt.value.trim() || it.value,
-									onClick: st
+									disabled: !at.value.trim() || ot.value,
+									onClick: lt
 								}, {
-									default: g(() => [E(w(it.value ? "Running…" : "Run"), 1)]),
+									default: g(() => [O(E(ot.value ? "Running…" : "Run"), 1)]),
 									_: 1
 								}, 8, ["disabled"])]),
-								U.value ? (h(), k("div", Ya, [M("p", { class: _e(["text-xs", U.value.status === "success" ? "text-unraid-green-800" : "text-destructive"]) }, w(U.value.message), 3), U.value.stdout || U.value.stderr ? (h(), k("pre", Xa, w([U.value.stdout, U.value.stderr].filter(Boolean).join("\n")), 1)) : T("", !0)])) : T("", !0),
-								S(y($), null, {
-									default: g(() => [...a[150] ||= [E(" Runs as root, mediated by you here in the UI — the container's own \"agent\" user never gets this capability, so this stays safe even with sudo left off. Good for one-off fixes (a forgotten package) without needing the sudo toggle at all. ", -1)]]),
+								U.value ? (h(), j("div", Za, [P("p", { class: he(["text-xs", U.value.status === "success" ? "text-unraid-green-800" : "text-destructive"]) }, E(U.value.message), 3), U.value.stdout || U.value.stderr ? (h(), j("pre", Qa, E([U.value.stdout, U.value.stderr].filter(Boolean).join("\n")), 1)) : D("", !0)])) : D("", !0),
+								C(b($), null, {
+									default: g(() => [...a[152] ||= [O(" Runs as root, mediated by you here in the UI — the container's own \"agent\" user never gets this capability, so this stays safe even with sudo left off. Good for one-off fixes (a forgotten package) without needing the sudo toggle at all. ", -1)]]),
 									_: 1
 								})
 							])
-						], 64)) : T("", !0)])) : T("", !0)
+						], 64)) : D("", !0)])) : D("", !0)
 					], 2))), 128))])], 64))
 				])
-			])) : r.value === "config" ? (h(), k("section", Za, [M("div", Qa, [
-				M("section", $a, [
-					a[166] ||= M("p", { class: "mb-1 text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Runtime", -1),
-					a[167] ||= M("h3", { class: "mb-4 text-base font-semibold" }, "Service", -1),
-					M("div", eo, [
-						S(y(Q), { for: "config-enabled" }, {
-							default: g(() => [...a[152] ||= [E("Enable Incus", -1)]]),
+			])) : r.value === "config" ? (h(), j("section", $a, [P("div", eo, [
+				P("section", to, [
+					a[168] ||= P("p", { class: "mb-1 text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Runtime", -1),
+					a[169] ||= P("h3", { class: "mb-4 text-base font-semibold" }, "Service", -1),
+					P("div", no, [
+						C(b(Q), { for: "config-enabled" }, {
+							default: g(() => [...a[154] ||= [O("Enable Incus", -1)]]),
 							_: 1
 						}),
-						S(y(sn), {
+						C(b(cn), {
 							id: "config-enabled",
-							modelValue: x.enabled,
-							"onUpdate:modelValue": a[24] ||= (e) => x.enabled = e
+							modelValue: w.enabled,
+							"onUpdate:modelValue": a[24] ||= (e) => w.enabled = e
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[153] ||= [
-								E(" Starts incusd on array start. Leaving this off keeps the daemon — and its private-prefixed binaries under ", -1),
-								M("span", { class: "font-mono" }, "/usr/local/incus/", -1),
-								E(" — installed but never running. ", -1)
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[155] ||= [
+								O(" Starts incusd on array start. Leaving this off keeps the daemon — and its private-prefixed binaries under ", -1),
+								P("span", { class: "font-mono" }, "/usr/local/incus/", -1),
+								O(" — installed but never running. ", -1)
 							]]),
 							_: 1
 						}),
-						S(y(Q), { for: "config-dashboard-widget" }, {
-							default: g(() => [...a[154] ||= [E("Show Dashboard widget", -1)]]),
+						C(b(Q), { for: "config-dashboard-widget" }, {
+							default: g(() => [...a[156] ||= [O("Show Dashboard widget", -1)]]),
 							_: 1
 						}),
-						S(y(sn), {
+						C(b(cn), {
 							id: "config-dashboard-widget",
-							modelValue: x.dashboardWidgetEnable,
-							"onUpdate:modelValue": a[25] ||= (e) => x.dashboardWidgetEnable = e
+							modelValue: w.dashboardWidgetEnable,
+							"onUpdate:modelValue": a[25] ||= (e) => w.dashboardWidgetEnable = e
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[155] ||= [E(" Shows a jail-status box (running/stopped/other counts) on Unraid's Main/Dashboard tab. ", -1)]]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[157] ||= [O(" Shows a jail-status box (running/stopped/other counts) on Unraid's Main/Dashboard tab. ", -1)]]),
 							_: 1
 						}),
-						S(y(Q), { for: "config-state-dir" }, {
-							default: g(() => [...a[156] ||= [E("Incus state directory", -1)]]),
+						C(b(Q), { for: "config-state-dir" }, {
+							default: g(() => [...a[158] ||= [O("Incus state directory", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-state-dir",
-							modelValue: x.stateDir,
-							"onUpdate:modelValue": a[26] ||= (e) => x.stateDir = e,
+							modelValue: w.stateDir,
+							"onUpdate:modelValue": a[26] ||= (e) => w.stateDir = e,
 							class: "w-96 justify-self-end font-mono"
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[157] ||= [E(" Where incusd keeps its database, storage pool, and container state. Must be real persistent storage on the array, not tmpfs — this is the one thing that survives a reboot or plugin update. ", -1)]]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[159] ||= [O(" Where incusd keeps its database, storage pool, and container state. Must be real persistent storage on the array, not tmpfs — this is the one thing that survives a reboot or plugin update. ", -1)]]),
 							_: 1
 						})
 					]),
-					M("div", to, [a[165] ||= M("h4", { class: "mb-3 text-sm font-semibold" }, "Storage pool", -1), M("div", no, [
-						S(y(Q), { for: "config-storage-driver" }, {
-							default: g(() => [...a[158] ||= [E("Storage driver", -1)]]),
+					P("div", ro, [a[167] ||= P("h4", { class: "mb-3 text-sm font-semibold" }, "Storage pool", -1), P("div", io, [
+						C(b(Q), { for: "config-storage-driver" }, {
+							default: g(() => [...a[160] ||= [O("Storage driver", -1)]]),
 							_: 1
 						}),
-						S(y(pn), {
+						C(b(pn), {
 							id: "config-storage-driver",
-							modelValue: x.storageDriver,
-							"onUpdate:modelValue": a[27] ||= (e) => x.storageDriver = e,
+							modelValue: w.storageDriver,
+							"onUpdate:modelValue": a[27] ||= (e) => w.storageDriver = e,
 							class: "w-56 justify-self-end"
 						}, {
-							default: g(() => [...a[159] ||= [M("option", { value: "dir" }, "dir (simple, no pool required)", -1), M("option", { value: "zfs" }, "zfs (snapshots/speed, needs existing pool)", -1)]]),
+							default: g(() => [...a[161] ||= [P("option", { value: "dir" }, "dir (simple, no pool required)", -1), P("option", { value: "zfs" }, "zfs (snapshots/speed, needs existing pool)", -1)]]),
 							_: 1
 						}, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[160] ||= [
-								M("span", { class: "font-mono" }, "dir", -1),
-								E(" needs no existing pool and always works — it's the default for exactly that reason. ", -1),
-								M("span", { class: "font-mono" }, "zfs", -1),
-								E(" gets snapshots and speed, but the pool or dataset must already exist on your system; there's no safe way to auto-create one on your array. ", -1)
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[162] ||= [
+								P("span", { class: "font-mono" }, "dir", -1),
+								O(" needs no existing pool and always works — it's the default for exactly that reason. ", -1),
+								P("span", { class: "font-mono" }, "zfs", -1),
+								O(" gets snapshots and speed, but the pool or dataset must already exist on your system; there's no safe way to auto-create one on your array. ", -1)
 							]]),
 							_: 1
 						}),
-						we.value ? (h(), k(O, { key: 0 }, [
-							S(y(Q), { for: "config-storage-source" }, {
-								default: g(() => [...a[161] ||= [E("ZFS pool/dataset", -1)]]),
+						we.value ? (h(), j(A, { key: 0 }, [
+							C(b(Q), { for: "config-storage-source" }, {
+								default: g(() => [...a[163] ||= [O("ZFS pool/dataset", -1)]]),
 								_: 1
 							}),
-							S(y(Z), {
+							C(b(Z), {
 								id: "config-storage-source",
-								modelValue: x.storageSource,
-								"onUpdate:modelValue": a[28] ||= (e) => x.storageSource = e,
+								modelValue: w.storageSource,
+								"onUpdate:modelValue": a[28] ||= (e) => w.storageSource = e,
 								class: "w-96 justify-self-end font-mono"
 							}, null, 8, ["modelValue"]),
-							S(y($), { class: "col-span-2" }, {
-								default: g(() => [...a[162] ||= [
-									E(" An existing pool or dataset path, e.g. ", -1),
-									M("span", { class: "font-mono" }, "nvme/incus", -1),
-									E(". A dataset under this path is created if missing, but the pool itself must already exist. ", -1)
+							C(b($), { class: "col-span-2" }, {
+								default: g(() => [...a[164] ||= [
+									O(" An existing pool or dataset path, e.g. ", -1),
+									P("span", { class: "font-mono" }, "nvme/incus", -1),
+									O(". A dataset under this path is created if missing, but the pool itself must already exist. ", -1)
 								]]),
 								_: 1
 							})
-						], 64)) : T("", !0),
-						S(y(Q), { for: "config-storage-pool" }, {
-							default: g(() => [...a[163] ||= [E("Incus storage pool name", -1)]]),
+						], 64)) : D("", !0),
+						C(b(Q), { for: "config-storage-pool" }, {
+							default: g(() => [...a[165] ||= [O("Incus storage pool name", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-storage-pool",
-							modelValue: x.storagePoolName,
-							"onUpdate:modelValue": a[29] ||= (e) => x.storagePoolName = e,
+							modelValue: w.storagePoolName,
+							"onUpdate:modelValue": a[29] ||= (e) => w.storagePoolName = e,
 							class: "w-48 justify-self-end font-mono"
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[164] ||= [E(" The name Incus itself uses for this storage pool internally — cosmetic, doesn't need to match anything else on the host. ", -1)]]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[166] ||= [O(" The name Incus itself uses for this storage pool internally — cosmetic, doesn't need to match anything else on the host. ", -1)]]),
 							_: 1
 						})
 					])])
 				]),
-				M("section", ro, [
-					a[193] ||= M("p", { class: "mb-1 text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Network & Access", -1),
-					a[194] ||= M("h3", { class: "mb-4 text-base font-semibold" }, "Network & ACL (LAN-ban)", -1),
-					a[195] ||= M("p", { class: "mb-4 text-xs text-muted-foreground" }, " Controls the bridge/subnet containers attach to and the firewall rules governing what they can reach. ", -1),
-					M("div", io, [
-						S(y(Q), { for: "config-bridge" }, {
-							default: g(() => [...a[168] ||= [E("Container bridge", -1)]]),
+				P("section", ao, [
+					a[195] ||= P("p", { class: "mb-1 text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Network & Access", -1),
+					a[196] ||= P("h3", { class: "mb-4 text-base font-semibold" }, "Network & ACL (LAN-ban)", -1),
+					a[197] ||= P("p", { class: "mb-4 text-xs text-muted-foreground" }, " Controls the bridge/subnet containers attach to and the firewall rules governing what they can reach. ", -1),
+					P("div", oo, [
+						C(b(Q), { for: "config-bridge" }, {
+							default: g(() => [...a[170] ||= [O("Container bridge", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-bridge",
-							modelValue: x.jailBridge,
-							"onUpdate:modelValue": a[30] ||= (e) => x.jailBridge = e,
+							modelValue: w.jailBridge,
+							"onUpdate:modelValue": a[30] ||= (e) => w.jailBridge = e,
 							class: "w-48 justify-self-end font-mono"
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[169] ||= [E(" A dedicated NAT bridge name for containers, kept separate from Unraid's own br0 so container traffic never touches host networking directly. ", -1)]]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[171] ||= [O(" A dedicated NAT bridge name for containers, kept separate from Unraid's own br0 so container traffic never touches host networking directly. ", -1)]]),
 							_: 1
 						}),
-						S(y(Q), { for: "config-subnet" }, {
-							default: g(() => [...a[170] ||= [E("Container subnet", -1)]]),
+						C(b(Q), { for: "config-subnet" }, {
+							default: g(() => [...a[172] ||= [O("Container subnet", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-subnet",
-							modelValue: x.jailSubnet,
-							"onUpdate:modelValue": a[31] ||= (e) => x.jailSubnet = e,
+							modelValue: w.jailSubnet,
+							"onUpdate:modelValue": a[31] ||= (e) => w.jailSubnet = e,
 							class: "w-48 justify-self-end font-mono"
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[171] ||= [E(" CIDR for the bridge. Defaults to an RFC 2544 benchmark range specifically because it won't collide with a typical home or office LAN. ", -1)]]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[173] ||= [O(" CIDR for the bridge. Defaults to an RFC 2544 benchmark range specifically because it won't collide with a typical home or office LAN. ", -1)]]),
 							_: 1
 						}),
-						S(y(Q), { for: "config-nat" }, {
-							default: g(() => [...a[172] ||= [E("NAT", -1)]]),
+						C(b(Q), { for: "config-nat" }, {
+							default: g(() => [...a[174] ||= [O("NAT", -1)]]),
 							_: 1
 						}),
-						S(y(sn), {
+						C(b(cn), {
 							id: "config-nat",
-							modelValue: x.jailNat,
-							"onUpdate:modelValue": a[32] ||= (e) => x.jailNat = e
+							modelValue: w.jailNat,
+							"onUpdate:modelValue": a[32] ||= (e) => w.jailNat = e
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[173] ||= [E(" Routes container traffic to the Internet through the host. Turning this off isolates containers with no outbound access at all — no Internet, no LAN. ", -1)]]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[175] ||= [O(" Routes container traffic to the Internet through the host. Turning this off isolates containers with no outbound access at all — no Internet, no LAN. ", -1)]]),
 							_: 1
 						}),
-						S(y(Q), { for: "config-ipv6" }, {
-							default: g(() => [...a[174] ||= [E("IPv6", -1)]]),
+						C(b(Q), { for: "config-ipv6" }, {
+							default: g(() => [...a[176] ||= [O("IPv6", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-ipv6",
 							"model-value": "none",
 							disabled: "",
@@ -3830,353 +3840,353 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 							"aria-describedby": "config-ipv6-policy",
 							class: "w-48 justify-self-end font-mono"
 						}),
-						S(y($), {
+						C(b($), {
 							id: "config-ipv6-policy",
 							class: "col-span-2"
 						}, {
-							default: g(() => [...a[175] ||= [
-								E(" Fixed to ", -1),
-								M("span", { class: "font-mono" }, "none", -1),
-								E(": IPv6 is deliberately fail-closed until the plugin can enforce isolation equivalent to the IPv4 ACL policy. Containers cannot enable it from this page. ", -1)
+							default: g(() => [...a[177] ||= [
+								O(" Fixed to ", -1),
+								P("span", { class: "font-mono" }, "none", -1),
+								O(": IPv6 is deliberately fail-closed until the plugin can enforce isolation equivalent to the IPv4 ACL policy. Containers cannot enable it from this page. ", -1)
 							]]),
 							_: 1
 						}),
-						S(y(Q), { for: "config-acl-name" }, {
-							default: g(() => [...a[176] ||= [E("ACL name", -1)]]),
+						C(b(Q), { for: "config-acl-name" }, {
+							default: g(() => [...a[178] ||= [O("ACL name", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-acl-name",
-							modelValue: x.aclName,
-							"onUpdate:modelValue": a[33] ||= (e) => x.aclName = e,
+							modelValue: w.aclName,
+							"onUpdate:modelValue": a[33] ||= (e) => w.aclName = e,
 							class: "w-48 justify-self-end font-mono"
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[177] ||= [E(" The name of the Incus network ACL that enforces the LAN ban — created and applied to the bridge by the array-start init script. ", -1)]]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[179] ||= [O(" The name of the Incus network ACL that enforces the LAN ban — created and applied to the bridge by the array-start init script. ", -1)]]),
 							_: 1
 						}),
-						S(y(Q), { for: "config-egress" }, {
-							default: g(() => [...a[178] ||= [E("Default egress action", -1)]]),
+						C(b(Q), { for: "config-egress" }, {
+							default: g(() => [...a[180] ||= [O("Default egress action", -1)]]),
 							_: 1
 						}),
-						S(y(pn), {
+						C(b(pn), {
 							id: "config-egress",
-							modelValue: x.aclDefaultEgress,
-							"onUpdate:modelValue": a[34] ||= (e) => x.aclDefaultEgress = e,
+							modelValue: w.aclDefaultEgress,
+							"onUpdate:modelValue": a[34] ||= (e) => w.aclDefaultEgress = e,
 							class: "w-32 justify-self-end"
 						}, {
-							default: g(() => [...a[179] ||= [M("option", { value: "allow" }, "allow", -1), M("option", { value: "drop" }, "drop", -1)]]),
+							default: g(() => [...a[181] ||= [P("option", { value: "allow" }, "allow", -1), P("option", { value: "drop" }, "drop", -1)]]),
 							_: 1
 						}, 8, ["modelValue"]),
-						S(y(Q), { for: "config-ingress" }, {
-							default: g(() => [...a[180] ||= [E("Default ingress action", -1)]]),
+						C(b(Q), { for: "config-ingress" }, {
+							default: g(() => [...a[182] ||= [O("Default ingress action", -1)]]),
 							_: 1
 						}),
-						S(y(pn), {
+						C(b(pn), {
 							id: "config-ingress",
-							modelValue: x.aclDefaultIngress,
-							"onUpdate:modelValue": a[35] ||= (e) => x.aclDefaultIngress = e,
+							modelValue: w.aclDefaultIngress,
+							"onUpdate:modelValue": a[35] ||= (e) => w.aclDefaultIngress = e,
 							class: "w-32 justify-self-end"
 						}, {
-							default: g(() => [...a[181] ||= [M("option", { value: "allow" }, "allow", -1), M("option", { value: "drop" }, "drop", -1)]]),
+							default: g(() => [...a[183] ||= [P("option", { value: "allow" }, "allow", -1), P("option", { value: "drop" }, "drop", -1)]]),
 							_: 1
 						}, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[182] ||= [E(" What happens to traffic not covered by a rule above. Egress defaults to allow (deny-list model — Internet stays reachable unless explicitly blocked); ingress defaults to drop (nothing reaches a container unsolicited). Tailscale's CGNAT range (100.64.0.0/10) is blocked by default; add only the narrow allow-hole a container genuinely needs rather than exposing the whole tailnet. ", -1)]]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[184] ||= [O(" What happens to traffic not covered by a rule above. Egress defaults to allow (deny-list model — Internet stays reachable unless explicitly blocked); ingress defaults to drop (nothing reaches a container unsolicited). Tailscale's CGNAT range (100.64.0.0/10) is blocked by default; add only the narrow allow-hole a container genuinely needs rather than exposing the whole tailnet. ", -1)]]),
 							_: 1
 						})
 					]),
-					M("div", ao, [
-						S(y(Q), {
+					P("div", so, [
+						C(b(Q), {
 							for: "new-blocked-cidr",
 							class: "mb-1.5 block"
 						}, {
-							default: g(() => [...a[183] ||= [E("Blocked CIDRs (deny-list)", -1)]]),
+							default: g(() => [...a[185] ||= [O("Blocked CIDRs (deny-list)", -1)]]),
 							_: 1
 						}),
-						vt.value.length > 0 ? (h(), k("div", oo, [(h(!0), k(O, null, t(vt.value, (e) => (h(), k("span", {
+						bt.value.length > 0 ? (h(), j("div", co, [(h(!0), j(A, null, t(bt.value, (e) => (h(), j("span", {
 							key: e,
 							class: "flex items-center gap-1.5 rounded-md border border-border px-2 py-1 font-mono text-xs"
-						}, [E(w(e) + " ", 1), M("button", {
+						}, [O(E(e) + " ", 1), P("button", {
 							type: "button",
 							"aria-label": `Remove blocked CIDR ${e}`,
 							class: "cursor-pointer text-muted-foreground hover:text-destructive",
-							onClick: (t) => Tt(e)
-						}, "✕", 8, so)]))), 128))])) : T("", !0),
-						M("div", co, [S(y(Z), {
+							onClick: (t) => Et(e)
+						}, "✕", 8, lo)]))), 128))])) : D("", !0),
+						P("div", uo, [C(b(Z), {
 							id: "new-blocked-cidr",
-							modelValue: bt.value,
-							"onUpdate:modelValue": a[36] ||= (e) => bt.value = e,
+							modelValue: St.value,
+							"onUpdate:modelValue": a[36] ||= (e) => St.value = e,
 							class: "w-full font-mono",
 							placeholder: "e.g. 10.0.0.0/8",
-							onKeydown: Nt(jt(wt, ["prevent"]), ["enter"])
-						}, null, 8, ["modelValue", "onKeydown"]), S(y(A), {
+							onKeydown: Mt(At(Tt, ["prevent"]), ["enter"])
+						}, null, 8, ["modelValue", "onKeydown"]), C(b(M), {
 							size: "sm",
 							variant: "outline",
-							disabled: !bt.value.trim(),
-							onClick: wt
+							disabled: !St.value.trim(),
+							onClick: Tt
 						}, {
-							default: g(() => [...a[184] ||= [E("Add", -1)]]),
+							default: g(() => [...a[186] ||= [O("Add", -1)]]),
 							_: 1
 						}, 8, ["disabled"])]),
-						St.value ? (h(), k("p", lo, w(St.value), 1)) : T("", !0),
-						S(y($), null, {
-							default: g(() => [...a[185] ||= [E(" Ranges containers may not reach — this is the actual LAN ban. Add one CIDR at a time; defaults to the private IPv4 ranges (RFC 1918) plus link-local addresses. ", -1)]]),
+						G.value ? (h(), j("p", fo, E(G.value), 1)) : D("", !0),
+						C(b($), null, {
+							default: g(() => [...a[187] ||= [O(" Ranges containers may not reach — this is the actual LAN ban. Add one CIDR at a time; defaults to the private IPv4 ranges (RFC 1918) plus link-local addresses. ", -1)]]),
 							_: 1
 						})
 					]),
-					M("div", uo, [
-						S(y(Q), {
+					P("div", po, [
+						C(b(Q), {
 							for: "new-allow-cidr",
 							class: "mb-1.5 block"
 						}, {
-							default: g(() => [...a[186] ||= [E("Allow-holes (punched before block rules)", -1)]]),
+							default: g(() => [...a[188] ||= [O("Allow-holes (punched before block rules)", -1)]]),
 							_: 1
 						}),
-						yt.value.length > 0 ? (h(), k("div", fo, [(h(!0), k(O, null, t(yt.value, (e) => (h(), k("span", {
+						xt.value.length > 0 ? (h(), j("div", mo, [(h(!0), j(A, null, t(xt.value, (e) => (h(), j("span", {
 							key: e,
 							class: "flex items-center gap-1.5 rounded-md border border-border px-2 py-1 font-mono text-xs"
-						}, [E(w(e) + " ", 1), M("button", {
+						}, [O(E(e) + " ", 1), P("button", {
 							type: "button",
 							"aria-label": `Remove allowed CIDR ${e}`,
 							class: "cursor-pointer text-muted-foreground hover:text-destructive",
-							onClick: (t) => Dt(e)
-						}, "✕", 8, po)]))), 128))])) : T("", !0),
-						M("div", mo, [S(y(Z), {
+							onClick: (t) => Ot(e)
+						}, "✕", 8, ho)]))), 128))])) : D("", !0),
+						P("div", go, [C(b(Z), {
 							id: "new-allow-cidr",
-							modelValue: xt.value,
-							"onUpdate:modelValue": a[37] ||= (e) => xt.value = e,
+							modelValue: Ct.value,
+							"onUpdate:modelValue": a[37] ||= (e) => Ct.value = e,
 							class: "w-full font-mono",
 							placeholder: "e.g. 100.64.0.0/10",
-							onKeydown: Nt(jt(Et, ["prevent"]), ["enter"])
-						}, null, 8, ["modelValue", "onKeydown"]), S(y(A), {
+							onKeydown: Mt(At(Dt, ["prevent"]), ["enter"])
+						}, null, 8, ["modelValue", "onKeydown"]), C(b(M), {
 							size: "sm",
 							variant: "outline",
-							disabled: !xt.value.trim(),
-							onClick: Et
+							disabled: !Ct.value.trim(),
+							onClick: Dt
 						}, {
-							default: g(() => [...a[187] ||= [E("Add", -1)]]),
+							default: g(() => [...a[189] ||= [O("Add", -1)]]),
 							_: 1
 						}, 8, ["disabled"])]),
-						Ct.value ? (h(), k("p", ho, w(Ct.value), 1)) : T("", !0),
-						S(y($), null, {
-							default: g(() => [...a[188] ||= [E(" Exceptions punched through the block list before it's evaluated — e.g. one specific internal service (a local LLM, a search index) a container legitimately needs to reach. ", -1)]]),
+						wt.value ? (h(), j("p", _o, E(wt.value), 1)) : D("", !0),
+						C(b($), null, {
+							default: g(() => [...a[190] ||= [O(" Exceptions punched through the block list before it's evaluated — e.g. one specific internal service (a local LLM, a search index) a container legitimately needs to reach. ", -1)]]),
 							_: 1
 						})
 					]),
-					M("div", go, [
-						a[191] ||= M("h4", { class: "mb-3 text-sm font-semibold" }, "Tailscale", -1),
-						a[192] ||= M("p", { class: "mb-4 text-xs text-muted-foreground" }, " Optional — when set, new containers automatically join your tailnet using this key. ", -1),
-						M("div", _o, [
-							S(y(Q), { for: "tailscale-auth-key" }, {
-								default: g(() => [...a[189] ||= [E("Tailscale auth key", -1)]]),
+					P("div", vo, [
+						a[193] ||= P("h4", { class: "mb-3 text-sm font-semibold" }, "Tailscale", -1),
+						a[194] ||= P("p", { class: "mb-4 text-xs text-muted-foreground" }, " Optional — when set, new containers automatically join your tailnet using this key. ", -1),
+						P("div", yo, [
+							C(b(Q), { for: "tailscale-auth-key" }, {
+								default: g(() => [...a[191] ||= [O("Tailscale auth key", -1)]]),
 								_: 1
 							}),
-							M("div", vo, [
-								S(y(Z), {
+							P("div", bo, [
+								C(b(Z), {
 									id: "tailscale-auth-key",
-									modelValue: Ee.value,
-									"onUpdate:modelValue": a[38] ||= (e) => Ee.value = e,
+									modelValue: Oe.value,
+									"onUpdate:modelValue": a[38] ||= (e) => Oe.value = e,
 									type: Te.value ? "text" : "password",
 									class: "w-72 font-mono",
-									placeholder: x.tsAuthKeyConfigured ? "Configured — enter a replacement" : "tskey-auth-…"
+									placeholder: w.tsAuthKeyConfigured ? "Configured — enter a replacement" : "tskey-auth-…"
 								}, null, 8, [
 									"modelValue",
 									"type",
 									"placeholder"
 								]),
-								S(y(A), {
+								C(b(M), {
 									size: "sm",
 									variant: "outline",
 									onClick: a[39] ||= (e) => Te.value = !Te.value
 								}, {
-									default: g(() => [E(w(Te.value ? "Hide" : "Show"), 1)]),
+									default: g(() => [O(E(Te.value ? "Hide" : "Show"), 1)]),
 									_: 1
 								}),
-								x.tsAuthKeyConfigured ? (h(), C(y(A), {
+								w.tsAuthKeyConfigured ? (h(), T(b(M), {
 									key: 0,
 									size: "sm",
 									variant: "outline",
-									onClick: a[40] ||= (e) => De.value = !De.value
+									onClick: a[40] ||= (e) => ke.value = !ke.value
 								}, {
-									default: g(() => [E(w(De.value ? "Keep key" : "Clear on save"), 1)]),
+									default: g(() => [O(E(ke.value ? "Keep key" : "Clear on save"), 1)]),
 									_: 1
-								})) : T("", !0)
+								})) : D("", !0)
 							]),
-							S(y($), { class: "col-span-2" }, {
-								default: g(() => [...a[190] ||= [E(" The stored key is write-only and is never returned to this page. A reusable or ephemeral key from your Tailscale admin console. Best-effort: if a container's image doesn't have Tailscale installed, joining is silently skipped rather than failing the launch — it never blocks a container from starting. ", -1)]]),
+							C(b($), { class: "col-span-2" }, {
+								default: g(() => [...a[192] ||= [O(" The stored key is write-only and is never returned to this page. A reusable or ephemeral key from your Tailscale admin console. Best-effort: if a container's image doesn't have Tailscale installed, joining is silently skipped rather than failing the launch — it never blocks a container from starting. ", -1)]]),
 								_: 1
 							})
 						])
 					])
 				]),
-				M("section", yo, [
-					a[214] ||= M("p", { class: "mb-1 text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Container Defaults", -1),
-					a[215] ||= M("h3", { class: "mb-4 text-base font-semibold" }, "Defaults", -1),
-					M("div", bo, [
-						S(y(Q), { for: "config-profile" }, {
-							default: g(() => [...a[196] ||= [E("Container profile", -1)]]),
+				P("section", xo, [
+					a[216] ||= P("p", { class: "mb-1 text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground" }, "Container Defaults", -1),
+					a[217] ||= P("h3", { class: "mb-4 text-base font-semibold" }, "Defaults", -1),
+					P("div", So, [
+						C(b(Q), { for: "config-profile" }, {
+							default: g(() => [...a[198] ||= [O("Container profile", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-profile",
-							modelValue: x.jailProfile,
-							"onUpdate:modelValue": a[41] ||= (e) => x.jailProfile = e,
+							modelValue: w.jailProfile,
+							"onUpdate:modelValue": a[41] ||= (e) => w.jailProfile = e,
 							class: "w-48 justify-self-end font-mono"
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[197] ||= [E(" The Incus profile new containers launch with — sets resource limits, network, and mounts, defined in the array-start init script's profile template. ", -1)]]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[199] ||= [O(" The Incus profile new containers launch with — sets resource limits, network, and mounts, defined in the array-start init script's profile template. ", -1)]]),
 							_: 1
 						}),
-						S(y(Q), { for: "config-image" }, {
-							default: g(() => [...a[198] ||= [E("Default image", -1)]]),
+						C(b(Q), { for: "config-image" }, {
+							default: g(() => [...a[200] ||= [O("Default image", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-image",
-							modelValue: x.jailImage,
-							"onUpdate:modelValue": a[42] ||= (e) => x.jailImage = e,
+							modelValue: w.jailImage,
+							"onUpdate:modelValue": a[42] ||= (e) => w.jailImage = e,
 							class: "w-96 justify-self-end font-mono"
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[199] ||= [
-								E(" Used when launching a container without picking a specific image — either a remote reference like ", -1),
-								M("span", { class: "font-mono" }, "images:debian/trixie/cloud", -1),
-								E(", or a locally-built image's alias. Marking an image as the golden master in the Builder tab sets this automatically. ", -1)
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[201] ||= [
+								O(" Used when launching a container without picking a specific image — either a remote reference like ", -1),
+								P("span", { class: "font-mono" }, "images:debian/trixie/cloud", -1),
+								O(", or a locally-built image's alias. Marking an image as the golden master in the Builder tab sets this automatically. ", -1)
 							]]),
 							_: 1
 						}),
-						S(y(Q), { for: "config-nesting" }, {
-							default: g(() => [...a[200] ||= [E("Allow nesting", -1)]]),
+						C(b(Q), { for: "config-nesting" }, {
+							default: g(() => [...a[202] ||= [O("Allow nesting", -1)]]),
 							_: 1
 						}),
-						S(y(sn), {
+						C(b(cn), {
 							id: "config-nesting",
-							modelValue: x.jailNesting,
-							"onUpdate:modelValue": a[43] ||= (e) => x.jailNesting = e
+							modelValue: w.jailNesting,
+							"onUpdate:modelValue": a[43] ||= (e) => w.jailNesting = e
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[201] ||= [E(" Lets a container run Docker or Incus inside itself — needed for agents that spin up their own sandboxes, but widens what a compromised container could reach. ", -1)]]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[203] ||= [O(" Lets a container run Docker or Incus inside itself — needed for agents that spin up their own sandboxes, but widens what a compromised container could reach. ", -1)]]),
 							_: 1
 						}),
-						S(y(Q), { for: "config-cpu" }, {
-							default: g(() => [...a[202] ||= [E("CPU limit", -1)]]),
+						C(b(Q), { for: "config-cpu" }, {
+							default: g(() => [...a[204] ||= [O("CPU limit", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-cpu",
-							modelValue: x.jailCpu,
-							"onUpdate:modelValue": a[44] ||= (e) => x.jailCpu = e,
+							modelValue: w.jailCpu,
+							"onUpdate:modelValue": a[44] ||= (e) => w.jailCpu = e,
 							class: "w-24 justify-self-end font-mono",
 							placeholder: "empty = no cap"
 						}, null, 8, ["modelValue"]),
-						ee.value ? (h(), k("p", xo, w(ee.value), 1)) : T("", !0),
-						S(y(Q), { for: "config-memory" }, {
-							default: g(() => [...a[203] ||= [E("Memory limit", -1)]]),
+						x.value ? (h(), j("p", Co, E(x.value), 1)) : D("", !0),
+						C(b(Q), { for: "config-memory" }, {
+							default: g(() => [...a[205] ||= [O("Memory limit", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-memory",
-							modelValue: x.jailMemory,
-							"onUpdate:modelValue": a[45] ||= (e) => x.jailMemory = e,
+							modelValue: w.jailMemory,
+							"onUpdate:modelValue": a[45] ||= (e) => w.jailMemory = e,
 							class: "w-24 justify-self-end font-mono",
 							placeholder: "empty = no cap"
 						}, null, 8, ["modelValue"]),
-						ne.value ? (h(), k("p", So, w(ne.value), 1)) : T("", !0),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[204] ||= [
-								E(" Hard resource ceiling applied via the container profile at launch — CPU as a core count (e.g. ", -1),
-								M("span", { class: "font-mono" }, "2", -1),
-								E("), memory with a unit (e.g. ", -1),
-								M("span", { class: "font-mono" }, "4GiB", -1),
-								E("). Leave either empty for no cap. ", -1)
+						ne.value ? (h(), j("p", wo, E(ne.value), 1)) : D("", !0),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[206] ||= [
+								O(" Hard resource ceiling applied via the container profile at launch — CPU as a core count (e.g. ", -1),
+								P("span", { class: "font-mono" }, "2", -1),
+								O("), memory with a unit (e.g. ", -1),
+								P("span", { class: "font-mono" }, "4GiB", -1),
+								O("). Leave either empty for no cap. ", -1)
 							]]),
 							_: 1
 						}),
-						S(y(Q), { for: "config-workspace" }, {
-							default: g(() => [...a[205] ||= [E("Workspace root", -1)]]),
+						C(b(Q), { for: "config-workspace" }, {
+							default: g(() => [...a[207] ||= [O("Workspace root", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-workspace",
-							modelValue: x.jailWorkspaceRoot,
-							"onUpdate:modelValue": a[46] ||= (e) => x.jailWorkspaceRoot = e,
+							modelValue: w.jailWorkspaceRoot,
+							"onUpdate:modelValue": a[46] ||= (e) => w.jailWorkspaceRoot = e,
 							class: "w-96 justify-self-end font-mono"
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[206] ||= [
-								E(" Host directory holding per-container workspaces, bind-mounted in with idmap shifting. Must be real persistent storage — the init script refuses to start if it's tmpfs, since that would silently lose \"persistent\" data on every reboot. Prefer a real device mount (e.g. ", -1),
-								M("span", { class: "font-mono" }, "/mnt/cache/appdata/...", -1),
-								E(") over a ", -1),
-								M("span", { class: "font-mono" }, "/mnt/user/...", -1),
-								E(" path — Unraid's shfs FUSE union view generally doesn't support the idmapped-mount feature the shift needs. ", -1)
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[208] ||= [
+								O(" Host directory holding per-container workspaces, bind-mounted in with idmap shifting. Must be real persistent storage — the init script refuses to start if it's tmpfs, since that would silently lose \"persistent\" data on every reboot. Prefer a real device mount (e.g. ", -1),
+								P("span", { class: "font-mono" }, "/mnt/cache/appdata/...", -1),
+								O(") over a ", -1),
+								P("span", { class: "font-mono" }, "/mnt/user/...", -1),
+								O(" path — Unraid's shfs FUSE union view generally doesn't support the idmapped-mount feature the shift needs. ", -1)
 							]]),
 							_: 1
 						}),
-						S(y(Q), { for: "config-agent-uid" }, {
-							default: g(() => [...a[207] ||= [E("Agent UID", -1)]]),
+						C(b(Q), { for: "config-agent-uid" }, {
+							default: g(() => [...a[209] ||= [O("Agent UID", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-agent-uid",
-							modelValue: x.jailAgentUid,
-							"onUpdate:modelValue": a[47] ||= (e) => x.jailAgentUid = e,
+							modelValue: w.jailAgentUid,
+							"onUpdate:modelValue": a[47] ||= (e) => w.jailAgentUid = e,
 							class: "w-24 justify-self-end font-mono"
 						}, null, 8, ["modelValue"]),
-						S(y(Q), { for: "config-agent-gid" }, {
-							default: g(() => [...a[208] ||= [E("Agent GID", -1)]]),
+						C(b(Q), { for: "config-agent-gid" }, {
+							default: g(() => [...a[210] ||= [O("Agent GID", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-agent-gid",
-							modelValue: x.jailAgentGid,
-							"onUpdate:modelValue": a[48] ||= (e) => x.jailAgentGid = e,
+							modelValue: w.jailAgentGid,
+							"onUpdate:modelValue": a[48] ||= (e) => w.jailAgentGid = e,
 							class: "w-24 justify-self-end font-mono"
 						}, null, 8, ["modelValue"]),
-						S(y($), { class: "col-span-2" }, {
-							default: g(() => [...a[209] ||= [E(" The uid/gid inside each container mapped to your host user — match your own host user if you want files under the bind-mounted workspace to show correct ownership from outside the container. ", -1)]]),
+						C(b($), { class: "col-span-2" }, {
+							default: g(() => [...a[211] ||= [O(" The uid/gid inside each container mapped to your host user — match your own host user if you want files under the bind-mounted workspace to show correct ownership from outside the container. ", -1)]]),
 							_: 1
 						})
 					]),
-					M("div", Co, [
-						a[212] ||= M("h4", { class: "mb-3 text-sm font-semibold" }, "Bind mounts", -1),
-						S(y(Q), {
+					P("div", To, [
+						a[214] ||= P("h4", { class: "mb-3 text-sm font-semibold" }, "Bind mounts", -1),
+						C(b(Q), {
 							for: "config-bind-mounts",
 							class: "mb-2 block"
 						}, {
-							default: g(() => [...a[210] ||= [E("Host config bind-mounts", -1)]]),
+							default: g(() => [...a[212] ||= [O("Host config bind-mounts", -1)]]),
 							_: 1
 						}),
-						S(y(Z), {
+						C(b(Z), {
 							id: "config-bind-mounts",
-							modelValue: x.jailBindMounts,
-							"onUpdate:modelValue": a[49] ||= (e) => x.jailBindMounts = e,
+							modelValue: w.jailBindMounts,
+							"onUpdate:modelValue": a[49] ||= (e) => w.jailBindMounts = e,
 							class: "w-full font-mono",
 							placeholder: "/boot/config/plugins/incus/bind-mounts/claude:/home/agent/.claude:ro"
 						}, null, 8, ["modelValue"]),
-						a[213] ||= M("p", { class: "mt-2 text-xs text-muted-foreground" }, " Comma-separated host:container[:ro|rw] triples from approved roots. Mounts default to read-only; only sources beneath the workspace root may be writable. ", -1),
-						S(y($), null, {
-							default: g(() => [...a[211] ||= [
-								E(" Copy curated agent config under ", -1),
-								M("span", { class: "font-mono" }, "/boot/config/plugins/incus/bind-mounts", -1),
-								E(" rather than exposing host home or system paths. Sources must resolve beneath that directory or the configured workspace root; config-root mounts are always read-only. ", -1)
+						a[215] ||= P("p", { class: "mt-2 text-xs text-muted-foreground" }, " Comma-separated host:container[:ro|rw] triples from approved roots. Mounts default to read-only; only sources beneath the workspace root may be writable. ", -1),
+						C(b($), null, {
+							default: g(() => [...a[213] ||= [
+								O(" Copy curated agent config under ", -1),
+								P("span", { class: "font-mono" }, "/boot/config/plugins/incus/bind-mounts", -1),
+								O(" rather than exposing host home or system paths. Sources must resolve beneath that directory or the configured workspace root; config-root mounts are always read-only. ", -1)
 							]]),
 							_: 1
 						})
 					])
 				])
-			]), M("div", wo, [S(y(A), {
-				disabled: s.value || !!ee.value || !!ne.value,
-				onClick: je
+			]), P("div", Eo, [C(b(M), {
+				disabled: s.value || !!x.value || !!ne.value,
+				onClick: Me
 			}, {
-				default: g(() => [E(w(s.value ? "Applying…" : "Apply"), 1)]),
+				default: g(() => [O(E(s.value ? "Applying…" : "Apply"), 1)]),
 				_: 1
-			}, 8, ["disabled"])])])) : T("", !0)
-		], 64)), ie.value ? (h(), C(y(n), {
+			}, 8, ["disabled"])])])) : D("", !0)
+		], 64)), ie.value ? (h(), T(b(n), {
 			key: 2,
 			"jail-name": ie.value,
 			onClose: a[50] ||= (e) => ie.value = null
-		}, null, 8, ["jail-name"])) : T("", !0)]));
+		}, null, 8, ["jail-name"])) : D("", !0)]));
 	}
 }), { shadowRoot: !1 });
-customElements.get("incus-settings-app") || customElements.define("incus-settings-app", ko);
+customElements.get("incus-settings-app") || customElements.define("incus-settings-app", jo);

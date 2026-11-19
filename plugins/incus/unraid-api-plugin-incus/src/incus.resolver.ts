@@ -9,8 +9,10 @@ import { IncusConfigSyncService } from "./config-sync.service.js";
 import { IncusImageBuilderService } from "./incus-image-builder.service.js";
 import { IncusBuilderPresetsService } from "./incus-builder-presets.service.js";
 import { IncusPackageSearchService } from "./incus-package-search.service.js";
+import { readPluginHealth } from "./plugin-health.js";
 import { AuthAction, Resource, UsePermissions } from "@unraid/shared/use-permissions.directive.js";
 import {
+  IncusPluginHealth,
   Jail,
   JailDetail,
   HomebrewInstallStatus,
@@ -70,6 +72,22 @@ export class IncusResolver {
   @UsePermissions(READ_PERMISSION)
   async incusHealthy(): Promise<boolean> {
     return this.incus.ping();
+  }
+
+  @Query(() => IncusPluginHealth, {
+    nullable: true,
+    description: "Classic plugin health, including whether the jail environment is reconciled; null before first start",
+  })
+  @UsePermissions(READ_PERMISSION)
+  async incusPluginHealth(): Promise<IncusPluginHealth | null> {
+    // Advisory status: an unreadable file must not fail the whole status
+    // query, which would make the page report the daemon as not running.
+    try {
+      return await readPluginHealth(this.config.getOrThrow<IncusConfig>("incus").stateDir);
+    } catch (err) {
+      this.logger.warn(`could not read plugin-health: ${(err as Error).message}`);
+      return null;
+    }
   }
 
   @Query(() => IncusConfig, { description: "Current incus.cfg, as loaded by the API" })

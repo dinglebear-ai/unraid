@@ -114,6 +114,23 @@ validate_containment_config() {
     return 1
   }
 
+  # Reject ACL entries that are not addresses, so a hand-edited typo fails
+  # here instead of inside `incus network acl edit` on every attempt. Accept
+  # every form Incus takes: a CIDR, a bare address, or an address range.
+  local address='[0-9A-Fa-f:.]+' entries entry
+  for item in ACL_BLOCK ACL_ALLOW; do
+    host="${!item:-}"
+    host="${host// /}"
+    [ -n "$host" ] || continue
+    IFS=, read -ra entries <<<"$host"
+    for entry in "${entries[@]}"; do
+      [[ "$entry" =~ ^${address}(/[0-9]{1,3})?$ || "$entry" =~ ^${address}-${address}$ ]] || {
+        echo "${item} entries must be addresses, CIDRs, or address ranges: '${entry}' in ${!item}" >&2
+        return 1
+      }
+    done
+  done
+
   [ -z "${JAIL_BIND_MOUNTS:-}" ] && return 0
   config_root="$(readlink -m /boot/config/plugins/incus/bind-mounts)" || return 1
   old_ifs="$IFS"

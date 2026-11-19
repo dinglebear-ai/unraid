@@ -1,24 +1,104 @@
 #!/bin/bash
 # Fires when the array comes up. Start incusd (state lives on the array, so we
 # must wait until now) then apply the jail environment from incus.cfg.
-CFG="/boot/config/plugins/incus/incus.cfg"
+CFG="${INCUS_CONFIG:-/boot/config/plugins/incus/incus.cfg}"
+RC_INCUS="${INCUS_RC:-/etc/rc.d/rc.incus}"
+EMHTTP="${INCUS_EMHTTP:-/usr/local/emhttp/plugins/incus}"
+NOTIFY="${INCUS_NOTIFY:-/usr/local/emhttp/webGui/scripts/notify}"
+INIT="${EMHTTP}/scripts/incus-init.sh"
 [ -f "$CFG" ] || exit 0
 . "$CFG"
 [ "${SERVICE:-disabled}" = "enabled" ] || exit 0
+. "${EMHTTP}/scripts/incus-env.sh"   # exports PATH/LD_LIBRARY_PATH/INCUS_DIR, as in rc.incus
+
+# emhttp runs every plugin's hook in sequence, so these bound how long a slow
+# boot can hold up the rest of array start.
+positive_int() {
+  case "$2" in
+    ''|*[!0-9]*|0*) logger -t incus "ignoring invalid $1='$2'; using $3"; printf '%s' "$3" ;;
+    *) printf '%s' "$2" ;;
+  esac
+}
+INIT_ATTEMPTS="$(positive_int INCUS_INIT_ATTEMPTS "${INCUS_INIT_ATTEMPTS:-4}" 4)"
+INIT_BACKOFF="$(positive_int INCUS_INIT_BACKOFF "${INCUS_INIT_BACKOFF:-5}" 5)"
+INIT_TIMEOUT="$(positive_int INCUS_INIT_TIMEOUT "${INCUS_INIT_TIMEOUT:-300}" 300)"
+EX_LOCKED=75
+EX_CONFIG=78
+
+# shellcheck disable=SC2034 # read by incus-health.sh
+PLUGIN_BUILD="$(head -n 1 "${EMHTTP}/build-id" 2>/dev/null || printf 'unknown')"
+. "${EMHTTP}/scripts/incus-health.sh"
+health() {
+  local error
+  error="$(incus_health_write "$1" "$2" 2>&1)" || { logger -t incus "$error"; return 1; }
+}
+
+# Reduce one attempt's output to a one-line reason. Keep the trap's
+# "FAILED ... at line N: command" line and the last Incus "Error:" line before
+# it, since the error text is the actual cause. Otherwise use the last line.
+failure_reason() {
+  local output="$1" status="$2" failed error last
+  output="${output//$'\r'/}"
+  failed="$(printf '%s\n' "$output" | grep -m 1 'FAILED (exit ' || true)"
+  error="$(printf '%s\n' "$output" | grep '^Error:' | tail -n 1 || true)"
+  last="$(printf '%s\n' "$output" | grep -v '^[[:space:]]*$' | grep -v 'exiting with status ' | tail -n 1 || true)"
+  if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
+    printf 'timed out after %ss%s' "$INIT_TIMEOUT" "${last:+; last output: ${last}}"
+  elif [ -n "$failed" ]; then
+    printf '%s%s' "$failed" "${error:+ (${error})}"
+  else
+    printf '%s' "${last:-incus-init.sh exited with status ${status} and no output}"
+  fi
+}
 
 logger -t incus "array up: starting incusd"
 attempt=1
-while ! /etc/rc.d/rc.incus start; do
+while ! "$RC_INCUS" start; do
   logger -t incus "incusd failed to start (attempt ${attempt}/3)"
   [ "$attempt" -ge 3 ] && exit 1
   attempt=$((attempt + 1))
   sleep 2
 done
 
-# Apply storage/ACL/bridge/profile idempotently.
-if ! /usr/local/emhttp/plugins/incus/scripts/incus-init.sh; then
-  logger -t incus "daemon started but environment reconciliation failed"
-  /etc/rc.d/rc.incus stop || true
-  exit 1
-fi
+# Apply storage/ACL/bridge/profile. Under heavy boot load a step can fail
+# transiently, so retry with doubling backoff. A rejected configuration fails
+# the same way every time, and a hang usually means a missing helper that
+# makes incusd hang rather than fail, so neither is retried.
+attempt=1
+delay="$INIT_BACKOFF"
+while :; do
+  output="$(timeout --kill-after=15 "$INIT_TIMEOUT" "$INIT" 2>&1)"
+  status=$?
+  [ "$status" -eq 0 ] && break
+  # Syslog keeps the full output; incus CLI errors never reach it otherwise.
+  printf '%s\n' "$output" | grep -v '^[[:space:]]*$' | logger -t incus-init-output
+  reason="$(failure_reason "$output" "$status")"
+  logger -t incus "environment reconciliation failed (attempt ${attempt}/${INIT_ATTEMPTS}, status ${status}): ${reason}"
+  case "$status" in "$EX_CONFIG"|124|137) final=true ;; *) final=false ;; esac
+  if [ "$final" = true ] || [ "$attempt" -ge "$INIT_ATTEMPTS" ]; then
+    if [ "$status" -eq "$EX_CONFIG" ]; then
+      message="incus.cfg rejected: ${reason}"
+    elif [ "$status" -eq "$EX_LOCKED" ]; then
+      message="environment not reconciled after ${attempt} attempts; another incus-init.sh run held the lock: ${reason}"
+    else
+      message="environment reconciliation failed after ${attempt} attempts: ${reason}"
+    fi
+    # Do NOT stop the daemon. Stopping it tears down the managed bridges and
+    # their dnsmasq, and anything still attached to them (host Docker
+    # containers, or instances left running when rc.incus falls back to a raw
+    # kill) then has no DNS or egress. incusd restores networks, ACLs and
+    # profiles from its database: the last successful reconciliation plus any
+    # steps the failed attempts already applied (nothing, on a first run).
+    health degraded "$message"
+    logger -t incus "array up: daemon left running in degraded state; ${message}"
+    if [ -x "$NOTIFY" ]; then
+      "$NOTIFY" -e "Incus" -s "Incus environment not reconciled" -d "$message" -i alert \
+        >/dev/null 2>&1 || logger -t incus "could not raise the degraded-state notification"
+    fi
+    exit 1
+  fi
+  sleep "$delay"
+  attempt=$((attempt + 1))
+  delay=$((delay * 2))
+done
 logger -t incus "array up: daemon and containment environment ready"

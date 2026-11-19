@@ -15,6 +15,13 @@ import { IncusUnixClient } from "./src/incus-unix-client.service.js";
 export const adapter = "nestjs";
 
 export const graphqlSchemaExtension = async () => `
+  type IncusPluginHealth {
+    status: String!
+    message: String!
+    time: String
+    build: String
+  }
+
   type Jail {
     name: String!
     status: String!
@@ -174,6 +181,7 @@ export const graphqlSchemaExtension = async () => `
 
   extend type Query {
     incusHealthy: Boolean!
+    incusPluginHealth: IncusPluginHealth
     incusConfig: IncusConfig!
     jails: [Jail!]!
     jailDetail(name: String!): JailDetail!

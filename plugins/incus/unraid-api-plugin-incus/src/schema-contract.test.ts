@@ -113,6 +113,7 @@ describe("plugin GraphQL schema contract", () => {
     const expected = {
       Query: {
         incusHealthy: ": Boolean!",
+        incusPluginHealth: ": IncusPluginHealth",
         incusConfig: ": IncusConfig!",
         jails: ": [Jail!]!",
         jailDetail: "(name: String!): JailDetail!",

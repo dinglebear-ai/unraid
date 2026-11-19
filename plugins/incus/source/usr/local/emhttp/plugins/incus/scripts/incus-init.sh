@@ -1,12 +1,43 @@
 #!/bin/bash
-# incus-init.sh — idempotently apply the jail environment from incus.cfg.
-# Runs on every array start (after incusd is up). Safe to re-run: every step is
-# check-then-create. Nothing here is destructive.
+# incus-init.sh — apply the jail environment from incus.cfg.
+# Runs on every array start (after incusd is up) and is intended to be re-run:
+# objects are created when missing, and the ACL and profile bodies are
+# re-applied from incus.cfg on every run. It deletes a same-named host
+# interface that Incus reports as unmanaged before creating the managed bridge.
+#
+# Exit status: 0 ready; 78 configuration rejected (retrying cannot help);
+# 75 another run held the lock too long; any other non-zero status may be
+# transient and is safe to retry.
 set -euo pipefail
 
-CFG="/boot/config/plugins/incus/incus.cfg"
+# Name the failing line and command. Without this, an unexpected failure under
+# set -e exits with no log line and no way to tell which step failed. Steps
+# inside functions run only in checked contexts, where bash suppresses ERR, so
+# this fires once per failure at the top level.
+on_error() {
+  local status="$1" line="$2" command="$3" message
+  message="FAILED (exit ${status}) at line ${line}: ${command}"
+  logger -t incus-init "$message" 2>/dev/null || true
+  echo "incus-init: ${message}" >&2
+}
+trap 'on_error "$?" "$LINENO" "$BASH_COMMAND"' ERR
+# ERR does not fire for unbound variables, syntax errors in sourced files, or
+# signals. Record every non-zero exit so none of those is silent.
+on_exit() {
+  local status="$1"
+  [ "$status" -eq 0 ] && return 0
+  logger -t incus-init "exiting with status ${status}" 2>/dev/null || true
+  echo "incus-init: exiting with status ${status}" >&2
+}
+trap 'on_exit "$?"' EXIT
+trap 'exit 143' TERM
+trap 'exit 130' INT
+EX_LOCKED=75
+EX_CONFIG=78
+
+CFG="${INCUS_CONFIG:-/boot/config/plugins/incus/incus.cfg}"
 PREFIX="/usr/local/incus"
-EMHTTP="/usr/local/emhttp/plugins/incus"
+EMHTTP="${INCUS_EMHTTP:-/usr/local/emhttp/plugins/incus}"
 if [ ! -f "${EMHTTP}/scripts/incus-env.sh" ]; then
   echo "incus-init: FATAL — ${EMHTTP}/scripts/incus-env.sh not found" >&2; exit 1
 fi
@@ -15,13 +46,21 @@ if [ ! -f "$CFG" ]; then
   echo "incus-init: FATAL — $CFG not found" >&2; exit 1
 fi
 . "$CFG"
-INCUS="${PREFIX}/bin/incus"
+INCUS="${INCUS_BIN:-${PREFIX}/bin/incus}"
 log() { logger -t incus-init "$*"; echo "incus-init: $*"; }
+# A configuration error fails the same way on every attempt.
+fatal_config() { log "FATAL: $*"; exit "$EX_CONFIG"; }
 
 # ---------- L6: Prevent concurrent execution ----------
-LOCKFILE="/var/run/incus-init.lock"
+# Wait for a concurrent run (Settings Apply, the watchdog, the installer)
+# instead of reporting success for work this run did not do.
+LOCKFILE="${INCUS_INIT_LOCK_FILE:-/var/run/incus-init.lock}"
+LOCK_TIMEOUT="${INCUS_INIT_LOCK_TIMEOUT:-120}"
 exec 200>"$LOCKFILE"
-flock -n 200 || { log "Another instance is already running. Exiting."; exit 0; }
+if ! flock -w "$LOCK_TIMEOUT" 200; then
+  log "another incus-init.sh run held the lock for ${LOCK_TIMEOUT}s; not reconciled"
+  exit "$EX_LOCKED"
+fi
 
 # ---------- H1: Ensure default values for all config variables ----------
 STORAGE_DRIVER="${STORAGE_DRIVER:-dir}"
@@ -46,16 +85,17 @@ JAIL_AGENT_UID="${JAIL_AGENT_UID:-1000}"
 JAIL_AGENT_GID="${JAIL_AGENT_GID:-1000}"
 JAIL_BIND_MOUNTS="${JAIL_BIND_MOUNTS:-}"
 . "${EMHTTP}/scripts/config-validation.sh"
+# shellcheck disable=SC2034 # read by incus-health.sh
+PLUGIN_BUILD="$(head -n 1 "${EMHTTP}/build-id" 2>/dev/null || printf 'unknown')"
+. "${EMHTTP}/scripts/incus-health.sh"
 
 # The ACL rendered below currently covers IPv4 only. Fail closed instead of
 # accepting an IPv6 bridge address that bypasses the advertised containment.
 if [ "$JAIL_IPV6" != "none" ]; then
-  log "FATAL: JAIL_IPV6 must remain 'none' until an IPv6 containment ACL is configured"
-  exit 1
+  fatal_config "JAIL_IPV6 must remain 'none' until an IPv6 containment ACL is configured"
 fi
 if ! validation_error="$(validate_containment_config 2>&1)"; then
-  log "FATAL: ${validation_error}"
-  exit 1
+  fatal_config "${validation_error}"
 fi
 if ! storage_error="$(prepare_storage_config 2>&1)"; then
   log "FATAL: ${storage_error}"
@@ -67,7 +107,7 @@ fi
 # container start fails with "Failed to prepare rootfs storage". Real
 # Debian/Ubuntu lxc packages ship it via liblxc-common; we don't package
 # liblxc through apt, so it never gets created otherwise.
-mkdir -p /usr/lib/x86_64-linux-gnu/lxc/rootfs
+mkdir -p "${INCUS_LXC_ROOTFS_DIR:-/usr/lib/x86_64-linux-gnu/lxc/rootfs}"
 
 # ---------- 1. daemon first-run init (storage pool + core), guarded ----------
 # Gate on the storage pool actually existing, not on database/global/db.bin —
@@ -140,8 +180,7 @@ fi
 
 # ---------- 2. LAN-ban ACL (deny-list egress; Internet allowed) ----------
 if [ -z "${ACL_BLOCK// /}" ]; then
-  log "FATAL: ACL_BLOCK is empty — refusing to start with the LAN-ban egress filter disabled"
-  exit 1
+  fatal_config "ACL_BLOCK is empty — refusing to start with the LAN-ban egress filter disabled"
 fi
 
 # Build egress rules: mandatory bridge protections first, then optional
@@ -190,7 +229,8 @@ if ! "$INCUS" network acl show "$ACL_NAME" </dev/null >/dev/null 2>&1; then
   "$INCUS" network acl create "$ACL_NAME" </dev/null
 fi
 # Always re-apply the rule body so config edits take effect on restart.
-acl_yaml | "$INCUS" network acl edit "$ACL_NAME"
+ACL_BODY="$(acl_yaml)"
+printf '%s\n' "$ACL_BODY" | "$INCUS" network acl edit "$ACL_NAME"
 
 # ---------- 3. jail bridge ----------
 # `network show` succeeds even for a host interface Incus doesn't manage
@@ -199,42 +239,59 @@ acl_yaml | "$INCUS" network acl edit "$ACL_NAME"
 # actually ours. An unmanaged same-named interface can't be reconfigured
 # (network set fails with "Only managed networks can be modified"), so
 # tear it down at the OS level and recreate it properly managed.
-if "$INCUS" network show "$JAIL_BRIDGE" </dev/null 2>/dev/null | grep -q '^managed: true'; then
-  : # already a properly managed bridge
-else
-  if ip link show "$JAIL_BRIDGE" >/dev/null 2>&1; then
+# Delete only on that positive answer. A failed query (e.g. a busy database
+# under boot load) must not remove the live managed bridge, so it fails the
+# run and leaves the next attempt to retry.
+create_bridge=false
+if bridge_info="$("$INCUS" network show "$JAIL_BRIDGE" </dev/null 2>&1)"; then
+  if ! grep -q '^managed: true' <<<"$bridge_info"; then
     log "removing stale unmanaged interface ${JAIL_BRIDGE} before recreating it as managed"
     ip link delete "$JAIL_BRIDGE" 2>/dev/null || true
+    create_bridge=true
   fi
+elif grep -qx 'Error: Network not found' <<<"$bridge_info"; then
+  create_bridge=true
+else
+  log "cannot query bridge ${JAIL_BRIDGE}: ${bridge_info//$'\n'/ }"
+  exit 1
+fi
+if [ "$create_bridge" = true ]; then
   log "creating bridge ${JAIL_BRIDGE} (${JAIL_SUBNET})"
+  # Attach the ACL in the create call so the bridge never exists unfiltered.
   "$INCUS" network create "$JAIL_BRIDGE" --type=bridge \
     ipv4.address="$JAIL_SUBNET" ipv4.nat="$JAIL_NAT" \
-    ipv6.address="$JAIL_IPV6" ipv6.nat=false </dev/null
+    ipv6.address="$JAIL_IPV6" ipv6.nat=false \
+    security.acls="$ACL_NAME" \
+    security.acls.default.egress.action="$ACL_DEFAULT_EGRESS" \
+    security.acls.default.ingress.action="$ACL_DEFAULT_INGRESS" </dev/null
+else
+  # An existing bridge keeps its addressing unless it is updated here. The
+  # ACL's bridge-subnet rule uses JAIL_SUBNET, so a stale bridge address would
+  # leave peers on the real subnet unfiltered.
+  for setting in "ipv4.address=${JAIL_SUBNET}" "ipv4.nat=${JAIL_NAT}" "ipv6.address=${JAIL_IPV6}"; do
+    key="${setting%%=*}"
+    want="${setting#*=}"
+    have="$("$INCUS" network get "$JAIL_BRIDGE" "$key" </dev/null)"
+    if [ "$have" != "$want" ]; then
+      log "updating bridge ${JAIL_BRIDGE} ${key}: ${have:-unset} -> ${want}"
+      "$INCUS" network set "$JAIL_BRIDGE" "${key}=${want}" </dev/null
+    fi
+  done
 fi
 "$INCUS" network set "$JAIL_BRIDGE" security.acls="$ACL_NAME" </dev/null
 "$INCUS" network set "$JAIL_BRIDGE" security.acls.default.egress.action="$ACL_DEFAULT_EGRESS" </dev/null
 "$INCUS" network set "$JAIL_BRIDGE" security.acls.default.ingress.action="$ACL_DEFAULT_INGRESS" </dev/null
 
 # ---------- 4. agent-jail profile (from template) ----------
-case "$JAIL_WORKSPACE_ROOT" in
-  /srv/*|/mnt/*) ;;
-  *)
-    log "FATAL: JAIL_WORKSPACE_ROOT must be beneath /srv or /mnt, not ${JAIL_WORKSPACE_ROOT}"
-    exit 1
-    ;;
-esac
+path_is_safe_storage "$JAIL_WORKSPACE_ROOT" ||
+  fatal_config "JAIL_WORKSPACE_ROOT must be beneath /srv or /mnt, not ${JAIL_WORKSPACE_ROOT}"
 # prepare_storage_config already created and write-probed this directory.
 CANONICAL_WORKSPACE_ROOT="$(readlink -f "$JAIL_WORKSPACE_ROOT")" || {
   log "FATAL: cannot resolve workspace root ${JAIL_WORKSPACE_ROOT}"
   exit 1
 }
-case "$CANONICAL_WORKSPACE_ROOT" in
-  /srv/*|/mnt/*) ;;
-  *)
-    log "FATAL: workspace root resolves outside /srv or /mnt: ${CANONICAL_WORKSPACE_ROOT}"
-    exit 1
-    ;;
-esac
+path_is_safe_storage "$CANONICAL_WORKSPACE_ROOT" ||
+  fatal_config "workspace root resolves outside /srv or /mnt: ${CANONICAL_WORKSPACE_ROOT}"
 JAIL_WORKSPACE_ROOT="$CANONICAL_WORKSPACE_ROOT"
 mkdir -p "${JAIL_WORKSPACE_ROOT}/default-workspace"
 chown "${JAIL_AGENT_UID}:${JAIL_AGENT_GID}" "${JAIL_WORKSPACE_ROOT}/default-workspace"
@@ -245,15 +302,16 @@ chmod 0750 "${JAIL_WORKSPACE_ROOT}/default-workspace"
 # reboot, which is a much worse failure mode than refusing to start.
 WS_FSTYPE="$(stat -f -c '%T' "${JAIL_WORKSPACE_ROOT}" 2>/dev/null || echo unknown)"
 if [ "$WS_FSTYPE" = "tmpfs" ] || [ "$WS_FSTYPE" = "ramfs" ]; then
-  log "FATAL: JAIL_WORKSPACE_ROOT (${JAIL_WORKSPACE_ROOT}) is on ${WS_FSTYPE} — not persistent."
   log "Point it at a real array/cache path, e.g. /mnt/cache/appdata/agent-jails."
-  exit 1
+  fatal_config "JAIL_WORKSPACE_ROOT (${JAIL_WORKSPACE_ROOT}) is on ${WS_FSTYPE} — not persistent."
 fi
-TMPL="/usr/local/emhttp/plugins/incus/templates/agent-jail-profile.yaml.tmpl"
+TMPL="${EMHTTP}/templates/agent-jail-profile.yaml.tmpl"
 if [ ! -f "$TMPL" ]; then
   log "ERROR: profile template not found at ${TMPL}"
   exit 1
 fi
+# render runs in a checked command substitution, where set -e is suspended, so
+# every step returns its own failure.
 render() {
   local out bind_yaml
   out=$(sed -e "s|@PROFILE@|${JAIL_PROFILE}|g" \
@@ -261,17 +319,17 @@ render() {
             -e "s|@NESTING@|${JAIL_NESTING}|g" \
             -e "s|@UID@|${JAIL_AGENT_UID}|g" \
             -e "s|@GID@|${JAIL_AGENT_GID}|g" \
-            -e "s|@WSROOT@|${JAIL_WORKSPACE_ROOT}|g" "$TMPL")
+            -e "s|@WSROOT@|${JAIL_WORKSPACE_ROOT}|g" "$TMPL") || return 1
   # Handle empty CPU/MEMORY (= no cap): remove the limits line entirely
   if [ -n "${JAIL_CPU}" ]; then
-    out=$(echo "$out" | sed "s|@CPU@|${JAIL_CPU}|g")
+    out=$(echo "$out" | sed "s|@CPU@|${JAIL_CPU}|g") || return 1
   else
-    out=$(echo "$out" | grep -v '@CPU@')
+    out=$(echo "$out" | grep -v '@CPU@') || return 1
   fi
   if [ -n "${JAIL_MEMORY}" ]; then
-    out=$(echo "$out" | sed "s|@MEMORY@|${JAIL_MEMORY}|g")
+    out=$(echo "$out" | sed "s|@MEMORY@|${JAIL_MEMORY}|g") || return 1
   else
-    out=$(echo "$out" | grep -v '@MEMORY@')
+    out=$(echo "$out" | grep -v '@MEMORY@') || return 1
   fi
   bind_yaml="$(render_bind_mounts)" || return 1
   [ -z "$bind_yaml" ] || out="${out}
@@ -286,7 +344,7 @@ render_bind_mounts() {
   local item host target mode extra index=0 old_ifs canonical_host config_root
   [ -z "${JAIL_BIND_MOUNTS// /}" ] && return 0
   config_root="/boot/config/plugins/incus/bind-mounts"
-  mkdir -p "$config_root"
+  mkdir -p "$config_root" || return 1
   config_root="$(readlink -f "$config_root")" || return 1
   old_ifs="$IFS"
   IFS=,
@@ -334,6 +392,15 @@ if ! "$INCUS" profile show "$JAIL_PROFILE" </dev/null >/dev/null 2>&1; then
   log "creating profile ${JAIL_PROFILE}"
   "$INCUS" profile create "$JAIL_PROFILE" </dev/null
 fi
-render | "$INCUS" profile edit "$JAIL_PROFILE"
+# Render before editing: a failed render piped straight into `profile edit`
+# would replace the profile with an empty one.
+if ! PROFILE_BODY="$(render)" || [ -z "$PROFILE_BODY" ]; then
+  log "FATAL: could not render profile ${JAIL_PROFILE} from ${TMPL}"
+  exit 1
+fi
+printf '%s\n' "$PROFILE_BODY" | "$INCUS" profile edit "$JAIL_PROFILE"
 
+# A successful run is the only thing that clears a degraded status.
+incus_health_write ready "environment reconciled" reconciled ||
+  log "WARNING: environment reconciled but plugin-health was not updated"
 log "environment ready (bridge=${JAIL_BRIDGE} acl=${ACL_NAME} pool=${STORAGE_POOL_NAME})"
