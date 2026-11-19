@@ -2,14 +2,14 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "incus">
   <!ENTITY author    "Dinglebear AI">
-  <!ENTITY version   "20261024.001"> <!-- managed by .github/scripts/plugin_calver.py -->
+  <!ENTITY version   "20261119.001"> <!-- managed by .github/scripts/plugin_calver.py -->
   <!ENTITY launch    "Settings/IncusSettings">
   <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/incus">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY txz       "&name;-unraid-7.0.0-57-x86_64-1.txz">
+  <!ENTITY txz       "&name;-unraid-7.0.0-59-x86_64-1.txz">
   <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/incus-v&version;/&txz;">
-  <!ENTITY md5       "77876242e8e2db8f4deb462ebfcfee66">
-  <!ENTITY sha256    "698879a9205e0f61bb0b8b47761881db712dcb7b602203f700cbb85a37e972af">
+  <!ENTITY md5       "8e0a5a0f3024d33077f89c72cf37f1d3">
+  <!ENTITY sha256    "7fa5a4daa2844891e446449f0ac7af7462983e469a340d2e193fc91eed46c8be">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -17,6 +17,14 @@
 <PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="7.0.0" support="https://github.com/dinglebear-ai/unraid/issues">
 
 <CHANGES>
+###2026.11.19
+- Build 59: a failed environment setup at array start no longer stops incusd
+  under running workloads. Setup is retried, then reported as degraded in
+  syslog, an Unraid alert, the settings page and the dashboard. The watchdog
+  retries setup while degraded and no longer restarts incusd after one slow
+  health check. An existing bridge picks up subnet and NAT changes.
+- Also ships the build 57 dependency refresh, which was not published on its own.
+
 ###2026.10.24
 - Build 57 refreshes the API backend and complete browser dependency payload,
   including compatible major upgrades and security fixes.
