@@ -1,6 +1,7 @@
 #!/bin/bash
-# plugin-health writer contract: a daemon-level "ready" never hides a
-# degraded environment; only a successful reconciliation clears it.
+# plugin-health writer contract: daemon-level writes (including a restart's
+# stop and start) never hide an unreconciled environment; only a successful
+# reconciliation clears it.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -22,21 +23,31 @@ incus_health_write ready "daemon socket healthy"
 incus_health_write degraded $'reconciliation failed:\nsecond line'
 [[ "$(field status)" = degraded ]] || fail "degraded not written"
 [[ "$(field message)" = 'reconciliation failed: second line' ]] || fail "message not kept on one line"
-[[ "$(wc -l <"$file")" = 4 ]] || fail "health file must stay four lines"
+[[ "$(field unreconciled)" = 'reconciliation failed: second line' ]] || fail "unreconciled reason not kept"
+[[ "$(wc -l <"$file")" = 5 ]] || fail "degraded health file must be five lines"
 
 incus_health_write ready "status check passed"
 [[ "$(field status)" = degraded ]] || fail "daemon-level ready replaced degraded"
+[[ "$(field message)" = 'reconciliation failed: second line' ]] || fail "daemon-level ready replaced the reason"
 [[ "$(incus_health_status)" = degraded ]] || fail "incus_health_status misread the file"
+
+# A restart reports the daemon state, then reports degraded again once the
+# daemon answers.
+for status in stopped failed; do
+  incus_health_write "$status" "daemon down"
+  [[ "$(field status)" = "$status" ]] || fail "$status not reported"
+  [[ -n "$(field unreconciled)" ]] || fail "$status dropped the unreconciled reason"
+  incus_health_write ready "daemon socket healthy"
+  [[ "$(field status)" = degraded ]] || fail "restart through $status hid the unreconciled environment"
+done
 
 incus_health_write ready "environment reconciled" reconciled
 [[ "$(field status)" = ready && "$(field message)" = 'environment reconciled' ]] ||
   fail "successful reconciliation did not clear degraded"
-
-for status in failed stopped; do
-  incus_health_write degraded "x"
-  incus_health_write "$status" "daemon down"
-  [[ "$(field status)" = "$status" ]] || fail "$status did not replace degraded"
-done
+[[ -z "$(field unreconciled)" && "$(wc -l <"$file")" = 4 ]] || fail "reconciliation left the unreconciled line"
+incus_health_write stopped "daemon and lxcfs stopped"
+incus_health_write ready "daemon socket healthy"
+[[ "$(field status)" = ready ]] || fail "reconciled environment reported degraded after a restart"
 
 : >"$tmp/not-a-dir"
 INCUS_DIR="$tmp/not-a-dir/incus"

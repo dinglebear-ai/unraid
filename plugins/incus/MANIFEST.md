@@ -70,12 +70,14 @@ tar -tvJf packages/incus-unraid-7.0.0-57-x86_64-1.txz
 - `rc.incus` rolls back partial startup, rotates `/var/log/incusd.log`, records
   health in `$INCUS_DIR/plugin-health`, validates PIDs, and starts a bounded
   watchdog. Array shutdown aggregates instance and daemon stop failures.
-- `scripts/incus-health.sh` is the only writer of `plugin-health`. A daemon
-  "ready" never replaces "degraded"; only a successful `incus-init.sh` run
-  clears it. The API exposes the file as `incusPluginHealth`, and the settings
+- `scripts/incus-health.sh` is the only writer of `plugin-health`. It keeps
+  an unreconciled environment in its own `unreconciled=` line, so a daemon
+  restart cannot hide it; only a successful `incus-init.sh` run clears it.
+  The array-start hook, the watchdog and Settings Apply record it. The API exposes the file as `incusPluginHealth`, and the settings
   page and dashboard show a degraded state.
 - The watchdog restarts the daemon only after several consecutive failed
-  checks, records `degraded` if reconciliation fails after a restart, and
+  checks, limits restarts per incident, stops an in-flight reconciliation
+  when it is stopped, records `degraded` if reconciliation fails after a restart, and
   retries reconciliation with backoff while degraded. A rejected `incus.cfg`
   is retried only after the file changes.
 - `event/disks_mounted` retries environment reconciliation with backoff and

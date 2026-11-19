@@ -190,6 +190,7 @@ install it transactionally; older/classic-only artifacts do not. Requirements:
    `incus-init` and `incus-init-output` tags. The settings page and dashboard
    show the degraded state and its reason. Only a successful `incus-init.sh`
    run clears it: restarting the daemon or running `rc.incus status` does not.
+   A failed Settings Apply also records it.
    While degraded, the watchdog retries `incus-init.sh` with backoff, and it
    restarts the daemon only after several consecutive failed health checks.
    Config Apply restores `incus.cfg.known-good` on reconciliation failure.

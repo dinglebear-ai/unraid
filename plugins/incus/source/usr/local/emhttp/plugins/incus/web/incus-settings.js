@@ -2792,9 +2792,9 @@ var Xn = { class: "unapi w-full max-w-4xl text-foreground xl:max-w-6xl 2xl:max-w
 		}), (e, a) => (h(), j("div", Xn, [i.value ? (h(), j("div", Zn, "Loading incus configuration…")) : (h(), j(A, { key: 1 }, [
 			c.value ? (h(), j("div", Qn, E(c.value), 1)) : D("", !0),
 			p.value ? (h(), j("div", $n, [
-				a[51] ||= P("p", { class: "font-semibold" }, "Container network setup did not finish.", -1),
+				a[51] ||= P("p", { class: "font-semibold" }, "Container environment setup did not finish.", -1),
 				P("p", er, E(d.value?.message), 1),
-				a[52] ||= P("p", { class: "mt-1 text-muted-foreground" }, " Running containers keep their last applied network settings, and recent changes to incus.cfg may not be in force. Fix the cause, then press Apply on the Config tab. The plugin also retries on its own. ", -1)
+				a[52] ||= P("p", { class: "mt-1 text-muted-foreground" }, " Running containers keep the network, firewall and profile settings last applied, and recent changes to incus.cfg may not be in force. Fix the cause, then press Apply on the Config tab. ", -1)
 			])) : D("", !0),
 			P("header", tr, [a[54] ||= ue("<svg width=\"14\" height=\"20\" viewBox=\"0 0 10 14\" fill=\"none\" aria-hidden=\"true\" class=\"shrink-0 text-foreground\"><path d=\"M5 0L9 2.5L5 5L1 2.5Z\" fill=\"currentColor\" opacity=\"0.95\"></path><path d=\"M5 3L9 5.5L5 8L1 5.5Z\" fill=\"currentColor\" opacity=\"0.7\"></path><path d=\"M5 6L9 8.5L5 11L1 8.5Z\" fill=\"currentColor\" opacity=\"0.45\"></path><path d=\"M5 9L9 11.5L5 14L1 11.5Z\" fill=\"currentColor\" opacity=\"0.25\"></path></svg><span class=\"text-sm font-semibold tracking-[0.14em] uppercase\">Incus</span><span class=\"text-xs text-muted-foreground\">dev containers</span>", 3), P("div", nr, [C(b(_e), { variant: p.value ? "orange" : u.value ? "green" : "red" }, {
 				default: g(() => [O(E(p.value ? "Degraded" : u.value ? "Reachable" : "Not running"), 1)]),

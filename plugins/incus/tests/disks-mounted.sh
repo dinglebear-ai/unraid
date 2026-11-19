@@ -114,7 +114,8 @@ grep -Fxq 'build=test-build' "$health" || fail "health build id missing"
 grep -Eq '^time=.+' "$health" || fail "health time missing"
 expected='message=environment reconciliation failed after 4 attempts: incus-init: FAILED (exit 1) at line 191: network acl edit attempt 4 (Error: database is locked)'
 grep -Fxq "$expected" "$health" || { cat "$health" >&2; fail "unexpected health message"; }
-[[ "$(wc -l <"$health")" = 4 ]] || fail "health file must stay four key=value lines"
+[[ "$(wc -l <"$health")" = 5 ]] || fail "degraded health file must be five key=value lines"
+grep -Fq 'unreconciled=environment reconciliation failed after 4 attempts' "$health" || fail "unreconciled reason not recorded"
 ! grep -q $'\r' "$health" || fail "carriage return kept in health message"
 grep -Fq 'incus: array up: daemon left running in degraded state' "$state/log" || fail "degraded state not logged"
 grep -Fxq 'incus-init-output: Error: database is locked' "$state/log" || fail "Incus error text not logged"

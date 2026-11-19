@@ -1,3 +1,6 @@
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   appliedPermissions,
@@ -105,5 +108,37 @@ describe("IncusResolver secret handling", () => {
     ]);
     expect(calls.flat().join(" ")).not.toContain("tskey-auth-live-secret");
     expect(calls.at(-1)).toEqual(["rm", "-f", "/run/incus-web-tailscale-auth.key"]);
+  });
+});
+
+describe("IncusResolver plugin health", () => {
+  async function resolverFor(stateDir: string): Promise<IncusResolver> {
+    const config = { getOrThrow: () => ({ stateDir }) };
+    return new IncusResolver(
+      {} as never, {} as never, {} as never, {} as never, {} as never, {} as never, config as never,
+    );
+  }
+
+  it("reports the classic plugin's degraded state", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "incus-resolver-"));
+    try {
+      await writeFile(join(dir, "plugin-health"), "status=degraded\nmessage=ACL edit failed\nunreconciled=ACL edit failed\n");
+      await expect((await resolverFor(dir)).incusPluginHealth()).resolves.toMatchObject({
+        status: "degraded",
+        message: "ACL edit failed",
+      });
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("returns null instead of failing the status query when the file is unreadable", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "incus-resolver-"));
+    try {
+      await mkdir(join(dir, "plugin-health"));
+      await expect((await resolverFor(dir)).incusPluginHealth()).resolves.toBeNull();
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

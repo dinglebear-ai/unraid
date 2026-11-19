@@ -5,8 +5,8 @@
 # - The daemon is restarted only after several consecutive failed checks.
 #   A restart tears down the managed bridges, so one slow answer under load
 #   must not cause it.
-# - While plugin-health is "degraded" and the daemon answers, incus-init.sh
-#   is retried with backoff. Its success is what clears "degraded".
+# - While plugin-health records an unreconciled environment and the daemon
+#   answers, incus-init.sh is retried with backoff. Its success clears it.
 set -uo pipefail
 
 PREFIX="/usr/local/incus"
@@ -21,6 +21,9 @@ PLUGIN_BUILD="$(head -n 1 "$BUILD_ID_FILE" 2>/dev/null || printf 'unknown')"
 INTERVAL="${INCUS_WATCHDOG_INTERVAL:-30}"
 UNHEALTHY_CHECKS="${INCUS_WATCHDOG_UNHEALTHY_CHECKS:-3}"
 MAX_RESTARTS=3
+# The restart limit applies to one incident: this many healthy checks in a
+# row end it, while a crash loop still reaches the limit.
+HEALTHY_RESET="${INCUS_WATCHDOG_HEALTHY_RESET:-10}"
 RECONCILE_DELAY="${INCUS_WATCHDOG_RECONCILE_DELAY:-300}"
 RECONCILE_MAX_DELAY=3600
 INIT_TIMEOUT="${INCUS_INIT_TIMEOUT:-300}"
@@ -36,19 +39,39 @@ health() {
   error="$(incus_health_write "$1" "$2" 2>&1)" || log "$error"
 }
 
-# Runs incus-init.sh once with a time limit; prints its last output line.
+# Runs incus-init.sh once with a time limit and sets `reason` to its last
+# output line. It runs in this shell, never in $(...), and the run is a
+# background child the TERM trap can stop: `rc.incus stop` must not leave an
+# orphaned reconciliation holding the init lock or running against a
+# restarted daemon with an old incus.cfg.
+child=""
+output_file="$(mktemp "${TMPDIR:-/tmp}/incus-watchdog.XXXXXX")" || exit 1
+on_term() {
+  [ -z "$child" ] || { kill -TERM "$child" 2>/dev/null; wait "$child" 2>/dev/null; }
+  rm -f "$output_file"
+  exit 143
+}
+trap on_term TERM INT
+trap 'rm -f "$output_file"' EXIT
+reason=""
 reconcile() {
   local output status
-  output="$(timeout --kill-after=15 "$INIT_TIMEOUT" "$INIT" 2>&1)"
+  reason=""
+  timeout --kill-after=15 "$INIT_TIMEOUT" "$INIT" >"$output_file" 2>&1 &
+  child=$!
+  wait "$child"
   status=$?
+  child=""
+  output="$(cat "$output_file")"
   if [ "$status" -ne 0 ]; then
     printf '%s\n' "$output" | grep -v '^[[:space:]]*$' | logger -t incus-init-output
-    printf '%s' "$(printf '%s\n' "$output" | grep -v '^[[:space:]]*$' | grep -v 'exiting with status ' | tail -n 1)"
+    reason="$(printf '%s\n' "$output" | grep -v '^[[:space:]]*$' | grep -v 'exiting with status ' | tail -n 1)"
   fi
   return "$status"
 }
 
 unhealthy=0
+healthy=0
 restarts=0
 delay="$RECONCILE_DELAY"
 next_reconcile=$((SECONDS + delay))
@@ -59,11 +82,13 @@ while [ -f "$CFG" ]; do
   [ "${SERVICE:-disabled}" = "enabled" ] || exit 0
   if "$INCUS" info </dev/null >/dev/null 2>&1; then
     unhealthy=0
-    if [ "$(incus_health_status)" = degraded ] && [ "$SECONDS" -ge "$next_reconcile" ]; then
+    healthy=$((healthy + 1))
+    [ "$healthy" -lt "$HEALTHY_RESET" ] || restarts=0
+    if [ -n "$(incus_health_field unreconciled)" ] && [ "$SECONDS" -ge "$next_reconcile" ]; then
       cfg_stamp="$(stat -c %Y "$CFG" 2>/dev/null || echo 0)"
       # A rejected config fails the same way until incus.cfg changes.
       if [ "$config_rejected" != "$cfg_stamp" ]; then
-        if reason="$(reconcile)"; then
+        if reconcile; then
           log "degraded environment reconciled"
           delay="$RECONCILE_DELAY"
         else
@@ -80,6 +105,7 @@ while [ -f "$CFG" ]; do
       next_reconcile=$((SECONDS + delay))
     fi
   else
+    healthy=0
     unhealthy=$((unhealthy + 1))
     if [ "$unhealthy" -lt "$UNHEALTHY_CHECKS" ]; then
       log "incusd did not answer (${unhealthy}/${UNHEALTHY_CHECKS} consecutive checks)"
@@ -95,7 +121,7 @@ while [ -f "$CFG" ]; do
       if "$RC_INCUS" stop; then
         if ! "$RC_INCUS" start; then
           log "verified stop completed but restart failed"
-        elif ! reason="$(reconcile)"; then
+        elif ! reconcile; then
           health degraded "watchdog restarted incusd but reconciliation failed: ${reason}"
           log "verified restart completed but reconciliation failed: ${reason}"
           delay="$RECONCILE_DELAY"

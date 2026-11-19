@@ -1601,11 +1601,11 @@ onBeforeUnmount(() => {
         {{ error }}
       </div>
       <div v-if="environmentDegraded" role="alert" data-testid="incus-degraded" class="mb-4 rounded-md border border-orange bg-orange/10 px-4 py-3 text-sm">
-        <p class="font-semibold">Container network setup did not finish.</p>
+        <p class="font-semibold">Container environment setup did not finish.</p>
         <p class="mt-1">{{ pluginHealth?.message }}</p>
         <p class="mt-1 text-muted-foreground">
-          Running containers keep their last applied network settings, and recent changes to incus.cfg may not be in force.
-          Fix the cause, then press Apply on the Config tab. The plugin also retries on its own.
+          Running containers keep the network, firewall and profile settings last applied, and recent changes to incus.cfg may
+          not be in force. Fix the cause, then press Apply on the Config tab.
         </p>
       </div>
 

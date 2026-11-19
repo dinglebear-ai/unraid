@@ -80,7 +80,14 @@ export class IncusResolver {
   })
   @UsePermissions(READ_PERMISSION)
   async incusPluginHealth(): Promise<IncusPluginHealth | null> {
-    return readPluginHealth(this.config.getOrThrow<IncusConfig>("incus").stateDir);
+    // Advisory status: an unreadable file must not fail the whole status
+    // query, which would make the page report the daemon as not running.
+    try {
+      return await readPluginHealth(this.config.getOrThrow<IncusConfig>("incus").stateDir);
+    } catch (err) {
+      this.logger.warn(`could not read plugin-health: ${(err as Error).message}`);
+      return null;
+    }
   }
 
   @Query(() => IncusConfig, { description: "Current incus.cfg, as loaded by the API" })

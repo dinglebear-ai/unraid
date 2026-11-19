@@ -40,6 +40,10 @@ cat >"$emhttp/scripts/incus-init.sh" <<'EOF'
 count=0; [[ -r "$MOCK_DIR/init-count" ]] && count="$(cat "$MOCK_DIR/init-count")"
 count=$((count + 1)); echo "$count" >"$MOCK_DIR/init-count"
 printf 'init-%s\n' "$count" >>"$MOCK_DIR/events"
+if [[ "${MOCK_INIT_HANG:-0}" = 1 ]]; then
+  echo "$$" >"$MOCK_DIR/init-pid"
+  command -p sleep 30
+fi
 if [[ "$count" -le "${MOCK_INIT_FAILS:-0}" ]]; then
   echo "incus-init: FAILED (exit 1) at line 9: attempt ${count}" >&2
   exit "${MOCK_INIT_EXIT:-1}"
@@ -73,6 +77,7 @@ run_watchdog() {
   printf 'SERVICE=enabled\nINCUS_DIR="%s"\n' "$case_dir/incus" >"$case_dir/incus.cfg"
   if [[ -n "${MOCK_HEALTH:-}" ]]; then
     printf 'status=%s\ntime=t\nbuild=b\nmessage=seeded\n' "$MOCK_HEALTH" >"$case_dir/incus/plugin-health"
+    [[ "$MOCK_HEALTH" != degraded ]] || printf 'unreconciled=seeded\n' >>"$case_dir/incus/plugin-health"
   fi
   env MOCK_DIR="$case_dir" PATH="$bin:$PATH" INCUS_CONFIG="$case_dir/incus.cfg" \
     INCUS_EMHTTP="$emhttp" INCUS_BIN="$bin/incus" INCUS_RC="$bin/rc.incus" \
@@ -118,5 +123,38 @@ run_watchdog limit 20 down || status=$?
 [[ "$status" = 1 ]] || fail "restart limit should exit 1, got $status"
 [[ "$(grep -c '^rc-stop$' "$tmp/limit/events")" = 3 ]] || fail "expected 3 restarts before giving up"
 [[ "$(health_of limit)" = failed ]] || fail "restart limit not recorded"
+
+# The limit applies per incident: recoveries separated by healthy checks do
+# not add up to a permanent give-up.
+answers=()
+for _ in 1 2 3 4; do answers+=(down down down ok ok); done
+INCUS_WATCHDOG_HEALTHY_RESET=2 run_watchdog incidents 20 "${answers[@]}" || fail "separate incidents hit the restart limit"
+[[ "$(grep -c '^rc-stop$' "$tmp/incidents/events")" = 4 ]] || fail "expected one restart per incident"
+[[ "$(health_of incidents)" != failed ]] || fail "separate incidents recorded failure"
+
+# Stopping the watchdog mid-reconciliation also stops that reconciliation, so
+# no orphan keeps the init lock or runs against a restarted daemon.
+case_dir="$tmp/term"
+mkdir -p "$case_dir/incus"
+printf 'ok\n' >"$case_dir/info"
+printf 'SERVICE=enabled\nINCUS_DIR="%s"\n' "$case_dir/incus" >"$case_dir/incus.cfg"
+printf 'status=degraded\ntime=t\nbuild=b\nmessage=seeded\nunreconciled=seeded\n' >"$case_dir/incus/plugin-health"
+env MOCK_DIR="$case_dir" MOCK_INIT_HANG=1 PATH="$bin:$PATH" INCUS_CONFIG="$case_dir/incus.cfg" \
+  INCUS_EMHTTP="$emhttp" INCUS_BIN="$bin/incus" INCUS_RC="$bin/rc.incus" \
+  INCUS_WATCHDOG_RECONCILE_DELAY=0 "$WATCHDOG" 2>"$case_dir/stderr" &
+watchdog_pid=$!
+for _ in $(seq 1 100); do [[ -s "$case_dir/init-pid" ]] && break; command -p sleep 0.1; done
+[[ -s "$case_dir/init-pid" ]] || { kill "$watchdog_pid"; fail "reconciliation never started"; }
+init_pid="$(cat "$case_dir/init-pid")"
+term_sent=$SECONDS
+kill -TERM "$watchdog_pid"
+status=0
+wait "$watchdog_pid" || status=$?
+[[ "$status" = 143 ]] || fail "TERM should exit 143, got $status"
+[[ $((SECONDS - term_sent)) -lt 10 ]] || fail "TERM waited for the reconciliation to finish on its own"
+for _ in $(seq 1 50); do kill -0 "$init_pid" 2>/dev/null || break; command -p sleep 0.1; done
+! kill -0 "$init_pid" 2>/dev/null || { kill "$init_pid"; fail "reconciliation survived the watchdog"; }
+[[ -z "$(find "${TMPDIR:-/tmp}" -maxdepth 1 -name 'incus-watchdog.*' -newer "$case_dir/incus.cfg" 2>/dev/null)" ]] ||
+  fail "watchdog left its output file behind"
 
 printf 'incus-watchdog tests passed\n'

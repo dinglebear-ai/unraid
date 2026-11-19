@@ -65,7 +65,7 @@ onUnmounted(() => poller?.stop());
       <template v-if="other > 0">, <span class="incus-tile-other">{{ other }} other</span></template>)
     </div>
     <div v-if="healthy && degradedReason !== null" class="incus-tile-other incus-tile-degraded" :title="degradedReason">
-      Network setup incomplete; see Settings › Incus
+      Environment setup incomplete; see Settings › Incus
     </div>
   </div>
 </template>

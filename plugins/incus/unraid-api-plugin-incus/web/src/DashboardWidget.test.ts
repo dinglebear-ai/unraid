@@ -33,7 +33,7 @@ describe("DashboardWidget", () => {
     const wrapper = mount(DashboardWidget);
     await flushPromises();
     const line = wrapper.get(".incus-tile-degraded");
-    expect(line.text()).toContain("Network setup incomplete");
+    expect(line.text()).toContain("Environment setup incomplete");
     expect(line.attributes("title")).toBe("environment reconciliation failed after 4 attempts");
     wrapper.unmount();
   });

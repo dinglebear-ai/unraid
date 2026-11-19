@@ -34,6 +34,10 @@ done
 # init lock and must not roll back a candidate because the lock was busy.
 grep -Fq 'INCUS_INIT_LOCK_TIMEOUT="${INCUS_APPLY_LOCK_TIMEOUT:-20}"' "$APPLY"
 grep -Fq 'if [ "$init_status" -eq "$EX_LOCKED" ]; then' "$APPLY"
+# Every failed Apply reconciliation leaves the daemon running, so each one
+# must record degraded health for the UI and the watchdog.
+[ "$(grep -c '^ *degraded "' "$APPLY")" -eq 3 ]
+grep -Fq 'incus_health_write degraded' "$APPLY"
 grep -Fq 'timeout: 90_000' "$ROOT/unraid-api-plugin-incus/src/incus.resolver.ts"
 
 grep -Eq 'ACL_BLOCK=.*100\.64\.0\.0/10' "$CFG"

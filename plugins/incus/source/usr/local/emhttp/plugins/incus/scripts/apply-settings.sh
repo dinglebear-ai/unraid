@@ -14,8 +14,18 @@ HEALTH="/var/log/incus-apply.log"
 [ -f "$CFG" ] || exit 0
 . "$CFG"
 . /usr/local/emhttp/plugins/incus/scripts/config-validation.sh
+# shellcheck disable=SC2034 # read by incus-health.sh
+PLUGIN_BUILD="$(head -n 1 /usr/local/emhttp/plugins/incus/build-id 2>/dev/null || printf 'unknown')"
+. /usr/local/emhttp/plugins/incus/scripts/incus-health.sh
 
 record() { printf '%s %s\n' "$(date -Is)" "$*" >>"$HEALTH"; logger -t incus-apply "$*"; }
+# The daemon keeps running after a failed reconciliation, so record it where
+# the settings page, dashboard and watchdog see it. A later successful
+# incus-init.sh run clears it.
+degraded() {
+  record "$1"
+  incus_health_write degraded "Settings Apply: $1" 2>>"$HEALTH" || true
+}
 # The API runs this script with a 90 s timeout, which also covers the daemon
 # restart, so wait only briefly for a concurrent reconciliation's lock.
 EX_LOCKED=75
@@ -32,8 +42,12 @@ restore_known_good() {
   record "restored known-good config after failed apply"
   [ "$reconcile" = "true" ] || return 0
   if [ "${SERVICE:-disabled}" = "enabled" ]; then
-    if ! /etc/rc.d/rc.incus restart || ! run_init; then
-      record "known-good config restored but its reconciliation failed; daemon left running, see syslog (incus-init)"
+    if ! /etc/rc.d/rc.incus restart; then
+      record "known-good config restored but the daemon did not restart; see /var/log/incusd.log"
+      return 1
+    fi
+    if ! run_init; then
+      degraded "known-good config restored but its reconciliation failed; daemon left running, see syslog (incus-init)"
       return 1
     fi
   else
@@ -81,10 +95,10 @@ fi
 if [ "$init_status" -eq "$EX_LOCKED" ]; then
   # A busy lock says nothing about the candidate. Keep it in place; the
   # running reconciliation or the next Apply applies it.
-  record "another reconciliation is running; candidate kept but not yet reconciled, retry Apply"
+  degraded "another reconciliation is running; candidate kept but not yet reconciled, retry Apply"
   exit 1
 fi
 
-record "candidate configuration failed; attempting rollback"
+degraded "candidate configuration failed reconciliation (status ${init_status}); attempting rollback"
 restore_known_good || true
 exit 1
