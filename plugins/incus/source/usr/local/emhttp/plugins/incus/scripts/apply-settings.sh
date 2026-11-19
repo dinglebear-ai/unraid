@@ -32,7 +32,10 @@ restore_known_good() {
   record "restored known-good config after failed apply"
   [ "$reconcile" = "true" ] || return 0
   if [ "${SERVICE:-disabled}" = "enabled" ]; then
-    /etc/rc.d/rc.incus restart && run_init
+    if ! /etc/rc.d/rc.incus restart || ! run_init; then
+      record "known-good config restored but its reconciliation failed; daemon left running, see syslog (incus-init)"
+      return 1
+    fi
   else
     /etc/rc.d/rc.incus stop
   fi

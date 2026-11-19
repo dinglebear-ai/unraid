@@ -140,4 +140,39 @@ describe("App", () => {
     expect((update?.[1].input as { jailIpv6: string }).jailIpv6).toBe("none");
     wrapper.unmount();
   });
+
+  it("shows a degraded containment environment instead of a healthy daemon badge", async () => {
+    const health = { status: "degraded", message: "incus.cfg rejected: ACL_BLOCK entries must be addresses" };
+    gqlMock.mockImplementation((query: string) => {
+      if (query.includes("incusConfig")) return Promise.resolve({ incusConfig: { enabled: true, jailCpu: "", jailMemory: "", tsAuthKeyConfigured: false } });
+      if (query.includes("incusHealthy")) return Promise.resolve({ incusHealthy: true, incusPluginHealth: health, jails: [] });
+      if (query.includes("builderPresets")) return Promise.resolve({ builderPresets: [] });
+      if (query.includes("jailImages")) return Promise.resolve({ jailImages: [] });
+      return Promise.resolve({});
+    });
+    const wrapper = mount(App, { attachTo: document.body });
+    await flushPromises();
+    const banner = wrapper.get('[data-testid="incus-degraded"]');
+    expect(banner.attributes("role")).toBe("alert");
+    expect(banner.text()).toContain(health.message);
+    expect(wrapper.text()).toContain("Degraded");
+    expect(wrapper.text()).not.toContain("Reachable");
+    wrapper.unmount();
+  });
+
+  it("does not report degraded while the daemon itself is down", async () => {
+    gqlMock.mockImplementation((query: string) => {
+      if (query.includes("incusConfig")) return Promise.resolve({ incusConfig: { enabled: true, jailCpu: "", jailMemory: "", tsAuthKeyConfigured: false } });
+      if (query.includes("incusHealthy"))
+        return Promise.resolve({ incusHealthy: false, incusPluginHealth: { status: "degraded", message: "stale" }, jails: [] });
+      if (query.includes("builderPresets")) return Promise.resolve({ builderPresets: [] });
+      if (query.includes("jailImages")) return Promise.resolve({ jailImages: [] });
+      return Promise.resolve({});
+    });
+    const wrapper = mount(App, { attachTo: document.body });
+    await flushPromises();
+    expect(wrapper.find('[data-testid="incus-degraded"]').exists()).toBe(false);
+    expect(wrapper.text()).toContain("Not running");
+    wrapper.unmount();
+  });
 });

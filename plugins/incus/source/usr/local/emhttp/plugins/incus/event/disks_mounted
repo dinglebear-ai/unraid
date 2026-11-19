@@ -25,20 +25,12 @@ INIT_TIMEOUT="$(positive_int INCUS_INIT_TIMEOUT "${INCUS_INIT_TIMEOUT:-300}" 300
 EX_LOCKED=75
 EX_CONFIG=78
 
+# shellcheck disable=SC2034 # read by incus-health.sh
 PLUGIN_BUILD="$(head -n 1 "${EMHTTP}/build-id" 2>/dev/null || printf 'unknown')"
-HEALTH_FILE="${INCUS_DIR:-/mnt/user/appdata/incus}/plugin-health"
+. "${EMHTTP}/scripts/incus-health.sh"
 health() {
   local error
-  if ! error="$(
-    { mkdir -p "${HEALTH_FILE%/*}" &&
-      printf 'status=%s\ntime=%s\nbuild=%s\nmessage=%s\n' "$1" "$(date -Is)" "$PLUGIN_BUILD" "$2" \
-        >"${HEALTH_FILE}.tmp" &&
-      mv -f "${HEALTH_FILE}.tmp" "$HEALTH_FILE"; } 2>&1
-  )"; then
-    rm -f "${HEALTH_FILE}.tmp" 2>/dev/null
-    logger -t incus "could not write ${HEALTH_FILE}: ${error//$'\n'/ }"
-    return 1
-  fi
+  error="$(incus_health_write "$1" "$2" 2>&1)" || { logger -t incus "$error"; return 1; }
 }
 
 # Reduce one attempt's output to a one-line reason. Keep the trap's

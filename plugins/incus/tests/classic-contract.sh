@@ -28,6 +28,8 @@ done
 "$ROOT/tests/start-instance.sh"
 "$ROOT/tests/disks-mounted.sh"
 "$ROOT/tests/incus-init.sh"
+"$ROOT/tests/incus-health.sh"
+"$ROOT/tests/incus-watchdog.sh"
 # Apply runs under the API's 90 s timeout: it must wait only briefly for the
 # init lock and must not roll back a candidate because the lock was busy.
 grep -Fq 'INCUS_INIT_LOCK_TIMEOUT="${INCUS_APPLY_LOCK_TIMEOUT:-20}"' "$APPLY"

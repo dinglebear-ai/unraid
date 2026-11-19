@@ -8,6 +8,7 @@ import { IncusResolver } from "./incus.resolver.js";
 
 const EXPECTED_ACTIONS = {
   incusHealthy: AuthAction.READ_ANY,
+  incusPluginHealth: AuthAction.READ_ANY,
   incusConfig: AuthAction.READ_ANY,
   updateIncusConfig: AuthAction.UPDATE_ANY,
   jails: AuthAction.READ_ANY,

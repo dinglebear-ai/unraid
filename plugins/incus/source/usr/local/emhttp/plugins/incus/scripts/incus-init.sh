@@ -85,6 +85,9 @@ JAIL_AGENT_UID="${JAIL_AGENT_UID:-1000}"
 JAIL_AGENT_GID="${JAIL_AGENT_GID:-1000}"
 JAIL_BIND_MOUNTS="${JAIL_BIND_MOUNTS:-}"
 . "${EMHTTP}/scripts/config-validation.sh"
+# shellcheck disable=SC2034 # read by incus-health.sh
+PLUGIN_BUILD="$(head -n 1 "${EMHTTP}/build-id" 2>/dev/null || printf 'unknown')"
+. "${EMHTTP}/scripts/incus-health.sh"
 
 # The ACL rendered below currently covers IPv4 only. Fail closed instead of
 # accepting an IPv6 bridge address that bypasses the advertised containment.
@@ -261,6 +264,19 @@ if [ "$create_bridge" = true ]; then
     security.acls="$ACL_NAME" \
     security.acls.default.egress.action="$ACL_DEFAULT_EGRESS" \
     security.acls.default.ingress.action="$ACL_DEFAULT_INGRESS" </dev/null
+else
+  # An existing bridge keeps its addressing unless it is updated here. The
+  # ACL's bridge-subnet rule uses JAIL_SUBNET, so a stale bridge address would
+  # leave peers on the real subnet unfiltered.
+  for setting in "ipv4.address=${JAIL_SUBNET}" "ipv4.nat=${JAIL_NAT}" "ipv6.address=${JAIL_IPV6}"; do
+    key="${setting%%=*}"
+    want="${setting#*=}"
+    have="$("$INCUS" network get "$JAIL_BRIDGE" "$key" </dev/null)"
+    if [ "$have" != "$want" ]; then
+      log "updating bridge ${JAIL_BRIDGE} ${key}: ${have:-unset} -> ${want}"
+      "$INCUS" network set "$JAIL_BRIDGE" "${key}=${want}" </dev/null
+    fi
+  done
 fi
 "$INCUS" network set "$JAIL_BRIDGE" security.acls="$ACL_NAME" </dev/null
 "$INCUS" network set "$JAIL_BRIDGE" security.acls.default.egress.action="$ACL_DEFAULT_EGRESS" </dev/null
@@ -384,4 +400,7 @@ if ! PROFILE_BODY="$(render)" || [ -z "$PROFILE_BODY" ]; then
 fi
 printf '%s\n' "$PROFILE_BODY" | "$INCUS" profile edit "$JAIL_PROFILE"
 
+# A successful run is the only thing that clears a degraded status.
+incus_health_write ready "environment reconciled" reconciled ||
+  log "WARNING: environment reconciled but plugin-health was not updated"
 log "environment ready (bridge=${JAIL_BRIDGE} acl=${ACL_NAME} pool=${STORAGE_POOL_NAME})"

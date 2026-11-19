@@ -45,6 +45,10 @@ const loading = ref(true);
 const saving = ref(false);
 const error = ref<string | null>(null);
 const incusHealthy = ref(false);
+// plugin-health from the classic scripts: "degraded" means incusd answers but
+// the containment environment (ACL, bridge, profile) was not reconciled.
+const pluginHealth = ref<{ status: string; message: string } | null>(null);
+const environmentDegraded = computed(() => incusHealthy.value && pluginHealth.value?.status === "degraded");
 const jails = ref<Jail[]>([]);
 const newJailName = ref("");
 const newJailNameError = computed(() => validateContainerName(newJailName.value));
@@ -107,15 +111,21 @@ let statusRequestId = 0;
 async function refreshStatus() {
   const requestId = ++statusRequestId;
   try {
-    const data = await gql<{ incusHealthy: boolean; jails: Jail[] }>(STATUS_QUERY);
+    const data = await gql<{
+      incusHealthy: boolean;
+      incusPluginHealth: { status: string; message: string } | null;
+      jails: Jail[];
+    }>(STATUS_QUERY);
     if (requestId !== statusRequestId) return;
     incusHealthy.value = data.incusHealthy;
+    pluginHealth.value = data.incusPluginHealth ?? null;
     jails.value = data.jails;
     updateCpuSamplesAndHistory();
   } catch (e) {
     if (requestId !== statusRequestId) return;
     // Status is best-effort — don't block the rest of the page on it.
     incusHealthy.value = false;
+    pluginHealth.value = null;
   }
 }
 
@@ -1590,6 +1600,14 @@ onBeforeUnmount(() => {
       <div v-if="error" role="alert" class="mb-4 rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
         {{ error }}
       </div>
+      <div v-if="environmentDegraded" role="alert" data-testid="incus-degraded" class="mb-4 rounded-md border border-orange bg-orange/10 px-4 py-3 text-sm">
+        <p class="font-semibold">Container network setup did not finish.</p>
+        <p class="mt-1">{{ pluginHealth?.message }}</p>
+        <p class="mt-1 text-muted-foreground">
+          Running containers keep their last applied network settings, and recent changes to incus.cfg may not be in force.
+          Fix the cause, then press Apply on the Config tab. The plugin also retries on its own.
+        </p>
+      </div>
 
       <!-- Masthead -->
       <header class="mb-6 flex items-center gap-3 border-b border-border pb-4">
@@ -1602,7 +1620,7 @@ onBeforeUnmount(() => {
         <span class="text-sm font-semibold tracking-[0.14em] uppercase">Incus</span>
         <span class="text-xs text-muted-foreground">dev containers</span>
         <div class="ml-auto flex items-center gap-3">
-          <Badge :variant="incusHealthy ? 'green' : 'red'">{{ incusHealthy ? "Reachable" : "Not running" }}</Badge>
+          <Badge :variant="environmentDegraded ? 'orange' : incusHealthy ? 'green' : 'red'">{{ environmentDegraded ? "Degraded" : incusHealthy ? "Reachable" : "Not running" }}</Badge>
           <Button size="sm" variant="outline" @click="refreshStatus">Refresh</Button>
         </div>
       </header>
@@ -2035,7 +2053,7 @@ onBeforeUnmount(() => {
           <div class="rounded-lg border border-border bg-card p-3">
             <p class="text-[10px] font-semibold tracking-[0.08em] uppercase text-muted-foreground">Daemon</p>
             <div class="mt-1.5">
-              <Badge :variant="incusHealthy ? 'green' : 'red'">{{ incusHealthy ? "Reachable" : "Not running" }}</Badge>
+              <Badge :variant="environmentDegraded ? 'orange' : incusHealthy ? 'green' : 'red'">{{ environmentDegraded ? "Degraded" : incusHealthy ? "Reachable" : "Not running" }}</Badge>
             </div>
           </div>
           <div class="rounded-lg border border-border bg-card p-3">

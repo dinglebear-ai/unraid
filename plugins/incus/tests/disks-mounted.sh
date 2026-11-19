@@ -12,6 +12,7 @@ bin="$tmp/bin"
 emhttp="$tmp/emhttp"
 mkdir -p "$bin" "$emhttp/scripts"
 : >"$emhttp/scripts/incus-env.sh"
+ln -s "$ROOT/source/usr/local/emhttp/plugins/incus/scripts/incus-health.sh" "$emhttp/scripts/incus-health.sh"
 printf 'test-build\n' >"$emhttp/build-id"
 
 cat >"$bin/rc.incus" <<'EOF'

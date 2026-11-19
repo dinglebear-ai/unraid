@@ -14,6 +14,7 @@ bin="$tmp/bin"
 emhttp="$tmp/emhttp"
 mkdir -p "$bin" "$emhttp/scripts"
 : >"$emhttp/scripts/incus-env.sh"
+ln -s "$PLUGIN/scripts/incus-health.sh" "$emhttp/scripts/incus-health.sh"
 ln -s "$PLUGIN/templates" "$emhttp/templates"
 # Real containment validation. Storage probes are covered by classic-contract.sh
 # and depend on the host's /tmp filesystem type, so they are stubbed here.
@@ -53,6 +54,9 @@ case "$args" in
       *) echo "managed: true" ;;
     esac
     ;;
+  "network get agentbr0 ipv4.address") echo "${MOCK_BRIDGE_SUBNET:-198.18.0.1/24}" ;;
+  "network get agentbr0 ipv4.nat") echo true ;;
+  "network get agentbr0 ipv6.address") echo none ;;
   "network create agentbr0 "*) exit 0 ;;
   "network set agentbr0 security.acls=agent-block-lan")
     [[ "${MOCK_FAIL_ON:-}" = network-set ]] && { echo "Error: network busy" >&2; exit 1; }
@@ -113,14 +117,24 @@ no_trap_lines() {
   ! grep -q 'FAILED (exit' "$tmp/$1/log" || { cat "$tmp/$1/log" >&2; fail "$1: unexpected ERR trap line"; }
 }
 
-# Reconciling an existing environment succeeds with no trap noise and applies
-# non-empty ACL and profile bodies.
+# Reconciling an existing environment succeeds with no trap noise, applies
+# non-empty ACL and profile bodies, and clears a degraded health status.
+mkdir -p "$tmp/ok/state"
+printf 'status=degraded\ntime=t\nbuild=b\nmessage=seeded\n' >"$tmp/ok/state/plugin-health"
 run_init ok || { cat "$tmp/ok/stderr" >&2; fail "existing environment should reconcile"; }
+grep -Fxq 'status=ready' "$tmp/ok/state/plugin-health" || fail "success did not clear degraded"
 grep -Fq 'environment ready' "$tmp/ok/log" || fail "missing ready log"
 no_trap_lines ok
 grep -Fq 'name: agent-jail' "$tmp/ok/body-profile" || fail "profile body not rendered"
 grep -Fq 'Blocked LAN ranges' "$tmp/ok/body-acl" || fail "ACL body not rendered"
 ! grep -q '^ip ' "$tmp/ok/calls" || fail "managed bridge touched at the OS level"
+! grep -Eq '^network set agentbr0 ipv[46]\.' "$tmp/ok/calls" || fail "unchanged bridge addressing was rewritten"
+
+# An existing bridge whose address no longer matches incus.cfg is updated, so
+# the ACL's bridge-subnet rule covers the subnet actually in use.
+run_init drift MOCK_BRIDGE_SUBNET=10.99.0.1/24 || { cat "$tmp/drift/stderr" >&2; fail "drift run failed"; }
+grep -Fxq 'network set agentbr0 ipv4.address=198.18.0.1/24' "$tmp/drift/calls" || fail "bridge subnet not updated"
+! grep -Fq 'network set agentbr0 ipv4.nat=' "$tmp/drift/calls" || fail "unchanged NAT setting rewritten"
 
 # A first run creates every object, and the bridge carries its ACL from creation.
 run_init first MOCK_MODE=first-run || { cat "$tmp/first/stderr" >&2; fail "first run should succeed"; }

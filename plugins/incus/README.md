@@ -187,8 +187,11 @@ install it transactionally; older/classic-only artifacts do not. Requirements:
    rejected config is reported as `incus.cfg rejected:` and is not retried;
    other `FATAL:` lines, such as a missing storage pool, are retried. An
    Unraid alert is raised, and syslog has the full output under the
-   `incus-init` and `incus-init-output` tags. A later `rc.incus start` or `status` resets
-   `plugin-health` to `ready` before init runs, so check syslog too.
+   `incus-init` and `incus-init-output` tags. The settings page and dashboard
+   show the degraded state and its reason. Only a successful `incus-init.sh`
+   run clears it: restarting the daemon or running `rc.incus status` does not.
+   While degraded, the watchdog retries `incus-init.sh` with backoff, and it
+   restarts the daemon only after several consecutive failed health checks.
    Config Apply restores `incus.cfg.known-good` on reconciliation failure.
 
 To uninstall, use the Unraid plugin manager. It stops Incus, removes the API

@@ -13,15 +13,14 @@ PIDFILE="/var/run/incusd.pid"
 LXCFS_PID="/var/run/incus-lxcfs.pid"
 LOG="/var/log/incusd.log"
 WATCHDOG_PID="/var/run/incus-watchdog.pid"
-HEALTH_FILE="${INCUS_DIR}/plugin-health"
 BUILD_ID_FILE="${EMHTTP}/build-id"
 PLUGIN_BUILD="$(head -n 1 "$BUILD_ID_FILE" 2>/dev/null || printf 'unknown')"
+. "${EMHTTP}/scripts/incus-health.sh"
 
 log() { logger -t incus "$*"; printf '%s incus: %s\n' "$(date -Is)" "$*" >>"$LOG"; }
+# Daemon-level writes: a "ready" here keeps an existing "degraded" status.
 health() {
-  mkdir -p "$INCUS_DIR" 2>/dev/null || true
-  printf 'status=%s\ntime=%s\nbuild=%s\nmessage=%s\n' "$1" "$(date -Is)" "$PLUGIN_BUILD" "${2:-}" >"${HEALTH_FILE}.tmp" 2>/dev/null &&
-    mv -f "${HEALTH_FILE}.tmp" "$HEALTH_FILE" 2>/dev/null || true
+  incus_health_write "$1" "${2:-}" 2>>"$LOG" || true
 }
 rotate_log() {
   [ -f "$LOG" ] || return 0
@@ -145,7 +144,12 @@ stop() {
 status() {
   if "${PREFIX}/bin/incus" info </dev/null >/dev/null 2>&1; then
     health ready "status check passed"
-    echo "incus: RUNNING"; "${PREFIX}/bin/incus" list </dev/null 2>/dev/null
+    if [ "$(incus_health_status)" = degraded ]; then
+      echo "incus: RUNNING (degraded: $(sed -n 's/^message=//p' "$(incus_health_file)"))"
+    else
+      echo "incus: RUNNING"
+    fi
+    "${PREFIX}/bin/incus" list </dev/null 2>/dev/null
   else
     health stopped "status check found no daemon"
     echo "incus: STOPPED"

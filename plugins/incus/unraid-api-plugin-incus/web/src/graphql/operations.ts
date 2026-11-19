@@ -3,7 +3,7 @@ export const CONFIG_QUERY = `query { incusConfig {
   aclName aclBlock aclAllow aclDefaultEgress aclDefaultIngress jailProfile jailImage jailNesting jailCpu jailMemory
   jailWorkspaceRoot jailAgentUid jailAgentGid jailBindMounts tsAuthKeyConfigured dashboardWidgetEnable
 } }`;
-export const STATUS_QUERY = `query { incusHealthy jails { name status ipv4 cpuUsageNs memoryUsageBytes memoryTotalBytes } }`;
+export const STATUS_QUERY = `query { incusHealthy incusPluginHealth { status message } jails { name status ipv4 cpuUsageNs memoryUsageBytes memoryTotalBytes } }`;
 export const UPDATE_CONFIG_MUTATION = `mutation($input: IncusConfigInput!) { updateIncusConfig(input: $input) { enabled } }`;
 export const SET_JAIL_STATE_MUTATION = `mutation($name: String!, $action: JailAction!) { setJailState(name: $name, action: $action) }`;
 export const DELETE_JAIL_MUTATION = `mutation($name: String!) { deleteJail(name: $name) }`;
