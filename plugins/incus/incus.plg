@@ -2,14 +2,14 @@
 <!DOCTYPE PLUGIN [
   <!ENTITY name      "incus">
   <!ENTITY author    "Dinglebear AI">
-  <!ENTITY version   "20261119.001"> <!-- managed by .github/scripts/plugin_calver.py -->
+  <!ENTITY version   "20261119.002"> <!-- managed by .github/scripts/plugin_calver.py -->
   <!ENTITY launch    "Settings/IncusSettings">
   <!ENTITY gitURL    "https://raw.githubusercontent.com/dinglebear-ai/unraid/main/plugins/incus">
   <!ENTITY pluginURL "&gitURL;/&name;.plg">
-  <!ENTITY txz       "&name;-unraid-7.0.0-59-x86_64-1.txz">
+  <!ENTITY txz       "&name;-unraid-7.0.0-60-x86_64-1.txz">
   <!ENTITY txzURL    "https://github.com/dinglebear-ai/unraid/releases/download/incus-v&version;/&txz;">
-  <!ENTITY md5       "8e0a5a0f3024d33077f89c72cf37f1d3">
-  <!ENTITY sha256    "7fa5a4daa2844891e446449f0ac7af7462983e469a340d2e193fc91eed46c8be">
+  <!ENTITY md5       "eaa8818aec5922ac6c84a0e94716e4cc">
+  <!ENTITY sha256    "f407e5f0530c143b88c96398e53377f40d3252f52ad7b46067d309a904cdb080">
   <!ENTITY plugin    "/boot/config/plugins/&name;">
   <!ENTITY emhttp    "/usr/local/emhttp/plugins/&name;">
 ]>
@@ -17,6 +17,11 @@
 <PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" min="7.0.0" support="https://github.com/dinglebear-ai/unraid/issues">
 
 <CHANGES>
+###2026.11.19.002
+- Build 60 bundles libbsd (Debian trixie 0.12.2-2), so a fresh install on a
+  stock Unraid host passes preflight. Before, incusd needed a libbsd that only
+  some other plugins, such as Unassigned Devices Plus, installed.
+
 ###2026.11.19
 - Build 59: a failed environment setup at array start no longer stops incusd
   under running workloads. Setup is retried, then reported as degraded in

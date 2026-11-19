@@ -1,0 +1,16 @@
+# Shared libraries the Incus runtime may take from the host, because a stock
+# Unraid install provides them. verify-classic-package.sh fails when a binary
+# or library in /usr/local/incus needs any other library that the package does
+# not bundle. Add a name here only after checking that a stock Unraid host,
+# with no other plugins installed, provides it; otherwise bundle and pin the
+# library in runtime-libraries.lock.
+ld-linux-x86-64.so.2
+libacl.so.1
+libc.so.6
+libcap.so.2
+libdbus-1.so.3
+libgcc_s.so.1
+libm.so.6
+libseccomp.so.2
+libsqlite3.so.0
+libudev.so.1

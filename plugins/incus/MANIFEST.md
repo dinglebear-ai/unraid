@@ -3,11 +3,11 @@
 Release metadata is machine-readable in `release-manifest.json`. The currently
 tracked classic artifact is:
 
-- File: `packages/incus-unraid-7.0.0-59-x86_64-1.txz`
-- Size: 36,167,752 bytes
-- Entries: 323
-- MD5 (legacy Unraid downloader field only): `8e0a5a0f3024d33077f89c72cf37f1d3`
-- SHA-256: `7fa5a4daa2844891e446449f0ac7af7462983e469a340d2e193fc91eed46c8be`
+- File: `packages/incus-unraid-7.0.0-60-x86_64-1.txz`
+- Size: 36,199,904 bytes
+- Entries: 329
+- MD5 (legacy Unraid downloader field only): `eaa8818aec5922ac6c84a0e94716e4cc`
+- SHA-256: `f407e5f0530c143b88c96398e53377f40d3252f52ad7b46067d309a904cdb080`
 - Target: x86_64, glibc 2.38 or newer
 
 The Incus 7.0 runtime was repackaged from Debian trixie packages and has been
@@ -18,6 +18,16 @@ this artifact is verifiable against the repository hash and inventory but is
 not reproducible from upstream sources. Do not describe it as reproducible or
 independently attestable until those inputs are checked in or fetched from an
 immutable, checksummed lock manifest.
+
+`runtime-libraries.lock` is that lock for the libraries added since:
+`libbsd.so.0` and its dependency `libmd.so.0`, from Debian trixie, fetched from
+immutable snapshot.debian.org files and checked by `.deb` and library SHA-256.
+The build installs them with their Debian copyright files, and the bundled
+`libmd.so.0` was already byte-identical to the locked one.
+`stock-unraid-libraries.txt` lists the only libraries the runtime may take from
+the host. Package verification reads each runtime ELF file's direct
+dependencies and fails on any library that is neither bundled nor on that list,
+so a build host's extra libraries cannot hide a missing one.
 
 ## Payload boundaries
 
@@ -36,7 +46,7 @@ Required executable inventory includes `incus`, `incusd`, `lxcfs`, `nft`,
 The authoritative full inventory is the archive itself:
 
 ```bash
-tar -tvJf packages/incus-unraid-7.0.0-59-x86_64-1.txz
+tar -tvJf packages/incus-unraid-7.0.0-60-x86_64-1.txz
 ./scripts/verify-classic-package.sh
 ```
 
@@ -44,8 +54,10 @@ tar -tvJf packages/incus-unraid-7.0.0-59-x86_64-1.txz
 
 1. Build and test the API and both frontend bundles.
 2. Run `scripts/build-classic-package.sh NEW_BUILD PREVIOUS_TXZ`. It extracts
-   the previous complete binary payload, overlays tracked `source/`, embeds
-   this manifest, and includes the built API payload when `dist/` is present.
+   the previous complete binary payload, overlays tracked `source/`, installs
+   any library from `runtime-libraries.lock` that is missing or differs (this
+   downloads its pinned `.deb`), embeds this manifest, and includes the built
+   API payload when `dist/` is present.
 3. Update `incus.plg` and `release-manifest.json` with the new filename, MD5,
    SHA-256, version, and compatibility values.
 4. Run `scripts/verify-classic-package.sh`. It checks XML, shell syntax/static

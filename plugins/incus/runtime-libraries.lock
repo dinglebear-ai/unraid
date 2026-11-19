@@ -1,0 +1,8 @@
+# Pinned shared libraries bundled into /usr/local/incus/lib.
+# scripts/bundle-runtime-libraries.sh installs each one into the package stage
+# and scripts/verify-classic-package.sh checks the archive against it.
+# Sources are Debian trixie amd64 binary packages, fetched from immutable
+# snapshot.debian.org file URLs. libc6 >= 2.38 matches the plugin's glibc floor.
+# package version url deb_sha256 member soname lib_sha256
+libbsd0 0.12.2-2 https://snapshot.debian.org/file/e4894bcb1b3c28477aa780a66131998370c83aa3 e5a85986fa6bec3307ab1bc860736b478b331882bc45e17675a7bdf88eecb43a usr/lib/x86_64-linux-gnu/libbsd.so.0.12.2 libbsd.so.0 167e3fa2b6320ce61534a48002e6d0921f61d61eae88a669c117e23ed3de9f37
+libmd0 1.1.0-2+b1 https://snapshot.debian.org/file/b74e47ea74c82c695f1d18c5473851e1882392ce 7244ec3839b61fac0c1884fe08aaa040f26e8f1f35f1f5d3482eacefd30d1b44 usr/lib/x86_64-linux-gnu/libmd.so.0.1.0 libmd.so.0 1c8c51474c0eb67dabd9f1605097eb58195cdabef64427ae17cfcd2053c37479

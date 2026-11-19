@@ -145,6 +145,37 @@ for path in "${required_executables[@]}" usr/lib/x86_64-linux-gnu/lxcfs/liblxcfs
   fi
 done
 
+# Every library pinned in runtime-libraries.lock is bundled byte for byte,
+# with its Debian copyright file.
+while read -r package version _url _deb_sha _member soname lib_sha; do
+  case "$package" in ''|'#'*) continue ;; esac
+  bundled="$archive_tree/usr/local/incus/lib/$soname"
+  [ -f "$bundled" ] && [ ! -L "$bundled" ] || { echo "archive missing pinned library $soname ($package $version)" >&2; exit 1; }
+  [ "$(sha256sum "$bundled" | cut -d' ' -f1)" = "$lib_sha" ] || {
+    echo "bundled $soname does not match runtime-libraries.lock ($package $version)" >&2
+    exit 1
+  }
+  [ -s "$archive_tree/usr/local/incus/share/doc/$package/copyright" ] || {
+    echo "archive missing copyright for $package" >&2
+    exit 1
+  }
+done <runtime-libraries.lock
+
+# A build host can provide libraries a stock Unraid host does not, so ldd
+# alone passes when a bundled library is missing (libbsd.so.0 did). Check the
+# direct dependencies recorded in every runtime ELF file instead: each must be
+# bundled in usr/local/incus/lib or listed in stock-unraid-libraries.txt.
+stock_unraid_libs=" $(grep -v '^#' stock-unraid-libraries.txt | tr -s '[:space:]' ' ') "
+bundled_libs=" $(find "$archive_tree/usr/local/incus/lib" -maxdepth 1 \( -type f -o -type l \) -printf '%f ' ) "
+while IFS= read -r -d '' elf; do
+  head -c 4 "$elf" | grep -q 'ELF' || continue
+  while read -r needed; do
+    case "$bundled_libs$stock_unraid_libs" in *" $needed "*) continue ;; esac
+    echo "${elf#"$archive_tree"/} needs $needed, which is neither bundled nor provided by stock Unraid; bundle and pin it in runtime-libraries.lock" >&2
+    exit 1
+  done < <(readelf -d "$elf" 2>/dev/null | sed -n 's/.*(NEEDED).*\[\(.*\)\]/\1/p')
+done < <(find "$archive_tree/usr/local/incus" "$archive_tree/usr/lib/x86_64-linux-gnu/lxcfs" -type f -print0)
+
 release="$(jq -er '.release' release-manifest.json)"
 package_build="$(sed -n 's/.*<!ENTITY txz[[:space:]]*"&name;-unraid-7\.0\.0-\([0-9][0-9]*\)-x86_64-1\.txz".*/\1/p' incus.plg)"
 [ "$(cat "$archive_tree/usr/local/emhttp/plugins/incus/build-id")" = "${release}+${package_build}" ] || {

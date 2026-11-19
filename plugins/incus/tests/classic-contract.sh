@@ -30,6 +30,12 @@ done
 "$ROOT/tests/incus-init.sh"
 "$ROOT/tests/incus-health.sh"
 "$ROOT/tests/incus-watchdog.sh"
+"$ROOT/tests/bundle-runtime-libraries.sh"
+# Package builds install the pinned runtime libraries, and package
+# verification checks them and every runtime ELF dependency.
+grep -Fq '"$ROOT/scripts/bundle-runtime-libraries.sh" "$stage"' "$BUILD_CLASSIC"
+grep -Fq 'done <runtime-libraries.lock' "$VERIFY_CLASSIC"
+grep -Fq 'stock-unraid-libraries.txt' "$VERIFY_CLASSIC"
 # Apply runs under the API's 90 s timeout: it must wait only briefly for the
 # init lock and must not roll back a candidate because the lock was busy.
 grep -Fq 'INCUS_INIT_LOCK_TIMEOUT="${INCUS_APPLY_LOCK_TIMEOUT:-20}"' "$APPLY"
