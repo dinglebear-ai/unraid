@@ -24,3 +24,5 @@ Thumbs.db
 
 # plugin build artifacts are release assets, never tracked
 packages/*.txz
+# pinned .deb downloads cached by scripts/bundle-runtime-libraries.sh
+packages/debs/

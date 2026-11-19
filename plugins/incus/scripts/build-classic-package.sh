@@ -20,6 +20,8 @@ trap 'rm -rf "$stage"' EXIT
 
 tar -xJf "$previous" -C "$stage"
 cp -a "$ROOT/source/." "$stage/"
+# Pinned libraries a stock Unraid host does not provide (runtime-libraries.lock).
+"$ROOT/scripts/bundle-runtime-libraries.sh" "$stage"
 
 # Carry-forward archives may contain helpers from a historically broken build
 # where regular files were mode 0600. Restore the runtime contract explicitly

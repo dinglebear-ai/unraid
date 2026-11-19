@@ -18,7 +18,9 @@ build_fixture() {
     "$fixture/source/usr/local/emhttp/plugins/incus" \
     "$fixture/source/usr/local/incus/bin" \
     "$seed/usr/local/emhttp/plugins/incus"
-  cp "$ROOT/scripts/build-classic-package.sh" "$fixture/scripts/"
+  cp "$ROOT/scripts/build-classic-package.sh" "$ROOT/scripts/bundle-runtime-libraries.sh" "$fixture/scripts/"
+  # No pinned libraries: the fixture must build offline.
+  printf '# package version url deb_sha256 member soname lib_sha256\n' >"$fixture/runtime-libraries.lock"
   printf '{"release":"test"}\n' >"$fixture/release-manifest.json"
   printf '%s\n' \
     '- File: old' \
