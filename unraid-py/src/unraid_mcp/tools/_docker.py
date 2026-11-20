@@ -44,6 +44,8 @@ _DOCKER_QUERIES: dict[str, str] = {
 
 # Internal query used only for container ID resolution — not a public subaction.
 _DOCKER_RESOLVE_QUERY = "query ResolveContainerID { docker { containers { id names } } }"
+# Autostart merge needs the current list with order and wait (see update_autostart).
+_DOCKER_AUTOSTART_QUERY = "query DockerAutostart { docker { containers { id names autoStart autoStartOrder autoStartWait } } }"
 
 _DOCKER_MUTATIONS: dict[str, str] = {
     "start": "mutation StartContainer($id: PrefixedID!) { docker { start(id: $id) { id names state status } } }",
@@ -188,8 +190,10 @@ def _container_names(c: dict[str, Any]) -> list[str]:
 def _find_container(
     identifier: str, containers: list[dict[str, Any]], *, strict: bool = False
 ) -> dict[str, Any] | None:
+    # Docker reports names with a leading "/" ("/plex"); accept either spelling.
+    bare = identifier.lstrip("/")
     for c in containers:
-        if c.get("id") == identifier or identifier in _container_names(c):
+        if c.get("id") == identifier or bare in (n.lstrip("/") for n in _container_names(c)):
             return c
     if strict:
         return None
@@ -467,7 +471,30 @@ async def _handle_docker(
                     "autostart_entries is required for docker/update_autostart "
                     "(list of {id, autoStart, wait?})"
                 )
-            entries = validate_input_mapping_list(autostart_entries, "autostart_entries")
+            requested = validate_input_mapping_list(autostart_entries, "autostart_entries")
+            # updateAutostartConfiguration REPLACES the whole autostart list, so a
+            # one-container call would silently drop every other container. Merge the
+            # requested entries into the current set (order and wait preserved).
+            current_data = await _client.make_graphql_request(_DOCKER_AUTOSTART_QUERY)
+            containers = safe_get(current_data, "docker", "containers", default=[]) or []
+            current = sorted(
+                (c for c in containers if c.get("autoStart")),
+                key=lambda c: (c.get("autoStartOrder") is None, c.get("autoStartOrder") or 0),
+            )
+            merged: dict[str, dict[str, Any]] = {}
+            for c in current:
+                entry: dict[str, Any] = {"id": c["id"], "autoStart": True}
+                if c.get("autoStartWait") is not None:
+                    entry["wait"] = c["autoStartWait"]
+                merged[c["id"]] = entry
+            for req in requested:
+                if "id" not in req or "autoStart" not in req:
+                    raise ToolError("each autostart entry needs 'id' and 'autoStart'")
+                cid = await _resolve_container_id(
+                    str(req["id"]), strict=True, containers=containers
+                )
+                merged[cid] = {**merged.get(cid, {}), **req, "id": cid}
+            entries = [e for e in merged.values() if e.get("autoStart")]
             data = await _client.make_graphql_request(
                 _DOCKER_BULK_MUTATIONS["update_autostart"],
                 {"entries": entries, "persist": True},
@@ -476,6 +503,7 @@ async def _handle_docker(
                 "success": bool(safe_get(data, "docker", "updateAutostartConfiguration")),
                 "subaction": subaction,
                 "entry_count": len(entries),
+                "requested_count": len(requested),
             }
 
         # Single-id namespaced lifecycle mutations: start, stop, unpause, update_container.

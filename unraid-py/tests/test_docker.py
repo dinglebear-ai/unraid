@@ -814,7 +814,10 @@ class TestDockerSuccessDerivationAndCoverage:
     """Success must be derived from the GraphQL result, not hardcoded."""
 
     async def test_update_autostart_success(self, _mock_graphql: AsyncMock) -> None:
-        _mock_graphql.return_value = {"docker": {"updateAutostartConfiguration": True}}
+        _mock_graphql.side_effect = [
+            {"docker": {"containers": [{"id": _FULL_ID, "names": ["/plex"], "autoStart": False}]}},
+            {"docker": {"updateAutostartConfiguration": True}},
+        ]
         result = await _make_tool()(
             action="docker",
             subaction="update_autostart",
@@ -825,7 +828,80 @@ class TestDockerSuccessDerivationAndCoverage:
         # entries forwarded, persist hardcoded True
         sent = _mock_graphql.call_args.args[1]
         assert sent["persist"] is True
-        assert sent["entries"][0]["autoStart"] is True
+        assert sent["entries"] == [{"id": _FULL_ID, "autoStart": True, "wait": 5}]
+
+    async def test_update_autostart_merges_with_current_list(
+        self, _mock_graphql: AsyncMock
+    ) -> None:
+        """The mutation replaces the whole list; one entry must not drop the others."""
+        id_a, id_b, id_c = (f"{c * 64}:local" for c in "abc")
+        _mock_graphql.side_effect = [
+            {
+                "docker": {
+                    "containers": [
+                        {"id": id_b, "names": ["b"], "autoStart": True, "autoStartOrder": 2},
+                        {
+                            "id": id_a,
+                            "names": ["a"],
+                            "autoStart": True,
+                            "autoStartOrder": 1,
+                            "autoStartWait": 10,
+                        },
+                        {"id": id_c, "names": ["c"], "autoStart": False},
+                    ]
+                }
+            },
+            {"docker": {"updateAutostartConfiguration": True}},
+        ]
+        result = await _make_tool()(
+            action="docker",
+            subaction="update_autostart",
+            autostart_entries=[{"id": "c", "autoStart": True}],
+        )
+        sent = _mock_graphql.call_args.args[1]["entries"]
+        assert sent == [
+            {"id": id_a, "autoStart": True, "wait": 10},
+            {"id": id_b, "autoStart": True},
+            {"id": id_c, "autoStart": True},
+        ]
+        assert result["entry_count"] == 3
+        assert result["requested_count"] == 1
+
+    async def test_update_autostart_accepts_bare_name_for_slash_prefixed_container(
+        self, _mock_graphql: AsyncMock
+    ) -> None:
+        _mock_graphql.side_effect = [
+            {"docker": {"containers": [{"id": _FULL_ID, "names": ["/syncthing"]}]}},
+            {"docker": {"updateAutostartConfiguration": True}},
+        ]
+        await _make_tool()(
+            action="docker",
+            subaction="update_autostart",
+            autostart_entries=[{"id": "syncthing", "autoStart": True}],
+        )
+        assert _mock_graphql.call_args.args[1]["entries"] == [{"id": _FULL_ID, "autoStart": True}]
+
+    async def test_update_autostart_disable_removes_only_that_entry(
+        self, _mock_graphql: AsyncMock
+    ) -> None:
+        id_a, id_b = (f"{c * 64}:local" for c in "ab")
+        _mock_graphql.side_effect = [
+            {
+                "docker": {
+                    "containers": [
+                        {"id": id_a, "names": ["a"], "autoStart": True, "autoStartOrder": 1},
+                        {"id": id_b, "names": ["b"], "autoStart": True, "autoStartOrder": 2},
+                    ]
+                }
+            },
+            {"docker": {"updateAutostartConfiguration": True}},
+        ]
+        await _make_tool()(
+            action="docker",
+            subaction="update_autostart",
+            autostart_entries=[{"id": id_a, "autoStart": False}],
+        )
+        assert _mock_graphql.call_args.args[1]["entries"] == [{"id": id_b, "autoStart": True}]
 
     async def test_update_containers_success(self, _mock_graphql: AsyncMock) -> None:
         _mock_graphql.return_value = {"docker": {"updateContainers": [{"id": _FULL_ID}]}}
