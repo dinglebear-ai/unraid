@@ -107,7 +107,9 @@ Pin production containers to the reported digest when immutability is required.
 ## Release automation liveness
 
 The daily `release-liveness.yml` monitor opens a `Release automation liveness failure`
-issue when releasable commits exist but no release PR has updated for 48 hours. Rotate
+issue when releasable commits exist and the open release PR has not caught up with
+the newest commit on `main` within 48 hours. A release PR that is current with `main`
+is healthy however long it waits to be merged. When the monitor fires, rotate
 `RELEASE_PLEASE_TOKEN` or replace the expiring PAT with a repository-scoped GitHub App
 credential, then rerun release-please.
 
