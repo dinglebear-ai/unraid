@@ -28,16 +28,16 @@
     "class-validator": "*"
   },
   "dependencies": {
-    "graphql-subscriptions": "^3.0.0",
+    "graphql-subscriptions": "^3.1.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@nestjs/common": "11.1.28",
+    "@nestjs/common": "11.2.11",
     "@nestjs/config": "4.0.4",
-    "@nestjs/graphql": "13.4.2",
+    "@nestjs/graphql": "13.4.5",
     "@stryker-mutator/core": "^10.1.1",
     "@stryker-mutator/vitest-runner": "^10.1.1",
-    "@types/ws": "^8.5.13",
+    "@types/ws": "^8.18.2",
     "@unraid/shared": "file:.ci-stubs/unraid-shared",
     "@vitest/coverage-v8": "^5.1.2",
     "class-transformer": "0.5.1",
