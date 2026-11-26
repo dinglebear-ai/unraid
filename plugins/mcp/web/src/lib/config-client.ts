@@ -5,6 +5,11 @@
  * The token script may not have executed before our element mounts, so we
  * poll briefly for window.csrf_token before the first mutating request —
  * the same race guard incus-unraid's graphql-client uses.
+ *
+ * POSTs are form-encoded: webGui/include/local_prepend.php runs before
+ * config.php and accepts the token only as the `csrf_token` form field. A JSON
+ * body with an X-Csrf-Token header is rejected with an empty response before
+ * config.php runs. The action payload travels as JSON in the `payload` field.
  */
 
 const ENDPOINT = "/plugins/unraid-mcp/include/config.php";
@@ -60,13 +65,46 @@ async function csrfToken(): Promise<string> {
   throw new Error("Unraid CSRF token is unavailable; reload the webGUI and try again");
 }
 
+async function readJson(res: Response, what: string): Promise<unknown> {
+  const text = await res.text();
+  let body: unknown = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    body = null;
+  }
+  const error = (body as { error?: unknown } | null)?.error;
+  if (!res.ok) {
+    throw new Error(typeof error === "string" ? error : `${what} failed: HTTP ${res.status}`);
+  }
+  if (body === null || typeof body !== "object") {
+    throw new Error(
+      `${what} failed: the webGUI returned no JSON (session expired or CSRF check failed?); reload the page and try again`,
+    );
+  }
+  return body;
+}
+
 async function request(init?: RequestInit): Promise<ConfigPayload> {
   const res = await fetch(ENDPOINT, { credentials: "include", ...init });
-  const body = await res.json().catch(() => null);
-  if (!res.ok) {
-    throw new Error(body?.error ?? `request failed: HTTP ${res.status}`);
-  }
-  return body as ConfigPayload;
+  return (await readJson(res, "request")) as ConfigPayload;
+}
+
+/** Form-encode a POST so Unraid's global CSRF gate sees `csrf_token`. */
+export async function postBody(payload: object): Promise<URLSearchParams> {
+  return new URLSearchParams({
+    csrf_token: await csrfToken(),
+    payload: JSON.stringify(payload),
+  });
+}
+
+async function postAction(payload: object, what: string): Promise<unknown> {
+  const res = await fetch(ENDPOINT, {
+    method: "POST",
+    credentials: "include",
+    body: await postBody(payload),
+  });
+  return readJson(res, what);
 }
 
 export function loadConfig(): Promise<ConfigPayload> {
@@ -74,14 +112,7 @@ export function loadConfig(): Promise<ConfigPayload> {
 }
 
 async function post(payload: object): Promise<ConfigPayload> {
-  return request({
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Csrf-Token": await csrfToken(),
-    },
-    body: JSON.stringify(payload),
-  });
+  return (await postAction(payload, "request")) as ConfigPayload;
 }
 
 /** Save changed keys. Secrets: send a value to replace, "" to clear, omit to keep. */
@@ -97,38 +128,14 @@ export function serviceAction(op: ServiceOp): Promise<ConfigPayload> {
 
 /** Fetch a stored secret value (session + CSRF gated server-side). */
 export async function revealSecret(key: string): Promise<string> {
-  const res = await fetch(ENDPOINT, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Csrf-Token": await csrfToken(),
-    },
-    body: JSON.stringify({ action: "reveal", key }),
-  });
-  const body = await res.json().catch(() => null);
-  if (!res.ok) {
-    throw new Error(body?.error ?? `reveal failed: HTTP ${res.status}`);
-  }
-  return String(body?.value ?? "");
+  const body = (await postAction({ action: "reveal", key }, "reveal")) as { value?: unknown };
+  return String(body.value ?? "");
 }
 
 /** Tail the service log (session + CSRF gated server-side). */
 export async function fetchLogs(lines = 200): Promise<string> {
-  const res = await fetch(ENDPOINT, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Csrf-Token": await csrfToken(),
-    },
-    body: JSON.stringify({ action: "logs", lines }),
-  });
-  const body = await res.json().catch(() => null);
-  if (!res.ok) {
-    throw new Error(body?.error ?? `log fetch failed: HTTP ${res.status}`);
-  }
-  return String(body?.log ?? "");
+  const body = (await postAction({ action: "logs", lines }, "log fetch")) as { log?: unknown };
+  return String(body.log ?? "");
 }
 
 /** Ask GitHub for the latest release tag (explicit user action). */
@@ -148,18 +155,7 @@ export async function resetServer(): Promise<ConfigPayload> {
 
 /** POST returning a typed JSON object (not the full ConfigPayload). */
 async function postJson<T>(payload: object): Promise<T> {
-  const res = await fetch(ENDPOINT, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Csrf-Token": await csrfToken(),
-    },
-    body: JSON.stringify(payload),
-  });
-  const body = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(body?.error ?? `request failed: HTTP ${res.status}`);
-  return (body ?? {}) as T;
+  return (await postAction(payload, "request")) as T;
 }
 
 /** Cheap live poll for the dashboard (service + process, no env reads). */

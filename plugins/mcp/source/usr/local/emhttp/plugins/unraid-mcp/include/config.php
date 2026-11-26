@@ -4,14 +4,16 @@
  *
  * GET  -> current config as JSON. Secret values are never returned; each secret
  *         is reported only as "<KEY>_configured": bool (write-only pattern).
- * POST -> JSON body of {key: value} changes; merges into the env file
+ * POST -> form fields `csrf_token` and `payload` (a JSON action object, e.g.
+ *         {"action":"save","changes":{...}}); merges into the env file
  *         atomically, enforces permissions, restarts the service when running,
- *         returns the fresh GET payload.
+ *         returns the fresh GET payload. A raw JSON body is still accepted for
+ *         callers that satisfy the CSRF gate some other way.
  *
  * Auth: served by emhttp's nginx, so the webGUI session is already required.
- * CSRF: POSTs must carry the session token (header X-Csrf-Token or field
- * csrf_token) matching /var/local/emhttp/var.ini — same model the stock
- * webGUI update.php uses.
+ * CSRF: webGui/include/local_prepend.php runs first and accepts the session
+ * token only as the `csrf_token` POST field (not an X-Csrf-Token header),
+ * matching /var/local/emhttp/var.ini — same model the stock update.php uses.
  */
 
 header('Content-Type: application/json');
@@ -565,6 +567,14 @@ function current_payload(): array
     ];
 }
 
+/** The JSON action for a POST: the form `payload` field the settings UI sends
+ *  (so local_prepend.php sees `csrf_token`), else a raw JSON body. */
+function request_body_json(array $post, string $raw): string
+{
+    $payload = $post['payload'] ?? null;
+    return is_string($payload) ? $payload : $raw;
+}
+
 if (defined('UNRAID_MCP_CONFIG_LIBRARY_ONLY') && UNRAID_MCP_CONFIG_LIBRARY_ONLY === true) {
     return;
 }
@@ -581,7 +591,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // (webGui/include/local_prepend.php) before this script ran — the same gate
 // every stock webGUI page uses. No plugin-level re-check needed.
 
-$body = json_decode(file_get_contents('php://input') ?: '', true);
+$body = json_decode(request_body_json($_POST, file_get_contents('php://input') ?: ''), true);
 if (!is_array($body)) {
     fail(400, 'invalid json body');
 }
