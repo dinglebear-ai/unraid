@@ -83,6 +83,13 @@ class TestDockerActions:
         result = await tool_fn(action="docker", subaction="list")
         assert len(result["containers"]) == 1
 
+    async def test_list_handles_null_docker_root(self, _mock_graphql: AsyncMock) -> None:
+        # Query.docker is nullable upstream (#485): Docker disabled returns null.
+        _mock_graphql.return_value = {"docker": None}
+        tool_fn = _make_tool()
+        result = await tool_fn(action="docker", subaction="list")
+        assert result["containers"] == []
+
     async def test_list_caps_default(self, _mock_graphql: AsyncMock) -> None:
         # Tool param default is 20.
         _mock_graphql.return_value = {

@@ -241,6 +241,9 @@ respect-type-ignore-comments = true
 # ============================================================================
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+# Explicit so pytest-asyncio >= 1.5 does not raise its unset-scope deprecation
+# warning, which filterwarnings="error" turns into an INTERNALERROR.
+asyncio_default_fixture_loop_scope = "function"
 cache_dir = ".cache/.pytest_cache"
 # Put the repo root on sys.path so tests can import the top-level `scripts`
 # package (a namespace package with no __init__.py), e.g.

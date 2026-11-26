@@ -40,6 +40,13 @@ class TestVmValidation:
 
 
 class TestVmActions:
+    async def test_list_handles_null_vms_root(self, _mock_graphql: AsyncMock) -> None:
+        # Query.vms is nullable upstream (#485): VM manager disabled returns null.
+        _mock_graphql.return_value = {"vms": None}
+        tool_fn = _make_tool()
+        result = await tool_fn(action="vm", subaction="list")
+        assert result["vms"] == []
+
     async def test_list(self, _mock_graphql: AsyncMock) -> None:
         _mock_graphql.return_value = {
             "vms": {
