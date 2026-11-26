@@ -169,6 +169,17 @@ jobs:
         run: |
           test -n "$UNRAID_API_URL"
           test -n "$UNRAID_API_KEY"
+      - name: Trust Let's Encrypt Gen Y roots for the live API
+        # Unraid's myunraid.net certs now chain to ISRG Root YR/YE, and the bundle
+        # nginx serves stops at the YR1/YE1 intermediate (no X1/X2 cross-sign).
+        # certifi does not ship the Gen Y roots yet, so verification failed with
+        # CERTIFICATE_VERIFY_FAILED. Keep verification on: extend certifi's bundle
+        # with the pinned roots and pass it through the CA-bundle-path contract.
+        run: |
+          bundle="${RUNNER_TEMP}/unraid-live-ca.pem"
+          cat "$(uv run --frozen python -c 'import certifi; print(certifi.where())')" \
+            "${GITHUB_WORKSPACE}/.github/ci/isrg-gen-y-roots.pem" > "$bundle"
+          echo "UNRAID_VERIFY_SSL=${bundle}" >> "$GITHUB_ENV"
       - name: Validate every runtime operation against the live GraphQL schema
         run: uv run python -m unraid_mcp.devtools.live_schema_validation
       - name: Run blocking live transport and packaged-container smoke
