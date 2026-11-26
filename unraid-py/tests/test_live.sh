@@ -461,7 +461,9 @@ run_phase4() {
   call_unraid "unraid disk/log_files"         "disk"         "log_files"
   call_unraid "unraid docker/list"            "docker"       "list"
   call_unraid "unraid docker/networks"        "docker"       "networks"
-  call_unraid "unraid vm/list"                "vm"           "list"
+  call_unraid_optional "unraid vm/list"       "vm"           "list" \
+    'VMs are not available' \
+    "VM service is disabled on this appliance"
   call_unraid "unraid notification/overview"  "notification" "overview"
   call_unraid "unraid notification/list"      "notification" "list"
   call_unraid "unraid notification/recalculate" "notification" "recalculate"
