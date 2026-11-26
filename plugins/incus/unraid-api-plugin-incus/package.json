@@ -46,6 +46,17 @@
     "class-validator": "0.15.1"
   },
   "overrides": {
-    "qs": "^6.15.3"
+    "qs": "^6.15.3",
+    "@graphql-tools/utils": "^12.0.2",
+    "@stryker-mutator/core": {
+      "minimatch": "^11.0.1"
+    },
+    "@nestjs/graphql": {
+      "ws": "^8.21.1",
+      "@graphql-tools/utils": "^12.0.2",
+      "subscriptions-transport-ws": {
+        "ws": "^7.5.10"
+      }
+    }
   }
 }

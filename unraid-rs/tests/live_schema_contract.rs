@@ -164,6 +164,12 @@ fn collect_incompatibilities(path: &str, vendored: &Value, live: &Value, out: &m
                 ));
             }
         }
+        // A vendored output field may be the nullable form of a live non-null
+        // type: clients that handle `null` stay correct against the stricter
+        // server (unraid/api ships `vms`/`docker` nullable, see #485/#486).
+        // Arguments and input fields stay exact, since widening those breaks writes.
+        (Value::String(vendored_ty), Value::String(live_ty))
+            if is_output_field_type(path) && live_ty == &format!("{vendored_ty}!") => {}
         _ if vendored != live => {
             out.push(format!(
                 "{path}: vendored SDL={vendored}, live schema={live}"
@@ -171,6 +177,10 @@ fn collect_incompatibilities(path: &str, vendored: &Value, live: &Value, out: &m
         }
         _ => {}
     }
+}
+
+fn is_output_field_type(path: &str) -> bool {
+    path.ends_with(".type") && path.contains(".fields.") && !path.contains(".args.")
 }
 
 #[test]

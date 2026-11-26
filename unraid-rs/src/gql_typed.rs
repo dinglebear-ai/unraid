@@ -3207,7 +3207,7 @@ pub struct Port(pub i32);
 #[cynic(graphql_type = "Query")]
 #[serde(rename_all = "camelCase")]
 pub struct DockerReadQuery {
-    pub docker: DockerRead,
+    pub docker: Option<DockerRead>, // Query.docker: Docker (nullable since unraid/api 023a3ca0)
 }
 
 #[derive(cynic::QueryFragment, serde::Serialize)]
@@ -3257,7 +3257,7 @@ pub struct DockerLogsVars {
 #[cynic(graphql_type = "Query", variables = "DockerLogsVars")]
 #[serde(rename_all = "camelCase")]
 pub struct DockerLogsReadQuery {
-    pub docker: DockerLogsNs,
+    pub docker: Option<DockerLogsNs>, // Query.docker: Docker (nullable)
 }
 
 #[derive(cynic::QueryFragment, serde::Serialize)]
@@ -3297,7 +3297,7 @@ pub struct DockerContainerLogLineRead {
 #[cynic(graphql_type = "Query")]
 #[serde(rename_all = "camelCase")]
 pub struct VmsReadQuery {
-    pub vms: VmsRead,
+    pub vms: Option<VmsRead>, // Query.vms: Vms (nullable since unraid/api 023a3ca0)
 }
 
 #[derive(cynic::QueryFragment, serde::Serialize)]

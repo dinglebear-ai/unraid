@@ -461,7 +461,9 @@ run_phase4() {
   call_unraid "unraid disk/log_files"         "disk"         "log_files"
   call_unraid "unraid docker/list"            "docker"       "list"
   call_unraid "unraid docker/networks"        "docker"       "networks"
-  call_unraid "unraid vm/list"                "vm"           "list"
+  call_unraid_optional "unraid vm/list"       "vm"           "list" \
+    'VMs are not available' \
+    "VM service is disabled on this appliance"
   call_unraid "unraid notification/overview"  "notification" "overview"
   call_unraid "unraid notification/list"      "notification" "list"
   call_unraid "unraid notification/recalculate" "notification" "recalculate"
@@ -595,15 +597,33 @@ run_docker_mode() {
   fi
 
   section "Docker · Start"
-  docker run -d \
+  # Forward a CA-bundle path (UNRAID_VERIFY_SSL=/path/ca.pem) so the packaged
+  # server verifies the live API with the same trust as the host. Copy it in with
+  # `docker cp` rather than a bind mount: on a containerised runner the host's
+  # Docker daemon cannot see paths inside the job container.
+  local ca_in_container="/tmp/unraid-live-ca.pem"
+  local -a tls_env=()
+  local ca_bundle=""
+  if [[ -n "${UNRAID_VERIFY_SSL:-}" && -f "${UNRAID_VERIFY_SSL}" ]]; then
+    ca_bundle="${UNRAID_VERIFY_SSL}"
+    tls_env=(-e "UNRAID_VERIFY_SSL=${ca_in_container}")
+  fi
+  docker create \
     --name "$container" \
     -p "${port}:6970" \
+    "${tls_env[@]}" \
     -e UNRAID_MCP_TRANSPORT=streamable-http \
     -e UNRAID_MCP_BEARER_TOKEN="ci-integration-token" \
     -e UNRAID_MCP_DISABLE_HTTP_AUTH=false \
     -e UNRAID_API_URL="${UNRAID_API_URL:-http://127.0.0.1:1}" \
     -e UNRAID_API_KEY="${UNRAID_API_KEY:-ci-fake-key}" \
     "$image" >/dev/null 2>&1
+  if [[ -n "$ca_bundle" ]] && ! docker cp "$ca_bundle" "${container}:${ca_in_container}" >/dev/null 2>&1; then
+    fail "docker cp CA bundle into $container"
+    docker rm -f "$container" >/dev/null 2>&1 || true
+    return 1
+  fi
+  docker start "$container" >/dev/null 2>&1
   pass "docker run $container"
 
   # Set token for subsequent phases

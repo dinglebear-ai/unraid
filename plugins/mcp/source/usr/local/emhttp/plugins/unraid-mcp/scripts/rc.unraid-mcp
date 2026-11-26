@@ -47,6 +47,17 @@ pid_matches() {
     tr '\0' ' ' <"/proc/${pid}/cmdline" 2>/dev/null | grep -qE '(^|[ /])runraid +serve( |$)'
 }
 
+# Startup-only liveness: the child may not have exec'd runraid yet, so its
+# cmdline can still be the forking rc shell. Treat only a vanished or zombie
+# process as exited; pid_matches stays the strict check for status/stop.
+startup_alive() {
+    local pid="$1" state
+    [ -n "${pid}" ] && [ -r "/proc/${pid}/stat" ] || return 1
+    # Field 3 follows "(comm)", which may itself contain spaces or parens.
+    state="$(sed -e 's/^.*) //' "/proc/${pid}/stat" 2>/dev/null | cut -d' ' -f1)"
+    [ -n "${state}" ] && [ "${state}" != "Z" ] && [ "${state}" != "X" ]
+}
+
 overlay_valid() {
     [ -f "${OVERLAY_BIN}" ] \
         && [ ! -L "${OVERLAY_BIN}" ] \
@@ -208,13 +219,16 @@ start() {
     url="$(health_url)"
 
     for _ in $(seq 1 30); do
-        if ! pid_matches "${pid}"; then
+        if ! startup_alive "${pid}"; then
             log "FATAL: server exited during startup — check ${LOG_FILE}"
             rm -f "${PID_FILE}"
             serve_stop
             return 1
         fi
-        if curl -fsS --noproxy '*' --max-time 2 "${url}" >/dev/null 2>&1; then
+        # Require our own child to be serving, so a stray listener on the port
+        # cannot pass the health check for a process that is still starting.
+        if pid_matches "${pid}" \
+            && curl -fsS --noproxy '*' --max-time 2 "${url}" >/dev/null 2>&1; then
             log "started (pid ${pid}, health ${url})"
             serve_start
             return 0
@@ -225,7 +239,7 @@ start() {
     log "FATAL: server did not become healthy at ${url} within 30 seconds"
     kill "${pid}" 2>/dev/null || true
     sleep 1
-    pid_matches "${pid}" && kill -9 "${pid}" 2>/dev/null || true
+    startup_alive "${pid}" && kill -9 "${pid}" 2>/dev/null || true
     rm -f "${PID_FILE}"
     serve_stop
     return 1

@@ -59,10 +59,15 @@ jobs:
           if [[ "$releasable_commits" -eq 0 ]]; then
             healthy=true
           elif [[ -n "$release_pr" ]]; then
+            # release-please only rewrites its PR when main moves. A PR that is
+            # already current with main's newest commit is healthy however old
+            # it is (it is just waiting to be merged); only a PR that has not
+            # followed a main commit within 48 hours means the automation stalled.
             updated_at="$(jq -r .updatedAt <<<"$release_pr")"
             updated_epoch="$(date -u -d "$updated_at" +%s)"
+            main_epoch="$(git log -1 --format=%ct origin/main)"
             now_epoch="$(date -u +%s)"
-            if (( now_epoch - updated_epoch < 172800 )); then
+            if (( updated_epoch >= main_epoch || now_epoch - main_epoch < 172800 )); then
               healthy=true
             fi
           fi
