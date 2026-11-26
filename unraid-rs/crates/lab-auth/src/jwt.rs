@@ -7,7 +7,7 @@ use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, deco
 use rsa::pkcs8::{DecodePrivateKey, EncodePrivateKey, EncodePublicKey, LineEnding};
 use rsa::rand_core::{TryCryptoRng, TryRng, UnwrapErr};
 use rsa::traits::PublicKeyParts;
-use rsa::{RsaPrivateKey, RsaPublicKey};
+use rsa::{PrivateKey, PublicKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -78,11 +78,11 @@ impl SigningKeys {
             let pem = std::fs::read_to_string(path).map_err(|error| {
                 AuthError::Storage(format!("read signing key `{}`: {error}", path.display()))
             })?;
-            RsaPrivateKey::from_pkcs8_pem(&pem)
+            PrivateKey::from_pkcs8_pem(&pem)
                 .map_err(|error| AuthError::Storage(format!("parse signing key PEM: {error}")))?
         } else {
             let mut rng = UnwrapErr(SystemRng);
-            let key = RsaPrivateKey::new(&mut rng, 2048).map_err(|error| {
+            let key = PrivateKey::new(&mut rng, 2048).map_err(|error| {
                 AuthError::Storage(format!("generate RSA signing key: {error}"))
             })?;
             let pem = key
@@ -149,11 +149,11 @@ impl SigningKeys {
         &self.jwks
     }
 
-    fn from_private_key(private_key: &RsaPrivateKey) -> Result<Self, AuthError> {
+    fn from_private_key(private_key: &PrivateKey) -> Result<Self, AuthError> {
         let private_pem = private_key
             .to_pkcs8_pem(LineEnding::LF)
             .map_err(|error| AuthError::Storage(format!("encode signing key PEM: {error}")))?;
-        let public_key = RsaPublicKey::from(private_key);
+        let public_key = PublicKey::from(private_key);
         let public_pem = public_key
             .to_public_key_pem(LineEnding::LF)
             .map_err(|error| AuthError::Storage(format!("encode public key PEM: {error}")))?;
