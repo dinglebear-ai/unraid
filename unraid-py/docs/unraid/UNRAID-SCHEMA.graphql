@@ -3314,7 +3314,7 @@ type Query {
   vars: Vars!
 
   """Get information about all VMs on the system"""
-  vms: Vms!
+  vms: Vms
   parityHistory: [ParityCheck!]!
   array: UnraidArray!
   customization: Customization
@@ -3326,7 +3326,7 @@ type Query {
 
   """Network interfaces"""
   networkInterfaces: [InfoNetworkInterface!]!
-  docker: Docker!
+  docker: Docker
   disks: [Disk!]!
   assignableDisks: [Disk!]!
   disk(id: PrefixedID!): Disk!
