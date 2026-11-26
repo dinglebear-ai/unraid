@@ -43,6 +43,11 @@ updates:
     directory: "/unraid-py"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    ignore:
+      # The runtime image must match the uv builder's Python minor (3.12), or the
+      # copied venv breaks. tests/test_review_regressions.py enforces this.
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     groups:
       minor-and-patch:
         patterns: ["*"]
@@ -78,6 +83,11 @@ updates:
     directory: "/unraid-rs/config"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    ignore:
+      # The builder image is the one fixed Rust version in the build matrix and
+      # tracks the MSRV pin (rust-version / rust-toolchain.toml). Bump it with them.
+      - dependency-name: "rust"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     groups:
       minor-and-patch:
         patterns: ["*"]
@@ -91,6 +101,11 @@ updates:
     directory: "/unraid-py/tests/mock"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    ignore:
+      # TypeScript 7 drops the JS compiler API that vue-tsc and our
+      # schema-contract test use. Revisit when they support it.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         patterns: ["*"]
@@ -102,6 +117,11 @@ updates:
     directory: "/plugins/mcp/web"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    ignore:
+      # TypeScript 7 drops the JS compiler API that vue-tsc and our
+      # schema-contract test use. Revisit when they support it.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         patterns: ["*"]
@@ -113,6 +133,11 @@ updates:
     directory: "/plugins/codex/web-src"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    ignore:
+      # TypeScript 7 drops the JS compiler API that vue-tsc and our
+      # schema-contract test use. Revisit when they support it.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         patterns: ["*"]
@@ -124,6 +149,14 @@ updates:
     directory: "/plugins/incus/unraid-api-plugin-incus"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    ignore:
+      # TypeScript 7 drops the JS compiler API that src/schema-contract.test.ts uses.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # The Unraid API host provides NestJS at runtime; these dev pins mirror its
+      # versions and move only when the host does.
+      - dependency-name: "@nestjs/*"
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         patterns: ["*"]
@@ -135,6 +168,11 @@ updates:
     directory: "/plugins/incus/unraid-api-plugin-incus/web"
     schedule: { interval: "weekly" }
     commit-message: { prefix: "deps", prefix-development: "deps", include: "scope" }
+    ignore:
+      # TypeScript 7 drops the JS compiler API that vue-tsc and our
+      # schema-contract test use. Revisit when they support it.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         patterns: ["*"]

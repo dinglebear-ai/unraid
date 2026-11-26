@@ -43,7 +43,7 @@ def _call_kwargs(action: str, subaction: str) -> dict[str, Any]:
         "network_id": "network-1",
         "container_ids": [CONTAINER_ID],
         "with_image": False,
-        "autostart_entries": [{"id": "docker-1", "autostart": True}],
+        "autostart_entries": [{"id": "value", "autoStart": True}],
         "organizer_input": organizer_input,
         "vm_id": "vm-1",
         "notification_id": "notification-1",
