@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.4](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.6.3...unraid-rs-v0.6.4) (2026-11-26)
+
+
+### Bug Fixes
+
+* **deps:** patch open rustls and incus Dependabot alerts ([#517](https://github.com/dinglebear-ai/unraid/issues/517)) ([0a9b5ed](https://github.com/dinglebear-ai/unraid/commit/0a9b5ed1b18ccd2c192c9ce83777e95b9aefdd13))
+* **schema:** accept nullable Query.docker/vms from unraid/api ([#516](https://github.com/dinglebear-ai/unraid/issues/516)) ([43f3e0f](https://github.com/dinglebear-ai/unraid/commit/43f3e0f75ecd63de2c4dc8448e83433996efd459)), closes [#485](https://github.com/dinglebear-ai/unraid/issues/485) [#486](https://github.com/dinglebear-ai/unraid/issues/486)
+
+
+### Dependencies
+
+* **deps:** bump the minor-and-patch group across 1 directory with 8 updates ([#520](https://github.com/dinglebear-ai/unraid/issues/520)) ([4e39b0f](https://github.com/dinglebear-ai/unraid/commit/4e39b0f766de3980991ad29f5cd670289cca38f7))
+
 ## [0.6.3](https://github.com/dinglebear-ai/unraid/compare/unraid-rs-v0.6.2...unraid-rs-v0.6.3) (2026-10-24)
 
 
