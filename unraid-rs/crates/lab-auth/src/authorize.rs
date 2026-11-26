@@ -597,7 +597,7 @@ pub mod tests {
     use axum::http::{Request, StatusCode, header};
     use base64::Engine;
     use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
-    use rsa::RsaPrivateKey;
+    use rsa::PrivateKey;
     use rsa::pkcs8::{DecodePrivateKey, EncodePrivateKey, LineEnding};
     use rsa::traits::PublicKeyParts;
     use serde_json::json;
@@ -1403,8 +1403,8 @@ pub mod tests {
         })
     }
 
-    fn test_rsa_key() -> RsaPrivateKey {
-        RsaPrivateKey::from_pkcs8_pem(TEST_RSA_KEY_PEM).unwrap()
+    fn test_rsa_key() -> PrivateKey {
+        PrivateKey::from_pkcs8_pem(TEST_RSA_KEY_PEM).unwrap()
     }
 
     fn test_encoding_key() -> EncodingKey {

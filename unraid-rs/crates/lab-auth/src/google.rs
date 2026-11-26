@@ -585,7 +585,7 @@ mod tests {
     use base64::Engine;
     use base64::engine::general_purpose::URL_SAFE_NO_PAD;
     use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
-    use rsa::RsaPrivateKey;
+    use rsa::PrivateKey;
     use rsa::pkcs8::EncodePrivateKey;
     use rsa::rand_core::{TryCryptoRng, TryRng, UnwrapErr};
     use rsa::traits::PublicKeyParts;
@@ -854,11 +854,11 @@ mod tests {
         }
     }
 
-    fn test_rsa_key() -> &'static RsaPrivateKey {
-        static TEST_RSA_KEY: OnceLock<RsaPrivateKey> = OnceLock::new();
+    fn test_rsa_key() -> &'static PrivateKey {
+        static TEST_RSA_KEY: OnceLock<PrivateKey> = OnceLock::new();
         TEST_RSA_KEY.get_or_init(|| {
             let mut rng = UnwrapErr(TestRng);
-            RsaPrivateKey::new(&mut rng, 2048).unwrap()
+            PrivateKey::new(&mut rng, 2048).unwrap()
         })
     }
 
