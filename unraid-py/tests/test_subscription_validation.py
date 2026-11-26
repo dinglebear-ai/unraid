@@ -100,12 +100,20 @@ class TestValidateSubscriptionQueryInvalidFormat:
             "",
             "cpuSubscription { usage }",
             "subscription",
-            "subscription {  }",
         ],
     )
     def test_invalid_graphql_rejected(self, bad: str) -> None:
         with pytest.raises(ToolError, match="not a valid GraphQL document"):
             _validate_subscription_query(bad)
+
+    def test_empty_selection_set_rejected(self) -> None:
+        """graphql-core < 3.3.2 fails to parse an empty selection set; 3.3.2+
+        parses it and the one-top-level-field check rejects it instead.
+        Either way the query must not reach upstream."""
+        with pytest.raises(
+            ToolError, match=r"not a valid GraphQL document|exactly one top-level field"
+        ):
+            _validate_subscription_query("subscription {  }")
 
 
 class TestValidateSubscriptionQueryUnknownName:
