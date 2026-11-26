@@ -157,4 +157,13 @@ expect_same(
 );
 expect_same(true, in_array('UNRAID_RMCP_PROJECTION', ALLOWED_KEYS, true), 'projection must be persistable by the settings UI');
 
+// The settings UI posts form fields so local_prepend.php sees csrf_token (#497).
+expect_same(
+    '{"action":"stats"}',
+    request_body_json(['payload' => '{"action":"stats"}'], ''),
+    'form payload field must carry the JSON action',
+);
+expect_same('{"action":"save"}', request_body_json([], '{"action":"save"}'), 'raw JSON body must remain accepted');
+expect_same('raw', request_body_json(['payload' => ['nested']], 'raw'), 'non-string payload must fall back to the raw body');
+
 echo "Unraid MCP config endpoint tests passed\n";

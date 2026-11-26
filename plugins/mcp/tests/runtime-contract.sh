@@ -205,6 +205,29 @@ grep -Fq 'verify_attestation "${actual}" || exit 1' "$update_script"
 grep -Fq "curl -fsS --noproxy '*' --max-time 2" "$rc_script"
 grep -Fq 'TAILSCALE_PORT_FILE=' "$rc_script"
 grep -Fq 'validate_required_config || return 1' "$rc_script"
+
+# Startup liveness must not mistake a child that has not exec'd runraid yet for
+# an exited server (#498), but must still notice a child that really exited.
+(
+    eval "$(sed -n '/^startup_alive() {/,/^}/p' "$rc_script")"
+    eval "$(sed -n '/^pid_matches() {/,/^}/p' "$rc_script")"
+    sleep 30 &
+    not_yet_execd=$!
+    startup_alive "$not_yet_execd"
+    ! pid_matches "$not_yet_execd"
+    kill "$not_yet_execd"
+    true &
+    exited=$!
+    for _ in $(seq 1 50); do
+        startup_alive "$exited" || break
+        sleep 0.1
+    done
+    ! startup_alive "$exited"
+    wait "$exited" 2>/dev/null || true
+    ! startup_alive "$exited"
+    ! startup_alive ""
+)
+grep -Fq 'if ! startup_alive "${pid}"; then' "$rc_script"
 grep -Fq 'process_is_runraid_server' "$plugin_dir/source/usr/local/emhttp/plugins/unraid-mcp/include/config.php"
 grep -Fq 'runraid +serve' "$nchan_script"
 grep -Fq 'unraid-mcp-widget.js' "$verifier"
