@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
 # ── Stage 2: Runtime ────────────────────────────────────────────────────────────
-FROM python:3.12.11-slim-bookworm@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7 AS runtime
+FROM python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70 AS runtime
 # Runtime Python must match the builder's Python 3.12 virtualenv layout.
 # The digest remains reproducible, while the explicit upgrade closes Debian security
 # fixes published after that immutable base was built. CI scans the resulting image.
