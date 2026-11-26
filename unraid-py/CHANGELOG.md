@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.4](https://github.com/dinglebear-ai/unraid/compare/v2.10.3...v2.10.4) (2026-11-26)
+
+
+### Bug Fixes
+
+* **ci:** trust Gen Y LE roots in live gate, stop false release-liveness alarms ([#513](https://github.com/dinglebear-ai/unraid/issues/513)) ([b35e7d2](https://github.com/dinglebear-ai/unraid/commit/b35e7d28180a44c4b60c98be1d74aaeadb451a10))
+* **deps:** cap py-key-value-aio below 0.5 to match fastmcp ([#521](https://github.com/dinglebear-ai/unraid/issues/521)) ([7f26561](https://github.com/dinglebear-ai/unraid/commit/7f26561f282ac56d4aeb0799b0b3c55b976b7f04))
+* **deps:** consolidate and qualify Dependabot backlog ([#473](https://github.com/dinglebear-ai/unraid/issues/473)) ([aeee28a](https://github.com/dinglebear-ai/unraid/commit/aeee28acd28aa16e0d9a6bfb9fe12af12b109aef))
+* **incus:** keep incusd up and surface degraded state when reconciliation fails ([#506](https://github.com/dinglebear-ai/unraid/issues/506)) ([d1ff1c7](https://github.com/dinglebear-ai/unraid/commit/d1ff1c76d47f5544fc57e095544166798d257d08))
+* **schema:** accept nullable Query.docker/vms from unraid/api ([#516](https://github.com/dinglebear-ai/unraid/issues/516)) ([43f3e0f](https://github.com/dinglebear-ai/unraid/commit/43f3e0f75ecd63de2c4dc8448e83433996efd459)), closes [#485](https://github.com/dinglebear-ai/unraid/issues/485) [#486](https://github.com/dinglebear-ai/unraid/issues/486)
+* **unraid-py:** merge docker update_autostart into the current list ([#505](https://github.com/dinglebear-ai/unraid/issues/505)) ([173ede6](https://github.com/dinglebear-ai/unraid/commit/173ede646ea626a188ba1200c28470b9742f7cca))
+
+
+### Dependencies
+
+* **deps:** bump the minor-and-patch group across 1 directory with 11 updates ([#512](https://github.com/dinglebear-ai/unraid/issues/512)) ([b24de13](https://github.com/dinglebear-ai/unraid/commit/b24de133a0febeb041ecfd913bec9190d74ea27d))
+
 ## [2.10.3](https://github.com/dinglebear-ai/unraid/compare/v2.10.2...v2.10.3) (2026-10-20)
 
 
